@@ -16,6 +16,8 @@ Raytracer uses the Convex Raycast to visualize the Collision Shapes/Minkowski Su
 Very basic raytracer, rendering into a texture.
 */
 
+///Low level demo, doesn't include btBulletCollisionCommon.h
+
 #include "GL_Simplex1to4.h"
 #include "LinearMath/SimdQuaternion.h"
 #include "LinearMath/SimdTransform.h"

@@ -19,24 +19,7 @@ subject to the following restrictions:
 
 #include "CcdPhysicsEnvironment.h"
 #include "CcdPhysicsController.h"
-
-//#include "GL_LineSegmentShape.h"
-#include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "BulletCollision/CollisionShapes/btConeShape.h"
-#include "BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h"
-#include "BulletCollision/CollisionShapes/btTriangleMesh.h"
-
-
-#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
-#include "BulletCollision/CollisionShapes/btEmptyShape.h"
-
-#include "BulletDynamics/Dynamics/btRigidBody.h"
-#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
-#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
-#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
-#include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
+#include "btBulletDynamicsCommon.h"
 
 #include "LinearMath/GenQuickprof.h"
 #include "LinearMath/GenIDebugDraw.h"

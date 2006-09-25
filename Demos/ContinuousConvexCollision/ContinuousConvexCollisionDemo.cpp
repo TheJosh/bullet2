@@ -18,6 +18,8 @@
 	Also comparision with Algebraic CCD and Interval Arithmetic methods (Stephane Redon)
 */
 
+
+///This low level demo need internal access, and intentionally doesn't include the btBulletCollisionCommon.h headerfile
 #include "LinearMath/SimdQuaternion.h"
 #include "LinearMath/SimdTransform.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"

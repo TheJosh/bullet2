@@ -15,17 +15,11 @@ subject to the following restrictions:
 
 #include "CcdPhysicsEnvironment.h"
 #include "CcdPhysicsController.h"
-#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
-#include "BulletCollision/CollisionShapes/btEmptyShape.h"
-#include "BulletDynamics/Dynamics/btRigidBody.h"
-#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
-#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
-#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
-#include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
+#include "btBulletDynamicsCommon.h"
 #include "LinearMath/GenQuickprof.h"
 #include "LinearMath/GenIDebugDraw.h"
 #include "GLDebugDrawer.h"
+
 
 
 //COLLADA_DOM and LibXML source code are included in Extras/ folder.

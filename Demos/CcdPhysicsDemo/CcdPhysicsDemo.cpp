@@ -21,36 +21,17 @@ subject to the following restrictions:
 #include "CcdPhysicsEnvironment.h"
 #include "ParallelPhysicsEnvironment.h"
 
+#include "btBulletDynamicsCommon.h"
+
 #include "CcdPhysicsController.h"
 #include "MyMotionState.h"
-//#include "GL_LineSegmentShape.h"
-#include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "BulletCollision/CollisionShapes/btConeShape.h"
-#include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
-#include "BulletCollision/CollisionShapes/btCompoundShape.h"
-#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
-#include "BulletCollision/CollisionShapes/btEmptyShape.h"
-#include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
-#include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
-#include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
-#include "BulletCollision/CollisionShapes/btTriangleMesh.h"
-#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
-#include "BulletDynamics/Dynamics/btRigidBody.h"
-#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 
 #include "ParallelIslandDispatcher.h"
-
-#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
-#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
-#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
-#include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
 
 #include "LinearMath/GenQuickprof.h"
 #include "LinearMath/GenIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
-#include "BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h"
 
 
 

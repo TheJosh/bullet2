@@ -19,12 +19,14 @@ subject to the following restrictions:
 /// See the define CATCH_DEGENERATE_TETRAHEDRON in Bullet's VoronoiSimplexSolver.cpp
 ///
 
+
+///This low-level internal demo does intentionally NOT use the btBulletCollisionCommon.h header
+///It needs internal access
 #include "GL_Simplex1to4.h"
 #include "LinearMath/SimdQuaternion.h"
 #include "LinearMath/SimdTransform.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
-
 #include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
 #include "BulletCollision/NarrowPhaseCollision/btPointCollector.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"

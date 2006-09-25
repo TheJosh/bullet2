@@ -19,16 +19,10 @@ subject to the following restrictions:
 ///
 
 #include "GL_Simplex1to4.h"
-#include "LinearMath/SimdQuaternion.h"
-#include "LinearMath/SimdTransform.h"
-#include "BulletCollision/CollisionShapes/btConvexHullShape.h"
 
-#include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
-#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
-#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
-#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
+//include common Bullet Collision Detection headerfiles
+#include "btBulletCollisionCommon.h"
+
 #include "LinearMath/GenIDebugDraw.h"
 #include "GL_ShapeDrawer.h"
 #include "CollisionInterfaceDemo.h"
