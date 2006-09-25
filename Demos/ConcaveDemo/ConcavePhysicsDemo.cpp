@@ -27,7 +27,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
-#include "CollisionShapes/TriangleMesh.h"
+#include "BulletCollision/CollisionShapes/btTriangleMesh.h"
 #include "LinearMath/GenIDebugDraw.h"
 #include "GLDebugDrawer.h"
 #include "PHY_Pro.h"

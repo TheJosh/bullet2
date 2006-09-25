@@ -26,17 +26,17 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btTriangleMesh.h"
 #include "BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
-#include "CollisionShapes/TriangleIndexVertexArray.h"
+#include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
 
 
-#include "BulletCollision/CollisionShapes/TetrahedronShape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
 #include "BulletCollision/CollisionShapes/btEmptyShape.h"
 
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BroadphaseCollision/SimpleBroadphase.h"
+#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
 #include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
 #include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
 #include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
