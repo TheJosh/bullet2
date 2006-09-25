@@ -11,11 +11,11 @@
 #ifndef RAYCASTVEHICLE_H
 #define RAYCASTVEHICLE_H
 
-#include "Dynamics/RigidBody.h"
-#include "ConstraintSolver/TypedConstraint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 
 struct MassProps;
-#include "WheelInfo.h"
+#include "btWheelInfo.h"
 
 struct	VehicleRaycaster;
 class VehicleTuning;

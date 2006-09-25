@@ -17,13 +17,13 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 #include "MyMotionState.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "CollisionShapes/Simplex1to4Shape.h"
-#include "CollisionShapes/EmptyShape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
+#include "BulletCollision/CollisionShapes/btEmptyShape.h"
 
-#include "Dynamics/RigidBody.h"
-#include "ConstraintSolver/SequentialImpulseConstraintSolver.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BroadphaseCollision/SimpleBroadphase.h"
+#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
 #include "LinearMath/GenIDebugDraw.h"
 
 #include "GLDebugDrawer.h"

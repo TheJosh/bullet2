@@ -27,16 +27,16 @@ subject to the following restrictions:
 #endif
 
 #include "GL_ShapeDrawer.h"
-#include "CollisionShapes/PolyhedralConvexShape.h"
+#include "BulletCollision/CollisionShapes/btPolyhedralConvexShape.h"
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "CollisionShapes/ConeShape.h"
-#include "CollisionShapes/CylinderShape.h"
-#include "CollisionShapes/Simplex1to4Shape.h"
+#include "BulletCollision/CollisionShapes/btConeShape.h"
+#include "BulletCollision/CollisionShapes/btCylinderShape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
-#include "CollisionShapes/ConvexTriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h"
 
 
 #include "LinearMath/GenIDebugDraw.h"

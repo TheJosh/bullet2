@@ -20,19 +20,19 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
 
 
-#include "CollisionShapes/Simplex1to4Shape.h"
-#include "Dynamics/RigidBody.h"
-#include "BroadphaseCollision/AxisSweep3.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
 
-#include "ConstraintSolver/SequentialImpulseConstraintSolver.h"
+#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BroadphaseCollision/SimpleBroadphase.h"
-#include "BroadphaseCollision/AxisSweep3.h"
+#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
+#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
 
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
-#include "CollisionShapes/TriangleIndexVertexArray.h"
+#include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
-#include "CollisionShapes/TriangleMesh.h"
+#include "BulletCollision/CollisionShapes/btTriangleMesh.h"
 #include "LinearMath/GenIDebugDraw.h"
 #include "GLDebugDrawer.h"
 #include "PHY_Pro.h"
@@ -41,7 +41,7 @@ subject to the following restrictions:
 #include "GlutStuff.h"
 
 //The user defined collision algorithm
-#include "CollisionDispatch/SphereSphereCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h"
 
 GLDebugDrawer	debugDrawer;
 

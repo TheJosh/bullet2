@@ -19,9 +19,9 @@ subject to the following restrictions:
 #include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "BulletCollision/BroadphaseCollision/btDispatcher.h"
-#include "ConstraintSolver/ContactSolverInfo.h"
-#include "ConstraintSolver/ConstraintSolver.h"
-#include "ConstraintSolver/TypedConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btContactSolverInfo.h"
+#include "BulletDynamics/ConstraintSolver/btConstraintSolver.h"
+#include "BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "LinearMath/GenIDebugDraw.h"
 
 extern float gContactBreakingTreshold;

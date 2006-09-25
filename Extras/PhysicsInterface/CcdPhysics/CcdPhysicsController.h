@@ -22,10 +22,10 @@ subject to the following restrictions:
 ///	PHY_IPhysicsController is the abstract simplified Interface to a physical object.
 ///	It contains the IMotionState and IDeformableMesh Interfaces.
 #include "LinearMath/SimdVector3.h"
-#include "SimdScalar.h"	
+#include "LinearMath/SimdScalar.h"	
 #include "LinearMath/SimdMatrix3x3.h"
 #include "LinearMath/SimdTransform.h"
-#include "Dynamics/RigidBody.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 
 #include "PHY_IMotionState.h"
 

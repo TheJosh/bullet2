@@ -31,15 +31,15 @@
 //#include <bullet/bullet.h>
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
-#include "BroadphaseCollision/SimpleBroadphase.h"
-#include "BroadphaseCollision/AxisSweep3.h"
+#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
+#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
 
 
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "CollisionShapes/CylinderShape.h"
+#include "BulletCollision/CollisionShapes/btCylinderShape.h"
 
 
 

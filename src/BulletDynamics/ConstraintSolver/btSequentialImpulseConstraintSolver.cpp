@@ -14,20 +14,18 @@ subject to the following restrictions:
 */
 
 
-#include "SequentialImpulseConstraintSolver.h"
+#include "btSequentialImpulseConstraintSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
-#include "Dynamics/RigidBody.h"
-#include "ContactConstraint.h"
-#include "Solve2LinearConstraint.h"
-#include "ContactSolverInfo.h"
-#include "Dynamics/BU_Joint.h"
-#include "Dynamics/ContactJoint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "btContactConstraint.h"
+#include "btSolve2LinearConstraint.h"
+#include "btContactSolverInfo.h"
 #include "LinearMath/GenIDebugDraw.h"
-#include "JacobianEntry.h"
-#include "GEN_MinMax.h"
+#include "btJacobianEntry.h"
+#include "LinearMath/GenMinMax.h"
 
 #ifdef USE_PROFILE
-#include "GenQuickprof.h"
+#include "LinearMath/GenQuickprof.h"
 #endif //USE_PROFILE
 
 int totalCpd = 0;

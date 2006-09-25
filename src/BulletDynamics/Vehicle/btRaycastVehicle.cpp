@@ -9,17 +9,17 @@
  * It is provided "as is" without express or implied warranty.
 */
 
-#include "RaycastVehicle.h"
-#include "ConstraintSolver/Solve2LinearConstraint.h"
-#include "ConstraintSolver/JacobianEntry.h"
+#include "btRaycastVehicle.h"
+#include "BulletDynamics/ConstraintSolver/btSolve2LinearConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
 #include "LinearMath/SimdQuaternion.h"
 #include "LinearMath/SimdVector3.h"
-#include "VehicleRaycaster.h"
-#include "WheelInfo.h"
+#include "btVehicleRaycaster.h"
+#include "btWheelInfo.h"
 
 
-#include "Dynamics/MassProps.h"
-#include "ConstraintSolver/ContactConstraint.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
+#include "BulletDynamics/ConstraintSolver/btContactConstraint.h"
 
 
 

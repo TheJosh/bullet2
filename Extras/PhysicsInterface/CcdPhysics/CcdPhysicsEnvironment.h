@@ -34,7 +34,7 @@ class Dispatcher;
 //switch on/off new vehicle support
 #define NEW_BULLET_VEHICLE_SUPPORT 1
 
-#include "ConstraintSolver/ContactSolverInfo.h"
+#include "BulletDynamics/ConstraintSolver/btContactSolverInfo.h"
 
 class WrapperVehicle;
 class PersistentManifold;

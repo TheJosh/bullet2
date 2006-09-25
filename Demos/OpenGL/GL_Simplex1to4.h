@@ -15,7 +15,7 @@ subject to the following restrictions:
 #ifndef GL_SIMPLEX_1TO4_H
 #define GL_SIMPLEX_1TO4_H
 
-#include "CollisionShapes/Simplex1to4Shape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
 
 #include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
 

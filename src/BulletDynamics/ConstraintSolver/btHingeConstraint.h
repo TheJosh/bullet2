@@ -18,8 +18,8 @@ subject to the following restrictions:
 
 #include "LinearMath/SimdVector3.h"
 
-#include "ConstraintSolver/JacobianEntry.h"
-#include "TypedConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
+#include "btTypedConstraint.h"
 
 class RigidBody;
 

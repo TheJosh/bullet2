@@ -14,9 +14,9 @@ subject to the following restrictions:
 */
 
 
-#include "HingeConstraint.h"
-#include "Dynamics/RigidBody.h"
-#include "Dynamics/MassProps.h"
+#include "btHingeConstraint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
 #include "LinearMath/SimdTransformUtil.h"
 
 

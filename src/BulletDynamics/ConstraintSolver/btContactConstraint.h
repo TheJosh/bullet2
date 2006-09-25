@@ -20,7 +20,7 @@ subject to the following restrictions:
 
 class RigidBody;
 #include "LinearMath/SimdVector3.h"
-#include "SimdScalar.h"
+#include "LinearMath/SimdScalar.h"
 struct ContactSolverInfo;
 class ManifoldPoint;
 

@@ -34,7 +34,7 @@
 
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
 
-#include "CollisionShapes/Simplex1to4Shape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
 
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"

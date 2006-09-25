@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef MASS_PROPS_H
 #define MASS_PROPS_H
 
-#include <SimdVector3.h>
+#include <LinearMath/SimdVector3.h>
 
 struct MassProps {
 	MassProps(float mass,const SimdVector3& inertiaLocal):

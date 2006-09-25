@@ -14,9 +14,9 @@ subject to the following restrictions:
 */
 
 
-#include "TypedConstraint.h"
-#include "Dynamics/RigidBody.h"
-#include "Dynamics/MassProps.h"
+#include "btTypedConstraint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
 
 static RigidBody s_fixed(MassProps(0,SimdVector3(0.f,0.f,0.f)),0.f,0.f,1.f,1.f);
 

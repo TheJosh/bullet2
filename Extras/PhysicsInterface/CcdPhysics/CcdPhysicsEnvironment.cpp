@@ -21,25 +21,25 @@ subject to the following restrictions:
 
 #include <algorithm>
 #include "LinearMath/SimdTransform.h"
-#include "Dynamics/RigidBody.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
-#include "BroadphaseCollision/SimpleBroadphase.h"
-#include "BroadphaseCollision/AxisSweep3.h"
+#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
+#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
 
 #include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
 #include "BulletCollision/CollisionShapes/btConvexShape.h"
-#include "CollisionShapes/ConeShape.h"
-#include "CollisionDispatch/SimulationIslandManager.h"
+#include "BulletCollision/CollisionShapes/btConeShape.h"
+#include "BulletCollision/CollisionDispatch/btSimulationIslandManager.h"
 
 #include "BulletCollision/BroadphaseCollision/btDispatcher.h"
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 #include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
-#include "ConstraintSolver/SequentialImpulseConstraintSolver.h"
+#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
 
 
 //profiling/timings
-#include "GenQuickprof.h"
+#include "LinearMath/GenQuickprof.h"
 
 
 #include "LinearMath/GenIDebugDraw.h"
@@ -62,20 +62,20 @@ subject to the following restrictions:
 bool useIslands = true;
 
 #ifdef NEW_BULLET_VEHICLE_SUPPORT
-#include "Vehicle/RaycastVehicle.h"
-#include "Vehicle/VehicleRaycaster.h"
+#include "BulletDynamics/Vehicle/btRaycastVehicle.h"
+#include "BulletDynamics/Vehicle/btVehicleRaycaster.h"
 
-#include "Vehicle/WheelInfo.h"
+#include "BulletDynamics/Vehicle/btWheelInfo.h"
 #include "PHY_IVehicle.h"
 RaycastVehicle::VehicleTuning	gTuning;
 
 #endif //NEW_BULLET_VEHICLE_SUPPORT
 #include "LinearMath/GenAabbUtil2.h"
 
-#include "ConstraintSolver/ConstraintSolver.h"
-#include "ConstraintSolver/Point2PointConstraint.h"
-#include "ConstraintSolver/HingeConstraint.h"
-#include "ConstraintSolver/Generic6DofConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btConstraintSolver.h"
+#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btGeneric6DofConstraint.h"
 
 
 //#include "BroadphaseCollision/QueryDispatcher.h"
@@ -87,7 +87,7 @@ void DrawRasterizerLine(const float* from,const float* to,int color);
 #endif
 
 
-#include "ConstraintSolver/ContactConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btContactConstraint.h"
 
 
 #include <stdio.h>

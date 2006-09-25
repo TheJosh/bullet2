@@ -23,22 +23,22 @@ subject to the following restrictions:
 //#include "GL_LineSegmentShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "CollisionShapes/ConeShape.h"
-#include "CollisionShapes/ConvexTriangleMeshShape.h"
-#include "CollisionShapes/TriangleMesh.h"
+#include "BulletCollision/CollisionShapes/btConeShape.h"
+#include "BulletCollision/CollisionShapes/btConvexTriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btTriangleMesh.h"
 
 
-#include "CollisionShapes/Simplex1to4Shape.h"
-#include "CollisionShapes/EmptyShape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
+#include "BulletCollision/CollisionShapes/btEmptyShape.h"
 
-#include "Dynamics/RigidBody.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
-#include "BroadphaseCollision/SimpleBroadphase.h"
-#include "BroadphaseCollision/AxisSweep3.h"
-#include "ConstraintSolver/Point2PointConstraint.h"
-#include "ConstraintSolver/HingeConstraint.h"
+#include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
+#include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
+#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
+#include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
 
-#include "GenQuickprof.h"
+#include "LinearMath/GenQuickprof.h"
 #include "LinearMath/GenIDebugDraw.h"
 
 #include "GLDebugDrawer.h"

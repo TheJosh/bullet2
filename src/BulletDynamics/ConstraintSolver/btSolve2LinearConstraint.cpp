@@ -15,11 +15,11 @@ subject to the following restrictions:
 
 
 
-#include "Solve2LinearConstraint.h"
+#include "btSolve2LinearConstraint.h"
 
-#include "Dynamics/RigidBody.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "LinearMath/SimdVector3.h"
-#include "JacobianEntry.h"
+#include "btJacobianEntry.h"
 
 
 void Solve2LinearConstraint::resolveUnilateralPairConstraint(

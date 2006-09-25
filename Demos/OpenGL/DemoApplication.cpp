@@ -18,12 +18,12 @@ subject to the following restrictions:
 
 #include "CcdPhysicsEnvironment.h"
 #include "CcdPhysicsController.h"
-#include "ConstraintSolver/Point2PointConstraint.h"//picking
+#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"//picking
 #include "PHY_Pro.h"
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "GL_ShapeDrawer.h"
-#include "GenQuickprof.h"
+#include "LinearMath/GenQuickprof.h"
 #include "BMF_Api.h"
 
 int numObjects = 0;

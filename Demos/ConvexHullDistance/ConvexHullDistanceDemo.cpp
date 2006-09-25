@@ -23,10 +23,10 @@ subject to the following restrictions:
 #include "LinearMath/SimdQuaternion.h"
 #include "LinearMath/SimdTransform.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
-#include "CollisionShapes/ConvexHullShape.h"
+#include "BulletCollision/CollisionShapes/btConvexHullShape.h"
 
 #include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
-#include "NarrowPhaseCollision/PointCollector.h"
+#include "BulletDynamics/NarrowPhaseCollision/btPointCollector.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
 

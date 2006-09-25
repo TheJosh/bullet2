@@ -14,9 +14,9 @@ subject to the following restrictions:
 */
 
 
-#include "Generic6DofConstraint.h"
-#include "Dynamics/RigidBody.h"
-#include "Dynamics/MassProps.h"
+#include "btGeneric6DofConstraint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
 #include "LinearMath/SimdTransformUtil.h"
 
 static const SimdScalar kSign[] = { 1.0f, -1.0f, 1.0f };

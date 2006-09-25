@@ -8,8 +8,8 @@
  * of this software for any purpose.  
  * It is provided "as is" without express or implied warranty.
 */
-#include "WheelInfo.h"
-#include "Dynamics/RigidBody.h" // for pointvelocity
+#include "btWheelInfo.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h" // for pointvelocity
 
 
 SimdScalar WheelInfo::GetSuspensionRestLength() const

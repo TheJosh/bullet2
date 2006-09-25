@@ -16,10 +16,10 @@ subject to the following restrictions:
 #ifndef SEQUENTIAL_IMPULSE_CONSTRAINT_SOLVER_H
 #define SEQUENTIAL_IMPULSE_CONSTRAINT_SOLVER_H
 
-#include "ConstraintSolver.h"
+#include "btConstraintSolver.h"
 class IDebugDraw;
 
-#include "ContactConstraint.h"
+#include "btContactConstraint.h"
 	
 
 

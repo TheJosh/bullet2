@@ -26,7 +26,7 @@
 #include <vector>
 #include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
 #include "BulletCollision/CollisionShapes/btConvexShape.h"
-#include "GEN_MinMax.h"
+#include "LinearMath/GenMinMax.h"
 
 #define ASSERT_MESSAGE
 

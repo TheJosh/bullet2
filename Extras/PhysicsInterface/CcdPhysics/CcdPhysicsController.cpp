@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #include "CcdPhysicsController.h"
 
-#include "Dynamics/RigidBody.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "PHY_IMotionState.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
@@ -24,7 +24,7 @@ subject to the following restrictions:
 #include "LinearMath/SimdTransformUtil.h"
 
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "CollisionShapes/ConeShape.h"
+#include "BulletCollision/CollisionShapes/btConeShape.h"
 
 class BP_Proxy;
 
@@ -37,7 +37,7 @@ bool	gDisableDeactivation = false;
 float gLinearSleepingTreshold = 0.8f;
 float gAngularSleepingTreshold = 1.0f;
 
-#include "Dynamics/MassProps.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
 
 SimdVector3 startVel(0,0,0);//-10000);
 CcdPhysicsController::CcdPhysicsController (const CcdConstructionInfo& ci)

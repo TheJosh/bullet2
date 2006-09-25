@@ -15,7 +15,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "SimdScalar.h"
+#include "LinearMath/SimdScalar.h"
 #include "LinearMath/SimdVector3.h"
 #include "LinearMath/SimdPoint3.h"
 #include "LinearMath/SimdTransform.h"

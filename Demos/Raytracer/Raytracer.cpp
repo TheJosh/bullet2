@@ -35,11 +35,11 @@ Very basic raytracer, rendering into a texture.
 
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "BulletCollision/CollisionShapes/btMultiSphereShape.h"
-#include "CollisionShapes/ConvexHullShape.h"
+#include "BulletCollision/CollisionShapes/btConvexHullShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
-#include "CollisionShapes/Simplex1to4Shape.h"
-#include "CollisionShapes/ConeShape.h"
-#include "CollisionShapes/CylinderShape.h"
+#include "BulletCollision/CollisionShapes/btTetrahedronShape.h"
+#include "BulletCollision/CollisionShapes/btConeShape.h"
+#include "BulletCollision/CollisionShapes/btCylinderShape.h"
 #include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
 
 

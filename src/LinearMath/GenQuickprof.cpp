@@ -27,7 +27,7 @@
 // Credits: The Clock class was inspired by the Timer classes in 
 // Ogre (www.ogre3d.org).
 
-#include "GenQuickprof.h"
+#include "LinearMath/GenQuickprof.h"
 
 #ifdef USE_QUICKPROF
 

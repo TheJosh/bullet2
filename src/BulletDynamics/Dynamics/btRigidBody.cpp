@@ -13,11 +13,11 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "RigidBody.h"
-#include "MassProps.h"
+#include "btRigidBody.h"
+#include "btMassProps.h"
 #include "BulletCollision/CollisionShapes/btConvexShape.h"
-#include "GEN_MinMax.h"
-#include <SimdTransformUtil.h>
+#include "LinearMath/GenMinMax.h"
+#include <LinearMath/SimdTransformUtil.h>
 
 float gLinearAirDamping = 1.f;
 

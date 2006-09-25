@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define TYPED_CONSTRAINT_H
 
 class RigidBody;
-#include "SimdScalar.h"
+#include "LinearMath/SimdScalar.h"
 
 //TypedConstraint is the baseclass for Bullet constraints and vehicles
 class TypedConstraint

@@ -14,13 +14,13 @@ subject to the following restrictions:
 */
 
 
-#include "ContactConstraint.h"
-#include "Dynamics/RigidBody.h"
+#include "btContactConstraint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "LinearMath/SimdVector3.h"
-#include "JacobianEntry.h"
-#include "ContactSolverInfo.h"
-#include "GEN_MinMax.h"
-#include "NarrowPhaseCollision/ManifoldPoint.h"
+#include "btJacobianEntry.h"
+#include "btContactSolverInfo.h"
+#include "LinearMath/GenMinMax.h"
+#include "BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
 
 #define ASSERT2 assert
 

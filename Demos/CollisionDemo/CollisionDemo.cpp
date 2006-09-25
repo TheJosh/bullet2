@@ -26,7 +26,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 
 #include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
-#include "NarrowPhaseCollision/PointCollector.h"
+#include "BulletCollision/NarrowPhaseCollision/btPointCollector.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
 

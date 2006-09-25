@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef SimdMatrix3x3_H
 #define SimdMatrix3x3_H
 
-#include "SimdScalar.h"
+#include "LinearMath/SimdScalar.h"
 
 #include "LinearMath/SimdVector3.h"
 #include "LinearMath/SimdQuaternion.h"

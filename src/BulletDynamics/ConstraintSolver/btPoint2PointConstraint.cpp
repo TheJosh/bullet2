@@ -14,9 +14,9 @@ subject to the following restrictions:
 */
 
 
-#include "Point2PointConstraint.h"
-#include "Dynamics/RigidBody.h"
-#include "Dynamics/MassProps.h"
+#include "btPoint2PointConstraint.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
 
 
 
