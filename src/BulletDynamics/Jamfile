@@ -1,6 +1,7 @@
-SubDir TOP BulletDynamics ;
+SubDir TOP src BulletDynamics ;
 
-Library bulletdynamics :
+Description bulletdynamics : "Bullet Rigidbody Dynamics" ;
+Library bulletdynamics : 
   [ Wildcard ConstraintSolver : *.h *.cpp ] 
   [ Wildcard Dynamics : *.h *.cpp ] 
   [ Wildcard Vehicle : *.h *.cpp ] 
