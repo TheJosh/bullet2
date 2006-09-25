@@ -17,9 +17,9 @@ subject to the following restrictions:
 #ifndef TRIANGLE_MESH_H
 #define TRIANGLE_MESH_H
 
-#include "CollisionShapes/StridingMeshInterface.h"
+#include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
 #include <vector>
-#include <SimdVector3.h>
+#include <LinearMath/SimdVector3.h>
 
 struct MyTriangle
 {

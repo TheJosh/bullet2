@@ -17,7 +17,7 @@ subject to the following restrictions:
 
 #include "OdeConstraintSolver.h"
 
-#include "NarrowPhaseCollision/PersistentManifold.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 #include "Dynamics/RigidBody.h"
 #include "ContactConstraint.h"
 #include "Solve2LinearConstraint.h"
@@ -25,7 +25,7 @@ subject to the following restrictions:
 #include "Dynamics/BU_Joint.h"
 #include "Dynamics/ContactJoint.h"
 
-#include "IDebugDraw.h"
+#include "LinearMath/GenIDebugDraw.h"
 
 #define USE_SOR_SOLVER
 

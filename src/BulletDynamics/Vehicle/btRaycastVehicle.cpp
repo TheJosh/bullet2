@@ -12,8 +12,8 @@
 #include "RaycastVehicle.h"
 #include "ConstraintSolver/Solve2LinearConstraint.h"
 #include "ConstraintSolver/JacobianEntry.h"
-#include "SimdQuaternion.h"
-#include "SimdVector3.h"
+#include "LinearMath/SimdQuaternion.h"
+#include "LinearMath/SimdVector3.h"
 #include "VehicleRaycaster.h"
 #include "WheelInfo.h"
 

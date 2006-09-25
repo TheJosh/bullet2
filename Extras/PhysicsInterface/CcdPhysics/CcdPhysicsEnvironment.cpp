@@ -20,44 +20,44 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 
 #include <algorithm>
-#include "SimdTransform.h"
+#include "LinearMath/SimdTransform.h"
 #include "Dynamics/RigidBody.h"
-#include "BroadphaseCollision/BroadphaseInterface.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
 #include "BroadphaseCollision/SimpleBroadphase.h"
 #include "BroadphaseCollision/AxisSweep3.h"
 
-#include "CollisionDispatch/CollisionWorld.h"
+#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
-#include "CollisionShapes/ConvexShape.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
 #include "CollisionShapes/ConeShape.h"
 #include "CollisionDispatch/SimulationIslandManager.h"
 
-#include "BroadphaseCollision/Dispatcher.h"
-#include "NarrowPhaseCollision/PersistentManifold.h"
-#include "CollisionShapes/TriangleMeshShape.h"
+#include "BulletCollision/BroadphaseCollision/btDispatcher.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
+#include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "ConstraintSolver/SequentialImpulseConstraintSolver.h"
 
 
 //profiling/timings
-#include "quickprof.h"
+#include "GenQuickprof.h"
 
 
-#include "IDebugDraw.h"
+#include "LinearMath/GenIDebugDraw.h"
 
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "NarrowPhaseCollision/SubSimplexConvexCast.h"
-#include "NarrowPhaseCollision/GjkConvexCast.h"
-#include "NarrowPhaseCollision/ContinuousConvexCollision.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.h"
 
 
-#include "CollisionDispatch/CollisionDispatcher.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 #include "PHY_IMotionState.h"
 
-#include "CollisionDispatch/EmptyCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h"
 
 
 
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 
 bool useIslands = true;
 
@@ -70,7 +70,7 @@ bool useIslands = true;
 RaycastVehicle::VehicleTuning	gTuning;
 
 #endif //NEW_BULLET_VEHICLE_SUPPORT
-#include "AabbUtil2.h"
+#include "LinearMath/GenAabbUtil2.h"
 
 #include "ConstraintSolver/ConstraintSolver.h"
 #include "ConstraintSolver/Point2PointConstraint.h"

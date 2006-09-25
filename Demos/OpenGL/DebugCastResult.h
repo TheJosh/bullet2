@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define DEBUG_CAST_RESULT_H
 
 #include "NarrowPhaseCollision/ConvexCast.h"
-#include "SimdTransform.h"
+#include "LinearMath/SimdTransform.h"
 #include "GL_ShapeDrawer.h"
 #ifdef WIN32
 #include <windows.h>

@@ -14,15 +14,15 @@ subject to the following restrictions:
 */
 
 
-#include "ContinuousConvexCollision.h"
-#include "CollisionShapes/ConvexShape.h"
-#include "CollisionShapes/MinkowskiSumShape.h"
-#include "NarrowPhaseCollision/SimplexSolverInterface.h"
-#include "SimdTransformUtil.h"
-#include "CollisionShapes/SphereShape.h"
+#include "btContinuousConvexCollision.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
+#include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
+#include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
+#include "LinearMath/SimdTransformUtil.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 
-#include "GjkPairDetector.h"
-#include "PointCollector.h"
+#include "btGjkPairDetector.h"
+#include "btPointCollector.h"
 
 
 

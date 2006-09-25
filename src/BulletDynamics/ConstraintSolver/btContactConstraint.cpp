@@ -16,7 +16,7 @@ subject to the following restrictions:
 
 #include "ContactConstraint.h"
 #include "Dynamics/RigidBody.h"
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 #include "JacobianEntry.h"
 #include "ContactSolverInfo.h"
 #include "GEN_MinMax.h"

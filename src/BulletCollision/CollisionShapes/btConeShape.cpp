@@ -13,8 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "ConeShape.h"
-#include "SimdPoint3.h"
+#include "btConeShape.h"
+#include "LinearMath/SimdPoint3.h"
 
 #ifdef WIN32
 static int coneindices[3] = {1,2,0};

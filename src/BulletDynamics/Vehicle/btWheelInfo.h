@@ -11,8 +11,8 @@
 #ifndef WHEEL_INFO_H
 #define WHEEL_INFO_H
 
-#include "SimdVector3.h"
-#include "SimdTransform.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
 
 class RigidBody;
 

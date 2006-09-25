@@ -18,7 +18,7 @@ subject to the following restrictions:
 #ifndef VoronoiSimplexSolver_H
 #define VoronoiSimplexSolver_H
 
-#include "SimplexSolverInterface.h"
+#include "btSimplexSolverInterface.h"
 
 
 

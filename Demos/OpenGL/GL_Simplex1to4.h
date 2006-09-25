@@ -17,7 +17,7 @@ subject to the following restrictions:
 
 #include "CollisionShapes/Simplex1to4Shape.h"
 
-#include "NarrowPhaseCollision/SimplexSolverInterface.h"
+#include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
 
 ///GL_Simplex1to4 is a class to debug a Simplex Solver with 1 to 4 points. 
 ///Can be used by GJK.

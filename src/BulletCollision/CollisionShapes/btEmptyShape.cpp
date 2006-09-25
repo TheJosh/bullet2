@@ -13,10 +13,10 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "EmptyShape.h"
+#include "btEmptyShape.h"
 
 
-#include "CollisionShape.h"
+#include "btCollisionShape.h"
 
 
 EmptyShape::EmptyShape()

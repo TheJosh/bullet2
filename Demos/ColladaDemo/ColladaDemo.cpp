@@ -18,13 +18,13 @@ subject to the following restrictions:
 #include "CollisionShapes/Simplex1to4Shape.h"
 #include "CollisionShapes/EmptyShape.h"
 #include "Dynamics/RigidBody.h"
-#include "CollisionDispatch/CollisionDispatcher.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 #include "BroadphaseCollision/SimpleBroadphase.h"
 #include "BroadphaseCollision/AxisSweep3.h"
 #include "ConstraintSolver/Point2PointConstraint.h"
 #include "ConstraintSolver/HingeConstraint.h"
-#include "quickprof.h"
-#include "IDebugDraw.h"
+#include "GenQuickprof.h"
+#include "LinearMath/GenIDebugDraw.h"
 #include "GLDebugDrawer.h"
 
 

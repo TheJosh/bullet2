@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "Dispatcher.h"
+#include "btDispatcher.h"
 
 Dispatcher::~Dispatcher()
 {

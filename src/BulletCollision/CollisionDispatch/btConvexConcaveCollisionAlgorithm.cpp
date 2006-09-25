@@ -14,18 +14,18 @@ subject to the following restrictions:
 */
 
 
-#include "ConvexConcaveCollisionAlgorithm.h"
-#include "CollisionDispatch/CollisionObject.h"
-#include "CollisionShapes/MultiSphereShape.h"
-#include "ConvexConvexAlgorithm.h"
-#include "BroadphaseCollision/BroadphaseProxy.h"
-#include "CollisionShapes/ConcaveShape.h"
-#include "CollisionDispatch/ManifoldResult.h"
-#include "NarrowPhaseCollision/RaycastCallback.h"
-#include "CollisionShapes/TriangleShape.h"
-#include "CollisionShapes/SphereShape.h"
-#include "IDebugDraw.h"
-#include "NarrowPhaseCollision/SubSimplexConvexCast.h"
+#include "btConvexConcaveCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionShapes/btMultiSphereShape.h"
+#include "btConvexConvexAlgorithm.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+#include "BulletCollision/CollisionShapes/btConcaveShape.h"
+#include "BulletCollision/CollisionDispatch/btManifoldResult.h"
+#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
+#include "BulletCollision/CollisionShapes/btTriangleShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
+#include "LinearMath/GenIDebugDraw.h"
+#include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
 
 ConvexConcaveCollisionAlgorithm::ConvexConcaveCollisionAlgorithm( const CollisionAlgorithmConstructionInfo& ci,BroadphaseProxy* proxy0,BroadphaseProxy* proxy1)
 : CollisionAlgorithm(ci),m_convex(*proxy0),m_concave(*proxy1),

@@ -16,9 +16,9 @@ subject to the following restrictions:
 #ifndef CYLINDER_MINKOWSKI_H
 #define CYLINDER_MINKOWSKI_H
 
-#include "BoxShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
-#include "SimdVector3.h"
+#include "btBoxShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
+#include "LinearMath/SimdVector3.h"
 
 /// implements cylinder shape interface
 class CylinderShape : public BoxShape

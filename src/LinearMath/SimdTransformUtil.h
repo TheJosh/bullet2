@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef SIMD_TRANSFORM_UTIL_H
 #define SIMD_TRANSFORM_UTIL_H
 
-#include "SimdTransform.h"
+#include "LinearMath/SimdTransform.h"
 #define ANGULAR_MOTION_TRESHOLD 0.5f*SIMD_HALF_PI
 
 

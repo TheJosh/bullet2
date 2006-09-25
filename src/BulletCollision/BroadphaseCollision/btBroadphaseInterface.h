@@ -21,7 +21,7 @@ subject to the following restrictions:
 struct DispatcherInfo;
 class Dispatcher;
 struct BroadphaseProxy;
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 ///BroadphaseInterface for aabb-overlapping object pairs
 class BroadphaseInterface

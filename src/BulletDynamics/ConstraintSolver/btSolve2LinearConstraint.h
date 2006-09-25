@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef SOLVE_2LINEAR_CONSTRAINT_H
 #define SOLVE_2LINEAR_CONSTRAINT_H
 
-#include "SimdMatrix3x3.h"
-#include "SimdVector3.h"
+#include "LinearMath/SimdMatrix3x3.h"
+#include "LinearMath/SimdVector3.h"
 
 
 class RigidBody;

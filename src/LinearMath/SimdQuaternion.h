@@ -17,7 +17,7 @@ subject to the following restrictions:
 #ifndef SIMD__QUATERNION_H_
 #define SIMD__QUATERNION_H_
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 class SimdQuaternion : public SimdQuadWord {
 public:

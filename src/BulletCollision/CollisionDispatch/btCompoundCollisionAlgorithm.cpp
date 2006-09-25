@@ -13,9 +13,9 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "CollisionDispatch/CompoundCollisionAlgorithm.h"
-#include "CollisionDispatch/CollisionObject.h"
-#include "CollisionShapes/CompoundShape.h"
+#include "BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
 
 CompoundCollisionAlgorithm::CompoundCollisionAlgorithm( const CollisionAlgorithmConstructionInfo& ci,BroadphaseProxy* proxy0,BroadphaseProxy* proxy1)

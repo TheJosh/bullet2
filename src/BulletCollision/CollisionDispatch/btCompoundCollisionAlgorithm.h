@@ -16,15 +16,15 @@ subject to the following restrictions:
 #ifndef COMPOUND_COLLISION_ALGORITHM_H
 #define COMPOUND_COLLISION_ALGORITHM_H
 
-#include "BroadphaseCollision/CollisionAlgorithm.h"
-#include "BroadphaseCollision/Dispatcher.h"
-#include "BroadphaseCollision/BroadphaseInterface.h"
+#include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include "BulletCollision/BroadphaseCollision/btDispatcher.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
 
-#include "NarrowPhaseCollision/PersistentManifold.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 class Dispatcher;
-#include "BroadphaseCollision/BroadphaseProxy.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
 #include <vector>
-#include "CollisionCreateFunc.h"
+#include "btCollisionCreateFunc.h"
 
 /// CompoundCollisionAlgorithm  supports collision between CompoundCollisionShapes and other collision shapes
 /// Place holder, not fully implemented yet

@@ -18,8 +18,8 @@ subject to the following restrictions:
 
 #include "SimdScalar.h"
 
-#include "SimdVector3.h"
-#include "SimdQuaternion.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdQuaternion.h"
 
 
 class SimdMatrix3x3 {

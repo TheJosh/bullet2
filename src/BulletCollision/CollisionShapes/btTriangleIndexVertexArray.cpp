@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "TriangleIndexVertexArray.h"
+#include "btTriangleIndexVertexArray.h"
 
 TriangleIndexVertexArray::TriangleIndexVertexArray(int numTriangles,int* triangleIndexBase,int triangleIndexStride,int numVertices,float* vertexBase,int vertexStride)
 {

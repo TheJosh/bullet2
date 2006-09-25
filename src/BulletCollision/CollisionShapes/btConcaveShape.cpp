@@ -15,7 +15,7 @@ subject to the following restrictions:
 */
 
 
-#include "ConcaveShape.h"
+#include "btConcaveShape.h"
 
 ConcaveShape::ConcaveShape() : m_collisionMargin(0.f)
 {

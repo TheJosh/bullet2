@@ -16,13 +16,13 @@ subject to the following restrictions:
 #ifndef CONVEX_SHAPE_INTERFACE1
 #define CONVEX_SHAPE_INTERFACE1
 
-#include "CollisionShape.h"
+#include "btCollisionShape.h"
 
-#include "SimdVector3.h"
-#include "SimdTransform.h"
-#include "SimdMatrix3x3.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdMatrix3x3.h"
 #include <vector>
-#include "CollisionShapes/CollisionMargin.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
 //todo: get rid of this ConvexCastResult thing!
 struct ConvexCastResult;

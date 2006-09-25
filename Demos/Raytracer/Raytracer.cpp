@@ -17,30 +17,30 @@ Very basic raytracer, rendering into a texture.
 */
 
 #include "GL_Simplex1to4.h"
-#include "SimdQuaternion.h"
-#include "SimdTransform.h"
+#include "LinearMath/SimdQuaternion.h"
+#include "LinearMath/SimdTransform.h"
 #include "GL_ShapeDrawer.h"
 
 #include "Raytracer.h"
 #include "GlutStuff.h"
 
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "NarrowPhaseCollision/SubSimplexConvexCast.h"
-#include "NarrowPhaseCollision/GjkConvexCast.h"
-#include "NarrowPhaseCollision/ContinuousConvexCollision.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.h"
 #ifdef USE_ALGEBRAIC_CCD
 #include "NarrowPhaseCollision/BU_CollisionPair.h"
 #endif //USE_ALGEBRAIC_CCD
 
 
-#include "CollisionShapes/SphereShape.h"
-#include "CollisionShapes/MultiSphereShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
+#include "BulletCollision/CollisionShapes/btMultiSphereShape.h"
 #include "CollisionShapes/ConvexHullShape.h"
-#include "CollisionShapes/BoxShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "CollisionShapes/Simplex1to4Shape.h"
 #include "CollisionShapes/ConeShape.h"
 #include "CollisionShapes/CylinderShape.h"
-#include "CollisionShapes/MinkowskiSumShape.h"
+#include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
 
 
 

@@ -19,13 +19,13 @@ subject to the following restrictions:
 #ifndef GJK_PAIR_DETECTOR_H
 #define GJK_PAIR_DETECTOR_H
 
-#include "DiscreteCollisionDetectorInterface.h"
-#include "SimdPoint3.h"
+#include "btDiscreteCollisionDetectorInterface.h"
+#include "LinearMath/SimdPoint3.h"
 
-#include <CollisionShapes/CollisionMargin.h>
+#include <BulletCollision/CollisionShapes/btCollisionMargin.h>
 
 class ConvexShape;
-#include "SimplexSolverInterface.h"
+#include "btSimplexSolverInterface.h"
 class ConvexPenetrationDepthSolver;
 
 /// GjkPairDetector uses GJK to implement the DiscreteCollisionDetectorInterface

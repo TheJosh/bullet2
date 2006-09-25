@@ -16,11 +16,11 @@ subject to the following restrictions:
 #ifndef COLLISION_SHAPE_H
 #define COLLISION_SHAPE_H
 
-#include "SimdTransform.h"
-#include "SimdVector3.h"
-#include <SimdMatrix3x3.h>
-#include "SimdPoint3.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" //for the shape types
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdVector3.h"
+#include <LinearMath/SimdMatrix3x3.h>
+#include "LinearMath/SimdPoint3.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" //for the shape types
 
 ///CollisionShape provides generic interface for collidable objects
 class CollisionShape

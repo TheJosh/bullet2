@@ -15,19 +15,19 @@ subject to the following restrictions:
 
 
 #include "SequentialImpulseConstraintSolver.h"
-#include "NarrowPhaseCollision/PersistentManifold.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 #include "Dynamics/RigidBody.h"
 #include "ContactConstraint.h"
 #include "Solve2LinearConstraint.h"
 #include "ContactSolverInfo.h"
 #include "Dynamics/BU_Joint.h"
 #include "Dynamics/ContactJoint.h"
-#include "IDebugDraw.h"
+#include "LinearMath/GenIDebugDraw.h"
 #include "JacobianEntry.h"
 #include "GEN_MinMax.h"
 
 #ifdef USE_PROFILE
-#include "quickprof.h"
+#include "GenQuickprof.h"
 #endif //USE_PROFILE
 
 int totalCpd = 0;

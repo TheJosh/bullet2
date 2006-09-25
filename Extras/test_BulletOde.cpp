@@ -29,16 +29,16 @@
 #include <ode/ode.h>
 #include <drawstuff/drawstuff.h>
 //#include <bullet/bullet.h>
-#include "CollisionDispatch/CollisionObject.h"
-#include "CollisionDispatch/CollisionWorld.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "BroadphaseCollision/SimpleBroadphase.h"
 #include "BroadphaseCollision/AxisSweep3.h"
 
 
-#include "CollisionDispatch/CollisionDispatcher.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 
-#include "CollisionShapes/BoxShape.h"
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "CollisionShapes/CylinderShape.h"
 
 

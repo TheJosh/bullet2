@@ -24,7 +24,7 @@ subject to the following restrictions:
 #include "BU_MotionStateInterface.h"
 #include "CollisionShapes/PolyhedralConvexShape.h"
 #include <SimdMinMax.h>
-#include "SimdTransformUtil.h"
+#include "LinearMath/SimdTransformUtil.h"
 
 
 

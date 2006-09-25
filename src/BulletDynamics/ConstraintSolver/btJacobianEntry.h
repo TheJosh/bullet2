@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef JACOBIAN_ENTRY_H
 #define JACOBIAN_ENTRY_H
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 #include "Dynamics/RigidBody.h"
 
 

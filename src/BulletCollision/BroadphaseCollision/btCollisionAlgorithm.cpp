@@ -13,8 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "CollisionAlgorithm.h"
-#include "Dispatcher.h"
+#include "btCollisionAlgorithm.h"
+#include "btDispatcher.h"
 
 CollisionAlgorithm::CollisionAlgorithm(const CollisionAlgorithmConstructionInfo& ci)
 {

@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BoxShape.h"
+#include "btBoxShape.h"
 
 SimdVector3 BoxShape::GetHalfExtents() const
 {

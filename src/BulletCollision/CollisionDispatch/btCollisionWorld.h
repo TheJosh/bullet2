@@ -66,11 +66,11 @@ subject to the following restrictions:
 
 class CollisionShape;
 class BroadphaseInterface;
-#include "SimdVector3.h"
-#include "SimdTransform.h"
-#include "CollisionObject.h"
-#include "CollisionDispatcher.h" //for definition of CollisionObjectArray
-#include "BroadphaseCollision/OverlappingPairCache.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
+#include "btCollisionObject.h"
+#include "btCollisionDispatcher.h" //for definition of CollisionObjectArray
+#include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 
 #include <vector>
 

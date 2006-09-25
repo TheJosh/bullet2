@@ -14,9 +14,9 @@ subject to the following restrictions:
 */
 
 
-#include "ManifoldResult.h"
-#include "NarrowPhaseCollision/PersistentManifold.h"
-#include "CollisionDispatch/CollisionObject.h"
+#include "btManifoldResult.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
 
 ///This is to allow MaterialCombiner/Custom Friction/Restitution values

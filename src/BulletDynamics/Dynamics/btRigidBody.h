@@ -17,12 +17,12 @@ subject to the following restrictions:
 #define RIGIDBODY_H
 
 #include <vector>
-#include <SimdPoint3.h>
-#include <SimdTransform.h>
-#include "BroadphaseCollision/BroadphaseProxy.h"
+#include <LinearMath/SimdPoint3.h>
+#include <LinearMath/SimdTransform.h>
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
 
 
-#include "CollisionDispatch/CollisionObject.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
 class CollisionShape;
 struct MassProps;

@@ -24,7 +24,7 @@ subject to the following restrictions:
 */
 
 
-#include "VoronoiSimplexSolver.h"
+#include "btVoronoiSimplexSolver.h"
 #include <assert.h>
 #include <stdio.h>
 

@@ -28,18 +28,18 @@ subject to the following restrictions:
 
 #include "GL_ShapeDrawer.h"
 #include "CollisionShapes/PolyhedralConvexShape.h"
-#include "CollisionShapes/TriangleMeshShape.h"
-#include "CollisionShapes/BoxShape.h"
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "CollisionShapes/ConeShape.h"
 #include "CollisionShapes/CylinderShape.h"
 #include "CollisionShapes/Simplex1to4Shape.h"
-#include "CollisionShapes/CompoundShape.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
 #include "CollisionShapes/ConvexTriangleMeshShape.h"
 
 
-#include "IDebugDraw.h"
+#include "LinearMath/GenIDebugDraw.h"
 //for debugmodes
 #include "BMF_Api.h"
 #include <stdio.h> //printf debugging

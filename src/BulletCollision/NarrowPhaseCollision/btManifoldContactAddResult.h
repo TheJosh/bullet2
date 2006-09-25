@@ -17,7 +17,7 @@ subject to the following restrictions:
 #ifndef MANIFOLD_CONTACT_ADD_RESULT_H
 #define MANIFOLD_CONTACT_ADD_RESULT_H
 
-#include "NarrowPhaseCollision/DiscreteCollisionDetectorInterface.h"
+#include "BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h"
 class PersistentManifold;
 
 class ManifoldContactAddResult : public DiscreteCollisionDetectorInterface::Result

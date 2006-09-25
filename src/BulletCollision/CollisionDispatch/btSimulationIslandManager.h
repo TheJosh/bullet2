@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef SIMULATION_ISLAND_MANAGER_H
 #define SIMULATION_ISLAND_MANAGER_H
 
-#include "CollisionDispatch/UnionFind.h"
-#include "CollisionCreateFunc.h"
+#include "BulletCollision/CollisionDispatch/btUnionFind.h"
+#include "btCollisionCreateFunc.h"
 
 class CollisionWorld;
 class Dispatcher;

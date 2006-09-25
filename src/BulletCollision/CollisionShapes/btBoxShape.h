@@ -16,11 +16,11 @@ subject to the following restrictions:
 #ifndef OBB_BOX_MINKOWSKI_H
 #define OBB_BOX_MINKOWSKI_H
 
-#include "PolyhedralConvexShape.h"
-#include "CollisionShapes/CollisionMargin.h"
-#include "BroadphaseCollision/BroadphaseProxy.h"
-#include "SimdPoint3.h"
-#include "SimdMinMax.h"
+#include "btPolyhedralConvexShape.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/SimdMinMax.h"
 
 ///BoxShape implements both a feature based (vertex/edge/plane) and implicit (getSupportingVertex) Box
 class BoxShape: public PolyhedralConvexShape

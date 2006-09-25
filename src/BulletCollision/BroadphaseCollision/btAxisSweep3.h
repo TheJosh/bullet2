@@ -19,10 +19,10 @@
 #ifndef AXIS_SWEEP_3_H
 #define AXIS_SWEEP_3_H
 
-#include "SimdPoint3.h"
-#include "SimdVector3.h"
-#include "OverlappingPairCache.h"
-#include "BroadphaseProxy.h"
+#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/SimdVector3.h"
+#include "btOverlappingPairCache.h"
+#include "btBroadphaseProxy.h"
 
 /// AxisSweep3 is an efficient implementation of the 3d axis sweep and prune broadphase.
 /// It uses arrays rather then lists for storage of the 3 axis. Also it operates using integer coordinates instead of floats.

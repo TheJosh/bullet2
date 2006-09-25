@@ -13,8 +13,8 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-#include "Simplex1to4Shape.h"
-#include "SimdMatrix3x3.h"
+#include "btTetrahedronShape.h"
+#include "LinearMath/SimdMatrix3x3.h"
 
 BU_Simplex1to4::BU_Simplex1to4()
 :m_numVertices(0)

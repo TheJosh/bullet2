@@ -19,7 +19,7 @@ subject to the following restrictions:
 //todo: make into a proper class working with the iterative constraint solver
 
 class RigidBody;
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 #include "SimdScalar.h"
 struct ContactSolverInfo;
 class ManifoldPoint;

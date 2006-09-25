@@ -17,7 +17,7 @@ subject to the following restrictions:
 #ifndef MANIFOLD_RESULT_H
 #define MANIFOLD_RESULT_H
 
-#include "NarrowPhaseCollision/DiscreteCollisionDetectorInterface.h"
+#include "BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h"
 struct CollisionObject;
 class PersistentManifold;
 class ManifoldPoint;

@@ -16,18 +16,18 @@ subject to the following restrictions:
 */
 
 #include "SimdScalar.h"
-#include "SimdVector3.h"
-#include "SimdPoint3.h"
-#include "SimdTransform.h"
-#include "SimdMinMax.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdMinMax.h"
 
-#include "CollisionShapes/ConvexShape.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
 
 #include <vector>
 #include <list>
 #include <algorithm>
 
-#include "NarrowPhaseCollision/SimplexSolverInterface.h"
+#include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
 
 #include "NarrowPhaseCollision/EpaCommon.h"
 

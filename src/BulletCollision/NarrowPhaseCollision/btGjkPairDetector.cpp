@@ -13,10 +13,10 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "GjkPairDetector.h"
-#include "CollisionShapes/ConvexShape.h"
-#include "NarrowPhaseCollision/SimplexSolverInterface.h"
-#include "NarrowPhaseCollision/ConvexPenetrationDepthSolver.h"
+#include "btGjkPairDetector.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
+#include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
+#include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
 
 #if defined(DEBUG) || defined (_DEBUG)
 #include <stdio.h> //for debug printf

@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef MINKOWSKI_SUM_SHAPE_H
 #define MINKOWSKI_SUM_SHAPE_H
 
-#include "ConvexShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
+#include "btConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 /// MinkowskiSumShape represents implicit (getSupportingVertex) based minkowski sum of two convex implicit shapes.
 class MinkowskiSumShape : public ConvexShape

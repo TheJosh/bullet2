@@ -18,12 +18,12 @@ subject to the following restrictions:
 #ifndef SIMPLEX_SOLVER_INTERFACE_H
 #define SIMPLEX_SOLVER_INTERFACE_H
 
-#include "SimdVector3.h"
-#include "SimdPoint3.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdPoint3.h"
 
 #define NO_VIRTUAL_INTERFACE 1
 #ifdef NO_VIRTUAL_INTERFACE
-#include "VoronoiSimplexSolver.h"
+#include "btVoronoiSimplexSolver.h"
 #define SimplexSolverInterface VoronoiSimplexSolver
 #else
 

@@ -17,9 +17,9 @@ subject to the following restrictions:
 #define PERSISTENT_MANIFOLD_H
 
 
-#include "SimdVector3.h"
-#include "SimdTransform.h"
-#include "ManifoldPoint.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
+#include "btManifoldPoint.h"
 
 struct CollisionResult;
 

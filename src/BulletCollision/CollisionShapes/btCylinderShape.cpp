@@ -12,8 +12,8 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-#include "CylinderShape.h"
-#include "SimdPoint3.h"
+#include "btCylinderShape.h"
+#include "LinearMath/SimdPoint3.h"
 
 CylinderShape::CylinderShape (const SimdVector3& halfExtents)
 :BoxShape(halfExtents)

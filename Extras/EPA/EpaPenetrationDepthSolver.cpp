@@ -15,16 +15,16 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 #include "SimdScalar.h"
-#include "SimdVector3.h"
-#include "SimdPoint3.h"
-#include "SimdTransform.h"
-#include "SimdMinMax.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdMinMax.h"
 
 #include <list>
 
-#include "CollisionShapes/ConvexShape.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
 
-#include "NarrowPhaseCollision/SimplexSolverInterface.h"
+#include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
 
 #include "NarrowPhaseCollision/EpaCommon.h"
 
@@ -33,7 +33,7 @@ subject to the following restrictions:
 #include "NarrowPhaseCollision/EpaFace.h"
 #include "NarrowPhaseCollision/EpaPolyhedron.h"
 #include "NarrowPhaseCollision/Epa.h"
-#include "NarrowPhaseCollision/ConvexPenetrationDepthSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
 #include "NarrowPhaseCollision/EpaPenetrationDepthSolver.h"
 
 SimdScalar	g_GJKMaxRelError = 1e-3f;

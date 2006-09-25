@@ -17,7 +17,7 @@ subject to the following restrictions:
 #ifndef SimdPoint3_H
 #define SimdPoint3_H
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 typedef SimdVector3 SimdPoint3;
 

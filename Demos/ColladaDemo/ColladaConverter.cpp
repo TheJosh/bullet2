@@ -18,17 +18,17 @@ subject to the following restrictions:
 #include "dae.h"
 #include "dom/domCOLLADA.h"
 
-#include "CollisionShapes/BoxShape.h"
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "CollisionShapes/CylinderShape.h"
 #include "CollisionShapes/ConeShape.h"
 #include "CollisionShapes/StaticPlaneShape.h"
 #include "CollisionShapes/ConvexHullShape.h"
 #include "CollisionShapes/TriangleMesh.h"
 #include "CollisionShapes/ConvexTriangleMeshShape.h"
-#include "CollisionShapes/TriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "CollisionShapes/TriangleIndexVertexArray.h"
-#include "CollisionShapes/CompoundShape.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
 #include "CcdPhysicsController.h"
 

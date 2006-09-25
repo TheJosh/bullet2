@@ -17,7 +17,7 @@ subject to the following restrictions:
 #include "HingeConstraint.h"
 #include "Dynamics/RigidBody.h"
 #include "Dynamics/MassProps.h"
-#include "SimdTransformUtil.h"
+#include "LinearMath/SimdTransformUtil.h"
 
 
 HingeConstraint::HingeConstraint()

@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef CONE_MINKOWSKI_H
 #define CONE_MINKOWSKI_H
 
-#include "ConvexShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
+#include "btConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 /// implements cone shape interface
 class ConeShape : public ConvexShape

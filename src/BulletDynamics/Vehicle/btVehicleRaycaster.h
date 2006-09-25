@@ -11,7 +11,7 @@
 #ifndef VEHICLE_RAYCASTER_H
 #define VEHICLE_RAYCASTER_H
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 /// VehicleRaycaster is provides interface for between vehicle simulation and raycasting
 struct VehicleRaycaster

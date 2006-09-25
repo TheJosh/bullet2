@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "MinkowskiSumShape.h"
+#include "btMinkowskiSumShape.h"
 
 
 MinkowskiSumShape::MinkowskiSumShape(ConvexShape* shapeA,ConvexShape* shapeB)

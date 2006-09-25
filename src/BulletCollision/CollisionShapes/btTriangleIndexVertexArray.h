@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "StridingMeshInterface.h"
+#include "btStridingMeshInterface.h"
 #include <vector>
 
 ///IndexedMesh indexes into existing vertex and index arrays, in a similar way OpenGL glDrawElements

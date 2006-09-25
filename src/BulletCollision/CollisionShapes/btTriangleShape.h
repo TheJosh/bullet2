@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef OBB_TRIANGLE_MINKOWSKI_H
 #define OBB_TRIANGLE_MINKOWSKI_H
 
-#include "ConvexShape.h"
-#include "CollisionShapes/BoxShape.h"
+#include "btConvexShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
 
 class TriangleShape : public PolyhedralConvexShape
 {

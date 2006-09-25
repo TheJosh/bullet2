@@ -16,19 +16,19 @@ subject to the following restrictions:
 #ifndef COLLISION__DISPATCHER_H
 #define COLLISION__DISPATCHER_H
 
-#include "BroadphaseCollision/Dispatcher.h"
-#include "NarrowPhaseCollision/PersistentManifold.h"
+#include "BulletCollision/BroadphaseCollision/btDispatcher.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 
-#include "CollisionDispatch/ManifoldResult.h"
+#include "BulletCollision/CollisionDispatch/btManifoldResult.h"
 
-#include "BroadphaseCollision/BroadphaseProxy.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
 
 
 class IDebugDraw;
 class OverlappingPairCache;
 
 
-#include "CollisionCreateFunc.h"
+#include "btCollisionCreateFunc.h"
 
 
 

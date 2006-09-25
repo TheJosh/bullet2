@@ -20,20 +20,20 @@ subject to the following restrictions:
 ///
 
 #include "GL_Simplex1to4.h"
-#include "SimdQuaternion.h"
-#include "SimdTransform.h"
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "CollisionShapes/BoxShape.h"
+#include "LinearMath/SimdQuaternion.h"
+#include "LinearMath/SimdTransform.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
 
-#include "NarrowPhaseCollision/GjkPairDetector.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
 #include "NarrowPhaseCollision/PointCollector.h"
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "NarrowPhaseCollision/ConvexPenetrationDepthSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
 
 #include "CollisionDemo.h"
 #include "GL_ShapeDrawer.h"
 #include "GlutStuff.h"
-#include "IDebugDraw.h"
+#include "LinearMath/GenIDebugDraw.h"
 
 
 float yaw=0.f,pitch=0.f,roll=0.f;

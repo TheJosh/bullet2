@@ -28,7 +28,7 @@ DEALINGS IN THE SOFTWARE.
 #ifndef IDEBUG_DRAW__H
 #define IDEBUG_DRAW__H
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 
 class	IDebugDraw

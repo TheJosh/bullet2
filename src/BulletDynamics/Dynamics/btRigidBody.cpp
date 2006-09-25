@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #include "RigidBody.h"
 #include "MassProps.h"
-#include "CollisionShapes/ConvexShape.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
 #include "GEN_MinMax.h"
 #include <SimdTransformUtil.h>
 

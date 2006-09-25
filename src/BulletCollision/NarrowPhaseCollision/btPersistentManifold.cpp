@@ -14,8 +14,8 @@ subject to the following restrictions:
 */
 
 
-#include "PersistentManifold.h"
-#include "SimdTransform.h"
+#include "btPersistentManifold.h"
+#include "LinearMath/SimdTransform.h"
 #include <assert.h>
 
 float						gContactBreakingTreshold = 0.02f;

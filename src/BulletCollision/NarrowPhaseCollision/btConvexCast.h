@@ -17,11 +17,11 @@ subject to the following restrictions:
 #ifndef CONVEX_CAST_H
 #define CONVEX_CAST_H
 
-#include <SimdTransform.h>
-#include <SimdVector3.h>
-#include <SimdScalar.h>
+#include <LinearMath/SimdTransform.h>
+#include <LinearMath/SimdVector3.h>
+#include <LinearMath/SimdScalar.h>
 class MinkowskiSumShape;
-#include "IDebugDraw.h"
+#include "LinearMath/GenIDebugDraw.h"
 
 /// ConvexCast is an interface for Casting
 class ConvexCast

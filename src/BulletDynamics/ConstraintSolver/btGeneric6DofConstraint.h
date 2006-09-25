@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef GENERIC_6DOF_CONSTRAINT_H
 #define GENERIC_6DOF_CONSTRAINT_H
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 #include "ConstraintSolver/JacobianEntry.h"
 #include "TypedConstraint.h"

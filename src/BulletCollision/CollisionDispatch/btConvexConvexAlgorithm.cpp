@@ -13,31 +13,31 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "ConvexConvexAlgorithm.h"
+#include "btConvexConvexAlgorithm.h"
 
 #include <stdio.h>
-#include "NarrowPhaseCollision/DiscreteCollisionDetectorInterface.h"
-#include "BroadphaseCollision/BroadphaseInterface.h"
-#include "CollisionDispatch/CollisionObject.h"
-#include "CollisionShapes/ConvexShape.h"
-#include "NarrowPhaseCollision/GjkPairDetector.h"
-#include "BroadphaseCollision/BroadphaseProxy.h"
-#include "CollisionDispatch/CollisionDispatcher.h"
-#include "CollisionShapes/BoxShape.h"
-#include "CollisionDispatch/ManifoldResult.h"
+#include "BulletCollision/NarrowPhaseCollision/btDiscreteCollisionDetectorInterface.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
+#include "BulletCollision/CollisionDispatch/btManifoldResult.h"
 
-#include "NarrowPhaseCollision/ConvexPenetrationDepthSolver.h"
-#include "NarrowPhaseCollision/ContinuousConvexCollision.h"
-#include "NarrowPhaseCollision/SubSimplexConvexCast.h"
-#include "NarrowPhaseCollision/GjkConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.h"
+#include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkConvexCast.h"
 
 
 
-#include "CollisionShapes/MinkowskiSumShape.h"
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 
-#include "NarrowPhaseCollision/MinkowskiPenetrationDepthSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.h"
 
 //#include "NarrowPhaseCollision/EpaPenetrationDepthSolver.h"
 

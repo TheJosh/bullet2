@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef POINT_COLLECTOR_H
 #define POINT_COLLECTOR_H
 
-#include "DiscreteCollisionDetectorInterface.h"
+#include "btDiscreteCollisionDetectorInterface.h"
 
 
 

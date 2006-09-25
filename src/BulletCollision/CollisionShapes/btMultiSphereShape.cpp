@@ -13,9 +13,9 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "MultiSphereShape.h"
-#include "CollisionShapes/CollisionMargin.h"
-#include "SimdQuaternion.h"
+#include "btMultiSphereShape.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
+#include "LinearMath/SimdQuaternion.h"
 
 MultiSphereShape::MultiSphereShape (const SimdVector3& inertiaHalfExtents,const SimdVector3* positions,const SimdScalar* radi,int numSpheres)
 :m_inertiaHalfExtents(inertiaHalfExtents)

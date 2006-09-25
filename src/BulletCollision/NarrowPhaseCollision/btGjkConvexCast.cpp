@@ -15,11 +15,11 @@ subject to the following restrictions:
 
 
 
-#include "GjkConvexCast.h"
-#include "CollisionShapes/SphereShape.h"
-#include "CollisionShapes/MinkowskiSumShape.h"
-#include "GjkPairDetector.h"
-#include "PointCollector.h"
+#include "btGjkConvexCast.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
+#include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
+#include "btGjkPairDetector.h"
+#include "btPointCollector.h"
 
 
 GjkConvexCast::GjkConvexCast(ConvexShape* convexA,ConvexShape* convexB,SimplexSolverInterface* simplexSolver)

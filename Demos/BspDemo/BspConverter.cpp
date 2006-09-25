@@ -16,7 +16,7 @@ subject to the following restrictions:
 #include "BspConverter.h"
 #include "BspLoader.h"
 #include "CcdPhysicsEnvironment.h"
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 void BspConverter::convertBsp(BspLoader& bspLoader,float scaling)
 {

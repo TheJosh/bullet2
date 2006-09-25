@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef STRIDING_MESHINTERFACE_H
 #define STRIDING_MESHINTERFACE_H
 
-#include "SimdVector3.h"
-#include "TriangleCallback.h"
+#include "LinearMath/SimdVector3.h"
+#include "btTriangleCallback.h"
 
 /// PHY_ScalarType enumerates possible scalar types.
 /// See the StridingMeshInterface for its use

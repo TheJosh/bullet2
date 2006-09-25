@@ -16,13 +16,13 @@ subject to the following restrictions:
 #ifndef EMPTY_SHAPE_H
 #define EMPTY_SHAPE_H
 
-#include "ConcaveShape.h"
+#include "btConcaveShape.h"
 
-#include "SimdVector3.h"
-#include "SimdTransform.h"
-#include "SimdMatrix3x3.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdMatrix3x3.h"
 #include <vector>
-#include "CollisionShapes/CollisionMargin.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
 
 

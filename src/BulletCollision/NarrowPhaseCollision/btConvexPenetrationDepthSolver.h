@@ -18,9 +18,9 @@ subject to the following restrictions:
 #define CONVEX_PENETRATION_DEPTH_H
 
 class SimdVector3;
-#include "SimplexSolverInterface.h"
+#include "btSimplexSolverInterface.h"
 class ConvexShape;
-#include "SimdPoint3.h"
+#include "LinearMath/SimdPoint3.h"
 class SimdTransform;
 
 ///ConvexPenetrationDepthSolver provides an interface for penetration depth calculation.

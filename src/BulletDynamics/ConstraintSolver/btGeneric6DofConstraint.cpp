@@ -17,7 +17,7 @@ subject to the following restrictions:
 #include "Generic6DofConstraint.h"
 #include "Dynamics/RigidBody.h"
 #include "Dynamics/MassProps.h"
-#include "SimdTransformUtil.h"
+#include "LinearMath/SimdTransformUtil.h"
 
 static const SimdScalar kSign[] = { 1.0f, -1.0f, 1.0f };
 static const int kAxisA[] = { 1, 0, 0 };

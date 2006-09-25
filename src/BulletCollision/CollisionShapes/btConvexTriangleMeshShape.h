@@ -2,8 +2,8 @@
 #define CONVEX_TRIANGLEMESH_SHAPE_H
 
 
-#include "PolyhedralConvexShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
+#include "btPolyhedralConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 #include <vector>
 

@@ -17,13 +17,13 @@ subject to the following restrictions:
 
 #include "Dynamics/RigidBody.h"
 #include "PHY_IMotionState.h"
-#include "BroadphaseCollision/BroadphaseProxy.h"
-#include "BroadphaseCollision/BroadphaseInterface.h"
-#include "CollisionShapes/ConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
 #include "CcdPhysicsEnvironment.h"
-#include "SimdTransformUtil.h"
+#include "LinearMath/SimdTransformUtil.h"
 
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "CollisionShapes/ConeShape.h"
 
 class BP_Proxy;

@@ -13,12 +13,12 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "TriangleMeshShape.h"
-#include "SimdVector3.h"
-#include "SimdQuaternion.h"
-#include "StridingMeshInterface.h"
-#include "AabbUtil2.h"
-#include "CollisionShapes/CollisionMargin.h"
+#include "btTriangleMeshShape.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdQuaternion.h"
+#include "btStridingMeshInterface.h"
+#include "LinearMath/GenAabbUtil2.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
 #include "stdio.h"
 

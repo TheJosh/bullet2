@@ -17,7 +17,7 @@ subject to the following restrictions:
 #ifndef AABB_UTIL2
 #define AABB_UTIL2
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 #define SimdMin(a,b) ((a < b ? a : b))
 #define SimdMax(a,b) ((a > b ? a : b))

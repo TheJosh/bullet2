@@ -16,8 +16,8 @@ subject to the following restrictions:
 
 #ifndef DISCRETE_COLLISION_DETECTOR_INTERFACE_H
 #define DISCRETE_COLLISION_DETECTOR_INTERFACE_H
-#include "SimdTransform.h"
-#include "SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdVector3.h"
 
 
 /// This interface is made to be used by an iterative approach to do TimeOfImpact calculations

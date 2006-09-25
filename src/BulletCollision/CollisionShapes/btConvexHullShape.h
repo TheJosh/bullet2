@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef CONVEX_HULL_SHAPE_H
 #define CONVEX_HULL_SHAPE_H
 
-#include "PolyhedralConvexShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
+#include "btPolyhedralConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 #include <vector>
 

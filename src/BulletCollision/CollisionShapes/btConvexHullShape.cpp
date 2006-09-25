@@ -12,10 +12,10 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-#include "ConvexHullShape.h"
-#include "CollisionShapes/CollisionMargin.h"
+#include "btConvexHullShape.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
-#include "SimdQuaternion.h"
+#include "LinearMath/SimdQuaternion.h"
 
 
 ConvexHullShape ::ConvexHullShape (SimdPoint3* points,int numPoints,int stride)

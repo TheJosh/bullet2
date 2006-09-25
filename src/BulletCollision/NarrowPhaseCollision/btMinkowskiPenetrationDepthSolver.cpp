@@ -13,11 +13,11 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "MinkowskiPenetrationDepthSolver.h"
-#include "CollisionShapes/MinkowskiSumShape.h"
-#include "NarrowPhaseCollision/SubSimplexConvexCast.h"
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "NarrowPhaseCollision/GjkPairDetector.h"
+#include "btMinkowskiPenetrationDepthSolver.h"
+#include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
+#include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
 
 
 struct MyResult : public DiscreteCollisionDetectorInterface::Result

@@ -18,7 +18,7 @@ subject to the following restrictions:
 
 class BspLoader;
 #include <vector>
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 ///BspConverter turns a loaded bsp level into convex parts (vertices)
 class BspConverter

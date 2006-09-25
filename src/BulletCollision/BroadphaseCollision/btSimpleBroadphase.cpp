@@ -13,13 +13,13 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "SimpleBroadphase.h"
-#include <BroadphaseCollision/Dispatcher.h>
-#include <BroadphaseCollision/CollisionAlgorithm.h>
+#include "btSimpleBroadphase.h"
+#include <BulletCollision/BroadphaseCollision/btDispatcher.h>
+#include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
-#include "SimdVector3.h"
-#include "SimdTransform.h"
-#include "SimdMatrix3x3.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransform.h"
+#include "LinearMath/SimdMatrix3x3.h"
 #include <vector>
 
 

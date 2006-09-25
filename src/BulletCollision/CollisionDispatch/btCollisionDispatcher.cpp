@@ -14,18 +14,18 @@ subject to the following restrictions:
 */
 
 
-#include "CollisionDispatcher.h"
+#include "btCollisionDispatcher.h"
 
 
-#include "BroadphaseCollision/CollisionAlgorithm.h"
-#include "CollisionDispatch/ConvexConvexAlgorithm.h"
-#include "CollisionDispatch/EmptyCollisionAlgorithm.h"
-#include "CollisionDispatch/ConvexConcaveCollisionAlgorithm.h"
-#include "CollisionDispatch/CompoundCollisionAlgorithm.h"
-#include "CollisionShapes/CollisionShape.h"
-#include "CollisionDispatch/CollisionObject.h"
+#include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.h"
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include <algorithm>
-#include "BroadphaseCollision/OverlappingPairCache.h"
+#include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 
 int gNumManifold = 0;
 

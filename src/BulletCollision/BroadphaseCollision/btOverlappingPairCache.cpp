@@ -16,10 +16,10 @@ subject to the following restrictions:
 
 
 
-#include "OverlappingPairCache.h"
+#include "btOverlappingPairCache.h"
 
-#include "Dispatcher.h"
-#include "CollisionAlgorithm.h"
+#include "btDispatcher.h"
+#include "btCollisionAlgorithm.h"
 
 int	gOverlappingPairs = 0;
 

@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef MANIFOLD_CONTACT_POINT_H
 #define MANIFOLD_CONTACT_POINT_H
 
-#include "SimdVector3.h"
-#include "SimdTransformUtil.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdTransformUtil.h"
 
 
 

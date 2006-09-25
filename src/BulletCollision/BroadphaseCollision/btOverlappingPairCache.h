@@ -18,9 +18,9 @@ subject to the following restrictions:
 #define OVERLAPPING_PAIR_CACHE_H
 
 
-#include "BroadphaseInterface.h"
-#include "BroadphaseProxy.h"
-#include "SimdPoint3.h"
+#include "btBroadphaseInterface.h"
+#include "btBroadphaseProxy.h"
+#include "LinearMath/SimdPoint3.h"
 #include <set>
 
 

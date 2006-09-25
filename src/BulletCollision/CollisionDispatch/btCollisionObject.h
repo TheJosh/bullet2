@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef COLLISION_OBJECT_H
 #define COLLISION_OBJECT_H
 
-#include "SimdTransform.h"
+#include "LinearMath/SimdTransform.h"
 
 //island management, m_activationState1
 #define ACTIVE_TAG 1

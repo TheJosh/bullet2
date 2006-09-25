@@ -17,8 +17,8 @@ subject to the following restrictions:
 #ifndef SimdTransform_H
 #define SimdTransform_H
 
-#include "SimdVector3.h"
-#include "SimdMatrix3x3.h"
+#include "LinearMath/SimdVector3.h"
+#include "LinearMath/SimdMatrix3x3.h"
 
 
 

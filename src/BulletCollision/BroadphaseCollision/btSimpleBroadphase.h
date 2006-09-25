@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define SIMPLE_BROADPHASE_H
 
 
-#include "OverlappingPairCache.h"
+#include "btOverlappingPairCache.h"
 
 
 struct SimpleBroadphaseProxy : public BroadphaseProxy

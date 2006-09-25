@@ -14,10 +14,10 @@ subject to the following restrictions:
 */
 
 
-#include "SubSimplexConvexCast.h"
-#include "CollisionShapes/ConvexShape.h"
-#include "CollisionShapes/MinkowskiSumShape.h"
-#include "NarrowPhaseCollision/SimplexSolverInterface.h"
+#include "btSubSimplexConvexCast.h"
+#include "BulletCollision/CollisionShapes/btConvexShape.h"
+#include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
+#include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
 
 
 SubsimplexConvexCast::SubsimplexConvexCast (ConvexShape* convexA,ConvexShape* convexB,SimplexSolverInterface* simplexSolver)

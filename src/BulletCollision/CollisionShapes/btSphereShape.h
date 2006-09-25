@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef SPHERE_MINKOWSKI_H
 #define SPHERE_MINKOWSKI_H
 
-#include "ConvexShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
+#include "btConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 ///SphereShape implements an implicit (getSupportingVertex) Sphere
 class SphereShape : public ConvexShape

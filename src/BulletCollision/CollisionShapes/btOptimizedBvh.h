@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #ifndef OPTIMIZED_BVH_H
 #define OPTIMIZED_BVH_H
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 #include <vector>
 
 class StridingMeshInterface;

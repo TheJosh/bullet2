@@ -13,10 +13,10 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "SphereSphereCollisionAlgorithm.h"
-#include "CollisionDispatch/CollisionDispatcher.h"
-#include "CollisionShapes/SphereShape.h"
-#include "CollisionDispatch/CollisionObject.h"
+#include "btSphereSphereCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
 SphereSphereCollisionAlgorithm::SphereSphereCollisionAlgorithm(PersistentManifold* mf,const CollisionAlgorithmConstructionInfo& ci,BroadphaseProxy* proxy0,BroadphaseProxy* proxy1)
 : CollisionAlgorithm(ci),

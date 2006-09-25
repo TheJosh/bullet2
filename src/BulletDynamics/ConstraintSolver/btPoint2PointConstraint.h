@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef POINT2POINTCONSTRAINT_H
 #define POINT2POINTCONSTRAINT_H
 
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 
 #include "ConstraintSolver/JacobianEntry.h"
 #include "TypedConstraint.h"

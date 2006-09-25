@@ -17,17 +17,17 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 
 //#include "GL_LineSegmentShape.h"
-#include "CollisionShapes/BoxShape.h"
-#include "CollisionShapes/SphereShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "CollisionShapes/CylinderShape.h"
 #include "CollisionShapes/ConeShape.h"
 #include "CollisionShapes/StaticPlaneShape.h"
 #include "CollisionShapes/ConvexHullShape.h"
 #include "CollisionShapes/TriangleMesh.h"
 #include "CollisionShapes/ConvexTriangleMeshShape.h"
-#include "CollisionShapes/TriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btTriangleMeshShape.h"
 #include "CollisionShapes/TriangleIndexVertexArray.h"
-#include "CollisionShapes/CompoundShape.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
 
 
@@ -35,14 +35,14 @@ subject to the following restrictions:
 #include "CollisionShapes/EmptyShape.h"
 
 #include "Dynamics/RigidBody.h"
-#include "CollisionDispatch/CollisionDispatcher.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
 #include "BroadphaseCollision/SimpleBroadphase.h"
 #include "BroadphaseCollision/AxisSweep3.h"
 #include "ConstraintSolver/Point2PointConstraint.h"
 #include "ConstraintSolver/HingeConstraint.h"
 
-#include "quickprof.h"
-#include "IDebugDraw.h"
+#include "GenQuickprof.h"
+#include "LinearMath/GenIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
 

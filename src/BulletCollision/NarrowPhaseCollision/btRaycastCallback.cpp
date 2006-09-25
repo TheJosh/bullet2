@@ -14,7 +14,7 @@ subject to the following restrictions:
 */
 
 
-#include "RaycastCallback.h"
+#include "btRaycastCallback.h"
 
 TriangleRaycastCallback::TriangleRaycastCallback(const SimdVector3& from,const SimdVector3& to)
 	:

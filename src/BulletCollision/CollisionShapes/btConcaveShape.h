@@ -16,10 +16,10 @@ subject to the following restrictions:
 #ifndef CONCAVE_SHAPE_H
 #define CONCAVE_SHAPE_H
 
-#include "CollisionShapes/CollisionShape.h"
-#include "BroadphaseCollision/BroadphaseProxy.h" // for the types
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
-#include "TriangleCallback.h"
+#include "btTriangleCallback.h"
 
 
 ///Concave shape proves an interface concave shapes that can produce triangles that overlapping a given AABB.

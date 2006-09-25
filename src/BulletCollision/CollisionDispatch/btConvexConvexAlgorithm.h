@@ -16,12 +16,12 @@ subject to the following restrictions:
 #ifndef CONVEX_CONVEX_ALGORITHM_H
 #define CONVEX_CONVEX_ALGORITHM_H
 
-#include "BroadphaseCollision/CollisionAlgorithm.h"
-#include "NarrowPhaseCollision/GjkPairDetector.h"
-#include "NarrowPhaseCollision/PersistentManifold.h"
-#include "BroadphaseCollision/BroadphaseProxy.h"
-#include "NarrowPhaseCollision/VoronoiSimplexSolver.h"
-#include "CollisionCreateFunc.h"
+#include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
+#include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
+#include "btCollisionCreateFunc.h"
 
 class ConvexPenetrationDepthSolver;
 

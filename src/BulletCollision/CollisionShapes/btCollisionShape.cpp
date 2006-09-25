@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "CollisionShapes/CollisionShape.h"
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
 
 void	CollisionShape::GetBoundingSphere(SimdVector3& center,SimdScalar& radius) const
 {

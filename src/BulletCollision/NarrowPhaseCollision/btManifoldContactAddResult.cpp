@@ -13,8 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "ManifoldContactAddResult.h"
-#include "NarrowPhaseCollision/PersistentManifold.h"
+#include "btManifoldContactAddResult.h"
+#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 
 ManifoldContactAddResult::ManifoldContactAddResult(SimdTransform transA,SimdTransform transB,PersistentManifold* manifoldPtr)
 		:m_manifoldPtr(manifoldPtr)

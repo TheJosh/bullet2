@@ -18,13 +18,13 @@ subject to the following restrictions:
 #ifndef GJK_CONVEX_CAST_H
 #define GJK_CONVEX_CAST_H
 
-#include <CollisionShapes/CollisionMargin.h>
+#include <BulletCollision/CollisionShapes/btCollisionMargin.h>
 
-#include "SimdVector3.h"
-#include "ConvexCast.h"
+#include "LinearMath/SimdVector3.h"
+#include "btConvexCast.h"
 class ConvexShape;
 class MinkowskiSumShape;
-#include "SimplexSolverInterface.h"
+#include "btSimplexSolverInterface.h"
 
 ///GjkConvexCast performs a raycast on a convex object using support mapping.
 class GjkConvexCast : public ConvexCast

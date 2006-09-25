@@ -13,18 +13,18 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "CollisionWorld.h"
-#include "CollisionDispatcher.h"
-#include "CollisionDispatch/CollisionObject.h"
-#include "CollisionShapes/CollisionShape.h"
-#include "CollisionShapes/SphereShape.h" //for raycasting
-#include "CollisionShapes/TriangleMeshShape.h" //for raycasting
-#include "NarrowPhaseCollision/RaycastCallback.h"
-#include "CollisionShapes/CompoundShape.h"
+#include "btCollisionWorld.h"
+#include "btCollisionDispatcher.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "BulletCollision/CollisionShapes/btSphereShape.h" //for raycasting
+#include "BulletCollision/CollisionShapes/btTriangleMeshShape.h" //for raycasting
+#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
-#include "NarrowPhaseCollision/SubSimplexConvexCast.h"
-#include "BroadphaseCollision/BroadphaseInterface.h"
-#include "AabbUtil2.h"
+#include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
+#include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
+#include "LinearMath/GenAabbUtil2.h"
 
 #include <algorithm>
 

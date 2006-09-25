@@ -18,7 +18,7 @@ subject to the following restrictions:
 #include "Solve2LinearConstraint.h"
 
 #include "Dynamics/RigidBody.h"
-#include "SimdVector3.h"
+#include "LinearMath/SimdVector3.h"
 #include "JacobianEntry.h"
 
 

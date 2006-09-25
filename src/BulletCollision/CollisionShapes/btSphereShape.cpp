@@ -13,10 +13,10 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "SphereShape.h"
-#include "CollisionShapes/CollisionMargin.h"
+#include "btSphereShape.h"
+#include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
-#include "SimdQuaternion.h"
+#include "LinearMath/SimdQuaternion.h"
 
 
 SphereShape ::SphereShape (SimdScalar radius)
