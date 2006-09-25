@@ -12,9 +12,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -51,9 +48,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -80,9 +74,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
@@ -120,9 +111,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -149,9 +137,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
@@ -180,9 +165,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -209,9 +191,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
@@ -240,9 +219,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -269,9 +245,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
@@ -309,9 +282,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -339,9 +309,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -360,18 +327,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "appGPUphysics"=.\appGPUphysics.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "appRaytracer"=.\appRaytracer.dsp - Package Owner=<4>
 
 Package=<5>
@@ -380,9 +335,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
@@ -411,9 +363,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -441,9 +390,6 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
@@ -470,9 +416,6 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name libbullet
-    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletccdphysics
     End Project Dependency
@@ -534,9 +477,6 @@ Package=<4>
     Project_Dep_Name appGjkConvexCastDemo
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name appGPUphysics
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name appRaytracer
     End Project Dependency
     Begin Project Dependency
@@ -549,10 +489,10 @@ Package=<4>
     Project_Dep_Name appVehicleDemo
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libbullet
+    Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libbulletccdphysics
+    Project_Dep_Name libbulletcollision
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletdynamics
@@ -621,9 +561,6 @@ Package=<4>
     Project_Dep_Name appGjkConvexCastDemo
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name appGPUphysics
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name appRaytracer
     End Project Dependency
     Begin Project Dependency
@@ -648,10 +585,10 @@ Package=<5>
 Package=<4>
 {{{
     Begin Project Dependency
-    Project_Dep_Name libbullet
+    Project_Dep_Name libbulletccdphysics
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name libbulletccdphysics
+    Project_Dep_Name libbulletcollision
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libbulletdynamics
@@ -678,7 +615,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libbullet"=.\libbullet.dsp - Package Owner=<4>
+Project: "libbulletccdphysics"=.\libbulletccdphysics.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -690,7 +627,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libbulletccdphysics"=.\libbulletccdphysics.dsp - Package Owner=<4>
+Project: "libbulletcollision"=.\libbulletcollision.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
