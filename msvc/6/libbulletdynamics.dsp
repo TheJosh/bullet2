@@ -188,6 +188,10 @@ SOURCE=..\..\src\BulletDynamics\ConstraintSolver\btTypedConstraint.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\src\BulletDynamics\Dynamics\btMassProps.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\src\BulletDynamics\Dynamics\btRigidBody.h
 # End Source File
 # Begin Source File

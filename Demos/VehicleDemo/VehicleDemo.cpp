@@ -24,7 +24,7 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 #include "btBulletDynamicsCommon.h"
 
-//#include "PHY_IVehicle.h"
+#include "PHY_IVehicle.h"
 
 #include "ParallelIslandDispatcher.h"
 

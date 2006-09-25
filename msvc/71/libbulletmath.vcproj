@@ -178,7 +178,7 @@
 				RelativePath="..\..\src\LinearMath\GenList.h">
 			</File>
 			<File
-				RelativePath="..\..\src\LinearMath\GenMixMax.h">
+				RelativePath="..\..\src\LinearMath\GenMinMax.h">
 			</File>
 			<File
 				RelativePath="..\..\src\LinearMath\GenQuickprof.h">

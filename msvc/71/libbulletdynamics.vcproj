@@ -226,6 +226,9 @@
 				RelativePath="..\..\src\BulletDynamics\ConstraintSolver\btTypedConstraint.h">
 			</File>
 			<File
+				RelativePath="..\..\src\BulletDynamics\Dynamics\btMassProps.h">
+			</File>
+			<File
 				RelativePath="..\..\src\BulletDynamics\Dynamics\btRigidBody.h">
 			</File>
 			<File

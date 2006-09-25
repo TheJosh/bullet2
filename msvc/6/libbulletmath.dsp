@@ -124,7 +124,7 @@ SOURCE=..\..\src\LinearMath\GenList.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\src\LinearMath\GenMixMax.h
+SOURCE=..\..\src\LinearMath\GenMinMax.h
 # End Source File
 # Begin Source File
 
