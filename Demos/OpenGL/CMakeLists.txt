@@ -59,4 +59,5 @@ ADD_LIBRARY(LibOpenGLSupport
 		GLDebugDrawer.cpp
 		GlutStuff.cpp
 		RenderTexture.cpp
+		DemoApplication.cpp
 )

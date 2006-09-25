@@ -16,6 +16,9 @@
 /// VehicleRaycaster is provides interface for between vehicle simulation and raycasting
 struct VehicleRaycaster
 {
+virtual ~VehicleRaycaster()
+{
+}
 	struct VehicleRaycasterResult
 	{
 		VehicleRaycasterResult() :m_distFraction(-1.f){};

@@ -26,6 +26,9 @@ subject to the following restrictions:
 
 struct	OverlapCallback
 {
+virtual ~OverlapCallback()
+{
+}
 	//return true for deletion of the pair
 	virtual bool	ProcessOverlap(BroadphasePair& pair) = 0;
 };

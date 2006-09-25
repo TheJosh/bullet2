@@ -26,7 +26,9 @@ class BspConverter
 	public:
 
 		void convertBsp(BspLoader& bspLoader,float scaling);
-
+		virtual ~BspConverter()
+		{
+		}
 		///Utility function to create vertices from a Quake Brush. Brute force but it works. 
 		///Bit overkill to use QHull package
 		void	getVerticesFromPlaneEquations(const std::vector<SimdVector3>& planeEquations , std::vector<SimdVector3>& verticesOut );

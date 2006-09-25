@@ -86,7 +86,7 @@ void BspConverter::convertBsp(BspLoader& bspLoader,float scaling)
 							std::vector<SimdVector3>	vertices;
 							
 							getVerticesFromPlaneEquations(planeEquations,vertices);
-							printf("getVerticesFromPlaneEquations returned %i\n",vertices.size());
+							printf("getVerticesFromPlaneEquations returned %i\n",(int)vertices.size());
 
 							bool isEntity = false;
 							SimdVector3 entityTarget(0.f,0.f,0.f);

@@ -1120,6 +1120,9 @@ public:
 	  {
 	  }
 
+		virtual ~DefaultVehicleRaycaster()
+		{
+		}
 	  /*	struct VehicleRaycasterResult
 	  {
 	  VehicleRaycasterResult() :m_distFraction(-1.f){};
