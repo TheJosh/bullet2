@@ -168,7 +168,7 @@ public:
 protected:  // Attribute
 	domCg_identifier attrSid;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * The annotate element allows you to specify an annotation for this new param.
  * @see domAnnotate

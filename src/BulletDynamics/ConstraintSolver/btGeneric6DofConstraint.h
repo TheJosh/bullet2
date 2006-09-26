@@ -21,20 +21,20 @@ subject to the following restrictions:
 #include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
 #include "btTypedConstraint.h"
 
-class RigidBody;
+class btRigidBody;
 
 
 
-/// Generic6DofConstraint between two rigidbodies each with a pivotpoint that descibes the axis location in local space
-/// Generic6DofConstraint can leave any of the 6 degree of freedom 'free' or 'locked'
+/// btGeneric6DofConstraint between two rigidbodies each with a pivotpoint that descibes the axis location in local space
+/// btGeneric6DofConstraint can leave any of the 6 degree of freedom 'free' or 'locked'
 /// Work in progress (is still a Hinge actually)
-class Generic6DofConstraint : public TypedConstraint
+class btGeneric6DofConstraint : public btTypedConstraint
 {
-	JacobianEntry	m_jacLinear[3];			// 3 orthogonal linear constraints
-	JacobianEntry	m_jacAng[3];		// 3 orthogonal angular constraints
+	btJacobianEntry	m_jacLinear[3];			// 3 orthogonal linear constraints
+	btJacobianEntry	m_jacAng[3];		// 3 orthogonal angular constraints
 
-	SimdTransform	m_frameInA;			// the constraint space w.r.t body A
-	SimdTransform	m_frameInB;			// the constraint space w.r.t body B
+	btSimdTransform	m_frameInA;			// the constraint space w.r.t body A
+	btSimdTransform	m_frameInB;			// the constraint space w.r.t body B
 
 	SimdScalar      m_lowerLimit[6];	// the constraint lower limits
 	SimdScalar      m_upperLimit[6];	// the constraint upper limits
@@ -43,9 +43,9 @@ class Generic6DofConstraint : public TypedConstraint
 
 		
 public:
-	Generic6DofConstraint(RigidBody& rbA, RigidBody& rbB, const SimdTransform& frameInA, const SimdTransform& frameInB );
+	btGeneric6DofConstraint(btRigidBody& rbA, btRigidBody& rbB, const btSimdTransform& frameInA, const btSimdTransform& frameInB );
 
-	Generic6DofConstraint();
+	btGeneric6DofConstraint();
 
 	virtual void	BuildJacobian();
 
@@ -55,28 +55,28 @@ public:
 
 	SimdScalar ComputeAngle(int axis) const;
 
-	void	setLinearLowerLimit(const SimdVector3& linearLower)
+	void	setLinearLowerLimit(const btSimdVector3& linearLower)
 	{
 		m_lowerLimit[0] = linearLower.getX();
 		m_lowerLimit[1] = linearLower.getY();
 		m_lowerLimit[2] = linearLower.getZ();
 	}
 
-	void	setLinearUpperLimit(const SimdVector3& linearUpper)
+	void	setLinearUpperLimit(const btSimdVector3& linearUpper)
 	{
 		m_upperLimit[0] = linearUpper.getX();
 		m_upperLimit[1] = linearUpper.getY();
 		m_upperLimit[2] = linearUpper.getZ();
 	}
 
-	void	setAngularLowerLimit(const SimdVector3& angularLower)
+	void	setAngularLowerLimit(const btSimdVector3& angularLower)
 	{
 		m_lowerLimit[3] = angularLower.getX();
 		m_lowerLimit[4] = angularLower.getY();
 		m_lowerLimit[5] = angularLower.getZ();
 	}
 
-	void	setAngularUpperLimit(const SimdVector3& angularUpper)
+	void	setAngularUpperLimit(const btSimdVector3& angularUpper)
 	{
 		m_upperLimit[3] = angularUpper.getX();
 		m_upperLimit[4] = angularUpper.getY();
@@ -99,11 +99,11 @@ public:
 		return (m_upperLimit[limitIndex] >= m_lowerLimit[limitIndex]);
 	}
 
-	const RigidBody& GetRigidBodyA() const
+	const btRigidBody& GetRigidBodyA() const
 	{
 		return m_rbA;
 	}
-	const RigidBody& GetRigidBodyB() const
+	const btRigidBody& GetRigidBodyB() const
 	{
 		return m_rbB;
 	}

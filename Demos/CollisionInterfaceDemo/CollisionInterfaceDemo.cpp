@@ -36,8 +36,8 @@ const int numObjects = 2;
 GL_Simplex1to4 simplex;
 
 
-CollisionObject	objects[maxNumObjects];
-CollisionWorld*	collisionWorld = 0;
+btCollisionObject	objects[maxNumObjects];
+btCollisionWorld*	collisionWorld = 0;
 
 int screenWidth = 640;
 int screenHeight = 480;
@@ -57,12 +57,12 @@ int main(int argc,char** argv)
 void	CollisionInterfaceDemo::initPhysics()
 {
 			
-	m_debugMode |= IDebugDraw::DBG_DrawWireframe;
+	m_debugMode |= btIDebugDraw::DBG_DrawWireframe;
 	
-	SimdMatrix3x3 basisA;
+	btSimdMatrix3x3 basisA;
 	basisA.setIdentity();
 
-	SimdMatrix3x3 basisB;
+	btSimdMatrix3x3 basisB;
 	basisB.setIdentity();
 
 	objects[0].m_worldTransform.setBasis(basisA);
@@ -71,26 +71,26 @@ void	CollisionInterfaceDemo::initPhysics()
 	//SimdPoint3	points0[3]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1)};
 	//SimdPoint3	points1[5]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1),SimdPoint3(0,0,-1),SimdPoint3(-1,-1,0)};
 	
-	BoxShape* boxA = new BoxShape(SimdVector3(1,1,1));
-	BoxShape* boxB = new BoxShape(SimdVector3(0.5,0.5,0.5));
+	btBoxShape* boxA = new btBoxShape(btSimdVector3(1,1,1));
+	btBoxShape* boxB = new btBoxShape(btSimdVector3(0.5,0.5,0.5));
 	//ConvexHullShape	hullA(points0,3);
-	//hullA.setLocalScaling(SimdVector3(3,3,3));
+	//hullA.setLocalScaling(btSimdVector3(3,3,3));
 	//ConvexHullShape	hullB(points1,4);
-	//hullB.setLocalScaling(SimdVector3(4,4,4));
+	//hullB.setLocalScaling(btSimdVector3(4,4,4));
 
 	objects[0].m_collisionShape = boxA;//&hullA;
 	objects[1].m_collisionShape = boxB;//&hullB;
 
-	CollisionDispatcher* dispatcher = new CollisionDispatcher;
-	SimdVector3	worldAabbMin(-1000,-1000,-1000);
-	SimdVector3	worldAabbMax(1000,1000,1000);
+	btCollisionDispatcher* dispatcher = new btCollisionDispatcher;
+	btSimdVector3	worldAabbMin(-1000,-1000,-1000);
+	btSimdVector3	worldAabbMax(1000,1000,1000);
 
-	AxisSweep3*	broadphase = new AxisSweep3(worldAabbMin,worldAabbMax);
+	btAxisSweep3*	broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
 	
 	//SimpleBroadphase is a brute force alternative, performing N^2 aabb overlap tests
-	//SimpleBroadphase*	broadphase = new SimpleBroadphase;
+	//SimpleBroadphase*	broadphase = new btSimpleBroadphase;
 
-	collisionWorld = new CollisionWorld(dispatcher,broadphase);
+	collisionWorld = new btCollisionWorld(dispatcher,broadphase);
 	
 	collisionWorld->AddCollisionObject(&objects[0]);
 	collisionWorld->AddCollisionObject(&objects[1]);
@@ -107,8 +107,8 @@ void CollisionInterfaceDemo::clientMoveAndDisplay()
 }
 
 
-static VoronoiSimplexSolver sGjkSimplexSolver;
-SimplexSolverInterface& gGjkSimplexSolver = sGjkSimplexSolver;
+static btVoronoiSimplexSolver sGjkSimplexSolver;
+btSimplexSolverInterface& gGjkSimplexSolver = sGjkSimplexSolver;
 
 
 
@@ -127,21 +127,21 @@ void CollisionInterfaceDemo::displayCallback(void) {
 	int numManifolds = collisionWorld->GetDispatcher()->GetNumManifolds();
 	for (i=0;i<numManifolds;i++)
 	{
-		PersistentManifold* contactManifold = collisionWorld->GetDispatcher()->GetManifoldByIndexInternal(i);
-		CollisionObject* obA = static_cast<CollisionObject*>(contactManifold->GetBody0());
-		CollisionObject* obB = static_cast<CollisionObject*>(contactManifold->GetBody1());
+		btPersistentManifold* contactManifold = collisionWorld->GetDispatcher()->GetManifoldByIndexInternal(i);
+		btCollisionObject* obA = static_cast<btCollisionObject*>(contactManifold->GetBody0());
+		btCollisionObject* obB = static_cast<btCollisionObject*>(contactManifold->GetBody1());
 		contactManifold->RefreshContactPoints(obA->m_worldTransform,obB->m_worldTransform);
 
 		int numContacts = contactManifold->GetNumContacts();
 		for (int j=0;j<numContacts;j++)
 		{
-			ManifoldPoint& pt = contactManifold->GetContactPoint(j);
+			btManifoldPoint& pt = contactManifold->GetContactPoint(j);
 
 			glBegin(GL_LINES);
 			glColor3f(1, 0, 1);
 			
-			SimdVector3 ptA = pt.GetPositionWorldOnA();
-			SimdVector3 ptB = pt.GetPositionWorldOnB();
+			btSimdVector3 ptA = pt.GetPositionWorldOnA();
+			btSimdVector3 ptB = pt.GetPositionWorldOnB();
 
 			glVertex3d(ptA.x(),ptA.y(),ptA.z());
 			glVertex3d(ptB.x(),ptB.y(),ptB.z());
@@ -162,14 +162,14 @@ void CollisionInterfaceDemo::displayCallback(void) {
 	{
 		
 		objects[i].m_worldTransform.getOpenGLMatrix( m );
-		GL_ShapeDrawer::DrawOpenGL(m,objects[i].m_collisionShape,SimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,objects[i].m_collisionShape,btSimdVector3(1,1,1),getDebugMode());
 
 	}
 
 
-	SimdQuaternion orn;
+	btSimdQuaternion orn;
 	orn.setEuler(yaw,pitch,roll);
-	objects[1].m_worldTransform.setOrigin(objects[1].m_worldTransform.getOrigin()+SimdVector3(0,-0.01,0));
+	objects[1].m_worldTransform.setOrigin(objects[1].m_worldTransform.getOrigin()+btSimdVector3(0,-0.01,0));
 
 	objects[0].m_worldTransform.setRotation(orn);
 
@@ -182,8 +182,8 @@ void CollisionInterfaceDemo::displayCallback(void) {
 
 void CollisionInterfaceDemo::clientResetScene()
 {
-	objects[0].m_worldTransform.setOrigin(SimdVector3(0.0f,3.f,0.f));
-	objects[1].m_worldTransform.setOrigin(SimdVector3(0.0f,9.f,0.f));
+	objects[0].m_worldTransform.setOrigin(btSimdVector3(0.0f,3.f,0.f));
+	objects[1].m_worldTransform.setOrigin(btSimdVector3(0.0f,9.f,0.f));
 }
 
 

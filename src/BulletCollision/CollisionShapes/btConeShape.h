@@ -20,7 +20,7 @@ subject to the following restrictions:
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 /// implements cone shape interface
-class ConeShape : public ConvexShape
+class btConeShape : public btConvexShape
 
 {
 
@@ -28,28 +28,28 @@ class ConeShape : public ConvexShape
 	float m_radius;
 	float m_height;
 	
-	SimdVector3 ConeLocalSupport(const SimdVector3& v) const;
+	btSimdVector3 ConeLocalSupport(const btSimdVector3& v) const;
 
 
 public:
-	ConeShape (SimdScalar radius,SimdScalar height);
+	btConeShape (SimdScalar radius,SimdScalar height);
 	
-	virtual SimdVector3	LocalGetSupportingVertex(const SimdVector3& vec) const;
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec) const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec) const;
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec) const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
 
 	float GetRadius() const { return m_radius;}
 	float GetHeight() const { return m_height;}
 
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia)
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
 	{
-		SimdTransform identity;
+		btSimdTransform identity;
 		identity.setIdentity();
-		SimdVector3 aabbMin,aabbMax;
+		btSimdVector3 aabbMin,aabbMax;
 		GetAabb(identity,aabbMin,aabbMax);
 
-		SimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
+		btSimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
 
 		float margin = GetMargin();
 
@@ -61,7 +61,7 @@ public:
 		const SimdScalar z2 = lz*lz;
 		const SimdScalar scaledmass = mass * 0.08333333f;
 
-		inertia = scaledmass * (SimdVector3(y2+z2,x2+z2,x2+y2));
+		inertia = scaledmass * (btSimdVector3(y2+z2,x2+z2,x2+y2));
 
 //		inertia.x() = scaledmass * (y2+z2);
 //		inertia.y() = scaledmass * (x2+z2);

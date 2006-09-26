@@ -99,7 +99,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 /**
  * 3 float values that represent the extents of the box @see domHalf_extents
  */

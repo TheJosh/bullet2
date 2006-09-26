@@ -39,7 +39,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * The input element must occur at least one time. These inputs are local
  * inputs. @see domInput

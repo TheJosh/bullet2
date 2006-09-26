@@ -42,7 +42,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The geometry element may contain an asset element.  @see domAsset
  */

@@ -124,7 +124,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * The annotate element allows you to specify an annotation for this surface
  * generator. @see domAnnotate
@@ -257,7 +257,7 @@ public:
 
 
 
-protected:  // Element
+protected:  // btElement
 /**
  * A procedural surface generator. @see domGenerator
  */

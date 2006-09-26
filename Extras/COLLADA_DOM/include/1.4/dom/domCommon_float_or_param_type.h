@@ -164,7 +164,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 	domFloatRef elemFloat;
 	domParamRef elemParam;
 	/**

@@ -441,7 +441,7 @@ public:
  */
 					xsNCName attrSymbol;
 
-				protected:  // Elements
+				protected:  // btElements
 					domCg_param_typeRef elemCg_param_type;
 /**
  * References a predefined parameter in shader binding declarations. @see
@@ -539,7 +539,7 @@ public:
  */
 				domCg_pipeline_stage attrStage;
 
-			protected:  // Elements
+			protected:  // btElements
 				domFx_annotate_common_Array elemAnnotate_array;
 				domCompiler_targetRef elemCompiler_target;
 /**
@@ -652,7 +652,7 @@ public:
  */
 			xsNCName attrSid;
 
-		protected:  // Elements
+		protected:  // btElements
 			domFx_annotate_common_Array elemAnnotate_array;
 			domFx_colortarget_common_Array elemColor_target_array;
 			domFx_depthtarget_common_Array elemDepth_target_array;
@@ -861,7 +861,7 @@ public:
  */
 		xsNCName attrSid;
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  *  The technique element may contain an asset element.  @see domAsset
  */
@@ -1062,7 +1062,7 @@ protected:  // Attributes
  */
 	xsNCName attrPlatform;
 
-protected:  // Elements
+protected:  // btElements
 	domAssetRef elemAsset;
 	domFx_code_profile_Array elemCode_array;
 	domFx_include_common_Array elemInclude_array;

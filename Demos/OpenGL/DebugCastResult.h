@@ -29,16 +29,16 @@ subject to the following restrictions:
 #else
 #include <GL/gl.h>
 #endif
-struct DebugCastResult : public ConvexCast::CastResult
+struct btDebugCastResult : public btConvexCast::CastResult
 {
 
-	SimdTransform	m_fromTrans;
-	const PolyhedralConvexShape* m_shape;
-	SimdVector3	m_linVel;
-	SimdVector3 m_angVel;
+	btSimdTransform	m_fromTrans;
+	const btPolyhedralConvexShape* m_shape;
+	btSimdVector3	m_linVel;
+	btSimdVector3 m_angVel;
 
-	DebugCastResult(const SimdTransform& fromTrans,const PolyhedralConvexShape* shape,
-					const SimdVector3& linVel,const SimdVector3& angVel)
+	btDebugCastResult(const btSimdTransform& fromTrans,const btPolyhedralConvexShape* shape,
+					const btSimdVector3& linVel,const btSimdVector3& angVel)
 	:m_fromTrans(fromTrans),
 	m_shape(shape),
 	m_linVel(linVel),
@@ -46,7 +46,7 @@ struct DebugCastResult : public ConvexCast::CastResult
 	{
 	}
 
-	virtual void DrawCoordSystem(const SimdTransform& tr)  
+	virtual void DrawCoordSystem(const btSimdTransform& tr)  
 	{
 		float m[16];
 		tr.getOpenGLMatrix(m);
@@ -70,10 +70,10 @@ struct DebugCastResult : public ConvexCast::CastResult
 	{
 	
 		float m[16];
-		SimdTransform hitTrans;
-		SimdTransformUtil::IntegrateTransform(m_fromTrans,m_linVel,m_angVel,fraction,hitTrans);
+		btSimdTransform hitTrans;
+		btSimdTransformUtil::IntegrateTransform(m_fromTrans,m_linVel,m_angVel,fraction,hitTrans);
 		hitTrans.getOpenGLMatrix(m);
-		GL_ShapeDrawer::DrawOpenGL(m,m_shape,SimdVector3(1,0,0),IDebugDraw::DBG_NoDebug);
+		GL_ShapeDrawer::DrawOpenGL(m,m_shape,btSimdVector3(1,0,0),btIDebugDraw::DBG_NoDebug);
 	
 	}
 };

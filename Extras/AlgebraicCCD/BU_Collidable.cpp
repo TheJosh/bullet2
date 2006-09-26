@@ -19,7 +19,7 @@ subject to the following restrictions:
 #include <LinearMath/SimdTransform.h>
 #include "BU_MotionStateInterface.h"
 
-BU_Collidable::BU_Collidable(BU_MotionStateInterface& motion,PolyhedralConvexShape& shape,void* userPointer )
+BU_Collidable::BU_Collidable(BU_MotionStateInterface& motion,btPolyhedralConvexShape& shape,void* userPointer )
 :m_motionState(motion),m_shape(shape),m_userPointer(userPointer)
 {
 }

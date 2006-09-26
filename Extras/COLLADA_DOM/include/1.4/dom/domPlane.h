@@ -100,7 +100,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 /**
  * 4 float values that represent the coefficients for the plane’s equation:
  * Ax + By + Cz + D = 0 @see domEquation

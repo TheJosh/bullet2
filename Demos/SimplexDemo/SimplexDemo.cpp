@@ -27,7 +27,7 @@ subject to the following restrictions:
 #include "SimplexDemo.h"
 #include "GlutStuff.h"
 
-VoronoiSimplexSolver	simplexSolver;
+btVoronoiSimplexSolver	simplexSolver;
 
 
 
@@ -40,7 +40,7 @@ int screenHeight = 480;
 GL_Simplex1to4	simplex;
 
 
-PolyhedralConvexShape*	shapePtr[maxNumObjects];
+btPolyhedralConvexShape*	shapePtr[maxNumObjects];
 
 
 ///
@@ -78,17 +78,17 @@ void SimplexDemo::displayCallback()
 
 	for (i=0;i<numObjects;i++)
 	{
-		SimdTransform transA;
+		btSimdTransform transA;
 		transA.setIdentity();
-		SimdVector3	dpos(0.f,5.f,0.f);
+		btSimdVector3	dpos(0.f,5.f,0.f);
 		transA.setOrigin( dpos );
-		SimdQuaternion orn;
+		btSimdQuaternion orn;
 		orn.setEuler(yaw,pitch,roll);
 		transA.setRotation(orn);
 		transA.getOpenGLMatrix( m );
 
 		/// draw the simplex
-		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],SimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,1,1),getDebugMode());
 
 		/// calculate closest point from simplex to the origin, and draw this vector
 		simplex.CalcClosest(m);
@@ -113,7 +113,7 @@ void	SimplexDemo::initPhysics()
 
 	shapePtr[0] = &simplex;
 
-	SimdTransform tr;
+	btSimdTransform tr;
 	tr.setIdentity();
 }
 

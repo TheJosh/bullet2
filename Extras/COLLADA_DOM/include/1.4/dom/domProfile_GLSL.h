@@ -442,7 +442,7 @@ public:
  */
 					xsNCName attrSymbol;
 
-				protected:  // Elements
+				protected:  // btElements
 					domGlsl_param_typeRef elemGlsl_param_type;
 					domParamRef elemParam;
 					/**
@@ -536,7 +536,7 @@ public:
  */
 				domGlsl_pipeline_stage attrStage;
 
-			protected:  // Elements
+			protected:  // btElements
 				domFx_annotate_common_Array elemAnnotate_array;
 /**
  * A string declaring which profile or platform the compiler is targeting
@@ -653,7 +653,7 @@ public:
  */
 			xsNCName attrSid;
 
-		protected:  // Elements
+		protected:  // btElements
 			domFx_annotate_common_Array elemAnnotate_array;
 			domFx_colortarget_common_Array elemColor_target_array;
 			domFx_depthtarget_common_Array elemDepth_target_array;
@@ -862,7 +862,7 @@ public:
  */
 		xsNCName attrSid;
 
-	protected:  // Elements
+	protected:  // btElements
 		domFx_annotate_common_Array elemAnnotate_array;
 		domFx_code_profile_Array elemCode_array;
 		domFx_include_common_Array elemInclude_array;
@@ -1049,7 +1049,7 @@ protected:  // Attribute
  */
 	xsID attrId;
 
-protected:  // Elements
+protected:  // btElements
 	domAssetRef elemAsset;
 	domFx_code_profile_Array elemCode_array;
 	domFx_include_common_Array elemInclude_array;

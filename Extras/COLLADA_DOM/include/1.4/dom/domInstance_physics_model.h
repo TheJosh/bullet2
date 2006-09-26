@@ -53,7 +53,7 @@ protected:  // Attributes
  */
 	xsAnyURI attrParent;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The instance_physics_model element may instance any number of force_field
  * elements.  @see domInstance_force_field

@@ -22,18 +22,18 @@ subject to the following restrictions:
 
 
 ///PolyhedralConvexShape is an interface class for feature based (vertex/edge/face) convex shapes.
-class PolyhedralConvexShape : public ConvexShape
+class btPolyhedralConvexShape : public btConvexShape
 {
 
 public:
 
-	PolyhedralConvexShape();
+	btPolyhedralConvexShape();
 
 	//brute force implementations
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec)const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
 	
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia);
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
 
 
 
@@ -42,7 +42,7 @@ public:
 	virtual void GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const = 0;
 	virtual void GetVertex(int i,SimdPoint3& vtx) const = 0;
 	virtual int	GetNumPlanes() const = 0;
-	virtual void GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const = 0;
+	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const = 0;
 //	virtual int GetIndex(int i) const = 0 ; 
 
 	virtual	bool IsInside(const SimdPoint3& pt,SimdScalar tolerance) const = 0;

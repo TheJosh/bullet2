@@ -57,7 +57,7 @@ void	MyMotionState::setWorldPosition(float posX,float posY,float posZ)
 
 void	MyMotionState::setWorldOrientation(float quatIma0,float quatIma1,float quatIma2,float quatReal)
 {
-	SimdQuaternion orn(quatIma0,quatIma1,quatIma2,quatReal);
+	btSimdQuaternion orn(quatIma0,quatIma1,quatIma2,quatReal);
 	m_worldTransform.setRotation( orn );
 }
 		

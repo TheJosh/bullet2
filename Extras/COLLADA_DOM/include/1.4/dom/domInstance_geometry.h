@@ -44,7 +44,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  Bind a specific material to a piece of geometry, binding varying and uniform
  * parameters at the  same time.  @see domBind_material

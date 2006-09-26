@@ -8255,7 +8255,7 @@ typedef void (GLAPIENTRY * PFNGLADDSWAPHINTRECTWINPROC) (GLint x, GLint y, GLsiz
 #endif /* GLEW_MX */
 
 #if defined(GLEW_MX) && defined(_WIN32)
-struct GLEWContextStruct
+struct btGLEWContextStruct
 {
 #endif /* GLEW_MX */
 
@@ -9439,7 +9439,7 @@ GLEW_FUN_EXPORT PFNGLTEXCOORD4FVERTEX4FVSUNPROC __glewTexCoord4fVertex4fvSUN;
 GLEW_FUN_EXPORT PFNGLADDSWAPHINTRECTWINPROC __glewAddSwapHintRectWIN;
 
 #if defined(GLEW_MX) && !defined(_WIN32)
-struct GLEWContextStruct
+struct btGLEWContextStruct
 {
 #endif /* GLEW_MX */
 
@@ -9714,7 +9714,7 @@ GLEW_VAR_EXPORT GLboolean __GLEW_WIN_specular_fog;
 GLEW_VAR_EXPORT GLboolean __GLEW_WIN_swap_hint;
 
 #ifdef GLEW_MX
-}; /* GLEWContextStruct */
+}; /* btGLEWContextStruct */
 #endif /* GLEW_MX */
 
 /* ------------------------------------------------------------------------- */
@@ -9732,7 +9732,7 @@ GLEW_VAR_EXPORT GLboolean __GLEW_WIN_swap_hint;
 /* API */
 #ifdef GLEW_MX
 
-typedef struct GLEWContextStruct GLEWContext;
+typedef struct btGLEWContextStruct GLEWContext;
 GLEWAPI GLenum glewContextInit (GLEWContext* ctx);
 GLEWAPI GLboolean glewContextIsSupported (GLEWContext* ctx, const char* name);
 

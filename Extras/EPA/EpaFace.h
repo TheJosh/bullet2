@@ -44,8 +44,8 @@ class EpaFace
 		bool			CalculatePlane();
 #endif
 		void			CalcClosestPoint();
-		void			CalcClosestPointOnA( SimdVector3& closestPointOnA );
-		void			CalcClosestPointOnB( SimdVector3& closestPointOnB );
+		void			CalcClosestPointOnA( btSimdVector3& closestPointOnA );
+		void			CalcClosestPointOnB( btSimdVector3& closestPointOnB );
 
 		bool			IsAffinelyDependent()							const;
 		bool			IsClosestPointInternal()						const;
@@ -63,14 +63,14 @@ class EpaFace
 		EpaVertex*		m_pVertices[ 3 ];
 
 #ifdef EPA_POLYHEDRON_USE_PLANES
-		SimdVector3		m_planeNormal;
+		btSimdVector3		m_planeNormal;
 		SimdScalar		m_planeDistance;
 			
 		//SimdVector3		m_robustPlaneNormal;
 		//SimdScalar		m_robustPlaneDistance;
 #endif
 
-		SimdVector3		m_v;
+		btSimdVector3		m_v;
 		SimdScalar		m_vSqrd;
 
 		SimdScalar		m_determinant;

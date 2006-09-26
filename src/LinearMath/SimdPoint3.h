@@ -19,6 +19,6 @@ subject to the following restrictions:
 
 #include "LinearMath/SimdVector3.h"
 
-typedef SimdVector3 SimdPoint3;
+typedef btSimdVector3 SimdPoint3;
 
 #endif

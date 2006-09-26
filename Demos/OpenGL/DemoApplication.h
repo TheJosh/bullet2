@@ -41,7 +41,7 @@ subject to the following restrictions:
 
 class CcdPhysicsEnvironment;
 class CcdPhysicsController;
-class CollisionShape;
+class btCollisionShape;
 
 
 class DemoApplication
@@ -59,12 +59,12 @@ class DemoApplication
 	
 	float m_ele;
 	float m_azi;
-	SimdVector3 m_cameraPosition;
-	SimdVector3 m_cameraTargetPosition;//look at
+	btSimdVector3 m_cameraPosition;
+	btSimdVector3 m_cameraTargetPosition;//look at
 
 	float m_scaleBottom;
 	float m_scaleFactor;
-	SimdVector3 m_cameraUp;
+	btSimdVector3 m_cameraUp;
 	int	m_forwardAxis;
 
 	int m_glutScreenWidth;
@@ -99,7 +99,7 @@ class DemoApplication
 		return m_physicsEnvironmentPtr;
 	}
 	
-	void	setCameraUp(const SimdVector3& camUp)
+	void	setCameraUp(const btSimdVector3& camUp)
 	{
 		m_cameraUp = camUp;
 	}
@@ -114,11 +114,11 @@ class DemoApplication
 	
 	virtual void updateCamera();
 
-	SimdVector3	getCameraPosition()
+	btSimdVector3	getCameraPosition()
 	{
 		return m_cameraPosition;
 	}
-	SimdVector3	getCameraTargetPosition()
+	btSimdVector3	getCameraTargetPosition()
 	{
 		return m_cameraTargetPosition;
 	}
@@ -135,11 +135,11 @@ class DemoApplication
 	virtual void	clientResetScene() =0 ;
 
 	///Demo functions
-	void	shootBox(const SimdVector3& destination);
+	void	shootBox(const btSimdVector3& destination);
 
-	SimdVector3	GetRayTo(int x,int y);
+	btSimdVector3	GetRayTo(int x,int y);
 
-	CcdPhysicsController*  LocalCreatePhysicsObject(bool isDynamic, float mass, const SimdTransform& startTransform,CollisionShape* shape);
+	CcdPhysicsController*  LocalCreatePhysicsObject(bool isDynamic, float mass, const btSimdTransform& startTransform,btCollisionShape* shape);
 
 	///callback methods by glut	
 

@@ -308,7 +308,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 /**
  * The per-texel layout of the format.  The length of the string indicate
  * how many channels there are and the letter respresents the name of the

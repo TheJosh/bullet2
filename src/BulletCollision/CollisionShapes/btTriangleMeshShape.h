@@ -21,22 +21,22 @@ subject to the following restrictions:
 
 
 ///Concave triangle mesh. Uses an interface to access the triangles to allow for sharing graphics/physics triangles.
-class TriangleMeshShape : public ConcaveShape
+class btTriangleMeshShape : public ConcaveShape
 {
 protected:
-	StridingMeshInterface* m_meshInterface;
-	SimdVector3	m_localAabbMin;
-	SimdVector3	m_localAabbMax;
+	btStridingMeshInterface* m_meshInterface;
+	btSimdVector3	m_localAabbMin;
+	btSimdVector3	m_localAabbMax;
 	
 
 public:
-	TriangleMeshShape(StridingMeshInterface* meshInterface);
+	btTriangleMeshShape(btStridingMeshInterface* meshInterface);
 
-	virtual ~TriangleMeshShape();
+	virtual ~btTriangleMeshShape();
 
-	virtual SimdVector3 LocalGetSupportingVertex(const SimdVector3& vec) const;
+	virtual btSimdVector3 LocalGetSupportingVertex(const btSimdVector3& vec) const;
 
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec)const
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const
 	{
 		assert(0);
 		return LocalGetSupportingVertex(vec);
@@ -49,14 +49,14 @@ public:
 		return TRIANGLE_MESH_SHAPE_PROXYTYPE;
 	}
 
-	virtual void GetAabb(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const;
+	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
 
-	virtual void	ProcessAllTriangles(TriangleCallback* callback,const SimdVector3& aabbMin,const SimdVector3& aabbMax) const;
+	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia);
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
 
-	virtual void	setLocalScaling(const SimdVector3& scaling);
-	virtual const SimdVector3& getLocalScaling() const;
+	virtual void	setLocalScaling(const btSimdVector3& scaling);
+	virtual const btSimdVector3& getLocalScaling() const;
 	
 
 	//debugging

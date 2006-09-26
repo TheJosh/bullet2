@@ -30,7 +30,7 @@ class daeURI;
 template <typename T> class daeSmartRef;
 
 /**
- * The @c daeElement class represents an instance of a COLLADA "Element";
+ * The @c daeElement class represents an instance of a COLLADA "btElement";
  * it is the main base class for the COLLADA Dom.
  * Features of this class include:
  * - Uses factory concepts defined via daeMetaElement
@@ -74,13 +74,13 @@ protected:
 
 public:
 	/**
-	 * Element Constructor.
+	 * btElement Constructor.
 	 * @note This should not be used externally.
 	 * Use factories to create elements
 	 */
 	daeElement();
 	/**
-	 * Element Destructor.
+	 * btElement Destructor.
 	 * @note This should not be used externally, 
 	 * if daeSmartRefs are being used.
 	 */
@@ -121,7 +121,7 @@ public:
 	 * that field, based on whether it is a single child or an array of
 	 * children. This automatically adds the new element to the <tt><i> _contents </i></tt> of its parent, if the parent has one.  
 	 *
-	 * @param element Element to be placed in the @c this container.
+	 * @param element btElement to be placed in the @c this container.
 	 * @return Returns true if the element was successfully placed, false otherwise.
 	 */
 	daeBool placeElement(daeElement* element);
@@ -146,7 +146,7 @@ public:
 	 * This function inserts the new element before the element specified as marker.
 	 * This automatically adds the new element to the <tt><i> _contents </i></tt> of its parent, if the parent has one.  
 	 * @param marker The daeElement used to determine where the new child will be placed.
-	 * @param element Element to be placed in the @c this container.
+	 * @param element btElement to be placed in the @c this container.
 	 * @return Returns true if the element was successfully placed, false otherwise.
 	 */
 	daeBool placeElementBefore( daeElement* marker, daeElement *element );
@@ -156,7 +156,7 @@ public:
 	 * This function inserts the new element After the element specified as marker.
 	 * This automatically adds the new element to the <tt><i> _contents </i></tt> of its parent, if the parent has one.  
 	 * @param marker The daeElement used to determine where the new child will be placed.
-	 * @param element Element to be placed in the @c this container.
+	 * @param element btElement to be placed in the @c this container.
 	 * @return Returns true if the element was successfully placed, false otherwise.
 	 */
 	daeBool placeElementAfter( daeElement* marker, daeElement *element );
@@ -176,7 +176,7 @@ public:
 	 * inside of the @c this element.  Use this function instead of @c clear(), @c remove() or @c delete()
 	 * if you want to keep the <tt><i> _contents </i></tt> field up-to-date.
 	 *
-	 * @param element Element to be removed in the @c this container.
+	 * @param element btElement to be removed in the @c this container.
 	 * @return Returns true if the element was successfully removed, false otherwise.
 	 */
 	daeBool removeChildElement(daeElement* element);
@@ -192,7 +192,7 @@ public:
 	 * Use this function instead of @c clear(), @c remove() or @c delete()
 	 * if you want to keep <tt><i> _contents </i></tt> up-to-date.
 	 *
-	 * @param element Element to remove from its parent container, the function finds the parent element.
+	 * @param element btElement to remove from its parent container, the function finds the parent element.
 	 * @return Returns true if the element was successfully removed, false otherwise.
 	 */
 	static daeBool removeFromParent(daeElement* element)
@@ -389,7 +389,7 @@ public:
 	 * Releases the element passed in. This function is a static wrapper that invokes 
 	 * <tt> elem->release() </tt> on the passed in element,
 	 * if it is not NULL.
-	 * @param elem Element to call @c release() for, if the element exists.
+	 * @param elem btElement to call @c release() for, if the element exists.
 	 */
 	static void release(const daeElement* elem) {if (elem != NULL) elem->release();}
 	
@@ -397,14 +397,14 @@ public:
 	 * Increments the reference counter for the element passed in. This function is a static wrapper
 	 * that invokes <tt> elem->ref() </tt> on the passed in element,
 	 * if it is not NULL.
-	 * @param elem Element to call @c ref() for, if the element exists.
+	 * @param elem btElement to call @c ref() for, if the element exists.
 	 */
 	static void ref(const daeElement* elem) { if (elem != NULL) elem->ref(); }
 
 	/**
 	 * Appends the passed in element to the list of elements that need to be resolved.
 	 * The elements in this list will be resolved during @c resolveAll().
-	 * @param elem Element to add to the list of elements
+	 * @param elem btElement to add to the list of elements
 	 * waiting for their @c daeURIs to be resolved.
 	 */
 	static void appendResolveElement(daeElement* elem);

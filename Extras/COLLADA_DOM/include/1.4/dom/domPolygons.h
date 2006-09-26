@@ -116,7 +116,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  *  Theere may only be one p element.  @see domP
  */
@@ -201,7 +201,7 @@ protected:  // Attributes
  */
 	xsNCName attrMaterial;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * The input element may occur any number of times. This input is a local
  * input with the  offset and set attributes. @see domInput

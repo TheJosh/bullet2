@@ -23,28 +23,28 @@ subject to the following restrictions:
 #include "LinearMath/SimdMinMax.h"
 
 ///BoxShape implements both a feature based (vertex/edge/plane) and implicit (getSupportingVertex) Box
-class BoxShape: public PolyhedralConvexShape
+class btBoxShape: public btPolyhedralConvexShape
 {
 
-	SimdVector3	m_boxHalfExtents1;
+	btSimdVector3	m_boxHalfExtents1;
 
 
 public:
 
-	SimdVector3 GetHalfExtents() const;
+	btSimdVector3 GetHalfExtents() const;
 	//{ return m_boxHalfExtents1 * m_localScaling;}
- 	//const SimdVector3& GetHalfExtents() const{ return m_boxHalfExtents1;}
+ 	//const btSimdVector3& GetHalfExtents() const{ return m_boxHalfExtents1;}
 
 
 	
 	virtual int	GetShapeType() const { return BOX_SHAPE_PROXYTYPE;}
 
-	virtual SimdVector3	LocalGetSupportingVertex(const SimdVector3& vec) const
+	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec) const
 	{
 		
-		SimdVector3 halfExtents = GetHalfExtents();
+		btSimdVector3 halfExtents = GetHalfExtents();
 		
-		SimdVector3 supVertex;
+		btSimdVector3 supVertex;
 		supVertex = SimdPoint3(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
                      vec.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
                      vec.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
@@ -52,27 +52,27 @@ public:
 		return supVertex;
 	}
 
-	virtual inline SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec)const
+	virtual inline btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const
 	{
-		SimdVector3 halfExtents = GetHalfExtents();
-		SimdVector3 margin(GetMargin(),GetMargin(),GetMargin());
+		btSimdVector3 halfExtents = GetHalfExtents();
+		btSimdVector3 margin(GetMargin(),GetMargin(),GetMargin());
 		halfExtents -= margin;
 
-		return SimdVector3(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
+		return btSimdVector3(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
                     vec.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
                     vec.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
 	}
 
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
 	{
-		SimdVector3 halfExtents = GetHalfExtents();
-		SimdVector3 margin(GetMargin(),GetMargin(),GetMargin());
+		btSimdVector3 halfExtents = GetHalfExtents();
+		btSimdVector3 margin(GetMargin(),GetMargin(),GetMargin());
 		halfExtents -= margin;
 
 
 		for (int i=0;i<numVectors;i++)
 		{
-			const SimdVector3& vec = vectors[i];
+			const btSimdVector3& vec = vectors[i];
 			supportVerticesOut[i].setValue(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
                     vec.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
                     vec.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
@@ -81,20 +81,20 @@ public:
 	}
 
 
-	BoxShape( const SimdVector3& boxHalfExtents) :  m_boxHalfExtents1(boxHalfExtents){};
+	btBoxShape( const btSimdVector3& boxHalfExtents) :  m_boxHalfExtents1(boxHalfExtents){};
 	
-	virtual void GetAabb(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const;
+	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
 
 	
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia);
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
 
-	virtual void GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
+	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
 	{
 		//this plane might not be aligned...
-		SimdVector4 plane ;
+		btSimdVector4 plane ;
 		GetPlaneEquation(plane,i);
-		planeNormal = SimdVector3(plane.getX(),plane.getY(),plane.getZ());
+		planeNormal = btSimdVector3(plane.getX(),plane.getY(),plane.getZ());
 		planeSupport = LocalGetSupportingVertex(-planeNormal);
 	}
 
@@ -115,20 +115,20 @@ public:
 	}
 
 
-	virtual void GetVertex(int i,SimdVector3& vtx) const
+	virtual void GetVertex(int i,btSimdVector3& vtx) const
 	{
-		SimdVector3 halfExtents = GetHalfExtents();
+		btSimdVector3 halfExtents = GetHalfExtents();
 
-		vtx = SimdVector3(
+		vtx = btSimdVector3(
 				halfExtents.x() * (1-(i&1)) - halfExtents.x() * (i&1),
 				halfExtents.y() * (1-((i&2)>>1)) - halfExtents.y() * ((i&2)>>1),
 				halfExtents.z() * (1-((i&4)>>2)) - halfExtents.z() * ((i&4)>>2));
 	}
 	
 
-	virtual void	GetPlaneEquation(SimdVector4& plane,int i) const
+	virtual void	GetPlaneEquation(btSimdVector4& plane,int i) const
 	{
-		SimdVector3 halfExtents = GetHalfExtents();
+		btSimdVector3 halfExtents = GetHalfExtents();
 
 		switch (i)
 		{
@@ -235,7 +235,7 @@ public:
 	
 	virtual	bool IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
 	{
-		SimdVector3 halfExtents = GetHalfExtents();
+		btSimdVector3 halfExtents = GetHalfExtents();
 
 		//SimdScalar minDist = 2*tolerance;
 		

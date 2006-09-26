@@ -315,9 +315,9 @@ daeElementRefType::daeElementRefType()
 {
 	_size = sizeof(daeElementRef);
 	_alignment = sizeof(daeElementRef);
-	_typeEnum = ElementRefType;
+	_typeEnum = btElementRefType;
 	_nameBindings.append("element");
-	_nameBindings.append("Element");
+	_nameBindings.append("btElement");
 	_nameBindings.append("TrackedElement");
 	_printFormat = "%p";
 	_scanFormat = "%p";

@@ -24,7 +24,7 @@ class domGlsl_setparam_simple_complexType
 protected:  // Attribute
 	domGlsl_identifier attrRef;
 
-protected:  // Elements
+protected:  // btElements
 	domFx_annotate_common_Array elemAnnotate_array;
 	domGlsl_param_typeRef elemGlsl_param_type;
 

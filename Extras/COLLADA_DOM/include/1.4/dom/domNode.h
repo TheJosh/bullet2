@@ -67,7 +67,7 @@ protected:  // Attributes
  */
 	domListOfNames attrLayer;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The node element may contain an asset element.  @see domAsset
  */

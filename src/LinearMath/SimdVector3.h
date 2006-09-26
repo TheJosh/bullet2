@@ -22,27 +22,27 @@ subject to the following restrictions:
 
 ///SimdVector3 is 16byte aligned, and has an extra unused component m_w
 ///this extra component can be used by derived classes (Quaternion?) or by user
-class SimdVector3 : public SimdQuadWord {
+class btSimdVector3 : public btSimdQuadWord {
 
 
 public:
-	SIMD_FORCE_INLINE SimdVector3() {}
+	SIMD_FORCE_INLINE btSimdVector3() {}
 
 	
 
-	SIMD_FORCE_INLINE SimdVector3(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z) 
-		:SimdQuadWord(x,y,z,0.f)
+	SIMD_FORCE_INLINE btSimdVector3(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z) 
+		:btSimdQuadWord(x,y,z,0.f)
 	{
 	}
 
-//	SIMD_FORCE_INLINE SimdVector3(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z,const SimdScalar& w) 
-//		: SimdQuadWord(x,y,z,w)
+//	SIMD_FORCE_INLINE btSimdVector3(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z,const SimdScalar& w) 
+//		: btSimdQuadWord(x,y,z,w)
 //	{
 //	}
 
 	
 
-	SIMD_FORCE_INLINE SimdVector3& operator+=(const SimdVector3& v)
+	SIMD_FORCE_INLINE btSimdVector3& operator+=(const btSimdVector3& v)
 	{
 		m_x += v.x(); m_y += v.y(); m_z += v.z();
 		return *this;
@@ -50,25 +50,25 @@ public:
 
 
 
-	SIMD_FORCE_INLINE SimdVector3& operator-=(const SimdVector3& v) 
+	SIMD_FORCE_INLINE btSimdVector3& operator-=(const btSimdVector3& v) 
 	{
 		m_x -= v.x(); m_y -= v.y(); m_z -= v.z();
 		return *this;
 	}
 
-	SIMD_FORCE_INLINE SimdVector3& operator*=(const SimdScalar& s)
+	SIMD_FORCE_INLINE btSimdVector3& operator*=(const SimdScalar& s)
 	{
 		m_x *= s; m_y *= s; m_z *= s;
 		return *this;
 	}
 
-	SIMD_FORCE_INLINE SimdVector3& operator/=(const SimdScalar& s) 
+	SIMD_FORCE_INLINE btSimdVector3& operator/=(const SimdScalar& s) 
 	{
 		assert(s != SimdScalar(0.0));
 		return *this *= SimdScalar(1.0) / s;
 	}
 
-	SIMD_FORCE_INLINE SimdScalar dot(const SimdVector3& v) const
+	SIMD_FORCE_INLINE SimdScalar dot(const btSimdVector3& v) const
 	{
 		return m_x * v.x() + m_y * v.y() + m_z * v.z();
 	}
@@ -83,43 +83,43 @@ public:
 		return SimdSqrt(length2());
 	}
 
-	SIMD_FORCE_INLINE SimdScalar distance2(const SimdVector3& v) const;
+	SIMD_FORCE_INLINE SimdScalar distance2(const btSimdVector3& v) const;
 
-	SIMD_FORCE_INLINE SimdScalar distance(const SimdVector3& v) const;
+	SIMD_FORCE_INLINE SimdScalar distance(const btSimdVector3& v) const;
 
-	SIMD_FORCE_INLINE SimdVector3& normalize() 
+	SIMD_FORCE_INLINE btSimdVector3& normalize() 
 	{
 		return *this /= length();
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 normalized() const;
+	SIMD_FORCE_INLINE btSimdVector3 normalized() const;
 
-	SIMD_FORCE_INLINE SimdVector3 rotate( const SimdVector3& wAxis, const SimdScalar angle );
+	SIMD_FORCE_INLINE btSimdVector3 rotate( const btSimdVector3& wAxis, const SimdScalar angle );
 
-	SIMD_FORCE_INLINE SimdScalar angle(const SimdVector3& v) const 
+	SIMD_FORCE_INLINE SimdScalar angle(const btSimdVector3& v) const 
 	{
 		SimdScalar s = SimdSqrt(length2() * v.length2());
 		assert(s != SimdScalar(0.0));
 		return SimdAcos(dot(v) / s);
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 absolute() const 
+	SIMD_FORCE_INLINE btSimdVector3 absolute() const 
 	{
-		return SimdVector3(
+		return btSimdVector3(
 			SimdFabs(m_x), 
 			SimdFabs(m_y), 
 			SimdFabs(m_z));
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 cross(const SimdVector3& v) const
+	SIMD_FORCE_INLINE btSimdVector3 cross(const btSimdVector3& v) const
 	{
-		return SimdVector3(
+		return btSimdVector3(
 			m_y * v.z() - m_z * v.y(),
 			m_z * v.x() - m_x * v.z(),
 			m_x * v.y() - m_y * v.x());
 	}
 
-	SIMD_FORCE_INLINE SimdScalar triple(const SimdVector3& v1, const SimdVector3& v2) const
+	SIMD_FORCE_INLINE SimdScalar triple(const btSimdVector3& v1, const btSimdVector3& v2) const
 	{
 		return m_x * (v1.y() * v2.z() - v1.z() * v2.y()) + 
 			m_y * (v1.z() * v2.x() - v1.x() * v2.z()) + 
@@ -146,7 +146,7 @@ public:
 		return absolute().maxAxis();
 	}
 
-	SIMD_FORCE_INLINE void setInterpolate3(const SimdVector3& v0, const SimdVector3& v1, SimdScalar rt)
+	SIMD_FORCE_INLINE void setInterpolate3(const btSimdVector3& v0, const btSimdVector3& v1, SimdScalar rt)
 	{
 		SimdScalar s = 1.0f - rt;
 		m_x = s * v0[0] + rt * v1.x();
@@ -156,15 +156,15 @@ public:
 		//		m_co[3] = s * v0[3] + rt * v1[3];
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 lerp(const SimdVector3& v, const SimdScalar& t) const 
+	SIMD_FORCE_INLINE btSimdVector3 lerp(const btSimdVector3& v, const SimdScalar& t) const 
 	{
-		return SimdVector3(m_x + (v.x() - m_x) * t,
+		return btSimdVector3(m_x + (v.x() - m_x) * t,
 			m_y + (v.y() - m_y) * t,
 			m_z + (v.z() - m_z) * t);
 	}
 
 
-	SIMD_FORCE_INLINE SimdVector3& operator*=(const SimdVector3& v)
+	SIMD_FORCE_INLINE btSimdVector3& operator*=(const btSimdVector3& v)
 	{
 		m_x *= v.x(); m_y *= v.y(); m_z *= v.z();
 		return *this;
@@ -174,57 +174,57 @@ public:
 
 };
 
-SIMD_FORCE_INLINE SimdVector3 
-operator+(const SimdVector3& v1, const SimdVector3& v2) 
+SIMD_FORCE_INLINE btSimdVector3 
+operator+(const btSimdVector3& v1, const btSimdVector3& v2) 
 {
-	return SimdVector3(v1.x() + v2.x(), v1.y() + v2.y(), v1.z() + v2.z());
+	return btSimdVector3(v1.x() + v2.x(), v1.y() + v2.y(), v1.z() + v2.z());
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-operator*(const SimdVector3& v1, const SimdVector3& v2) 
+SIMD_FORCE_INLINE btSimdVector3 
+operator*(const btSimdVector3& v1, const btSimdVector3& v2) 
 {
-	return SimdVector3(v1.x() * v2.x(), v1.y() * v2.y(), v1.z() * v2.z());
+	return btSimdVector3(v1.x() * v2.x(), v1.y() * v2.y(), v1.z() * v2.z());
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-operator-(const SimdVector3& v1, const SimdVector3& v2)
+SIMD_FORCE_INLINE btSimdVector3 
+operator-(const btSimdVector3& v1, const btSimdVector3& v2)
 {
-	return SimdVector3(v1.x() - v2.x(), v1.y() - v2.y(), v1.z() - v2.z());
+	return btSimdVector3(v1.x() - v2.x(), v1.y() - v2.y(), v1.z() - v2.z());
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-operator-(const SimdVector3& v)
+SIMD_FORCE_INLINE btSimdVector3 
+operator-(const btSimdVector3& v)
 {
-	return SimdVector3(-v.x(), -v.y(), -v.z());
+	return btSimdVector3(-v.x(), -v.y(), -v.z());
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-operator*(const SimdVector3& v, const SimdScalar& s)
+SIMD_FORCE_INLINE btSimdVector3 
+operator*(const btSimdVector3& v, const SimdScalar& s)
 {
-	return SimdVector3(v.x() * s, v.y() * s, v.z() * s);
+	return btSimdVector3(v.x() * s, v.y() * s, v.z() * s);
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-operator*(const SimdScalar& s, const SimdVector3& v)
+SIMD_FORCE_INLINE btSimdVector3 
+operator*(const SimdScalar& s, const btSimdVector3& v)
 { 
 	return v * s; 
 }
 
-SIMD_FORCE_INLINE SimdVector3
-operator/(const SimdVector3& v, const SimdScalar& s)
+SIMD_FORCE_INLINE btSimdVector3
+operator/(const btSimdVector3& v, const SimdScalar& s)
 {
 	assert(s != SimdScalar(0.0));
 	return v * (SimdScalar(1.0) / s);
 }
 
-SIMD_FORCE_INLINE SimdVector3
-operator/(const SimdVector3& v1, const SimdVector3& v2)
+SIMD_FORCE_INLINE btSimdVector3
+operator/(const btSimdVector3& v1, const btSimdVector3& v2)
 {
-	return SimdVector3(v1.x() / v2.x(),v1.y() / v2.y(),v1.z() / v2.z());
+	return btSimdVector3(v1.x() / v2.x(),v1.y() / v2.y(),v1.z() / v2.z());
 }
 
 SIMD_FORCE_INLINE SimdScalar 
-dot(const SimdVector3& v1, const SimdVector3& v2) 
+dot(const btSimdVector3& v1, const btSimdVector3& v2) 
 { 
 	return v1.dot(v2); 
 }
@@ -232,93 +232,93 @@ dot(const SimdVector3& v1, const SimdVector3& v2)
 
 
 SIMD_FORCE_INLINE SimdScalar
-distance2(const SimdVector3& v1, const SimdVector3& v2) 
+distance2(const btSimdVector3& v1, const btSimdVector3& v2) 
 { 
 	return v1.distance2(v2); 
 }
 
 
 SIMD_FORCE_INLINE SimdScalar
-distance(const SimdVector3& v1, const SimdVector3& v2) 
+distance(const btSimdVector3& v1, const btSimdVector3& v2) 
 { 
 	return v1.distance(v2); 
 }
 
 SIMD_FORCE_INLINE SimdScalar
-angle(const SimdVector3& v1, const SimdVector3& v2) 
+angle(const btSimdVector3& v1, const btSimdVector3& v2) 
 { 
 	return v1.angle(v2); 
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-cross(const SimdVector3& v1, const SimdVector3& v2) 
+SIMD_FORCE_INLINE btSimdVector3 
+cross(const btSimdVector3& v1, const btSimdVector3& v2) 
 { 
 	return v1.cross(v2); 
 }
 
 SIMD_FORCE_INLINE SimdScalar
-triple(const SimdVector3& v1, const SimdVector3& v2, const SimdVector3& v3)
+triple(const btSimdVector3& v1, const btSimdVector3& v2, const btSimdVector3& v3)
 {
 	return v1.triple(v2, v3);
 }
 
-SIMD_FORCE_INLINE SimdVector3 
-lerp(const SimdVector3& v1, const SimdVector3& v2, const SimdScalar& t)
+SIMD_FORCE_INLINE btSimdVector3 
+lerp(const btSimdVector3& v1, const btSimdVector3& v2, const SimdScalar& t)
 {
 	return v1.lerp(v2, t);
 }
 
 
-SIMD_FORCE_INLINE bool operator==(const SimdVector3& p1, const SimdVector3& p2) 
+SIMD_FORCE_INLINE bool operator==(const btSimdVector3& p1, const btSimdVector3& p2) 
 {
 	return p1[0] == p2[0] && p1[1] == p2[1] && p1[2] == p2[2];
 }
 
-SIMD_FORCE_INLINE SimdScalar SimdVector3::distance2(const SimdVector3& v) const
+SIMD_FORCE_INLINE SimdScalar btSimdVector3::distance2(const btSimdVector3& v) const
 {
 	return (v - *this).length2();
 }
 
-SIMD_FORCE_INLINE SimdScalar SimdVector3::distance(const SimdVector3& v) const
+SIMD_FORCE_INLINE SimdScalar btSimdVector3::distance(const btSimdVector3& v) const
 {
 	return (v - *this).length();
 }
 
-SIMD_FORCE_INLINE SimdVector3 SimdVector3::normalized() const
+SIMD_FORCE_INLINE btSimdVector3 btSimdVector3::normalized() const
 {
 	return *this / length();
 } 
 
-SIMD_FORCE_INLINE SimdVector3 SimdVector3::rotate( const SimdVector3& wAxis, const SimdScalar angle )
+SIMD_FORCE_INLINE btSimdVector3 btSimdVector3::rotate( const btSimdVector3& wAxis, const SimdScalar angle )
 {
 	// wAxis must be a unit lenght vector
 
-	SimdVector3 o = wAxis * wAxis.dot( *this );
-	SimdVector3 x = *this - o;
-	SimdVector3 y;
+	btSimdVector3 o = wAxis * wAxis.dot( *this );
+	btSimdVector3 x = *this - o;
+	btSimdVector3 y;
 
 	y = wAxis.cross( *this );
 
 	return ( o + x * SimdCos( angle ) + y * SimdSin( angle ) );
 }
 
-class SimdVector4 : public SimdVector3
+class btSimdVector4 : public btSimdVector3
 {
 public:
 
-	SIMD_FORCE_INLINE SimdVector4() {}
+	SIMD_FORCE_INLINE btSimdVector4() {}
 
 
-	SIMD_FORCE_INLINE SimdVector4(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z,const SimdScalar& w) 
-		: SimdVector3(x,y,z)
+	SIMD_FORCE_INLINE btSimdVector4(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z,const SimdScalar& w) 
+		: btSimdVector3(x,y,z)
 	{
 		m_unusedW = w;
 	}
 
 
-	SIMD_FORCE_INLINE SimdVector4 absolute4() const 
+	SIMD_FORCE_INLINE btSimdVector4 absolute4() const 
 	{
-		return SimdVector4(
+		return btSimdVector4(
 			SimdFabs(m_x), 
 			SimdFabs(m_y), 
 			SimdFabs(m_z),

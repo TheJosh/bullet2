@@ -38,7 +38,7 @@ daeSTLDatabase::isDocumentLoaded(daeString name)
 		return(false);
 }
 
-// Element Types of all Elements
+// btElement Types of all btElements
 daeUInt daeSTLDatabase::getTypeCount()
 {
 	validate();
@@ -228,7 +228,7 @@ daeString daeSTLDatabase::getDocumentName(daeUInt index)
 		return NULL;
 }
 
-// Elements
+// btElements
 daeInt daeSTLDatabase::insertElement(daeDocument* document,daeElement* element)
 {
 	insertChildren( document, element );

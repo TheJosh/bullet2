@@ -34,7 +34,7 @@ protected:  // Attribute
  */
 	xsNCName attrSid;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * Defines a texture_pipeline command. This is a combiner-mode texturing operation.
  * @see domTexcombiner

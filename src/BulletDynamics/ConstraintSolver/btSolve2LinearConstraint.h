@@ -20,19 +20,19 @@ subject to the following restrictions:
 #include "LinearMath/SimdVector3.h"
 
 
-class RigidBody;
+class btRigidBody;
 
 
 
 /// constraint class used for lateral tyre friction.
-class	Solve2LinearConstraint
+class	btSolve2LinearConstraint
 {
 	SimdScalar	m_tau;
 	SimdScalar	m_damping;
 
 public:
 
-	Solve2LinearConstraint(SimdScalar tau,SimdScalar damping)
+	btSolve2LinearConstraint(SimdScalar tau,SimdScalar damping)
 	{
 		m_tau = tau;
 		m_damping = damping;
@@ -41,24 +41,24 @@ public:
 	// solve unilateral constraint (equality, direct method)
 	//
 	void resolveUnilateralPairConstraint(		
-														   RigidBody* body0,
-		RigidBody* body1,
+														   btRigidBody* body0,
+		btRigidBody* body1,
 
-		const SimdMatrix3x3& world2A,
-						const SimdMatrix3x3& world2B,
+		const btSimdMatrix3x3& world2A,
+						const btSimdMatrix3x3& world2B,
 						
-						const SimdVector3& invInertiaADiag,
+						const btSimdVector3& invInertiaADiag,
 						const SimdScalar invMassA,
-						const SimdVector3& linvelA,const SimdVector3& angvelA,
-						const SimdVector3& rel_posA1,
-						const SimdVector3& invInertiaBDiag,
+						const btSimdVector3& linvelA,const btSimdVector3& angvelA,
+						const btSimdVector3& rel_posA1,
+						const btSimdVector3& invInertiaBDiag,
 						const SimdScalar invMassB,
-						const SimdVector3& linvelB,const SimdVector3& angvelB,
-						const SimdVector3& rel_posA2,
+						const btSimdVector3& linvelB,const btSimdVector3& angvelB,
+						const btSimdVector3& rel_posA2,
 
-					  SimdScalar depthA, const SimdVector3& normalA, 
-					  const SimdVector3& rel_posB1,const SimdVector3& rel_posB2,
-					  SimdScalar depthB, const SimdVector3& normalB, 
+					  SimdScalar depthA, const btSimdVector3& normalA, 
+					  const btSimdVector3& rel_posB1,const btSimdVector3& rel_posB2,
+					  SimdScalar depthB, const btSimdVector3& normalB, 
 					  SimdScalar& imp0,SimdScalar& imp1);
 
 
@@ -66,38 +66,38 @@ public:
 	// solving 2x2 lcp problem (inequality, direct solution )
 	//
 	void resolveBilateralPairConstraint(
-			RigidBody* body0,
-						RigidBody* body1,
-		const SimdMatrix3x3& world2A,
-						const SimdMatrix3x3& world2B,
+			btRigidBody* body0,
+						btRigidBody* body1,
+		const btSimdMatrix3x3& world2A,
+						const btSimdMatrix3x3& world2B,
 						
-						const SimdVector3& invInertiaADiag,
+						const btSimdVector3& invInertiaADiag,
 						const SimdScalar invMassA,
-						const SimdVector3& linvelA,const SimdVector3& angvelA,
-						const SimdVector3& rel_posA1,
-						const SimdVector3& invInertiaBDiag,
+						const btSimdVector3& linvelA,const btSimdVector3& angvelA,
+						const btSimdVector3& rel_posA1,
+						const btSimdVector3& invInertiaBDiag,
 						const SimdScalar invMassB,
-						const SimdVector3& linvelB,const SimdVector3& angvelB,
-						const SimdVector3& rel_posA2,
+						const btSimdVector3& linvelB,const btSimdVector3& angvelB,
+						const btSimdVector3& rel_posA2,
 
-					  SimdScalar depthA, const SimdVector3& normalA, 
-					  const SimdVector3& rel_posB1,const SimdVector3& rel_posB2,
-					  SimdScalar depthB, const SimdVector3& normalB, 
+					  SimdScalar depthA, const btSimdVector3& normalA, 
+					  const btSimdVector3& rel_posB1,const btSimdVector3& rel_posB2,
+					  SimdScalar depthB, const btSimdVector3& normalB, 
 					  SimdScalar& imp0,SimdScalar& imp1);
 
 
-	void resolveAngularConstraint(	const SimdMatrix3x3& invInertiaAWS,
+	void resolveAngularConstraint(	const btSimdMatrix3x3& invInertiaAWS,
 						const SimdScalar invMassA,
-						const SimdVector3& linvelA,const SimdVector3& angvelA,
-						const SimdVector3& rel_posA1,
-						const SimdMatrix3x3& invInertiaBWS,
+						const btSimdVector3& linvelA,const btSimdVector3& angvelA,
+						const btSimdVector3& rel_posA1,
+						const btSimdMatrix3x3& invInertiaBWS,
 						const SimdScalar invMassB,
-						const SimdVector3& linvelB,const SimdVector3& angvelB,
-						const SimdVector3& rel_posA2,
+						const btSimdVector3& linvelB,const btSimdVector3& angvelB,
+						const btSimdVector3& rel_posA2,
 
-					  SimdScalar depthA, const SimdVector3& normalA, 
-					  const SimdVector3& rel_posB1,const SimdVector3& rel_posB2,
-					  SimdScalar depthB, const SimdVector3& normalB, 
+					  SimdScalar depthA, const btSimdVector3& normalA, 
+					  const btSimdVector3& rel_posB1,const btSimdVector3& rel_posB2,
+					  SimdScalar depthB, const btSimdVector3& normalB, 
 					  SimdScalar& imp0,SimdScalar& imp1);
 
 

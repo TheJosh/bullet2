@@ -142,7 +142,7 @@ public:
 	protected:  // Attribute
 		xsToken attrRef;
 
-	protected:  // Element
+	protected:  // btElement
 		domFx_basic_type_commonRef elemFx_basic_type_common;
 
 	public:	//Accessors and Mutators
@@ -222,7 +222,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * Add a hint for a platform of which technique to use in this effect. @see
  * domTechnique_hint

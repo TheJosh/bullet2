@@ -18,7 +18,7 @@ subject to the following restrictions:
 
 ///Common headerfile includes for Bullet Collision Detection
 
-///Bullet's CollisionWorld and CollisionObject definitions
+///Bullet's btCollisionWorld and btCollisionObject definitions
 #include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
@@ -56,3 +56,4 @@ subject to the following restrictions:
 
 
 #endif //BULLET_COLLISION_COMMON_H
+

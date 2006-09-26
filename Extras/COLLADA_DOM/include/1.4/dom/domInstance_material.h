@@ -237,7 +237,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * The bind element binds values to effect parameters upon instantiation.
  * @see domBind

@@ -31,7 +31,7 @@ class BU_Screwing
 public:
 
 	
-	BU_Screwing(const SimdVector3& relLinVel,const SimdVector3& relAngVel);
+	BU_Screwing(const btSimdVector3& relLinVel,const btSimdVector3& relAngVel);
 
 	~BU_Screwing() {
 	};
@@ -47,31 +47,31 @@ public:
 		pt.z()+m_s*CalculateF(t));
 	}
 
-	inline SimdVector3	InBetweenVector(const SimdVector3& vec,SimdScalar t) const
+	inline btSimdVector3	InBetweenVector(const btSimdVector3& vec,SimdScalar t) const
 	{
-		return SimdVector3(
+		return btSimdVector3(
 		vec.x()*SimdCos(m_w*t)-vec.y()*SimdSin(m_w*t),
 		vec.x()*SimdSin(m_w*t)+vec.y()*SimdCos(m_w*t),
 		vec.z());
 	}
 
 	//gives interpolated transform for time in [0..1] in screwing frame
-	SimdTransform	InBetweenTransform(const SimdTransform& tr,SimdScalar t) const;
+	btSimdTransform	InBetweenTransform(const btSimdTransform& tr,SimdScalar t) const;
 
 	
 	//gives matrix from global frame into screwing frame
-	void	LocalMatrix(SimdTransform &t) const;
+	void	LocalMatrix(btSimdTransform &t) const;
 
-	inline const SimdVector3& GetU() const {	return m_u;}
-	inline const SimdVector3& GetO() const {return m_o;}
+	inline const btSimdVector3& GetU() const {	return m_u;}
+	inline const btSimdVector3& GetO() const {return m_o;}
 	inline const SimdScalar GetS() const{ return m_s;}
 	inline const SimdScalar GetW() const { return m_w;}
 	
 private:
 	float		m_w;
 	float		m_s;
-	SimdVector3 m_u;
-	SimdVector3	m_o;
+	btSimdVector3 m_u;
+	btSimdVector3	m_o;
 };
 
 #endif //B_SCREWING_H

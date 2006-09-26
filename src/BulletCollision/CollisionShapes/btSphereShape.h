@@ -20,24 +20,24 @@ subject to the following restrictions:
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
 
 ///SphereShape implements an implicit (getSupportingVertex) Sphere
-class SphereShape : public ConvexShape
+class btSphereShape : public btConvexShape
 
 {
 	SimdScalar m_radius;
 	
 public:
-	SphereShape (SimdScalar radius);
+	btSphereShape (SimdScalar radius);
 	
 	
-	virtual SimdVector3	LocalGetSupportingVertex(const SimdVector3& vec)const;
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec)const;
+	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec)const;
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
 	//notice that the vectors should be unit length
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
 
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia);
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
 
-	virtual void GetAabb(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const;
+	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
 
 	virtual int	GetShapeType() const { return SPHERE_SHAPE_PROXYTYPE; }
 
@@ -48,13 +48,13 @@ public:
 
 	virtual void	SetMargin(float margin)
 	{
-		ConvexShape::SetMargin(margin);
+		btConvexShape::SetMargin(margin);
 	}
 	virtual float	GetMargin() const
 	{
 		//to improve gjk behaviour, use radius+margin as the full margin, so never get into the penetration case
 		//this means, non-uniform scaling is not supported anymore
-		return m_localScaling[0] * m_radius + ConvexShape::GetMargin();
+		return m_localScaling[0] * m_radius + btConvexShape::GetMargin();
 	}
 
 

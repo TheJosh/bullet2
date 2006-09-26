@@ -28,14 +28,14 @@
 #include "BulletCollision/NarrowPhaseCollision/btConvexPenetrationDepthSolver.h"
 
 /// Solid3EpaPenetrationDepth contains the 'Expanding Polytope Algorithm' from Solid 3.5
-class Solid3EpaPenetrationDepth : public ConvexPenetrationDepthSolver
+class Solid3EpaPenetrationDepth : public btConvexPenetrationDepthSolver
 {
 public:
 
-	virtual bool CalcPenDepth(SimplexSolverInterface& simplexSolver,
-		ConvexShape* convexA,ConvexShape* convexB,
-		const SimdTransform& transformA,const SimdTransform& transformB,
-				SimdVector3& v, SimdPoint3& pa, SimdPoint3& pb);
+	virtual bool CalcPenDepth(btSimplexSolverInterface& simplexSolver,
+		btConvexShape* convexA,btConvexShape* convexB,
+		const btSimdTransform& transformA,const btSimdTransform& transformB,
+				btSimdVector3& v, SimdPoint3& pa, SimdPoint3& pb);
 
 };
 

@@ -37,7 +37,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The library_physics_models element may contain an asset element.  @see
  * domAsset

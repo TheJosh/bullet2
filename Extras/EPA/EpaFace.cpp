@@ -43,8 +43,8 @@ bool EpaFace::Initialize()
 
 	CollectVertices( m_pVertices );
 	
-	const SimdVector3 e0 = m_pVertices[ 1 ]->m_point - m_pVertices[ 0 ]->m_point;
-	const SimdVector3 e1 = m_pVertices[ 2 ]->m_point - m_pVertices[ 0 ]->m_point;
+	const btSimdVector3 e0 = m_pVertices[ 1 ]->m_point - m_pVertices[ 0 ]->m_point;
+	const btSimdVector3 e1 = m_pVertices[ 2 ]->m_point - m_pVertices[ 0 ]->m_point;
 
 	const SimdScalar e0Sqrd = e0.length2();
 	const SimdScalar e1Sqrd = e1.length2();
@@ -83,8 +83,8 @@ bool EpaFace::CalculatePlane()
 
 	// Traditional method
 
-	const SimdVector3 v1 = m_pVertices[ 1 ]->m_point - m_pVertices[ 0 ]->m_point;
-	const SimdVector3 v2 = m_pVertices[ 2 ]->m_point - m_pVertices[ 0 ]->m_point;
+	const btSimdVector3 v1 = m_pVertices[ 1 ]->m_point - m_pVertices[ 0 ]->m_point;
+	const btSimdVector3 v2 = m_pVertices[ 2 ]->m_point - m_pVertices[ 0 ]->m_point;
 
 	m_planeNormal = v2.cross( v1 );
 
@@ -142,8 +142,8 @@ bool EpaFace::CalculatePlane()
 
 void EpaFace::CalcClosestPoint()
 {
-	const SimdVector3 e0 = m_pVertices[ 1 ]->m_point - m_pVertices[ 0 ]->m_point;
-	const SimdVector3 e1 = m_pVertices[ 2 ]->m_point - m_pVertices[ 0 ]->m_point;
+	const btSimdVector3 e0 = m_pVertices[ 1 ]->m_point - m_pVertices[ 0 ]->m_point;
+	const btSimdVector3 e1 = m_pVertices[ 2 ]->m_point - m_pVertices[ 0 ]->m_point;
 
 	m_v =  m_pVertices[ 0 ]->m_point +
 		 ( e0 * m_lambdas[ 0 ] + e1 * m_lambdas[ 1 ] ) / m_determinant;
@@ -151,20 +151,20 @@ void EpaFace::CalcClosestPoint()
 	m_vSqrd = m_v.length2();
 }
 
-void EpaFace::CalcClosestPointOnA( SimdVector3& closestPointOnA )
+void EpaFace::CalcClosestPointOnA( btSimdVector3& closestPointOnA )
 {
-	const SimdVector3 e0 = m_pVertices[ 1 ]->m_wSupportPointOnA - m_pVertices[ 0 ]->m_wSupportPointOnA;
-	const SimdVector3 e1 = m_pVertices[ 2 ]->m_wSupportPointOnA - m_pVertices[ 0 ]->m_wSupportPointOnA;
+	const btSimdVector3 e0 = m_pVertices[ 1 ]->m_wSupportPointOnA - m_pVertices[ 0 ]->m_wSupportPointOnA;
+	const btSimdVector3 e1 = m_pVertices[ 2 ]->m_wSupportPointOnA - m_pVertices[ 0 ]->m_wSupportPointOnA;
 
 	closestPointOnA =  m_pVertices[ 0 ]->m_wSupportPointOnA +
 					 ( e0 * m_lambdas[ 0 ] + e1 * m_lambdas[ 1 ] ) /
 					   m_determinant;
 }
 
-void EpaFace::CalcClosestPointOnB( SimdVector3& closestPointOnB )
+void EpaFace::CalcClosestPointOnB( btSimdVector3& closestPointOnB )
 {
-	const SimdVector3 e0 = m_pVertices[ 1 ]->m_wSupportPointOnB - m_pVertices[ 0 ]->m_wSupportPointOnB;
-	const SimdVector3 e1 = m_pVertices[ 2 ]->m_wSupportPointOnB - m_pVertices[ 0 ]->m_wSupportPointOnB;
+	const btSimdVector3 e0 = m_pVertices[ 1 ]->m_wSupportPointOnB - m_pVertices[ 0 ]->m_wSupportPointOnB;
+	const btSimdVector3 e1 = m_pVertices[ 2 ]->m_wSupportPointOnB - m_pVertices[ 0 ]->m_wSupportPointOnB;
 
 	closestPointOnB =  m_pVertices[ 0 ]->m_wSupportPointOnB +
 					 ( e0 * m_lambdas[  0 ] + e1 * m_lambdas[ 1 ] ) /

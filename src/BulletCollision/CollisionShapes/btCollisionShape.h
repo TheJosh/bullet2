@@ -23,20 +23,20 @@ subject to the following restrictions:
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" //for the shape types
 
 ///CollisionShape provides generic interface for collidable objects
-class CollisionShape
+class btCollisionShape
 {
 public:
 
-	CollisionShape() :m_tempDebug(0)
+	btCollisionShape() :m_tempDebug(0)
 	{
 	}
-	virtual ~CollisionShape()
+	virtual ~btCollisionShape()
 	{
 	}
 
-	virtual void GetAabb(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const =0;
+	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const =0;
 
-	virtual void	GetBoundingSphere(SimdVector3& center,SimdScalar& radius) const;
+	virtual void	GetBoundingSphere(btSimdVector3& center,SimdScalar& radius) const;
 
 	virtual float	GetAngularMotionDisc() const;
 
@@ -44,30 +44,30 @@ public:
 
 	///CalculateTemporalAabb calculates the enclosing aabb for the moving object over interval [0..timeStep)
 	///result is conservative
-	void CalculateTemporalAabb(const SimdTransform& curTrans,const SimdVector3& linvel,const SimdVector3& angvel,SimdScalar timeStep, SimdVector3& temporalAabbMin,SimdVector3& temporalAabbMax);
+	void CalculateTemporalAabb(const btSimdTransform& curTrans,const btSimdVector3& linvel,const btSimdVector3& angvel,SimdScalar timeStep, btSimdVector3& temporalAabbMin,btSimdVector3& temporalAabbMax);
 
 	inline bool	IsPolyhedral() const
 	{
-		return BroadphaseProxy::IsPolyhedral(GetShapeType());
+		return btBroadphaseProxy::IsPolyhedral(GetShapeType());
 	}
 
 	inline bool	IsConvex() const
 	{
-		return BroadphaseProxy::IsConvex(GetShapeType());
+		return btBroadphaseProxy::IsConvex(GetShapeType());
 	}
 	inline bool	IsConcave() const
 	{
-		return BroadphaseProxy::IsConcave(GetShapeType());
+		return btBroadphaseProxy::IsConcave(GetShapeType());
 	}
 	inline bool	IsCompound() const
 	{
-		return BroadphaseProxy::IsCompound(GetShapeType());
+		return btBroadphaseProxy::IsCompound(GetShapeType());
 	}
 
-	virtual void	setLocalScaling(const SimdVector3& scaling) =0;
-	virtual const SimdVector3& getLocalScaling() const =0;
+	virtual void	setLocalScaling(const btSimdVector3& scaling) =0;
+	virtual const btSimdVector3& getLocalScaling() const =0;
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia) = 0;
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia) = 0;
 
 //debugging support
 	virtual char*	GetName()const =0 ;

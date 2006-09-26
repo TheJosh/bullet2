@@ -19,7 +19,7 @@ subject to the following restrictions:
 #include "btCollisionShape.h"
 
 
-CompoundShape::CompoundShape()
+btCompoundShape::btCompoundShape()
 :m_localAabbMin(1e30f,1e30f,1e30f),
 m_localAabbMax(-1e30f,-1e30f,-1e30f),
 m_aabbTree(0),
@@ -29,17 +29,17 @@ m_localScaling(1.f,1.f,1.f)
 }
 
 
-CompoundShape::~CompoundShape()
+btCompoundShape::~btCompoundShape()
 {
 }
 
-void	CompoundShape::AddChildShape(const SimdTransform& localTransform,CollisionShape* shape)
+void	btCompoundShape::AddChildShape(const btSimdTransform& localTransform,btCollisionShape* shape)
 {
 	m_childTransforms.push_back(localTransform);
 	m_childShapes.push_back(shape);
 
 	//extend the local aabbMin/aabbMax
-	SimdVector3 localAabbMin,localAabbMax;
+	btSimdVector3 localAabbMin,localAabbMax;
 	shape->GetAabb(localTransform,localAabbMin,localAabbMax);
 	for (int i=0;i<3;i++)
 	{
@@ -58,33 +58,33 @@ void	CompoundShape::AddChildShape(const SimdTransform& localTransform,CollisionS
 
 
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-void CompoundShape::GetAabb(const SimdTransform& trans,SimdVector3& aabbMin,SimdVector3& aabbMax) const
+void btCompoundShape::GetAabb(const btSimdTransform& trans,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
 {
-	SimdVector3 localHalfExtents = 0.5f*(m_localAabbMax-m_localAabbMin);
-	SimdVector3 localCenter = 0.5f*(m_localAabbMax+m_localAabbMin);
+	btSimdVector3 localHalfExtents = 0.5f*(m_localAabbMax-m_localAabbMin);
+	btSimdVector3 localCenter = 0.5f*(m_localAabbMax+m_localAabbMin);
 	
-	SimdMatrix3x3 abs_b = trans.getBasis().absolute();  
+	btSimdMatrix3x3 abs_b = trans.getBasis().absolute();  
 
 	SimdPoint3 center = trans(localCenter);
 
-	SimdVector3 extent = SimdVector3(abs_b[0].dot(localHalfExtents),
+	btSimdVector3 extent = btSimdVector3(abs_b[0].dot(localHalfExtents),
 		   abs_b[1].dot(localHalfExtents),
 		  abs_b[2].dot(localHalfExtents));
-	extent += SimdVector3(GetMargin(),GetMargin(),GetMargin());
+	extent += btSimdVector3(GetMargin(),GetMargin(),GetMargin());
 
 	aabbMin = center - extent;
 	aabbMax = center + extent;
 }
 
-void	CompoundShape::CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia)
+void	btCompoundShape::CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
 {
 	//approximation: take the inertia from the aabb for now
-	SimdTransform ident;
+	btSimdTransform ident;
 	ident.setIdentity();
-	SimdVector3 aabbMin,aabbMax;
+	btSimdVector3 aabbMin,aabbMax;
 	GetAabb(ident,aabbMin,aabbMax);
 	
-	SimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
+	btSimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
 	
 	SimdScalar lx=2.f*(halfExtents.x());
 	SimdScalar ly=2.f*(halfExtents.y());

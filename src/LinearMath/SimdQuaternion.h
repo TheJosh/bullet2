@@ -19,28 +19,28 @@ subject to the following restrictions:
 
 #include "LinearMath/SimdVector3.h"
 
-class SimdQuaternion : public SimdQuadWord {
+class btSimdQuaternion : public btSimdQuadWord {
 public:
-	SimdQuaternion() {}
+	btSimdQuaternion() {}
 
 	//		template <typename SimdScalar>
 	//		explicit Quaternion(const SimdScalar *v) : Tuple4<SimdScalar>(v) {}
 
-	SimdQuaternion(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z, const SimdScalar& w) 
-		: SimdQuadWord(x, y, z, w) 
+	btSimdQuaternion(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z, const SimdScalar& w) 
+		: btSimdQuadWord(x, y, z, w) 
 	{}
 
-	SimdQuaternion(const SimdVector3& axis, const SimdScalar& angle) 
+	btSimdQuaternion(const btSimdVector3& axis, const SimdScalar& angle) 
 	{ 
 		setRotation(axis, angle); 
 	}
 
-	SimdQuaternion(const SimdScalar& yaw, const SimdScalar& pitch, const SimdScalar& roll)
+	btSimdQuaternion(const SimdScalar& yaw, const SimdScalar& pitch, const SimdScalar& roll)
 	{ 
 		setEuler(yaw, pitch, roll); 
 	}
 
-	void setRotation(const SimdVector3& axis, const SimdScalar& angle)
+	void setRotation(const btSimdVector3& axis, const SimdScalar& angle)
 	{
 		SimdScalar d = axis.length();
 		assert(d != SimdScalar(0.0));
@@ -66,26 +66,26 @@ public:
 			cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw);
 	}
 
-	SimdQuaternion& operator+=(const SimdQuaternion& q)
+	btSimdQuaternion& operator+=(const btSimdQuaternion& q)
 	{
 		m_x += q.x(); m_y += q.y(); m_z += q.z(); m_unusedW += q[3];
 		return *this;
 	}
 
-	SimdQuaternion& operator-=(const SimdQuaternion& q) 
+	btSimdQuaternion& operator-=(const btSimdQuaternion& q) 
 	{
 		m_x -= q.x(); m_y -= q.y(); m_z -= q.z(); m_unusedW -= q[3];
 		return *this;
 	}
 
-	SimdQuaternion& operator*=(const SimdScalar& s)
+	btSimdQuaternion& operator*=(const SimdScalar& s)
 	{
 		m_x *= s; m_y *= s; m_z *= s; m_unusedW *= s;
 		return *this;
 	}
 
 
-	SimdQuaternion& operator*=(const SimdQuaternion& q)
+	btSimdQuaternion& operator*=(const btSimdQuaternion& q)
 	{
 		setValue(m_unusedW * q.x() + m_x * q[3] + m_y * q.z() - m_z * q.y(),
 			m_unusedW * q.y() + m_y * q[3] + m_z * q.x() - m_x * q.z(),
@@ -94,7 +94,7 @@ public:
 		return *this;
 	}
 
-	SimdScalar dot(const SimdQuaternion& q) const
+	SimdScalar dot(const btSimdQuaternion& q) const
 	{
 		return m_x * q.x() + m_y * q.y() + m_z * q.z() + m_unusedW * q[3];
 	}
@@ -109,39 +109,39 @@ public:
 		return SimdSqrt(length2());
 	}
 
-	SimdQuaternion& normalize() 
+	btSimdQuaternion& normalize() 
 	{
 		return *this /= length();
 	}
 
-	SIMD_FORCE_INLINE SimdQuaternion
+	SIMD_FORCE_INLINE btSimdQuaternion
 	operator*(const SimdScalar& s) const
 	{
-		return SimdQuaternion(x() * s, y() * s, z() * s, m_unusedW * s);
+		return btSimdQuaternion(x() * s, y() * s, z() * s, m_unusedW * s);
 	}
 
 
 
-	SimdQuaternion operator/(const SimdScalar& s) const
+	btSimdQuaternion operator/(const SimdScalar& s) const
 	{
 		assert(s != SimdScalar(0.0));
 		return *this * (SimdScalar(1.0) / s);
 	}
 
 
-	SimdQuaternion& operator/=(const SimdScalar& s) 
+	btSimdQuaternion& operator/=(const SimdScalar& s) 
 	{
 		assert(s != SimdScalar(0.0));
 		return *this *= SimdScalar(1.0) / s;
 	}
 
 
-	SimdQuaternion normalized() const 
+	btSimdQuaternion normalized() const 
 	{
 		return *this / length();
 	} 
 
-	SimdScalar angle(const SimdQuaternion& q) const 
+	SimdScalar angle(const btSimdQuaternion& q) const 
 	{
 		SimdScalar s = SimdSqrt(length2() * q.length2());
 		assert(s != SimdScalar(0.0));
@@ -156,34 +156,34 @@ public:
 
 
 
-	SimdQuaternion inverse() const
+	btSimdQuaternion inverse() const
 	{
-		return SimdQuaternion(m_x, m_y, m_z, -m_unusedW);
+		return btSimdQuaternion(m_x, m_y, m_z, -m_unusedW);
 	}
 
-	SIMD_FORCE_INLINE SimdQuaternion
-	operator+(const SimdQuaternion& q2) const
+	SIMD_FORCE_INLINE btSimdQuaternion
+	operator+(const btSimdQuaternion& q2) const
 	{
-		const SimdQuaternion& q1 = *this;
-		return SimdQuaternion(q1.x() + q2.x(), q1.y() + q2.y(), q1.z() + q2.z(), q1[3] + q2[3]);
+		const btSimdQuaternion& q1 = *this;
+		return btSimdQuaternion(q1.x() + q2.x(), q1.y() + q2.y(), q1.z() + q2.z(), q1[3] + q2[3]);
 	}
 
-	SIMD_FORCE_INLINE SimdQuaternion
-	operator-(const SimdQuaternion& q2) const
+	SIMD_FORCE_INLINE btSimdQuaternion
+	operator-(const btSimdQuaternion& q2) const
 	{
-		const SimdQuaternion& q1 = *this;
-		return SimdQuaternion(q1.x() - q2.x(), q1.y() - q2.y(), q1.z() - q2.z(), q1[3] - q2[3]);
+		const btSimdQuaternion& q1 = *this;
+		return btSimdQuaternion(q1.x() - q2.x(), q1.y() - q2.y(), q1.z() - q2.z(), q1[3] - q2[3]);
 	}
 
-	SIMD_FORCE_INLINE SimdQuaternion operator-() const
+	SIMD_FORCE_INLINE btSimdQuaternion operator-() const
 	{
-		const SimdQuaternion& q2 = *this;
-		return SimdQuaternion( - q2.x(), - q2.y(),  - q2.z(),  - q2[3]);
+		const btSimdQuaternion& q2 = *this;
+		return btSimdQuaternion( - q2.x(), - q2.y(),  - q2.z(),  - q2[3]);
 	}
 
-	SIMD_FORCE_INLINE SimdQuaternion farthest( const SimdQuaternion& qd) const 
+	SIMD_FORCE_INLINE btSimdQuaternion farthest( const btSimdQuaternion& qd) const 
 	{
-		SimdQuaternion diff,sum;
+		btSimdQuaternion diff,sum;
 		diff = *this - qd;
 		sum = *this + qd;
 		if( diff.dot(diff) > sum.dot(sum) )
@@ -191,7 +191,7 @@ public:
 		return (-qd);
 	}
 
-	SimdQuaternion slerp(const SimdQuaternion& q, const SimdScalar& t) const
+	btSimdQuaternion slerp(const btSimdQuaternion& q, const SimdScalar& t) const
 	{
 		SimdScalar theta = angle(q);
 		if (theta != SimdScalar(0.0))
@@ -199,7 +199,7 @@ public:
 			SimdScalar d = SimdScalar(1.0) / SimdSin(theta);
 			SimdScalar s0 = SimdSin((SimdScalar(1.0) - t) * theta);
 			SimdScalar s1 = SimdSin(t * theta);   
-			return SimdQuaternion((m_x * s0 + q.x() * s1) * d,
+			return btSimdQuaternion((m_x * s0 + q.x() * s1) * d,
 				(m_y * s0 + q.y() * s1) * d,
 				(m_z * s0 + q.z() * s1) * d,
 				(m_unusedW * s0 + q[3] * s1) * d);
@@ -216,69 +216,69 @@ public:
 
 
 
-SIMD_FORCE_INLINE SimdQuaternion
-operator-(const SimdQuaternion& q)
+SIMD_FORCE_INLINE btSimdQuaternion
+operator-(const btSimdQuaternion& q)
 {
-	return SimdQuaternion(-q.x(), -q.y(), -q.z(), -q[3]);
+	return btSimdQuaternion(-q.x(), -q.y(), -q.z(), -q[3]);
 }
 
 
 
 
-SIMD_FORCE_INLINE SimdQuaternion
-operator*(const SimdQuaternion& q1, const SimdQuaternion& q2) {
-	return SimdQuaternion(q1[3] * q2.x() + q1.x() * q2[3] + q1.y() * q2.z() - q1.z() * q2.y(),
+SIMD_FORCE_INLINE btSimdQuaternion
+operator*(const btSimdQuaternion& q1, const btSimdQuaternion& q2) {
+	return btSimdQuaternion(q1[3] * q2.x() + q1.x() * q2[3] + q1.y() * q2.z() - q1.z() * q2.y(),
 		q1[3] * q2.y() + q1.y() * q2[3] + q1.z() * q2.x() - q1.x() * q2.z(),
 		q1[3] * q2.z() + q1.z() * q2[3] + q1.x() * q2.y() - q1.y() * q2.x(),
 		q1[3] * q2[3] - q1.x() * q2.x() - q1.y() * q2.y() - q1.z() * q2.z()); 
 }
 
-SIMD_FORCE_INLINE SimdQuaternion
-operator*(const SimdQuaternion& q, const SimdVector3& w)
+SIMD_FORCE_INLINE btSimdQuaternion
+operator*(const btSimdQuaternion& q, const btSimdVector3& w)
 {
-	return SimdQuaternion( q[3] * w.x() + q.y() * w.z() - q.z() * w.y(),
+	return btSimdQuaternion( q[3] * w.x() + q.y() * w.z() - q.z() * w.y(),
 		q[3] * w.y() + q.z() * w.x() - q.x() * w.z(),
 		q[3] * w.z() + q.x() * w.y() - q.y() * w.x(),
 		-q.x() * w.x() - q.y() * w.y() - q.z() * w.z()); 
 }
 
-SIMD_FORCE_INLINE SimdQuaternion
-operator*(const SimdVector3& w, const SimdQuaternion& q)
+SIMD_FORCE_INLINE btSimdQuaternion
+operator*(const btSimdVector3& w, const btSimdQuaternion& q)
 {
-	return SimdQuaternion( w.x() * q[3] + w.y() * q.z() - w.z() * q.y(),
+	return btSimdQuaternion( w.x() * q[3] + w.y() * q.z() - w.z() * q.y(),
 		w.y() * q[3] + w.z() * q.x() - w.x() * q.z(),
 		w.z() * q[3] + w.x() * q.y() - w.y() * q.x(),
 		-w.x() * q.x() - w.y() * q.y() - w.z() * q.z()); 
 }
 
 SIMD_FORCE_INLINE SimdScalar 
-dot(const SimdQuaternion& q1, const SimdQuaternion& q2) 
+dot(const btSimdQuaternion& q1, const btSimdQuaternion& q2) 
 { 
 	return q1.dot(q2); 
 }
 
 
 SIMD_FORCE_INLINE SimdScalar
-length(const SimdQuaternion& q) 
+length(const btSimdQuaternion& q) 
 { 
 	return q.length(); 
 }
 
 SIMD_FORCE_INLINE SimdScalar
-angle(const SimdQuaternion& q1, const SimdQuaternion& q2) 
+angle(const btSimdQuaternion& q1, const btSimdQuaternion& q2) 
 { 
 	return q1.angle(q2); 
 }
 
 
-SIMD_FORCE_INLINE SimdQuaternion
-inverse(const SimdQuaternion& q) 
+SIMD_FORCE_INLINE btSimdQuaternion
+inverse(const btSimdQuaternion& q) 
 {
 	return q.inverse();
 }
 
-SIMD_FORCE_INLINE SimdQuaternion
-slerp(const SimdQuaternion& q1, const SimdQuaternion& q2, const SimdScalar& t) 
+SIMD_FORCE_INLINE btSimdQuaternion
+slerp(const btSimdQuaternion& q1, const btSimdQuaternion& q2, const SimdScalar& t) 
 {
 	return q1.slerp(q2, t);
 }

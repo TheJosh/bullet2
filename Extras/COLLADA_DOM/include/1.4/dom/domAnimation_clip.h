@@ -54,7 +54,7 @@ protected:  // Attributes
  */
 	xsDouble attrEnd;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The animation_clip element may contain an asset element.  @see domAsset
  */

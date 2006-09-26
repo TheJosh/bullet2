@@ -194,14 +194,14 @@ bool EpaPolyhedron::Create( SimdPoint3* pInitialPoints,
 	//////////////////////////////////////////////////////////////////////////
 
 #ifdef EPA_POLYHEDRON_USE_PLANES
-	SimdVector3 v0 = pInitialPoints[ finalPointsIndices[ 1 ] ] - pInitialPoints[ finalPointsIndices[ 0 ] ];
-	SimdVector3 v1 = pInitialPoints[ finalPointsIndices[ 2 ] ] - pInitialPoints[ finalPointsIndices[ 0 ] ];
+	btSimdVector3 v0 = pInitialPoints[ finalPointsIndices[ 1 ] ] - pInitialPoints[ finalPointsIndices[ 0 ] ];
+	btSimdVector3 v1 = pInitialPoints[ finalPointsIndices[ 2 ] ] - pInitialPoints[ finalPointsIndices[ 0 ] ];
 #else
-	SimdVector3 v0 = pInitialPoints[ 1 ] - pInitialPoints[ 0 ];
-	SimdVector3 v1 = pInitialPoints[ 2 ] - pInitialPoints[ 0 ];
+	btSimdVector3 v0 = pInitialPoints[ 1 ] - pInitialPoints[ 0 ];
+	btSimdVector3 v1 = pInitialPoints[ 2 ] - pInitialPoints[ 0 ];
 #endif
 
-	SimdVector3 planeNormal = v1.cross( v0 );
+	btSimdVector3 planeNormal = v1.cross( v0 );
 	planeNormal.normalize();
 
 #ifdef EPA_POLYHEDRON_USE_PLANES
@@ -235,7 +235,7 @@ bool EpaPolyhedron::Create( SimdPoint3* pInitialPoints,
 	{
 		if ( planeDistance > 0 )
 		{
-			SimdVector3 tmp = pInitialPoints[ 1 ];
+			btSimdVector3 tmp = pInitialPoints[ 1 ];
 			pInitialPoints[ 1 ] = pInitialPoints[ 2 ];
 			pInitialPoints[ 2 ] = tmp;
 

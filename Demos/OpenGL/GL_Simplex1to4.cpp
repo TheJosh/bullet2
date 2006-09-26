@@ -38,7 +38,7 @@ GL_Simplex1to4::GL_Simplex1to4()
 ///
 void	GL_Simplex1to4::CalcClosest(float* m)
 {
-	SimdTransform tr;
+	btSimdTransform tr;
 	tr.setFromOpenGLMatrix(m);
 	
 
@@ -50,7 +50,7 @@ void	GL_Simplex1to4::CalcClosest(float* m)
 				m_simplexSolver->reset();
 				bool res;
 
-				SimdVector3 v;
+				btSimdVector3 v;
 
 				for (int i=0;i<m_numVertices;i++)
 				{

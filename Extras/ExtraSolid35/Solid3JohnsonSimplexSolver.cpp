@@ -48,7 +48,7 @@ void Solid3JohnsonSimplexSolver::reset()
 
 
 
-void Solid3JohnsonSimplexSolver::addVertex(const SimdVector3& w) 
+void Solid3JohnsonSimplexSolver::addVertex(const btSimdVector3& w) 
 {
 	assert(!fullSimplex());
 	m_last = 0;
@@ -66,7 +66,7 @@ void Solid3JohnsonSimplexSolver::addVertex(const SimdVector3& w)
 	compute_det();
 }
 
-void Solid3JohnsonSimplexSolver::addVertex(const SimdVector3& w, const SimdPoint3& p, const SimdPoint3& q)
+void Solid3JohnsonSimplexSolver::addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q)
 {
 	addVertex(w);
 	m_p[m_last] = p;
@@ -88,7 +88,7 @@ SimdScalar Solid3JohnsonSimplexSolver::maxVertex()
 	return m_maxlen2; 
 }
 
-bool Solid3JohnsonSimplexSolver::closest(SimdVector3& v) 
+bool Solid3JohnsonSimplexSolver::closest(btSimdVector3& v) 
 {
 #ifdef FAST_CLOSEST
 	T_Bits s;
@@ -125,14 +125,14 @@ bool Solid3JohnsonSimplexSolver::closest(SimdVector3& v)
 	
 	// Original GJK calls the backup procedure at this point.
 #ifdef USE_BACKUP_PROCEDURE
-	backup_closest(SimdVector3& v); 
+	backup_closest(btSimdVector3& v); 
 #endif
 	return false;  
 }
 
 
 
-int Solid3JohnsonSimplexSolver::getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, SimdVector3 *yBuf) const 
+int Solid3JohnsonSimplexSolver::getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const 
 {
 	int num_verts = 0;
 	int i;
@@ -155,7 +155,7 @@ int Solid3JohnsonSimplexSolver::getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, S
 	return num_verts;
 }
 
-bool Solid3JohnsonSimplexSolver::inSimplex(const SimdVector3& w) 
+bool Solid3JohnsonSimplexSolver::inSimplex(const btSimdVector3& w) 
 {
 	int i;
 	T_Bits bit;
@@ -171,7 +171,7 @@ bool Solid3JohnsonSimplexSolver::inSimplex(const SimdVector3& w)
 
 
 	
-void Solid3JohnsonSimplexSolver::backup_closest(SimdVector3& v)
+void Solid3JohnsonSimplexSolver::backup_closest(btSimdVector3& v)
 { 		
 	SimdScalar min_dist2 = SIMD_INFINITY;
 	
@@ -180,7 +180,7 @@ void Solid3JohnsonSimplexSolver::backup_closest(SimdVector3& v)
 	{
 		if (subseteq(s, m_all_bits) && proper(s))
 		{	
-			SimdVector3 u;
+			btSimdVector3 u;
 			compute_vector(s, u);
 			SimdScalar dist2 = u.length2();
 			if (dist2 < min_dist2)
@@ -300,7 +300,7 @@ bool Solid3JohnsonSimplexSolver::proper(T_Bits s)
 	return true;
 }
 
-void Solid3JohnsonSimplexSolver::compute_vector(T_Bits s, SimdVector3& v) 
+void Solid3JohnsonSimplexSolver::compute_vector(T_Bits s, btSimdVector3& v) 
 {
 	m_maxlen2 = SimdScalar(0.0);
 	SimdScalar sum = SimdScalar(0.0);

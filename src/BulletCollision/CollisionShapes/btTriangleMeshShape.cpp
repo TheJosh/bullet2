@@ -22,14 +22,14 @@ subject to the following restrictions:
 
 #include "stdio.h"
 
-TriangleMeshShape::TriangleMeshShape(StridingMeshInterface* meshInterface)
+btTriangleMeshShape::btTriangleMeshShape(btStridingMeshInterface* meshInterface)
 : m_meshInterface(meshInterface)
 {
 	RecalcLocalAabb();
 }
 
 
-TriangleMeshShape::~TriangleMeshShape()
+btTriangleMeshShape::~btTriangleMeshShape()
 {
 		
 }
@@ -37,20 +37,20 @@ TriangleMeshShape::~TriangleMeshShape()
 
 
 
-void TriangleMeshShape::GetAabb(const SimdTransform& trans,SimdVector3& aabbMin,SimdVector3& aabbMax) const
+void btTriangleMeshShape::GetAabb(const btSimdTransform& trans,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
 {
 
-	SimdVector3 localHalfExtents = 0.5f*(m_localAabbMax-m_localAabbMin);
-	SimdVector3 localCenter = 0.5f*(m_localAabbMax+m_localAabbMin);
+	btSimdVector3 localHalfExtents = 0.5f*(m_localAabbMax-m_localAabbMin);
+	btSimdVector3 localCenter = 0.5f*(m_localAabbMax+m_localAabbMin);
 	
-	SimdMatrix3x3 abs_b = trans.getBasis().absolute();  
+	btSimdMatrix3x3 abs_b = trans.getBasis().absolute();  
 
 	SimdPoint3 center = trans(localCenter);
 
-	SimdVector3 extent = SimdVector3(abs_b[0].dot(localHalfExtents),
+	btSimdVector3 extent = btSimdVector3(abs_b[0].dot(localHalfExtents),
 		   abs_b[1].dot(localHalfExtents),
 		  abs_b[2].dot(localHalfExtents));
-	extent += SimdVector3(GetMargin(),GetMargin(),GetMargin());
+	extent += btSimdVector3(GetMargin(),GetMargin(),GetMargin());
 
 	aabbMin = center - extent;
 	aabbMax = center + extent;
@@ -58,13 +58,13 @@ void TriangleMeshShape::GetAabb(const SimdTransform& trans,SimdVector3& aabbMin,
 	
 }
 
-void	TriangleMeshShape::RecalcLocalAabb()
+void	btTriangleMeshShape::RecalcLocalAabb()
 {
 	for (int i=0;i<3;i++)
 	{
-		SimdVector3 vec(0.f,0.f,0.f);
+		btSimdVector3 vec(0.f,0.f,0.f);
 		vec[i] = 1.f;
-		SimdVector3 tmp = LocalGetSupportingVertex(vec);
+		btSimdVector3 tmp = LocalGetSupportingVertex(vec);
 		m_localAabbMax[i] = tmp[i]+m_collisionMargin;
 		vec[i] = -1.f;
 		tmp = LocalGetSupportingVertex(vec);
@@ -74,24 +74,24 @@ void	TriangleMeshShape::RecalcLocalAabb()
 
 
 
-class SupportVertexCallback : public TriangleCallback
+class SupportVertexCallback : public btTriangleCallback
 {
 
-	SimdVector3 m_supportVertexLocal;
+	btSimdVector3 m_supportVertexLocal;
 public:
 
-	SimdTransform	m_worldTrans;
+	btSimdTransform	m_worldTrans;
 	SimdScalar m_maxDot;
-	SimdVector3 m_supportVecLocal;
+	btSimdVector3 m_supportVecLocal;
 
-	SupportVertexCallback(const SimdVector3& supportVecWorld,const SimdTransform& trans)
+	SupportVertexCallback(const btSimdVector3& supportVecWorld,const btSimdTransform& trans)
 		: m_supportVertexLocal(0.f,0.f,0.f), m_worldTrans(trans) ,m_maxDot(-1e30f)
 		
 	{
 		m_supportVecLocal = supportVecWorld * m_worldTrans.getBasis();
 	}
 
-	virtual void ProcessTriangle( SimdVector3* triangle,int partId, int triangleIndex)
+	virtual void ProcessTriangle( btSimdVector3* triangle,int partId, int triangleIndex)
 	{
 		for (int i=0;i<3;i++)
 		{
@@ -104,12 +104,12 @@ public:
 		}
 	}
 
-	SimdVector3 GetSupportVertexWorldSpace()
+	btSimdVector3 GetSupportVertexWorldSpace()
 	{
 		return m_worldTrans(m_supportVertexLocal);
 	}
 
-	SimdVector3	GetSupportVertexLocal()
+	btSimdVector3	GetSupportVertexLocal()
 	{
 		return m_supportVertexLocal;
 	}
@@ -117,13 +117,13 @@ public:
 };
 
 	
-void TriangleMeshShape::setLocalScaling(const SimdVector3& scaling)
+void btTriangleMeshShape::setLocalScaling(const btSimdVector3& scaling)
 {
 	m_meshInterface->setScaling(scaling);
 	RecalcLocalAabb();
 }
 
-const SimdVector3& TriangleMeshShape::getLocalScaling() const
+const btSimdVector3& btTriangleMeshShape::getLocalScaling() const
 {
 	return m_meshInterface->getScaling();
 }
@@ -136,23 +136,23 @@ const SimdVector3& TriangleMeshShape::getLocalScaling() const
 //#define DEBUG_TRIANGLE_MESH
 
 
-void	TriangleMeshShape::ProcessAllTriangles(TriangleCallback* callback,const SimdVector3& aabbMin,const SimdVector3& aabbMax) const
+void	btTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const
 {
 
-	struct FilteredCallback : public InternalTriangleIndexCallback
+	struct FilteredCallback : public btInternalTriangleIndexCallback
 	{
-		TriangleCallback* m_callback;
-		SimdVector3 m_aabbMin;
-		SimdVector3 m_aabbMax;
+		btTriangleCallback* m_callback;
+		btSimdVector3 m_aabbMin;
+		btSimdVector3 m_aabbMax;
 
-		FilteredCallback(TriangleCallback* callback,const SimdVector3& aabbMin,const SimdVector3& aabbMax)
+		FilteredCallback(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax)
 			:m_callback(callback),
 			m_aabbMin(aabbMin),
 			m_aabbMax(aabbMax)
 		{
 		}
 
-		virtual void InternalProcessTriangleIndex(SimdVector3* triangle,int partId,int triangleIndex)
+		virtual void InternalProcessTriangleIndex(btSimdVector3* triangle,int partId,int triangleIndex)
 		{
 			if (TestTriangleAgainstAabb2(&triangle[0],m_aabbMin,m_aabbMax))
 			{
@@ -174,7 +174,7 @@ void	TriangleMeshShape::ProcessAllTriangles(TriangleCallback* callback,const Sim
 
 
 
-void	TriangleMeshShape::CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia)
+void	btTriangleMeshShape::CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
 {
 	//moving concave objects not supported
 	assert(0);
@@ -182,16 +182,16 @@ void	TriangleMeshShape::CalculateLocalInertia(SimdScalar mass,SimdVector3& inert
 }
 
 
-SimdVector3 TriangleMeshShape::LocalGetSupportingVertex(const SimdVector3& vec) const
+btSimdVector3 btTriangleMeshShape::LocalGetSupportingVertex(const btSimdVector3& vec) const
 {
-	SimdVector3 supportVertex;
+	btSimdVector3 supportVertex;
 
-	SimdTransform ident;
+	btSimdTransform ident;
 	ident.setIdentity();
 
 	SupportVertexCallback supportCallback(vec,ident);
 
-	SimdVector3 aabbMax(1e30f,1e30f,1e30f);
+	btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
 	
 	ProcessAllTriangles(&supportCallback,-aabbMax,aabbMax);
 		

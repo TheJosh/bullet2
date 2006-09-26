@@ -117,7 +117,7 @@ public:
 	class domJoints : public daeElement
 	{
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * The input element must occur at least twice. These inputs are local inputs.
  * @see domInput
@@ -358,7 +358,7 @@ public:
  */
 		domUint attrCount;
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * The input element must occur at least twice. @see domInput
  */
@@ -471,7 +471,7 @@ protected:  // Attribute
  */
 	xsAnyURI attrSource;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * This provides extra information about the position and orientation of the
  * base mesh before binding.  If bind_shape_matrix is not specified then an

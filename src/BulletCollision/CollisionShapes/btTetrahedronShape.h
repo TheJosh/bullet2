@@ -22,7 +22,7 @@ subject to the following restrictions:
 
 
 ///BU_Simplex1to4 implements feature based and implicit simplex of up to 4 vertices (tetrahedron, triangle, line, vertex).
-class BU_Simplex1to4 : public PolyhedralConvexShape
+class btBU_Simplex1to4 : public btPolyhedralConvexShape
 {
 protected:
 
@@ -30,12 +30,12 @@ protected:
 	SimdPoint3	m_vertices[4];
 
 public:
-	BU_Simplex1to4();
+	btBU_Simplex1to4();
 
-	BU_Simplex1to4(const SimdPoint3& pt0);
-	BU_Simplex1to4(const SimdPoint3& pt0,const SimdPoint3& pt1);
-	BU_Simplex1to4(const SimdPoint3& pt0,const SimdPoint3& pt1,const SimdPoint3& pt2);
-	BU_Simplex1to4(const SimdPoint3& pt0,const SimdPoint3& pt1,const SimdPoint3& pt2,const SimdPoint3& pt3);
+	btBU_Simplex1to4(const SimdPoint3& pt0);
+	btBU_Simplex1to4(const SimdPoint3& pt0,const SimdPoint3& pt1);
+	btBU_Simplex1to4(const SimdPoint3& pt0,const SimdPoint3& pt1,const SimdPoint3& pt2);
+	btBU_Simplex1to4(const SimdPoint3& pt0,const SimdPoint3& pt1,const SimdPoint3& pt2,const SimdPoint3& pt3);
 
     
 	void	Reset()
@@ -60,7 +60,7 @@ public:
 
 	virtual int	GetNumPlanes() const;
 
-	virtual void GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i) const;
+	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i) const;
 
 	virtual int GetIndex(int i) const;
 
@@ -68,7 +68,7 @@ public:
 
 
 	///GetName is for debugging
-	virtual  char*	GetName()const { return "BU_Simplex1to4";}
+	virtual  char*	GetName()const { return "btBU_Simplex1to4";}
 
 };
 

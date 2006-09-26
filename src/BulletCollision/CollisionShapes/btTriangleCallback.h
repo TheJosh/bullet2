@@ -19,20 +19,20 @@ subject to the following restrictions:
 #include "LinearMath/SimdVector3.h"
 
 
-class TriangleCallback
+class btTriangleCallback
 {
 public:
 
-	virtual ~TriangleCallback();
-	virtual void ProcessTriangle(SimdVector3* triangle, int partId, int triangleIndex) = 0;
+	virtual ~btTriangleCallback();
+	virtual void ProcessTriangle(btSimdVector3* triangle, int partId, int triangleIndex) = 0;
 };
 
-class InternalTriangleIndexCallback
+class btInternalTriangleIndexCallback
 {
 public:
 
-	virtual ~InternalTriangleIndexCallback();
-	virtual void InternalProcessTriangleIndex(SimdVector3* triangle,int partId,int  triangleIndex) = 0;
+	virtual ~btInternalTriangleIndexCallback();
+	virtual void InternalProcessTriangleIndex(btSimdVector3* triangle,int partId,int  triangleIndex) = 0;
 };
 
 

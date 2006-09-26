@@ -25,16 +25,16 @@
 
 #ifndef SOR_LCP_H
 #define SOR_LCP_H
-class RigidBody;
+class btRigidBody;
 class BU_Joint;
 #include "LinearMath/SimdScalar.h"
 
-struct ContactSolverInfo;
+struct btContactSolverInfo;
 
 void SolveInternal1 (float global_cfm,
 					 float global_erp,
-					 RigidBody * const *body, int nb,
-		     BU_Joint * const *_joint, int nj, const ContactSolverInfo& info);
+					 btRigidBody * const *body, int nb,
+		     BU_Joint * const *_joint, int nj, const btContactSolverInfo& info);
 
 int dRandInt2 (int n);
 

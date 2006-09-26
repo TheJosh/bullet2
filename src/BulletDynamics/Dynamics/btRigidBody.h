@@ -24,8 +24,8 @@ subject to the following restrictions:
 
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
-class CollisionShape;
-struct MassProps;
+class btCollisionShape;
+struct btMassProps;
 typedef SimdScalar dMatrix3[4*3];
 
 extern float gLinearAirDamping;
@@ -33,87 +33,87 @@ extern bool gUseEpa;
 
 
 
-/// RigidBody class for RigidBody Dynamics
+/// btRigidBody class for btRigidBody Dynamics
 /// 
-class RigidBody  : public CollisionObject
+class btRigidBody  : public btCollisionObject
 {
 public:
 
-	RigidBody(const MassProps& massProps,SimdScalar linearDamping,SimdScalar angularDamping,SimdScalar friction,SimdScalar restitution);
+	btRigidBody(const btMassProps& massProps,SimdScalar linearDamping,SimdScalar angularDamping,SimdScalar friction,SimdScalar restitution);
 
-	void			proceedToTransform(const SimdTransform& newTrans); 
+	void			proceedToTransform(const btSimdTransform& newTrans); 
 	
 	
 	/// continuous collision detection needs prediction
-	void			predictIntegratedTransform(SimdScalar step, SimdTransform& predictedTransform) const;
+	void			predictIntegratedTransform(SimdScalar step, btSimdTransform& predictedTransform) const;
 	
 	void			saveKinematicState(SimdScalar step);
 	
 
 	void			applyForces(SimdScalar step);
 	
-	void			setGravity(const SimdVector3& acceleration);  
+	void			setGravity(const btSimdVector3& acceleration);  
 	
 	void			setDamping(SimdScalar lin_damping, SimdScalar ang_damping);
 	
-	inline const CollisionShape*	GetCollisionShape() const {
+	inline const btCollisionShape*	GetCollisionShape() const {
 		return m_collisionShape;
 	}
 
-	inline CollisionShape*	GetCollisionShape() {
+	inline btCollisionShape*	GetCollisionShape() {
 			return m_collisionShape;
 	}
 	
-	void			setMassProps(SimdScalar mass, const SimdVector3& inertia);
+	void			setMassProps(SimdScalar mass, const btSimdVector3& inertia);
 	
 	SimdScalar		getInvMass() const { return m_inverseMass; }
-	const SimdMatrix3x3& getInvInertiaTensorWorld() const { 
+	const btSimdMatrix3x3& getInvInertiaTensorWorld() const { 
 		return m_invInertiaTensorWorld; 
 	}
 		
 	void			integrateVelocities(SimdScalar step);
 
-	void			setCenterOfMassTransform(const SimdTransform& xform);
+	void			setCenterOfMassTransform(const btSimdTransform& xform);
 
-	void			applyCentralForce(const SimdVector3& force)
+	void			applyCentralForce(const btSimdVector3& force)
 	{
 		m_totalForce += force;
 	}
     
-	const SimdVector3& getInvInertiaDiagLocal()
+	const btSimdVector3& getInvInertiaDiagLocal()
 	{
 		return m_invInertiaLocal;
 	};
 
-	void	setInvInertiaDiagLocal(const SimdVector3& diagInvInertia)
+	void	setInvInertiaDiagLocal(const btSimdVector3& diagInvInertia)
 	{
 		m_invInertiaLocal = diagInvInertia;
 	}
 
-	void	applyTorque(const SimdVector3& torque)
+	void	applyTorque(const btSimdVector3& torque)
 	{
 		m_totalTorque += torque;
 	}
 	
-	void	applyForce(const SimdVector3& force, const SimdVector3& rel_pos) 
+	void	applyForce(const btSimdVector3& force, const btSimdVector3& rel_pos) 
 	{
 		applyCentralForce(force);
 		applyTorque(rel_pos.cross(force));
 	}
 	
-	void applyCentralImpulse(const SimdVector3& impulse)
+	void applyCentralImpulse(const btSimdVector3& impulse)
 	{
 		m_linearVelocity += impulse * m_inverseMass;
 	}
 	
-  	void applyTorqueImpulse(const SimdVector3& torque)
+  	void applyTorqueImpulse(const btSimdVector3& torque)
 	{
 		if (!IsStatic())
 			m_angularVelocity += m_invInertiaTensorWorld * torque;
 
 	}
 	
-	void applyImpulse(const SimdVector3& impulse, const SimdVector3& rel_pos) 
+	void applyImpulse(const btSimdVector3& impulse, const btSimdVector3& rel_pos) 
 	{
 		if (m_inverseMass != 0.f)
 		{
@@ -133,28 +133,28 @@ public:
 	const SimdPoint3&     getCenterOfMassPosition() const { 
 		return m_worldTransform.getOrigin(); 
 	}
-	SimdQuaternion getOrientation() const;
+	btSimdQuaternion getOrientation() const;
 	
-	const SimdTransform&  getCenterOfMassTransform() const { 
+	const btSimdTransform&  getCenterOfMassTransform() const { 
 		return m_worldTransform; 
 	}
-	const SimdVector3&   getLinearVelocity() const { 
+	const btSimdVector3&   getLinearVelocity() const { 
 		return m_linearVelocity; 
 	}
-	const SimdVector3&    getAngularVelocity() const { 
+	const btSimdVector3&    getAngularVelocity() const { 
 		return m_angularVelocity; 
 	}
 	
 
-	void setLinearVelocity(const SimdVector3& lin_vel);
-	void setAngularVelocity(const SimdVector3& ang_vel) { 
+	void setLinearVelocity(const btSimdVector3& lin_vel);
+	void setAngularVelocity(const btSimdVector3& ang_vel) { 
 		if (!IsStatic())
 		{
 			m_angularVelocity = ang_vel; 
 		}
 	}
 
-	SimdVector3 getVelocityInLocalPoint(const SimdVector3& rel_pos) const
+	btSimdVector3 getVelocityInLocalPoint(const btSimdVector3& rel_pos) const
 	{
 		//we also calculate lin/ang velocity for kinematic objects
 		return m_linearVelocity + m_angularVelocity.cross(rel_pos);
@@ -163,33 +163,33 @@ public:
 		//		return 	(m_worldTransform(rel_pos) - m_interpolationWorldTransform(rel_pos)) / m_kinematicTimeStep;
 	}
 
-	void translate(const SimdVector3& v) 
+	void translate(const btSimdVector3& v) 
 	{
 		m_worldTransform.getOrigin() += v; 
 	}
 
 	
-	void	getAabb(SimdVector3& aabbMin,SimdVector3& aabbMax) const;
+	void	getAabb(btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
 
 
 
 
 	
-	inline float ComputeImpulseDenominator(const SimdPoint3& pos, const SimdVector3& normal) const
+	inline float ComputeImpulseDenominator(const SimdPoint3& pos, const btSimdVector3& normal) const
 	{
-		SimdVector3 r0 = pos - getCenterOfMassPosition();
+		btSimdVector3 r0 = pos - getCenterOfMassPosition();
 
-		SimdVector3 c0 = (r0).cross(normal);
+		btSimdVector3 c0 = (r0).cross(normal);
 
-		SimdVector3 vec = (c0 * getInvInertiaTensorWorld()).cross(r0);
+		btSimdVector3 vec = (c0 * getInvInertiaTensorWorld()).cross(r0);
 
 		return m_inverseMass + normal.dot(vec);
 
 	}
 
-	inline float ComputeAngularImpulseDenominator(const SimdVector3& axis) const
+	inline float ComputeAngularImpulseDenominator(const btSimdVector3& axis) const
 	{
-		SimdVector3 vec = axis * getInvInertiaTensorWorld();
+		btSimdVector3 vec = axis * getInvInertiaTensorWorld();
 		return axis.dot(vec);
 	}
 
@@ -197,16 +197,16 @@ public:
 
 private:
 	
-	SimdMatrix3x3	m_invInertiaTensorWorld;
-	SimdVector3		m_gravity;	
-	SimdVector3		m_invInertiaLocal;
-	SimdVector3		m_totalForce;
-	SimdVector3		m_totalTorque;
-//	SimdQuaternion	m_orn1;
+	btSimdMatrix3x3	m_invInertiaTensorWorld;
+	btSimdVector3		m_gravity;	
+	btSimdVector3		m_invInertiaLocal;
+	btSimdVector3		m_totalForce;
+	btSimdVector3		m_totalTorque;
+//	btSimdQuaternion	m_orn1;
 	
-	SimdVector3		m_linearVelocity;
+	btSimdVector3		m_linearVelocity;
 	
-	SimdVector3		m_angularVelocity;
+	btSimdVector3		m_angularVelocity;
 	
 	SimdScalar		m_linearDamping;
 	SimdScalar		m_angularDamping;
@@ -215,7 +215,7 @@ private:
 
 	SimdScalar		m_kinematicTimeStep;
 
-	BroadphaseProxy*	m_broadphaseProxy;
+	btBroadphaseProxy*	m_broadphaseProxy;
 
 
 	
@@ -223,15 +223,15 @@ private:
 
 	
 public:
-	const BroadphaseProxy*	GetBroadphaseProxy() const
+	const btBroadphaseProxy*	GetBroadphaseProxy() const
 	{
 		return m_broadphaseProxy;
 	}
-	BroadphaseProxy*	GetBroadphaseProxy() 
+	btBroadphaseProxy*	GetBroadphaseProxy() 
 	{
 		return m_broadphaseProxy;
 	}
-	void	SetBroadphaseProxy(BroadphaseProxy* broadphaseProxy)
+	void	SetBroadphaseProxy(btBroadphaseProxy* broadphaseProxy)
 	{
 		m_broadphaseProxy = broadphaseProxy;
 	}
@@ -248,8 +248,8 @@ public:
 
 	int				m_odeTag;
 	
-	SimdVector3		m_tacc;//temp
-	SimdVector3		m_facc;
+	btSimdVector3		m_tacc;//temp
+	btSimdVector3		m_facc;
 
 
 

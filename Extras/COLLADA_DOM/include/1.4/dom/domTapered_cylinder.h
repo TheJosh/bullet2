@@ -244,7 +244,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 /**
  * A float value that represents the length of the cylinder along the Y axis.
  * @see domHeight

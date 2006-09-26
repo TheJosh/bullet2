@@ -37,7 +37,7 @@ class	MyMotionState : public PHY_IMotionState
 		
 		virtual	void	calculateWorldTransformations();
 		
-		SimdTransform	m_worldTransform;
+		btSimdTransform	m_worldTransform;
 
 };
 

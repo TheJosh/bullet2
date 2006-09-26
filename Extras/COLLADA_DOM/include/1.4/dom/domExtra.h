@@ -42,7 +42,7 @@ protected:  // Attributes
  */
 	xsNMTOKEN attrType;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The extra element may contain an asset element.  @see domAsset
  */

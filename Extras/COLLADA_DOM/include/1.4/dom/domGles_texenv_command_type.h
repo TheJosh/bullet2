@@ -24,7 +24,7 @@ protected:  // Attributes
 	domGles_texenv_mode_enums attrOperator;
 	xsNCName attrUnit;
 
-protected:  // Element
+protected:  // btElement
 	domGles_texture_constant_typeRef elemConstant;
 
 public:	//Accessors and Mutators

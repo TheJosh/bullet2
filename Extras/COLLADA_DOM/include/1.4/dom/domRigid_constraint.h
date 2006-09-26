@@ -47,7 +47,7 @@ public:
  */
 		xsAnyURI attrRigid_body;
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  *  Allows you to "position" the attachment point.  @see domTranslate
  */
@@ -185,7 +185,7 @@ public:
  */
 		xsAnyURI attrRigid_body;
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  *  Allows you to "position" the attachment point.  @see domTranslate
  */
@@ -518,7 +518,7 @@ public:
 			class domSwing_cone_and_twist : public daeElement
 			{
 
-			protected:  // Elements
+			protected:  // btElements
 /**
  * The minimum values for the limit. @see domMin
  */
@@ -589,7 +589,7 @@ public:
 			class domLinear : public daeElement
 			{
 
-			protected:  // Elements
+			protected:  // btElements
 /**
  * The minimum values for the limit. @see domMin
  */
@@ -651,7 +651,7 @@ public:
 
 
 
-		protected:  // Elements
+		protected:  // btElements
 /**
  * The swing_cone_and_twist element describes the angular limits along each
  * rotation axis in degrees. The the X and Y limits describe a “swing cone”
@@ -736,7 +736,7 @@ public:
 			class domAngular : public daeElement
 			{
 
-			protected:  // Elements
+			protected:  // btElements
 /**
  * The stiffness (also called spring coefficient) has units of force/angle
  * in degrees. @see domStiffness
@@ -817,7 +817,7 @@ public:
 			class domLinear : public daeElement
 			{
 
-			protected:  // Elements
+			protected:  // btElements
 /**
  * The stiffness (also called spring coefficient) has units of force/distance.
  * @see domStiffness
@@ -889,7 +889,7 @@ public:
 
 
 
-		protected:  // Elements
+		protected:  // btElements
 /**
  * The angular spring properties. @see domAngular
  */
@@ -951,7 +951,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * If false, the constraint doesn’t exert any force or influence on the
  * rigid bodies. @see domEnabled
@@ -1045,7 +1045,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  * Defines the attachment (to a rigid_body or a node) to be used as the reference-frame.
  * @see domRef_attachment

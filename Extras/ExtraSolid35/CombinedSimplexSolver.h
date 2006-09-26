@@ -17,10 +17,10 @@
 #include "Solid3JohnsonSimplexSolver.h"
 
 /// CombinedSimplexSolver runs both Solid and Voronoi Simplex Solver for comparison
-class CombinedSimplexSolver: public SimplexSolverInterface
+class CombinedSimplexSolver: public btSimplexSolverInterface
 {
-	VoronoiSimplexSolver	m_voronoiSolver;
-//	VoronoiSimplexSolver	m_johnsonSolver;
+	btVoronoiSimplexSolver	m_voronoiSolver;
+//	btVoronoiSimplexSolver	m_johnsonSolver;
 
 	Solid3JohnsonSimplexSolver	m_johnsonSolver;
 	
@@ -35,19 +35,19 @@ class CombinedSimplexSolver: public SimplexSolverInterface
 
 	virtual void reset();
 
-	virtual void addVertex(const SimdVector3& w, const SimdPoint3& p, const SimdPoint3& q);
+	virtual void addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q);
 	
-	virtual bool closest(SimdVector3& v);
+	virtual bool closest(btSimdVector3& v);
 
 	virtual SimdScalar maxVertex();
 
 	virtual bool fullSimplex() const;
 
-	virtual int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, SimdVector3 *yBuf) const;
+	virtual int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const;
 
-	virtual bool inSimplex(const SimdVector3& w);
+	virtual bool inSimplex(const btSimdVector3& w);
 	
-	virtual void backup_closest(SimdVector3& v) ;
+	virtual void backup_closest(btSimdVector3& v) ;
 
 	virtual bool emptySimplex() const;
 

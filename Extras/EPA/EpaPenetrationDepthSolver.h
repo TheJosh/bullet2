@@ -26,29 +26,29 @@ extern SimdScalar	g_GJKMaxRelError;
 extern SimdScalar	g_GJKMaxRelErrorSqrd;
 
 //! Note : This class is not supposed to be a base class
-class EpaPenetrationDepthSolver : public ConvexPenetrationDepthSolver
+class EpaPenetrationDepthSolver : public btConvexPenetrationDepthSolver
 {
 	public :
 
-		bool			CalcPenDepth( SimplexSolverInterface& simplexSolver,
-									  ConvexShape* pConvexA, ConvexShape* pConvexB,
-									  const SimdTransform& transformA, const SimdTransform& transformB,
-									  SimdVector3& v, SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB,
-									  class IDebugDraw* debugDraw );
+		bool			CalcPenDepth( btSimplexSolverInterface& simplexSolver,
+									  btConvexShape* pConvexA, btConvexShape* pConvexB,
+									  const btSimdTransform& transformA, const btSimdTransform& transformB,
+									  btSimdVector3& v, SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB,
+									  class btIDebugDraw* debugDraw );
 
 	private :
 
 #ifdef EPA_USE_HYBRID
-		bool			HybridPenDepth( SimplexSolverInterface& simplexSolver,
-										ConvexShape* pConvexA, ConvexShape* pConvexB,
-										const SimdTransform& transformA, const SimdTransform& transformB,
+		bool			HybridPenDepth( btSimplexSolverInterface& simplexSolver,
+										btConvexShape* pConvexA, btConvexShape* pConvexB,
+										const btSimdTransform& transformA, const btSimdTransform& transformB,
 										SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB,
-										SimdScalar& penDepth, SimdVector3& v );
+										SimdScalar& penDepth, btSimdVector3& v );
 #endif
 
-		SimdScalar		EpaPenDepth( SimplexSolverInterface& simplexSolver,
-									 ConvexShape* pConvexA, ConvexShape* pConvexB,
-									 const SimdTransform& transformA, const SimdTransform& transformB,
+		SimdScalar		EpaPenDepth( btSimplexSolverInterface& simplexSolver,
+									 btConvexShape* pConvexA, btConvexShape* pConvexB,
+									 const btSimdTransform& transformA, const btSimdTransform& transformB,
 									 SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB );
 };
 

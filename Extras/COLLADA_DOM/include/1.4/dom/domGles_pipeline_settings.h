@@ -186,7 +186,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 		domFuncRef elemFunc;
 		domValueRef elemValue;
 
@@ -402,7 +402,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 		domSrcRef elemSrc;
 		domDestRef elemDest;
 
@@ -1644,7 +1644,7 @@ public:
 	protected:  // Attribute
 		xsNCName attrParam;
 
-	protected:  // Element
+	protected:  // btElement
 		domGles_texture_pipelineRef elemValue;
 
 	public:	//Accessors and Mutators
@@ -4275,7 +4275,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 		domFuncRef elemFunc;
 		domRefRef elemRef;
 		domMaskRef elemMask;
@@ -4649,7 +4649,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 		domFailRef elemFail;
 		domZfailRef elemZfail;
 		domZpassRef elemZpass;
@@ -6561,7 +6561,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 	domAlpha_funcRef elemAlpha_func;
 	domBlend_funcRef elemBlend_func;
 	domClear_colorRef elemClear_color;

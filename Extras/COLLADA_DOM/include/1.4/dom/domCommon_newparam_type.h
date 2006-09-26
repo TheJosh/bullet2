@@ -371,7 +371,7 @@ protected:  // Attribute
  */
 	xsNCName attrSid;
 
-protected:  // Elements
+protected:  // btElements
 	domSemanticRef elemSemantic;
 	domFloatRef elemFloat;
 	domFloat2Ref elemFloat2;

@@ -30,7 +30,7 @@ protected:  // Attributes
 	domCg_identifier attrRef;
 	xsNCName attrProgram;
 
-protected:  // Elements
+protected:  // btElements
 	domCg_param_typeRef elemCg_param_type;
 	domCg_setuser_typeRef elemUsertype;
 	domCg_setarray_typeRef elemArray;

@@ -21,30 +21,30 @@ subject to the following restrictions:
 #include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
 #include "btTypedConstraint.h"
 
-class RigidBody;
+class btRigidBody;
 
 
 /// hinge constraint between two rigidbodies each with a pivotpoint that descibes the axis location in local space
 /// axis defines the orientation of the hinge axis
-class HingeConstraint : public TypedConstraint
+class btHingeConstraint : public btTypedConstraint
 {
-	JacobianEntry	m_jac[3]; //3 orthogonal linear constraints
-	JacobianEntry	m_jacAng[2]; //2 orthogonal angular constraints
+	btJacobianEntry	m_jac[3]; //3 orthogonal linear constraints
+	btJacobianEntry	m_jacAng[2]; //2 orthogonal angular constraints
 
-	SimdVector3	m_pivotInA;
-	SimdVector3	m_pivotInB;
-	SimdVector3	m_axisInA;
-	SimdVector3	m_axisInB;
+	btSimdVector3	m_pivotInA;
+	btSimdVector3	m_pivotInB;
+	btSimdVector3	m_axisInA;
+	btSimdVector3	m_axisInB;
 
 	bool	m_angularOnly;
 	
 public:
 
-	HingeConstraint(RigidBody& rbA,RigidBody& rbB, const SimdVector3& pivotInA,const SimdVector3& pivotInB,SimdVector3& axisInA,SimdVector3& axisInB);
+	btHingeConstraint(btRigidBody& rbA,btRigidBody& rbB, const btSimdVector3& pivotInA,const btSimdVector3& pivotInB,btSimdVector3& axisInA,btSimdVector3& axisInB);
 
-	HingeConstraint(RigidBody& rbA,const SimdVector3& pivotInA,SimdVector3& axisInA);
+	btHingeConstraint(btRigidBody& rbA,const btSimdVector3& pivotInA,btSimdVector3& axisInA);
 
-	HingeConstraint();
+	btHingeConstraint();
 
 	virtual void	BuildJacobian();
 
@@ -52,11 +52,11 @@ public:
 
 	void	UpdateRHS(SimdScalar	timeStep);
 
-	const RigidBody& GetRigidBodyA() const
+	const btRigidBody& GetRigidBodyA() const
 	{
 		return m_rbA;
 	}
-	const RigidBody& GetRigidBodyB() const
+	const btRigidBody& GetRigidBodyB() const
 	{
 		return m_rbB;
 	}

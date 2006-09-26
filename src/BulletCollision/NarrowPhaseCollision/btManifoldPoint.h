@@ -25,16 +25,16 @@ subject to the following restrictions:
 
 /// ManifoldContactPoint collects and maintains persistent contactpoints.
 /// used to improve stability and performance of rigidbody dynamics response.
-class ManifoldPoint
+class btManifoldPoint
 	{
 		public:
-			ManifoldPoint()
+			btManifoldPoint()
 				:m_userPersistentData(0)
 			{
 			}
 
-			ManifoldPoint( const SimdVector3 &pointA, const SimdVector3 &pointB, 
-					const SimdVector3 &normal, 
+			btManifoldPoint( const btSimdVector3 &pointA, const btSimdVector3 &pointB, 
+					const btSimdVector3 &normal, 
 					SimdScalar distance ) :
 					m_localPointA( pointA ), 
 					m_localPointB( pointB ), 
@@ -51,12 +51,12 @@ class ManifoldPoint
 
 			
 
-			SimdVector3 m_localPointA;			
-			SimdVector3 m_localPointB;			
-			SimdVector3	m_positionWorldOnB;
+			btSimdVector3 m_localPointA;			
+			btSimdVector3 m_localPointB;			
+			btSimdVector3	m_positionWorldOnB;
 			///m_positionWorldOnA is redundant information, see GetPositionWorldOnA(), but for clarity
-			SimdVector3	m_positionWorldOnA;
-			SimdVector3 m_normalWorldOnB;
+			btSimdVector3	m_positionWorldOnA;
+			btSimdVector3 m_normalWorldOnB;
 		
 			float	m_distance1;
 			float	m_combinedFriction;
@@ -76,12 +76,12 @@ class ManifoldPoint
 				return m_lifeTime;
 			}
 
-			SimdVector3 GetPositionWorldOnA() {
+			btSimdVector3 GetPositionWorldOnA() {
 				return m_positionWorldOnA;
 //				return m_positionWorldOnB + m_normalWorldOnB * m_distance1;
 			}
 
-			const SimdVector3& GetPositionWorldOnB()
+			const btSimdVector3& GetPositionWorldOnB()
 			{
 				return m_positionWorldOnB;
 			}

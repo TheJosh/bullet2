@@ -81,27 +81,27 @@ CcdPhysicsEnvironment* m_physicsEnvironmentPtr = 0;
 //						   SimdPoint3(50,0,0));
 static const int numShapes = 4;
 
-CollisionShape* shapePtr[numShapes] = 
+btCollisionShape* shapePtr[numShapes] = 
 {
 	///Please don't make the box sizes larger then 1000: the collision detection will be inaccurate.
 	///See http://www.continuousphysics.com/Bullet/phpBB2/viewtopic.php?t=346
 
 //#define USE_GROUND_PLANE 1
 #ifdef USE_GROUND_PLANE
-	new StaticPlaneShape(SimdVector3(0,1,0),10),
+	new btStaticPlaneShape(btSimdVector3(0,1,0),10),
 #else
-	new BoxShape (SimdVector3(50,10,50)),
+	new btBoxShape (btSimdVector3(50,10,50)),
 #endif
 		
-		new BoxShape (SimdVector3(CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS)),
-		new SphereShape (CUBE_HALF_EXTENTS- 0.05f),
+		new btBoxShape (btSimdVector3(CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS)),
+		new btSphereShape (CUBE_HALF_EXTENTS- 0.05f),
 
-		//new ConeShape(CUBE_HALF_EXTENTS,2.f*CUBE_HALF_EXTENTS),
-		//new BU_Simplex1to4(SimdPoint3(-1,-1,-1),SimdPoint3(1,-1,-1),SimdPoint3(-1,1,-1),SimdPoint3(0,0,1)),
+		//new btConeShape(CUBE_HALF_EXTENTS,2.f*CUBE_HALF_EXTENTS),
+		//new btBU_Simplex1to4(SimdPoint3(-1,-1,-1),SimdPoint3(1,-1,-1),SimdPoint3(-1,1,-1),SimdPoint3(0,0,1)),
 
-		//new EmptyShape(),
+		//new btEmptyShape(),
 
-		new BoxShape (SimdVector3(0.4,1,0.8))
+		new btBoxShape (btSimdVector3(0.4,1,0.8))
 
 };
 
@@ -144,13 +144,13 @@ void CcdPhysicsDemo::clientMoveAndDisplay()
 		m_physicsEnvironmentPtr->proceedDeltaTime(0.f,deltaTime);
 
 #ifdef USE_QUICKPROF 
-        Profiler::beginBlock("render"); 
+        btProfiler::beginBlock("render"); 
 #endif //USE_QUICKPROF 
 	
 	renderme(); 
 
 #ifdef USE_QUICKPROF 
-        Profiler::endBlock("render"); 
+        btProfiler::endBlock("render"); 
 #endif 
 	glFlush();
 	//some additional debugging info
@@ -203,7 +203,7 @@ void CcdPhysicsDemo::clientResetScene()
 		{
 			CcdPhysicsController* ctrl = m_physicsEnvironmentPtr->GetPhysicsController(i);
 
-			if ((getDebugMode() & IDebugDraw::DBG_NoHelpText))
+			if ((getDebugMode() & btIDebugDraw::DBG_NoHelpText))
 			{
 				if (ctrl->GetRigidBody()->GetCollisionShape()->GetShapeType() != SPHERE_SHAPE_PROXYTYPE)
 				{
@@ -213,7 +213,7 @@ void CcdPhysicsDemo::clientResetScene()
 					ctrl->GetRigidBody()->SetCollisionShape(shapePtr[1]);
 				}
 
-				BroadphaseProxy* bpproxy = ctrl->GetRigidBody()->m_broadphaseHandle;
+				btBroadphaseProxy* bpproxy = ctrl->GetRigidBody()->m_broadphaseHandle;
 				m_physicsEnvironmentPtr->GetBroadphase()->CleanProxyFromPairs(bpproxy);
 			}
 
@@ -240,7 +240,7 @@ void CcdPhysicsDemo::clientResetScene()
 
 
 ///User-defined friction model, the most simple friction model available: no friction
-float myFrictionModel(	RigidBody& body1,	RigidBody& body2,	ManifoldPoint& contactPoint,	const ContactSolverInfo& solverInfo	)
+float myFrictionModel(	btRigidBody& body1,	btRigidBody& body2,	btManifoldPoint& contactPoint,	const btContactSolverInfo& solverInfo	)
 {
 	//don't do any friction
 	return 0.f;
@@ -249,16 +249,16 @@ float myFrictionModel(	RigidBody& body1,	RigidBody& body2,	ManifoldPoint& contac
 void	CcdPhysicsDemo::initPhysics()
 {
 
-	CollisionDispatcher* dispatcher = new	CollisionDispatcher();
+	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher();
 
-	SimdVector3 worldAabbMin(-10000,-10000,-10000);
-	SimdVector3 worldAabbMax(10000,10000,10000);
+	btSimdVector3 worldAabbMin(-10000,-10000,-10000);
+	btSimdVector3 worldAabbMax(10000,10000,10000);
 
-	OverlappingPairCache* broadphase = new AxisSweep3(worldAabbMin,worldAabbMax,maxProxies);
-//	OverlappingPairCache* broadphase = new SimpleBroadphase;
+	btOverlappingPairCache* broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax,maxProxies);
+//	btOverlappingPairCache* broadphase = new btSimpleBroadphase;
 	
 #ifdef REGISTER_CUSTOM_COLLISION_ALGORITHM
-	dispatcher->RegisterCollisionCreateFunc(SPHERE_SHAPE_PROXYTYPE,SPHERE_SHAPE_PROXYTYPE,new SphereSphereCollisionAlgorithm::CreateFunc);
+	dispatcher->RegisterCollisionCreateFunc(SPHERE_SHAPE_PROXYTYPE,SPHERE_SHAPE_PROXYTYPE,new btSphereSphereCollisionAlgorithm::CreateFunc);
 #endif //REGISTER_CUSTOM_COLLISION_ALGORITHM
 
 
@@ -274,7 +274,7 @@ void	CcdPhysicsDemo::initPhysics()
 	m_physicsEnvironmentPtr->setDebugDrawer(&debugDrawer);
 
 #ifdef USER_DEFINED_FRICTION_MODEL
-	SequentialImpulseConstraintSolver* solver = (SequentialImpulseConstraintSolver*) m_physicsEnvironmentPtr->GetConstraintSolver();
+	btSequentialImpulseConstraintSolver* solver = (btSequentialImpulseConstraintSolver*) m_physicsEnvironmentPtr->GetConstraintSolver();
 	//solver->SetContactSolverFunc(ContactSolverFunc func,USER_CONTACT_SOLVER_TYPE1,DEFAULT_CONTACT_SOLVER_TYPE);
 	solver->SetFrictionSolverFunc(myFrictionModel,USER_CONTACT_SOLVER_TYPE1,DEFAULT_CONTACT_SOLVER_TYPE);
 	solver->SetFrictionSolverFunc(myFrictionModel,DEFAULT_CONTACT_SOLVER_TYPE,USER_CONTACT_SOLVER_TYPE1);
@@ -285,7 +285,7 @@ void	CcdPhysicsDemo::initPhysics()
 
 	int i;
 
-	SimdTransform tr;
+	btSimdTransform tr;
 	tr.setIdentity();
 
 	
@@ -301,26 +301,26 @@ void	CcdPhysicsDemo::initPhysics()
 
 	if (useCompound)
 	{
-		CompoundShape* compoundShape = new CompoundShape();
-		CollisionShape* oldShape = shapePtr[1];
+		btCompoundShape* compoundShape = new btCompoundShape();
+		btCollisionShape* oldShape = shapePtr[1];
 		shapePtr[1] = compoundShape;
 
-		SimdTransform ident;
+		btSimdTransform ident;
 		ident.setIdentity();
-		ident.setOrigin(SimdVector3(0,0,0));	
+		ident.setOrigin(btSimdVector3(0,0,0));	
 		compoundShape->AddChildShape(ident,oldShape);//
-		ident.setOrigin(SimdVector3(0,0,2));	
-		compoundShape->AddChildShape(ident,new SphereShape(0.9));//
+		ident.setOrigin(btSimdVector3(0,0,2));	
+		compoundShape->AddChildShape(ident,new btSphereShape(0.9));//
 	}
 
 	for (i=0;i<gNumObjects;i++)
 	{
-		CollisionShape* shape = shapePtr[shapeIndex[i]];
+		btCollisionShape* shape = shapePtr[shapeIndex[i]];
 		shape->SetMargin(0.05f);
 
 		bool isDyna = i>0;
 
-		SimdTransform trans;
+		btSimdTransform trans;
 		trans.setIdentity();
 		
 		if (i>0)
@@ -338,13 +338,13 @@ void	CcdPhysicsDemo::initPhysics()
 				row2 |=1;
 			}
 
-			SimdVector3 pos(col*2*CUBE_HALF_EXTENTS + (row2%2)*CUBE_HALF_EXTENTS,
+			btSimdVector3 pos(col*2*CUBE_HALF_EXTENTS + (row2%2)*CUBE_HALF_EXTENTS,
 				row*2*CUBE_HALF_EXTENTS+CUBE_HALF_EXTENTS+EXTRA_HEIGHT,0);
 
 			trans.setOrigin(pos);
 		} else
 		{
-			trans.setOrigin(SimdVector3(0,-30,0));
+			trans.setOrigin(btSimdVector3(0,-30,0));
 		}
 
 		float mass = 1.f;

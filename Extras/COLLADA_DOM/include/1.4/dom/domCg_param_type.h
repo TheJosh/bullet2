@@ -7462,7 +7462,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 	domBoolRef elemBool;
 	domBool1Ref elemBool1;
 	domBool2Ref elemBool2;

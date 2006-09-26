@@ -26,7 +26,7 @@ protected:  // Attributes
 	domGlsl_identifier attrRef;
 	xsNCName attrProgram;
 
-protected:  // Elements
+protected:  // btElements
 	domFx_annotate_common_Array elemAnnotate_array;
 	domGlsl_param_typeRef elemGlsl_param_type;
 	domGlsl_setarray_typeRef elemArray;

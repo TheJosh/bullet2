@@ -24,7 +24,7 @@ class domCg_setparam_simple_complexType
 protected:  // Attribute
 	domCg_identifier attrRef;
 
-protected:  // Elements
+protected:  // btElements
 	domFx_annotate_common_Array elemAnnotate_array;
 	domCg_param_typeRef elemCg_param_type;
 

@@ -18,7 +18,7 @@ subject to the following restrictions:
 #include "BU_Screwing.h"
 
 
-BU_Screwing::BU_Screwing(const SimdVector3& relLinVel,const SimdVector3& relAngVel) {
+BU_Screwing::BU_Screwing(const btSimdVector3& relLinVel,const btSimdVector3& relAngVel) {
 
 
 	const SimdScalar dx=relLinVel[0];
@@ -79,7 +79,7 @@ BU_Screwing::BU_Screwing(const SimdVector3& relLinVel,const SimdVector3& relAngV
 		//(len >= BUM_EPSILON2) {
 		if (n1[0] || n1[1] || n1[2]) { // n1 is not the zero vector
 			n1.normalize();
-			SimdVector3 n1orth=m_u.cross(n1);
+			btSimdVector3 n1orth=m_u.cross(n1);
 
 			float n2x=SimdCos(0.5f*m_w);
 			float n2y=SimdSin(0.5f*m_w);
@@ -99,7 +99,7 @@ BU_Screwing::BU_Screwing(const SimdVector3& relLinVel,const SimdVector3& relAngV
 //the screwing frame :
 
 
-void BU_Screwing::LocalMatrix(SimdTransform &t) const {
+void BU_Screwing::LocalMatrix(btSimdTransform &t) const {
 //So the whole computations do this : align the Oz axis along the
 //	screwing axis (thanks to u), and then find two others orthogonal axes to
 //	complete the basis.
@@ -109,7 +109,7 @@ void BU_Screwing::LocalMatrix(SimdTransform &t) const {
 			// to avoid numerical problems
 			float n=SimdSqrt(m_u[0]*m_u[0]+m_u[1]*m_u[1]);
 			float invn=1.0f/n;
-			SimdMatrix3x3 mat;
+			btSimdMatrix3x3 mat;
 
 	  		mat[0][0]=-m_u[1]*invn;
 			mat[0][1]=m_u[0]*invn;
@@ -133,7 +133,7 @@ void BU_Screwing::LocalMatrix(SimdTransform &t) const {
 		}
 		else {
 
-			SimdMatrix3x3 m;
+			btSimdMatrix3x3 m;
 
 			m[0][0]=1.;
 			m[1][0]=0.;
@@ -158,7 +158,7 @@ void BU_Screwing::LocalMatrix(SimdTransform &t) const {
 }
 
 //gives interpolated transform for time in [0..1] in screwing frame
-SimdTransform	BU_Screwing::InBetweenTransform(const SimdTransform& tr,SimdScalar t) const
+btSimdTransform	BU_Screwing::InBetweenTransform(const btSimdTransform& tr,SimdScalar t) const
 {
 	SimdPoint3 org = tr.getOrigin();
 
@@ -167,19 +167,19 @@ SimdTransform	BU_Screwing::InBetweenTransform(const SimdTransform& tr,SimdScalar
 	org.x()*SimdSin(m_w*t)+org.y()*SimdCos(m_w*t),
 	org.z()+m_s*CalculateF(t));
 		
-	SimdTransform newtr;
+	btSimdTransform newtr;
 	newtr.setOrigin(neworg);
-	SimdMatrix3x3 basis = tr.getBasis();
-	SimdMatrix3x3 basisorg = tr.getBasis();
+	btSimdMatrix3x3 basis = tr.getBasis();
+	btSimdMatrix3x3 basisorg = tr.getBasis();
 
-	SimdQuaternion rot(SimdVector3(0.,0.,1.),m_w*t);
-	SimdQuaternion tmpOrn;
+	btSimdQuaternion rot(btSimdVector3(0.,0.,1.),m_w*t);
+	btSimdQuaternion tmpOrn;
 	tr.getBasis().getRotation(tmpOrn);
 	rot = rot *  tmpOrn;
 
 	//to avoid numerical drift, normalize quaternion
 	rot.normalize();
-	newtr.setBasis(SimdMatrix3x3(rot));
+	newtr.setBasis(btSimdMatrix3x3(rot));
 	return newtr;
 
 }

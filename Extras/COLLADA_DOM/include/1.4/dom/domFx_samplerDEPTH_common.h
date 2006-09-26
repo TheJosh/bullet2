@@ -351,7 +351,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 	domSourceRef elemSource;
 	domWrap_sRef elemWrap_s;
 	domWrap_tRef elemWrap_t;

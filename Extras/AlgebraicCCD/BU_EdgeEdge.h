@@ -36,9 +36,9 @@ public:
 	bool GetTimeOfImpact(
 		const BU_Screwing& screwAB,
 		const SimdPoint3& a,//edge in object A
-		const SimdVector3& u,
+		const btSimdVector3& u,
 		const SimdPoint3& c,//edge in object B
-		const SimdVector3& v,
+		const btSimdVector3& v,
 		SimdScalar &minTime,
 		SimdScalar &lamda,
 		SimdScalar& mu
@@ -49,9 +49,9 @@ private:
 	bool GetTimeOfImpactGeneralCase(
 		const BU_Screwing& screwAB,
 		const SimdPoint3& a,//edge in object A
-		const SimdVector3& u,
+		const btSimdVector3& u,
 		const SimdPoint3& c,//edge in object B
-		const SimdVector3& v,
+		const btSimdVector3& v,
 		SimdScalar &minTime,
 		SimdScalar &lamda,
 		SimdScalar& mu
@@ -62,9 +62,9 @@ private:
 	bool GetTimeOfImpactVertexEdge(
 		const BU_Screwing& screwAB,
 		const SimdPoint3& a,//edge in object A
-		const SimdVector3& u,
+		const btSimdVector3& u,
 		const SimdPoint3& c,//edge in object B
-		const SimdVector3& v,
+		const btSimdVector3& v,
 		SimdScalar &minTime,
 		SimdScalar &lamda,
 		SimdScalar& mu

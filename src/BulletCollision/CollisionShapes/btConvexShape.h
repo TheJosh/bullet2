@@ -24,39 +24,39 @@ subject to the following restrictions:
 #include <vector>
 #include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
-//todo: get rid of this ConvexCastResult thing!
-struct ConvexCastResult;
+//todo: get rid of this btConvexCastResult thing!
+struct btConvexCastResult;
 
 
-/// ConvexShape is an abstract shape interface.
+/// btConvexShape is an abstract shape interface.
 /// The explicit part provides plane-equations, the implicit part provides GetClosestPoint interface.
-/// used in combination with GJK or ConvexCast
-class ConvexShape : public CollisionShape
+/// used in combination with GJK or btConvexCast
+class btConvexShape : public btCollisionShape
 {
 public:
-	ConvexShape();
+	btConvexShape();
 
-	virtual SimdVector3	LocalGetSupportingVertex(const SimdVector3& vec)const;
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec) const= 0;
+	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec)const;
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec) const= 0;
 	
 	//notice that the vectors should be unit length
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const= 0;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const= 0;
 
 	// testing for hullnode code
 
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-	void GetAabb(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const
+	void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
 	{
 		GetAabbSlow(t,aabbMin,aabbMax);
 	}
 
 
 	
-	virtual void GetAabbSlow(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const;
+	virtual void GetAabbSlow(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
 
 
-	virtual void	setLocalScaling(const SimdVector3& scaling);
-	virtual const SimdVector3& getLocalScaling() const 
+	virtual void	setLocalScaling(const btSimdVector3& scaling);
+	virtual const btSimdVector3& getLocalScaling() const 
 	{
 		return m_localScaling;
 	}
@@ -74,7 +74,7 @@ private:
 	SimdScalar	m_collisionMargin;
 	//local scaling. collisionMargin is not scaled !
 protected:
-	SimdVector3	m_localScaling;
+	btSimdVector3	m_localScaling;
 
 };
 

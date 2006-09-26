@@ -24,32 +24,32 @@ subject to the following restrictions:
 #define NO_VIRTUAL_INTERFACE 1
 #ifdef NO_VIRTUAL_INTERFACE
 #include "btVoronoiSimplexSolver.h"
-#define SimplexSolverInterface VoronoiSimplexSolver
+#define btSimplexSolverInterface btVoronoiSimplexSolver
 #else
 
-/// SimplexSolverInterface can incrementally calculate distance between origin and up to 4 vertices
+/// btSimplexSolverInterface can incrementally calculate distance between origin and up to 4 vertices
 /// Used by GJK or Linear Casting. Can be implemented by the Johnson-algorithm or alternative approaches based on
 /// voronoi regions or barycentric coordinates
-class SimplexSolverInterface
+class btSimplexSolverInterface
 {
 	public:
-		virtual ~SimplexSolverInterface() {};
+		virtual ~btSimplexSolverInterface() {};
 
 	virtual void reset() = 0;
 
-	virtual void addVertex(const SimdVector3& w, const SimdPoint3& p, const SimdPoint3& q) = 0;
+	virtual void addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q) = 0;
 	
-	virtual bool closest(SimdVector3& v) = 0;
+	virtual bool closest(btSimdVector3& v) = 0;
 
 	virtual SimdScalar maxVertex() = 0;
 
 	virtual bool fullSimplex() const = 0;
 
-	virtual int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, SimdVector3 *yBuf) const = 0;
+	virtual int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const = 0;
 
-	virtual bool inSimplex(const SimdVector3& w) = 0;
+	virtual bool inSimplex(const btSimdVector3& w) = 0;
 	
-	virtual void backup_closest(SimdVector3& v) = 0;
+	virtual void backup_closest(btSimdVector3& v) = 0;
 
 	virtual bool emptySimplex() const = 0;
 

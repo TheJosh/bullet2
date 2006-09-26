@@ -42,7 +42,7 @@ BU_VertexPoly::BU_VertexPoly()
 bool BU_VertexPoly::GetTimeOfImpact(
 		const BU_Screwing& screwAB,
 		const SimdPoint3& a,
-		const SimdVector4& planeEq,
+		const btSimdVector4& planeEq,
 		SimdScalar &minTime,bool swapAB)
 {
 
@@ -66,7 +66,7 @@ bool BU_VertexPoly::GetTimeOfImpact(
 	const SimdScalar r=planeEq[2];
 	const SimdScalar d=planeEq[3];
 
-	const SimdVector3 norm(p,q,r);
+	const btSimdVector3 norm(p,q,r);
 	BU_Polynomial polynomialSolver;
 	int numroots = 0;
 

@@ -20,25 +20,25 @@ subject to the following restrictions:
 #include <LinearMath/SimdTransform.h>
 #include <LinearMath/SimdVector3.h>
 #include <LinearMath/SimdScalar.h>
-class MinkowskiSumShape;
+class btMinkowskiSumShape;
 #include "LinearMath/GenIDebugDraw.h"
 
-/// ConvexCast is an interface for Casting
-class ConvexCast
+/// btConvexCast is an interface for Casting
+class btConvexCast
 {
 public:
 
 
-	virtual ~ConvexCast();
+	virtual ~btConvexCast();
 
 	///RayResult stores the closest result
 	/// alternatively, add a callback method to decide about closest/all results
 	struct	CastResult
 	{
-		//virtual bool	addRayResult(const SimdVector3& normal,SimdScalar	fraction) = 0;
+		//virtual bool	addRayResult(const btSimdVector3& normal,SimdScalar	fraction) = 0;
 				
 		virtual void	DebugDraw(SimdScalar	fraction) {}
-		virtual void	DrawCoordSystem(const SimdTransform& trans) {}
+		virtual void	DrawCoordSystem(const btSimdTransform& trans) {}
 
 		CastResult()
 			:m_fraction(1e30f),
@@ -49,22 +49,22 @@ public:
 
 		virtual ~CastResult() {};
 
-		SimdVector3	m_normal;
+		btSimdVector3	m_normal;
 		SimdScalar	m_fraction;
-		SimdTransform	m_hitTransformA;
-		SimdTransform	m_hitTransformB;
+		btSimdTransform	m_hitTransformA;
+		btSimdTransform	m_hitTransformB;
 
-		IDebugDraw* m_debugDrawer;
+		btIDebugDraw* m_debugDrawer;
 
 	};
 
 
 	/// cast a convex against another convex object
 	virtual bool	calcTimeOfImpact(
-					const SimdTransform& fromA,
-					const SimdTransform& toA,
-					const SimdTransform& fromB,
-					const SimdTransform& toB,
+					const btSimdTransform& fromA,
+					const btSimdTransform& toA,
+					const btSimdTransform& fromB,
+					const btSimdTransform& toB,
 					CastResult& result) = 0;
 };
 

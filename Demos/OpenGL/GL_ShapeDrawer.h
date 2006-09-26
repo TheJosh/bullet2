@@ -15,7 +15,7 @@ subject to the following restrictions:
 #ifndef GL_SHAPE_DRAWER_H
 #define GL_SHAPE_DRAWER_H
 
-class CollisionShape;
+class btCollisionShape;
 #include "LinearMath/SimdVector3.h"
 
 /// OpenGL shape drawing
@@ -23,7 +23,7 @@ class GL_ShapeDrawer
 {
 	public:
 
-		static 	void	DrawOpenGL(float* m, const CollisionShape* shape, const SimdVector3& color,int	debugMode);
+		static 	void	DrawOpenGL(float* m, const btCollisionShape* shape, const btSimdVector3& color,int	debugMode);
 		static void		DrawCoordSystem();
 		
 };

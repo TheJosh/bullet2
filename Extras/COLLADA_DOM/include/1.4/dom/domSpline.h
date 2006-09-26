@@ -39,7 +39,7 @@ public:
 	class domControl_vertices : public daeElement
 	{
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * The input element must occur at least one time. These inputs are local
  * inputs. @see domInput
@@ -114,7 +114,7 @@ public:
 protected:  // Attribute
 	domBool attrClosed;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The mesh element must contain one or more source elements.  @see domSource
  */

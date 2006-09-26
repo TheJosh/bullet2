@@ -19,7 +19,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
 
 
-ConvexTriangleMeshShape ::ConvexTriangleMeshShape (StridingMeshInterface* meshInterface)
+btConvexTriangleMeshShape ::btConvexTriangleMeshShape (btStridingMeshInterface* meshInterface)
 :m_stridingMesh(meshInterface)
 {
 }
@@ -29,23 +29,23 @@ ConvexTriangleMeshShape ::ConvexTriangleMeshShape (StridingMeshInterface* meshIn
 
 ///It's not nice to have all this virtual function overhead, so perhaps we can also gather the points once
 ///but then we are duplicating
-class LocalSupportVertexCallback: public InternalTriangleIndexCallback
+class LocalSupportVertexCallback: public btInternalTriangleIndexCallback
 {
 
-	SimdVector3 m_supportVertexLocal;
+	btSimdVector3 m_supportVertexLocal;
 public:
 
 	SimdScalar m_maxDot;
-	SimdVector3 m_supportVecLocal;
+	btSimdVector3 m_supportVecLocal;
 
-	LocalSupportVertexCallback(const SimdVector3& supportVecLocal)
+	LocalSupportVertexCallback(const btSimdVector3& supportVecLocal)
 		: m_supportVertexLocal(0.f,0.f,0.f),
 		m_maxDot(-1e30f),
                 m_supportVecLocal(supportVecLocal)
 	{
 	}
 
-	virtual void InternalProcessTriangleIndex(SimdVector3* triangle,int partId,int  triangleIndex)
+	virtual void InternalProcessTriangleIndex(btSimdVector3* triangle,int partId,int  triangleIndex)
 	{
 		for (int i=0;i<3;i++)
 		{
@@ -58,7 +58,7 @@ public:
 		}
 	}
 	
-	SimdVector3	GetSupportVertexLocal()
+	btSimdVector3	GetSupportVertexLocal()
 	{
 		return m_supportVertexLocal;
 	}
@@ -69,11 +69,11 @@ public:
 
 
 
-SimdVector3	ConvexTriangleMeshShape::LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec0)const
+btSimdVector3	btConvexTriangleMeshShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec0)const
 {
-	SimdVector3 supVec(0.f,0.f,0.f);
+	btSimdVector3 supVec(0.f,0.f,0.f);
 
-	SimdVector3 vec = vec0;
+	btSimdVector3 vec = vec0;
 	SimdScalar lenSqr = vec.length2();
 	if (lenSqr < 0.0001f)
 	{
@@ -85,14 +85,14 @@ SimdVector3	ConvexTriangleMeshShape::LocalGetSupportingVertexWithoutMargin(const
 	}
 
 	LocalSupportVertexCallback	supportCallback(vec);
-	SimdVector3 aabbMax(1e30f,1e30f,1e30f);
+	btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
 	m_stridingMesh->InternalProcessAllTriangles(&supportCallback,-aabbMax,aabbMax);
 	supVec = supportCallback.GetSupportVertexLocal();
 
 	return supVec;
 }
 
-void	ConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const
+void	btConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
 {
 	//use 'w' component of supportVerticesOut?
 	{
@@ -107,9 +107,9 @@ void	ConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(
 
 	for (int j=0;j<numVectors;j++)
 	{
-		const SimdVector3& vec = vectors[j];
+		const btSimdVector3& vec = vectors[j];
 		LocalSupportVertexCallback	supportCallback(vec);
-		SimdVector3 aabbMax(1e30f,1e30f,1e30f);
+		btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
 		m_stridingMesh->InternalProcessAllTriangles(&supportCallback,-aabbMax,aabbMax);
 		supportVerticesOut[j] = supportCallback.GetSupportVertexLocal();
 	}
@@ -118,13 +118,13 @@ void	ConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(
 	
 
 
-SimdVector3	ConvexTriangleMeshShape::LocalGetSupportingVertex(const SimdVector3& vec)const
+btSimdVector3	btConvexTriangleMeshShape::LocalGetSupportingVertex(const btSimdVector3& vec)const
 {
-	SimdVector3 supVertex = LocalGetSupportingVertexWithoutMargin(vec);
+	btSimdVector3 supVertex = LocalGetSupportingVertexWithoutMargin(vec);
 
 	if ( GetMargin()!=0.f )
 	{
-		SimdVector3 vecnorm = vec;
+		btSimdVector3 vecnorm = vec;
 		if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 		{
 			vecnorm.setValue(-1.f,-1.f,-1.f);
@@ -144,8 +144,8 @@ SimdVector3	ConvexTriangleMeshShape::LocalGetSupportingVertex(const SimdVector3&
 
 
 //currently just for debugging (drawing), perhaps future support for algebraic continuous collision detection
-//Please note that you can debug-draw ConvexTriangleMeshShape with the Raytracer Demo
-int	ConvexTriangleMeshShape::GetNumVertices() const
+//Please note that you can debug-draw btConvexTriangleMeshShape with the Raytracer Demo
+int	btConvexTriangleMeshShape::GetNumVertices() const
 {
 	//cache this?
 	assert(0);
@@ -153,34 +153,34 @@ int	ConvexTriangleMeshShape::GetNumVertices() const
 	
 }
 
-int ConvexTriangleMeshShape::GetNumEdges() const
+int btConvexTriangleMeshShape::GetNumEdges() const
 {
 	assert(0);	
 	return 0;
 }
 
-void ConvexTriangleMeshShape::GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
+void btConvexTriangleMeshShape::GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
 {
 	assert(0);	
 }
 
-void ConvexTriangleMeshShape::GetVertex(int i,SimdPoint3& vtx) const
+void btConvexTriangleMeshShape::GetVertex(int i,SimdPoint3& vtx) const
 {
 	assert(0);
 }
 
-int	ConvexTriangleMeshShape::GetNumPlanes() const
+int	btConvexTriangleMeshShape::GetNumPlanes() const
 {
 	return 0;
 }
 
-void ConvexTriangleMeshShape::GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
+void btConvexTriangleMeshShape::GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
 {
 	assert(0);
 }
 
 //not yet
-bool ConvexTriangleMeshShape::IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
+bool btConvexTriangleMeshShape::IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
 {
 	assert(0);
 	return false;
@@ -188,7 +188,7 @@ bool ConvexTriangleMeshShape::IsInside(const SimdPoint3& pt,SimdScalar tolerance
 
 
 
-void	ConvexTriangleMeshShape::setLocalScaling(const SimdVector3& scaling)
+void	btConvexTriangleMeshShape::setLocalScaling(const btSimdVector3& scaling)
 {
 	m_stridingMesh->setScaling(scaling);
 }

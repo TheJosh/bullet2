@@ -16,7 +16,7 @@ subject to the following restrictions:
 
 ///
 /// Convex Hull Distance Demo shows distance calculation between two convex hulls of points.
-/// GJK with the VoronoiSimplexSolver is used.
+/// GJK with the btVoronoiSimplexSolver is used.
 ///
 
 #include "GL_Simplex1to4.h"
@@ -51,9 +51,9 @@ const int numObjects = 2;
 
 GL_Simplex1to4 simplex;
 
-PolyhedralConvexShape*	shapePtr[maxNumObjects];
+btPolyhedralConvexShape*	shapePtr[maxNumObjects];
 
-SimdTransform tr[numObjects];
+btSimdTransform tr[numObjects];
 int screenWidth = 640.f;
 int screenHeight = 480.f;
 
@@ -62,10 +62,10 @@ int main(int argc,char** argv)
 {
 	clientResetScene();
 
-	SimdMatrix3x3 basisA;
+	btSimdMatrix3x3 basisA;
 	basisA.setIdentity();
 
-	SimdMatrix3x3 basisB;
+	btSimdMatrix3x3 basisB;
 	basisB.setIdentity();
 
 	tr[0].setBasis(basisA);
@@ -74,14 +74,14 @@ int main(int argc,char** argv)
 	SimdPoint3	points0[3]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1)};
 	SimdPoint3	points1[5]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1),SimdPoint3(0,0,-1),SimdPoint3(-1,-1,0)};
 	
-	ConvexHullShape	hullA(points0,3);
-	ConvexHullShape	hullB(points1,5);
+	btConvexHullShape	hullA(points0,3);
+	btConvexHullShape	hullB(points1,5);
 
 	shapePtr[0] = &hullA;
 	shapePtr[1] = &hullB;
 	
 
-	SimdTransform tr;
+	btSimdTransform tr;
 	tr.setIdentity();
 
 
@@ -97,8 +97,8 @@ void clientMoveAndDisplay()
 }
 
 
-static VoronoiSimplexSolver sGjkSimplexSolver;
-SimplexSolverInterface& gGjkSimplexSolver = sGjkSimplexSolver;
+static btVoronoiSimplexSolver sGjkSimplexSolver;
+btSimplexSolverInterface& gGjkSimplexSolver = sGjkSimplexSolver;
 
 
 
@@ -112,13 +112,13 @@ void clientDisplay(void) {
 	float m[16];
 	int i;
 
-	GjkPairDetector	convexConvex(shapePtr[0],shapePtr[1],&sGjkSimplexSolver,0);
+	btGjkPairDetector	convexConvex(shapePtr[0],shapePtr[1],&sGjkSimplexSolver,0);
 
-	SimdVector3 seperatingAxis(0.00000000f,0.059727669f,0.29259586f);
+	btSimdVector3 seperatingAxis(0.00000000f,0.059727669f,0.29259586f);
 	convexConvex.SetCachedSeperatingAxis(seperatingAxis);
 
-	PointCollector gjkOutput;
-	GjkPairDetector::ClosestPointInput input;
+	btPointCollector gjkOutput;
+	btGjkPairDetector::ClosestPointInput input;
 	input.m_transformA = tr[0];
 	input.m_transformB = tr[1];
 
@@ -126,7 +126,7 @@ void clientDisplay(void) {
 
 	if (gjkOutput.m_hasResult)
 	{
-		SimdVector3 endPt = gjkOutput.m_pointInWorld +
+		btSimdVector3 endPt = gjkOutput.m_pointInWorld +
 			gjkOutput.m_normalOnBInWorld*gjkOutput.m_distance;
 
 		 glBegin(GL_LINES);
@@ -142,7 +142,7 @@ void clientDisplay(void) {
 		
 		tr[i].getOpenGLMatrix( m );
 
-		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],SimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,1,1),getDebugMode());
 
 
 	}
@@ -155,13 +155,13 @@ void clientDisplay(void) {
 	for (i=0;i<numpoints;i++)
 		simplex.AddVertex(ybuf[i]);
 
-	SimdTransform ident;
+	btSimdTransform ident;
 	ident.setIdentity();
 	ident.getOpenGLMatrix(m);
-	GL_ShapeDrawer::DrawOpenGL(m,&simplex,SimdVector3(1,1,1),getDebugMode());
+	GL_ShapeDrawer::DrawOpenGL(m,&simplex,btSimdVector3(1,1,1),getDebugMode());
 
 
-	SimdQuaternion orn;
+	btSimdQuaternion orn;
 	orn.setEuler(yaw,pitch,roll);
 	tr[0].setRotation(orn);
 	tr[1].setRotation(orn);
@@ -175,8 +175,8 @@ void clientDisplay(void) {
 
 void clientResetScene()
 {
-	tr[0].setOrigin(SimdVector3(0.0f,3.f,7.f));
-	tr[1].setOrigin(SimdVector3(0.0f,9.f,2.f));
+	tr[0].setOrigin(btSimdVector3(0.0f,3.f,7.f));
+	tr[1].setOrigin(btSimdVector3(0.0f,9.f,2.f));
 }
 
 void clientKeyboard(unsigned char key, int x, int y)

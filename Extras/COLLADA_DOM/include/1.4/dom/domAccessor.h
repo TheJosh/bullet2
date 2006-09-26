@@ -49,7 +49,7 @@ protected:  // Attributes
  */
 	domUint attrStride;
 
-protected:  // Element
+protected:  // btElement
 /**
  *  The accessor element may have any number of param elements.  @see domParam
  */

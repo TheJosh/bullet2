@@ -101,9 +101,9 @@ public:
     bool isObsolete() const { return m_obsolete; }
     
 
-    bool computeClosest(const SimdVector3 *verts);
+    bool computeClosest(const btSimdVector3 *verts);
     
-    const SimdVector3& getClosest() const { return m_closest; } 
+    const btSimdVector3& getClosest() const { return m_closest; } 
     
     bool isClosestInternal() const
 	{ 
@@ -122,7 +122,7 @@ public:
 					 m_lambda2 * (points[m_indices[2]] - p0)) / m_det;
     }
     
-    void silhouette(const SimdVector3& w, ReplaceMeEdgeBuffer& edgeBuffer) 
+    void silhouette(const btSimdVector3& w, ReplaceMeEdgeBuffer& edgeBuffer) 
 	{
 		edgeBuffer.clear();
 		m_obsolete = true;
@@ -132,7 +132,7 @@ public:
     }
 	
 private:
-    void silhouette(int index, const SimdVector3& w, ReplaceMeEdgeBuffer& edgeBuffer);
+    void silhouette(int index, const btSimdVector3& w, ReplaceMeEdgeBuffer& edgeBuffer);
 	
     int         m_indices[3];
     bool        m_obsolete;
@@ -142,7 +142,7 @@ private:
     SimdScalar   m_det;
     SimdScalar   m_lambda1;
     SimdScalar   m_lambda2;
-    SimdVector3  m_closest;
+    btSimdVector3  m_closest;
     SimdScalar   m_dist2;
 };
 
@@ -163,12 +163,12 @@ bool ReplaceMeFacet::link(int edge0, ReplaceMeFacet *facet, int edge1)
 }
 
 
-bool ReplaceMeFacet::computeClosest(const SimdVector3 *verts)
+bool ReplaceMeFacet::computeClosest(const btSimdVector3 *verts)
 {
-    const SimdVector3& p0 = verts[m_indices[0]]; 
+    const btSimdVector3& p0 = verts[m_indices[0]]; 
 
-    SimdVector3 v1 = verts[m_indices[1]] - p0;
-    SimdVector3 v2 = verts[m_indices[2]] - p0;
+    btSimdVector3 v1 = verts[m_indices[1]] - p0;
+    btSimdVector3 v2 = verts[m_indices[2]] - p0;
     SimdScalar v1dv1 = v1.length2();
     SimdScalar v1dv2 = v1.dot(v2);
     SimdScalar v2dv2 = v2.length2();
@@ -192,7 +192,7 @@ bool ReplaceMeFacet::computeClosest(const SimdVector3 *verts)
     return false;
 } 
 
-void ReplaceMeFacet::silhouette(int index, const SimdVector3& w, 
+void ReplaceMeFacet::silhouette(int index, const btSimdVector3& w, 
 			  ReplaceMeEdgeBuffer& edgeBuffer) 
 {
     if (!m_obsolete) {
@@ -229,7 +229,7 @@ const int       MaxFacets         = 200;//b2000;
 
 static SimdPoint3  pBuf[MaxSupportPoints];
 static SimdPoint3  qBuf[MaxSupportPoints];
-static SimdVector3 yBuf[MaxSupportPoints];
+static btSimdVector3 yBuf[MaxSupportPoints];
 
 static ReplaceMeFacet facetBuf[MaxFacets];
 static int  freeFacet = 0;
@@ -300,13 +300,13 @@ inline ReplaceMeFacet *addFacet(int i0, int i1, int i2,
 
 
 
-inline bool originInTetrahedron(const SimdVector3& p1, const SimdVector3& p2, 
-								const SimdVector3& p3, const SimdVector3& p4)
+inline bool originInTetrahedron(const btSimdVector3& p1, const btSimdVector3& p2, 
+								const btSimdVector3& p3, const btSimdVector3& p4)
 {
-    SimdVector3 normal1 = (p2 - p1).cross(p3 - p1);
-    SimdVector3 normal2 = (p3 - p2).cross(p4 - p2);
-    SimdVector3 normal3 = (p4 - p3).cross(p1 - p3);
-    SimdVector3 normal4 = (p1 - p4).cross(p2 - p4);
+    btSimdVector3 normal1 = (p2 - p1).cross(p3 - p1);
+    btSimdVector3 normal2 = (p3 - p2).cross(p4 - p2);
+    btSimdVector3 normal3 = (p4 - p3).cross(p1 - p3);
+    btSimdVector3 normal4 = (p1 - p4).cross(p2 - p4);
     
     return 
 		(normal1.dot(p1) > SimdScalar(0.0)) != (normal1.dot(p4) > SimdScalar(0.0)) &&
@@ -317,10 +317,10 @@ inline bool originInTetrahedron(const SimdVector3& p1, const SimdVector3& p2,
 
 
 
-bool Solid3EpaPenetrationDepth::CalcPenDepth( SimplexSolverInterface& simplexSolver,
-			ConvexShape* convexA,ConvexShape* convexB,
-			const SimdTransform& transformA,const SimdTransform& transformB,
-			SimdVector3& v, SimdPoint3& pa, SimdPoint3& pb)
+bool Solid3EpaPenetrationDepth::CalcPenDepth( btSimplexSolverInterface& simplexSolver,
+			btConvexShape* convexA,btConvexShape* convexB,
+			const btSimdTransform& transformA,const btSimdTransform& transformB,
+			btSimdVector3& v, SimdPoint3& pa, SimdPoint3& pb)
 {
 	
     int num_verts = simplexSolver.getSimplex(pBuf, qBuf, yBuf);
@@ -336,17 +336,17 @@ bool Solid3EpaPenetrationDepth::CalcPenDepth( SimplexSolverInterface& simplexSol
 	    // We have a line segment inside the Minkowski sum containing the
 	    // origin. Blow it up by adding three additional support points.
 	    
-	    SimdVector3 dir  = (yBuf[1] - yBuf[0]).normalized();
+	    btSimdVector3 dir  = (yBuf[1] - yBuf[0]).normalized();
 	    int        axis = dir.furthestAxis();
 	    
 	    static SimdScalar sin_60 = 0.8660254037f;//84438646763723170752941.22474487f;//13915890490986420373529;//
 	    
-	    SimdQuaternion rot(dir[0] * sin_60, dir[1] * sin_60, dir[2] * sin_60, SimdScalar(0.5));
-	    SimdMatrix3x3 rot_mat(rot);
+	    btSimdQuaternion rot(dir[0] * sin_60, dir[1] * sin_60, dir[2] * sin_60, SimdScalar(0.5));
+	    btSimdMatrix3x3 rot_mat(rot);
 	    
-	    SimdVector3 aux1 = dir.cross(SimdVector3(axis == 0, axis == 1, axis == 2));
-	    SimdVector3 aux2 = rot_mat * aux1;
-	    SimdVector3 aux3 = rot_mat * aux2;
+	    btSimdVector3 aux1 = dir.cross(btSimdVector3(axis == 0, axis == 1, axis == 2));
+	    btSimdVector3 aux2 = rot_mat * aux1;
+	    btSimdVector3 aux3 = rot_mat * aux2;
 	    
 	    pBuf[2] = transformA(convexA->LocalGetSupportingVertex(aux1*transformA.getBasis()));
 		qBuf[2] = transformB(convexB->LocalGetSupportingVertex((-aux1)*transformB.getBasis()));
@@ -387,9 +387,9 @@ bool Solid3EpaPenetrationDepth::CalcPenDepth( SimplexSolverInterface& simplexSol
 	    // We have a triangle inside the Minkowski sum containing
 	    // the origin. First blow it up.
 	    
-	    SimdVector3 v1     = yBuf[1] - yBuf[0];
-	    SimdVector3 v2     = yBuf[2] - yBuf[0];
-	    SimdVector3 vv     = v1.cross(v2);
+	    btSimdVector3 v1     = yBuf[1] - yBuf[0];
+	    btSimdVector3 v2     = yBuf[2] - yBuf[0];
+	    btSimdVector3 vv     = v1.cross(v2);
 	    
 		pBuf[3] = transformA(convexA->LocalGetSupportingVertex(vv*transformA.getBasis()));
 		qBuf[3] = transformB(convexB->LocalGetSupportingVertex((-vv)*transformB.getBasis()));

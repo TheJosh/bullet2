@@ -40,8 +40,8 @@ subject to the following restrictions:
 const SimdScalar EPA_MAX_RELATIVE_ERROR = 1e-2f;
 const SimdScalar EPA_MAX_RELATIVE_ERROR_SQRD = EPA_MAX_RELATIVE_ERROR * EPA_MAX_RELATIVE_ERROR;
 
-Epa::Epa( ConvexShape* pConvexShapeA, ConvexShape* pConvexShapeB,
-		  const SimdTransform& transformA, const SimdTransform& transformB ) : m_pConvexShapeA( pConvexShapeA ),
+Epa::Epa( btConvexShape* pConvexShapeA, btConvexShape* pConvexShapeB,
+		  const btSimdTransform& transformA, const btSimdTransform& transformB ) : m_pConvexShapeA( pConvexShapeA ),
 																			   m_pConvexShapeB( pConvexShapeB ),
 																			   m_transformA( transformA ),
 																			   m_transformB( transformB )
@@ -53,11 +53,11 @@ Epa::~Epa()
 {
 }
 
-bool Epa::Initialize( SimplexSolverInterface& simplexSolver )
+bool Epa::Initialize( btSimplexSolverInterface& simplexSolver )
 {
 	// Run GJK on the enlarged shapes to obtain a simplex of the enlarged CSO
 
-	SimdVector3 v( 1, 0, 0 );
+	btSimdVector3 v( 1, 0, 0 );
 	SimdScalar squaredDistance = SIMD_INFINITY;
 
 	SimdScalar delta = 0.f;
@@ -70,16 +70,16 @@ bool Epa::Initialize( SimplexSolverInterface& simplexSolver )
 	{
 		EPA_DEBUG_ASSERT( ( v.length2() > 0 ) ,"Warning : v has zero magnitude!" );
 
-		SimdVector3 seperatingAxisInA = -v * m_transformA.getBasis();
-		SimdVector3 seperatingAxisInB =  v * m_transformB.getBasis();
+		btSimdVector3 seperatingAxisInA = -v * m_transformA.getBasis();
+		btSimdVector3 seperatingAxisInB =  v * m_transformB.getBasis();
 
-		SimdVector3 pInA = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
-		SimdVector3 qInB = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
+		btSimdVector3 pInA = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
+		btSimdVector3 qInB = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
 
 		SimdPoint3  pWorld = m_transformA( pInA );
 		SimdPoint3  qWorld = m_transformB( qInB );
 
-		SimdVector3 w = pWorld - qWorld;
+		btSimdVector3 w = pWorld - qWorld;
 		delta = v.dot( w );
 
 		EPA_DEBUG_ASSERT( ( delta <= 0 ) ,"Shapes are disjoint, EPA should have never    been called!" );
@@ -142,14 +142,14 @@ bool Epa::Initialize( SimplexSolverInterface& simplexSolver )
 		// We have a line segment inside the CSO that contains the origin
 		// Create an hexahedron ( two tetrahedron glued together ) by adding 3 new points
 
-		SimdVector3 d = simplexPoints[ 0 ] - simplexPoints[ 1 ];
+		btSimdVector3 d = simplexPoints[ 0 ] - simplexPoints[ 1 ];
 		d.normalize();
 
-		SimdVector3 v1;
-		SimdVector3 v2;
-		SimdVector3 v3;
+		btSimdVector3 v1;
+		btSimdVector3 v2;
+		btSimdVector3 v3;
 
-		SimdVector3 e1;
+		btSimdVector3 e1;
 
 		SimdScalar absx = abs( d.getX() );
 		SimdScalar absy = abs( d.getY() );
@@ -186,11 +186,11 @@ bool Epa::Initialize( SimplexSolverInterface& simplexSolver )
 
 		nbPolyhedronPoints = 5;
 
-		SimdVector3 seperatingAxisInA =  v1 * m_transformA.getBasis();
-		SimdVector3 seperatingAxisInB = -v1 * m_transformB.getBasis();
+		btSimdVector3 seperatingAxisInA =  v1 * m_transformA.getBasis();
+		btSimdVector3 seperatingAxisInB = -v1 * m_transformB.getBasis();
 
-		SimdVector3 p = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
-		SimdVector3 q = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
+		btSimdVector3 p = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
+		btSimdVector3 q = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
 
 		SimdPoint3 pWorld = m_transformA( p );
 		SimdPoint3 qWorld = m_transformB( q );
@@ -255,18 +255,18 @@ bool Epa::Initialize( SimplexSolverInterface& simplexSolver )
 		// We have a triangle inside the CSO that contains the origin
 		// Create an hexahedron ( two tetrahedron glued together ) by adding 2 new points
 
-		SimdVector3 v0 = simplexPoints[ 2 ] - simplexPoints[ 0 ];
-		SimdVector3 v1 = simplexPoints[ 1 ] - simplexPoints[ 0 ];
-		SimdVector3 triangleNormal = v0.cross( v1 );
+		btSimdVector3 v0 = simplexPoints[ 2 ] - simplexPoints[ 0 ];
+		btSimdVector3 v1 = simplexPoints[ 1 ] - simplexPoints[ 0 ];
+		btSimdVector3 triangleNormal = v0.cross( v1 );
 		triangleNormal.normalize();
 
 		nbPolyhedronPoints = 5;
 
-		SimdVector3 seperatingAxisInA =  triangleNormal * m_transformA.getBasis();
-		SimdVector3 seperatingAxisInB = -triangleNormal * m_transformB.getBasis();
+		btSimdVector3 seperatingAxisInA =  triangleNormal * m_transformA.getBasis();
+		btSimdVector3 seperatingAxisInB = -triangleNormal * m_transformB.getBasis();
 
-		SimdVector3 p = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
-		SimdVector3 q = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
+		btSimdVector3 p = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
+		btSimdVector3 q = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
 
 		SimdPoint3 pWorld = m_transformA( p );
 		SimdPoint3 qWorld = m_transformB( q );
@@ -400,7 +400,7 @@ bool Epa::Initialize( SimplexSolverInterface& simplexSolver )
 
 SimdScalar Epa::CalcPenDepth( SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB )
 {
-	SimdVector3 v;
+	btSimdVector3 v;
 
 	SimdScalar upperBoundSqrd = SIMD_INFINITY;
 	SimdScalar vSqrd = 0;
@@ -445,11 +445,11 @@ SimdScalar Epa::CalcPenDepth( SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB )
 #endif //_DEBUG
 			EPA_DEBUG_ASSERT( ( v.length2() > 0 ) ,"Zero vector not allowed!" );
 
-			SimdVector3 seperatingAxisInA =  v * m_transformA.getBasis();
-			SimdVector3 seperatingAxisInB = -v * m_transformB.getBasis();
+			btSimdVector3 seperatingAxisInA =  v * m_transformA.getBasis();
+			btSimdVector3 seperatingAxisInB = -v * m_transformB.getBasis();
 
-			SimdVector3 p = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
-			SimdVector3 q = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
+			btSimdVector3 p = m_pConvexShapeA->LocalGetSupportingVertex( seperatingAxisInA );
+			btSimdVector3 q = m_pConvexShapeB->LocalGetSupportingVertex( seperatingAxisInB );
 
 			SimdPoint3 pWorld = m_transformA( p );
 			SimdPoint3 qWorld = m_transformB( q );
@@ -547,7 +547,7 @@ SimdScalar Epa::CalcPenDepth( SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB )
 bool Epa::TetrahedronContainsOrigin( const SimdPoint3& point0, const SimdPoint3& point1,
 									 const SimdPoint3& point2, const SimdPoint3& point3 )
 {
-	SimdVector3 facesNormals[ 4 ] = { ( point1 - point0 ).cross( point2 - point0 ),
+	btSimdVector3 facesNormals[ 4 ] = { ( point1 - point0 ).cross( point2 - point0 ),
 									  ( point2 - point1 ).cross( point3 - point1 ),
 									  ( point3 - point2 ).cross( point0 - point2 ),
 									  ( point0 - point3 ).cross( point1 - point3 ) };

@@ -766,7 +766,7 @@ typedef BOOL (WINAPI * PFNWGLWAITFORSBCOMLPROC) (HDC hdc, INT64 target_sbc, INT6
 #endif /* GLEW_MX */
 
 #ifdef GLEW_MX
-struct WGLEWContextStruct
+struct btWGLEWContextStruct
 {
 #endif /* GLEW_MX */
 
@@ -897,14 +897,14 @@ WGLEW_EXPORT GLboolean __WGLEW_NV_vertex_array_range;
 WGLEW_EXPORT GLboolean __WGLEW_OML_sync_control;
 
 #ifdef GLEW_MX
-}; /* WGLEWContextStruct */
+}; /* btWGLEWContextStruct */
 #endif /* GLEW_MX */
 
 /* ------------------------------------------------------------------------- */
 
 #ifdef GLEW_MX
 
-typedef struct WGLEWContextStruct WGLEWContext;
+typedef struct btWGLEWContextStruct WGLEWContext;
 GLEWAPI GLenum wglewContextInit (WGLEWContext* ctx);
 GLEWAPI GLboolean wglewContextIsSupported (WGLEWContext* ctx, const char* name);
 

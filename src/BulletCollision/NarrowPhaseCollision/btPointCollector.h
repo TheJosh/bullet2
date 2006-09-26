@@ -20,17 +20,17 @@ subject to the following restrictions:
 
 
 
-struct PointCollector : public DiscreteCollisionDetectorInterface::Result
+struct btPointCollector : public btDiscreteCollisionDetectorInterface::Result
 {
 	
 	
-	SimdVector3 m_normalOnBInWorld;
-	SimdVector3 m_pointInWorld;
+	btSimdVector3 m_normalOnBInWorld;
+	btSimdVector3 m_pointInWorld;
 	SimdScalar	m_distance;//negative means penetration
 
 	bool	m_hasResult;
 
-	PointCollector () 
+	btPointCollector () 
 		: m_distance(1e30f),m_hasResult(false)
 	{
 	}
@@ -40,7 +40,7 @@ struct PointCollector : public DiscreteCollisionDetectorInterface::Result
 		//??
 	}
 
-	virtual void AddContactPoint(const SimdVector3& normalOnBInWorld,const SimdVector3& pointInWorld,float depth)
+	virtual void AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)
 	{
 		if (depth< m_distance)
 		{

@@ -94,7 +94,7 @@ public:
 
 
 
-protected:  // Elements
+protected:  // btElements
 /**
  * A float value that represents the radius of the sphere @see domRadius
  */

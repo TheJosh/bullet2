@@ -39,11 +39,11 @@ subject to the following restrictions:
 SimdScalar	g_GJKMaxRelError = 1e-3f;
 SimdScalar	g_GJKMaxRelErrorSqrd = g_GJKMaxRelError * g_GJKMaxRelError;
 
-bool EpaPenetrationDepthSolver::CalcPenDepth( SimplexSolverInterface& simplexSolver,
-											  ConvexShape* pConvexA, ConvexShape* pConvexB,
-											  const SimdTransform& transformA, const SimdTransform& transformB,
-											  SimdVector3& v, SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB,
-											  class IDebugDraw* debugDraw )
+bool EpaPenetrationDepthSolver::CalcPenDepth( btSimplexSolverInterface& simplexSolver,
+											  btConvexShape* pConvexA, btConvexShape* pConvexB,
+											  const btSimdTransform& transformA, const btSimdTransform& transformB,
+											  btSimdVector3& v, SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB,
+											  class btIDebugDraw* debugDraw )
 {
 	EPA_DEBUG_ASSERT( pConvexA ,"Convex shape A is invalid!" );
 	EPA_DEBUG_ASSERT( pConvexB ,"Convex shape B is invalid!" );
@@ -70,11 +70,11 @@ bool EpaPenetrationDepthSolver::CalcPenDepth( SimplexSolverInterface& simplexSol
 }
 
 #ifdef EPA_USE_HYBRID
-bool EpaPenetrationDepthSolver::HybridPenDepth( SimplexSolverInterface& simplexSolver,
-												ConvexShape* pConvexA, ConvexShape* pConvexB,
-												const SimdTransform& transformA, const SimdTransform& transformB,
+bool EpaPenetrationDepthSolver::HybridPenDepth( btSimplexSolverInterface& simplexSolver,
+												btConvexShape* pConvexA, btConvexShape* pConvexB,
+												const btSimdTransform& transformA, const btSimdTransform& transformB,
 												SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB,
-											    SimdScalar& penDepth, SimdVector3& v )
+											    SimdScalar& penDepth, btSimdVector3& v )
 {
 	SimdScalar squaredDistance = SIMD_INFINITY;
 	SimdScalar delta = 0.f;
@@ -90,16 +90,16 @@ bool EpaPenetrationDepthSolver::HybridPenDepth( SimplexSolverInterface& simplexS
 	{
 		assert( ( v.length2() > 0 ) && "Warning: v is the zero vector!" );
 
-		SimdVector3 seperatingAxisInA = -v * transformA.getBasis();
-		SimdVector3 seperatingAxisInB =  v * transformB.getBasis();
+		btSimdVector3 seperatingAxisInA = -v * transformA.getBasis();
+		btSimdVector3 seperatingAxisInB =  v * transformB.getBasis();
 
-		SimdVector3 pInA = pConvexA->LocalGetSupportingVertexWithoutMargin( seperatingAxisInA );
-		SimdVector3 qInB = pConvexB->LocalGetSupportingVertexWithoutMargin( seperatingAxisInB );
+		btSimdVector3 pInA = pConvexA->LocalGetSupportingVertexWithoutMargin( seperatingAxisInA );
+		btSimdVector3 qInB = pConvexB->LocalGetSupportingVertexWithoutMargin( seperatingAxisInB );
 
 		SimdPoint3  pWorld = transformA( pInA );
 		SimdPoint3  qWorld = transformB( qInB );
 
-		SimdVector3 w = pWorld - qWorld;
+		btSimdVector3 w = pWorld - qWorld;
 		delta = v.dot( w );
 
 		// potential exit, they don't overlap
@@ -184,9 +184,9 @@ bool EpaPenetrationDepthSolver::HybridPenDepth( SimplexSolverInterface& simplexS
 }
 #endif
 
-SimdScalar EpaPenetrationDepthSolver::EpaPenDepth( SimplexSolverInterface& simplexSolver,
-												   ConvexShape* pConvexA, ConvexShape* pConvexB,
-												   const SimdTransform& transformA, const SimdTransform& transformB,
+SimdScalar EpaPenetrationDepthSolver::EpaPenDepth( btSimplexSolverInterface& simplexSolver,
+												   btConvexShape* pConvexA, btConvexShape* pConvexB,
+												   const btSimdTransform& transformA, const btSimdTransform& transformB,
 												   SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB )
 {
 	Epa epa( pConvexA, pConvexB, transformA, transformB );

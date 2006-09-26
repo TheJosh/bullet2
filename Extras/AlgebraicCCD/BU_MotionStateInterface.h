@@ -20,30 +20,30 @@ subject to the following restrictions:
 
 #include <LinearMath/SimdTransform.h>
 #include <LinearMath/SimdPoint3.h>
-#include <SimdQuaternion.h>
+#include <btSimdQuaternion.h>
 
 class BU_MotionStateInterface
 {
 public:
 	virtual ~BU_MotionStateInterface(){};
 
-	virtual void	SetTransform(const SimdTransform& trans) = 0;
-	virtual void	GetTransform(SimdTransform& trans) const = 0; 
+	virtual void	SetTransform(const btSimdTransform& trans) = 0;
+	virtual void	GetTransform(btSimdTransform& trans) const = 0; 
 
 	virtual void	SetPosition(const SimdPoint3& position) = 0;
 	virtual void	GetPosition(SimdPoint3& position) const = 0; 
 
-	virtual void	SetOrientation(const SimdQuaternion& orientation) = 0;
-	virtual void	GetOrientation(SimdQuaternion& orientation) const = 0; 
+	virtual void	SetOrientation(const btSimdQuaternion& orientation) = 0;
+	virtual void	GetOrientation(btSimdQuaternion& orientation) const = 0; 
 
-	virtual void	SetBasis(const SimdMatrix3x3& basis) = 0;
-	virtual void	GetBasis(SimdMatrix3x3& basis) const = 0; 
+	virtual void	SetBasis(const btSimdMatrix3x3& basis) = 0;
+	virtual void	GetBasis(btSimdMatrix3x3& basis) const = 0; 
 
-	virtual void	SetLinearVelocity(const SimdVector3& linvel) = 0;
-	virtual void	GetLinearVelocity(SimdVector3& linvel) const = 0;
+	virtual void	SetLinearVelocity(const btSimdVector3& linvel) = 0;
+	virtual void	GetLinearVelocity(btSimdVector3& linvel) const = 0;
 	
-	virtual void	GetAngularVelocity(SimdVector3& angvel) const = 0;
-	virtual void	SetAngularVelocity(const SimdVector3& angvel) = 0;
+	virtual void	GetAngularVelocity(btSimdVector3& angvel) const = 0;
+	virtual void	SetAngularVelocity(const btSimdVector3& angvel) = 0;
 
 };
 

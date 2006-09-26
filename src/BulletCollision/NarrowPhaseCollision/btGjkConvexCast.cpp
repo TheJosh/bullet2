@@ -22,35 +22,35 @@ subject to the following restrictions:
 #include "btPointCollector.h"
 
 
-GjkConvexCast::GjkConvexCast(ConvexShape* convexA,ConvexShape* convexB,SimplexSolverInterface* simplexSolver)
+btGjkConvexCast::btGjkConvexCast(btConvexShape* convexA,btConvexShape* convexB,btSimplexSolverInterface* simplexSolver)
 :m_simplexSolver(simplexSolver),
 m_convexA(convexA),
 m_convexB(convexB)
 {
 }
 
-bool	GjkConvexCast::calcTimeOfImpact(
-					const SimdTransform& fromA,
-					const SimdTransform& toA,
-					const SimdTransform& fromB,
-					const SimdTransform& toB,
+bool	btGjkConvexCast::calcTimeOfImpact(
+					const btSimdTransform& fromA,
+					const btSimdTransform& toA,
+					const btSimdTransform& fromB,
+					const btSimdTransform& toB,
 					CastResult& result)
 {
 
 
-	MinkowskiSumShape combi(m_convexA,m_convexB);
-	MinkowskiSumShape* convex = &combi;
+	btMinkowskiSumShape combi(m_convexA,m_convexB);
+	btMinkowskiSumShape* convex = &combi;
 
-	SimdTransform	rayFromLocalA;
-	SimdTransform	rayToLocalA;
+	btSimdTransform	rayFromLocalA;
+	btSimdTransform	rayToLocalA;
 
 	rayFromLocalA = fromA.inverse()* fromB;
 	rayToLocalA = toA.inverse()* toB;
 
 
-	SimdTransform trA,trB;
-	trA = SimdTransform(fromA);
-	trB = SimdTransform(fromB);
+	btSimdTransform trA,trB;
+	trA = btSimdTransform(fromA);
+	trB = btSimdTransform(fromB);
 	trA.setOrigin(SimdPoint3(0,0,0));
 	trB.setOrigin(SimdPoint3(0,0,0));
 
@@ -63,37 +63,37 @@ bool	GjkConvexCast::calcTimeOfImpact(
 	float radius = 0.01f;
 
 	SimdScalar lambda = 0.f;
-	SimdVector3 s = rayFromLocalA.getOrigin();
-	SimdVector3 r = rayToLocalA.getOrigin()-rayFromLocalA.getOrigin();
-	SimdVector3 x = s;
-	SimdVector3 n;
+	btSimdVector3 s = rayFromLocalA.getOrigin();
+	btSimdVector3 r = rayToLocalA.getOrigin()-rayFromLocalA.getOrigin();
+	btSimdVector3 x = s;
+	btSimdVector3 n;
 	n.setValue(0,0,0);
 	bool hasResult = false;
-	SimdVector3 c;
+	btSimdVector3 c;
 
 	float lastLambda = lambda;
 
 	//first solution, using GJK
 
 	//no penetration support for now, perhaps pass a pointer when we really want it
-	ConvexPenetrationDepthSolver* penSolverPtr = 0;
+	btConvexPenetrationDepthSolver* penSolverPtr = 0;
 
-	SimdTransform identityTrans;
+	btSimdTransform identityTrans;
 	identityTrans.setIdentity();
 
-	SphereShape	raySphere(0.0f);
+	btSphereShape	raySphere(0.0f);
 	raySphere.SetMargin(0.f);
 
-	SimdTransform sphereTr;
+	btSimdTransform sphereTr;
 	sphereTr.setIdentity();
 	sphereTr.setOrigin( rayFromLocalA.getOrigin());
 
 	result.DrawCoordSystem(sphereTr);
 	{
-		PointCollector	pointCollector1;
-		GjkPairDetector gjk(&raySphere,convex,m_simplexSolver,penSolverPtr);		
+		btPointCollector	pointCollector1;
+		btGjkPairDetector gjk(&raySphere,convex,m_simplexSolver,penSolverPtr);		
 
-		GjkPairDetector::ClosestPointInput input;
+		btGjkPairDetector::ClosestPointInput input;
 		input.m_transformA = sphereTr;
 		input.m_transformB = identityTrans;
 		gjk.GetClosestPoints(input,pointCollector1,0);
@@ -135,9 +135,9 @@ bool	GjkConvexCast::calcTimeOfImpact(
 
 			sphereTr.setOrigin( x );
 			result.DrawCoordSystem(sphereTr);
-			PointCollector	pointCollector;
-			GjkPairDetector gjk(&raySphere,convex,m_simplexSolver,penSolverPtr);
-			GjkPairDetector::ClosestPointInput input;
+			btPointCollector	pointCollector;
+			btGjkPairDetector gjk(&raySphere,convex,m_simplexSolver,penSolverPtr);
+			btGjkPairDetector::ClosestPointInput input;
 			input.m_transformA = sphereTr;
 			input.m_transformB = identityTrans;
 			gjk.GetClosestPoints(input,pointCollector,0);

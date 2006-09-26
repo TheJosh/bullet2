@@ -14,13 +14,13 @@
 #include "LinearMath/SimdVector3.h"
 #include "LinearMath/SimdTransform.h"
 
-class RigidBody;
+class btRigidBody;
 
-struct WheelInfoConstructionInfo
+struct btWheelInfoConstructionInfo
 {
-	SimdVector3	m_chassisConnectionCS;
-	SimdVector3	m_wheelDirectionCS;
-	SimdVector3	m_wheelAxleCS;
+	btSimdVector3	m_chassisConnectionCS;
+	btSimdVector3	m_wheelDirectionCS;
+	btSimdVector3	m_wheelAxleCS;
 	SimdScalar	m_suspensionRestLength;
 	SimdScalar	m_maxSuspensionTravelCm;
 	SimdScalar	m_wheelRadius;
@@ -33,29 +33,29 @@ struct WheelInfoConstructionInfo
 	
 };
 
-/// WheelInfo contains information per wheel about friction and suspension.
-struct WheelInfo
+/// btWheelInfo contains information per wheel about friction and suspension.
+struct btWheelInfo
 {
 	struct RaycastInfo
 	{
 		//set by raycaster
-		SimdVector3	m_contactNormalWS;//contactnormal
-		SimdVector3	m_contactPointWS;//raycast hitpoint
+		btSimdVector3	m_contactNormalWS;//contactnormal
+		btSimdVector3	m_contactPointWS;//raycast hitpoint
 		SimdScalar	m_suspensionLength;
-		SimdVector3	m_hardPointWS;//raycast starting point
-		SimdVector3	m_wheelDirectionWS; //direction in worldspace
-		SimdVector3	m_wheelAxleWS; // axle in worldspace
+		btSimdVector3	m_hardPointWS;//raycast starting point
+		btSimdVector3	m_wheelDirectionWS; //direction in worldspace
+		btSimdVector3	m_wheelAxleWS; // axle in worldspace
 		bool		m_isInContact;
 		void*		m_groundObject; //could be general void* ptr
 	};
 
 	RaycastInfo	m_raycastInfo;
 
-	SimdTransform	m_worldTransform;
+	btSimdTransform	m_worldTransform;
 	
-	SimdVector3	m_chassisConnectionPointCS; //const
-	SimdVector3	m_wheelDirectionCS;//const
-	SimdVector3	m_wheelAxleCS; // const or modified by steering
+	btSimdVector3	m_chassisConnectionPointCS; //const
+	btSimdVector3	m_wheelDirectionCS;//const
+	btSimdVector3	m_wheelAxleCS; // const or modified by steering
 	SimdScalar	m_suspensionRestLength1;//const
 	SimdScalar	m_maxSuspensionTravelCm;
 	SimdScalar GetSuspensionRestLength() const;
@@ -77,7 +77,7 @@ struct WheelInfo
 	
 	void*		m_clientInfo;//can be used to store pointer to sync transforms...
 
-	WheelInfo(WheelInfoConstructionInfo& ci)
+	btWheelInfo(btWheelInfoConstructionInfo& ci)
 
 	{
 
@@ -102,7 +102,7 @@ struct WheelInfo
 
 	}
 
-	void	UpdateWheel(const RigidBody& chassis,RaycastInfo& raycastInfo);
+	void	UpdateWheel(const btRigidBody& chassis,RaycastInfo& raycastInfo);
 
 	SimdScalar	m_clippedInvContactDotSuspension;
 	SimdScalar	m_suspensionRelativeVelocity;

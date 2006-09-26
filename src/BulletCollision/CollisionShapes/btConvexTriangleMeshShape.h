@@ -7,24 +7,24 @@
 
 #include <vector>
 
-/// ConvexTriangleMeshShape is a convex hull of a triangle mesh. If you just have a point cloud, you can use ConvexHullShape instead.
-/// It uses the StridingMeshInterface instead of a point cloud. This can avoid the duplication of the triangle mesh data.
-class ConvexTriangleMeshShape : public PolyhedralConvexShape
+/// btConvexTriangleMeshShape is a convex hull of a triangle mesh. If you just have a point cloud, you can use btConvexHullShape instead.
+/// It uses the btStridingMeshInterface instead of a point cloud. This can avoid the duplication of the triangle mesh data.
+class btConvexTriangleMeshShape : public btPolyhedralConvexShape
 {
 
-	class StridingMeshInterface*	m_stridingMesh;
+	class btStridingMeshInterface*	m_stridingMesh;
 
 public:
-	ConvexTriangleMeshShape(StridingMeshInterface* meshInterface);
+	btConvexTriangleMeshShape(btStridingMeshInterface* meshInterface);
 
-	class StridingMeshInterface*	GetStridingMesh()
+	class btStridingMeshInterface*	GetStridingMesh()
 	{
 		return m_stridingMesh;
 	}
 	
-	virtual SimdVector3	LocalGetSupportingVertex(const SimdVector3& vec)const;
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec)const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec)const;
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
 	
 	virtual int	GetShapeType()const { return CONVEX_TRIANGLEMESH_SHAPE_PROXYTYPE; }
 
@@ -36,11 +36,11 @@ public:
 	virtual void GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const;
 	virtual void GetVertex(int i,SimdPoint3& vtx) const;
 	virtual int	GetNumPlanes() const;
-	virtual void GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const;
+	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const;
 	virtual	bool IsInside(const SimdPoint3& pt,SimdScalar tolerance) const;
 
 	
-	void	setLocalScaling(const SimdVector3& scaling);
+	void	setLocalScaling(const btSimdVector3& scaling);
 
 };
 

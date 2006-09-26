@@ -48,7 +48,7 @@ Very basic raytracer, rendering into a texture.
 
 #include "RenderTexture.h"
 
-VoronoiSimplexSolver	simplexSolver;
+btVoronoiSimplexSolver	simplexSolver;
 
 float yaw=0.f,pitch=0.f,roll=0.f;
 const int maxNumObjects = 4;
@@ -57,8 +57,8 @@ const int numObjects = 4;
 /// simplex contains the vertices, and some extra code to draw and debug
 GL_Simplex1to4	simplex;
 
-ConvexShape*	shapePtr[maxNumObjects];
-SimdTransform transforms[maxNumObjects];
+btConvexShape*	shapePtr[maxNumObjects];
+btSimdTransform transforms[maxNumObjects];
 
 RenderTexture*	raytracePicture = 0;
 
@@ -66,12 +66,12 @@ int screenWidth = 128;
 int screenHeight = 128;
 GLuint glTextureId;
 
-SphereShape	mySphere(1);
-BoxShape myBox(SimdVector3(0.4f,0.4f,0.4f));
-CylinderShape myCylinder(SimdVector3(0.3f,0.3f,0.3f));
-ConeShape myCone(1,1);
+btSphereShape	mySphere(1);
+btBoxShape myBox(btSimdVector3(0.4f,0.4f,0.4f));
+btCylinderShape myCylinder(btSimdVector3(0.3f,0.3f,0.3f));
+btConeShape myCone(1,1);
 
-MinkowskiSumShape myMink(&myCylinder,&myBox);
+btMinkowskiSumShape myMink(&myCylinder,&myBox);
 
 
 ///
@@ -104,17 +104,17 @@ void	Raytracer::initPhysics()
 	
 	/// convex hull of 5 spheres
 #define NUM_SPHERES 5
-	SimdVector3 inertiaHalfExtents(10.f,10.f,10.f);
-	SimdVector3 positions[NUM_SPHERES] = {
-		SimdVector3(-1.2f,	-0.3f,	0.f),
-		SimdVector3(0.8f,	-0.3f,	0.f),
-		SimdVector3(0.5f,	0.6f,	0.f),
-		SimdVector3(-0.5f,	0.6f,	0.f),
-		SimdVector3(0.f,	0.f,	0.f)
+	btSimdVector3 inertiaHalfExtents(10.f,10.f,10.f);
+	btSimdVector3 positions[NUM_SPHERES] = {
+		btSimdVector3(-1.2f,	-0.3f,	0.f),
+		btSimdVector3(0.8f,	-0.3f,	0.f),
+		btSimdVector3(0.5f,	0.6f,	0.f),
+		btSimdVector3(-0.5f,	0.6f,	0.f),
+		btSimdVector3(0.f,	0.f,	0.f)
 	};
 
-	// MultiSphereShape* multiSphereShape = new MultiSphereShape(inertiaHalfExtents,positions,radi,NUM_SPHERES);
-	ConvexHullShape* convexHullShape = new ConvexHullShape(positions,3);
+	// btMultiSphereShape* multiSphereShape = new btMultiSphereShape(inertiaHalfExtents,positions,radi,NUM_SPHERES);
+	btConvexHullShape* convexHullShape = new btConvexHullShape(positions,3);
 
 
 	//choose shape
@@ -146,16 +146,16 @@ void Raytracer::displayCallback()
 	for (int i=0;i<numObjects;i++)
 	{
 		transforms[i].setIdentity();
-		SimdVector3	pos(-3.5f+i*2.5f,0.f,0.f);
+		btSimdVector3	pos(-3.5f+i*2.5f,0.f,0.f);
 		transforms[i].setOrigin( pos );
-		SimdQuaternion orn;
+		btSimdQuaternion orn;
 		if (i < 2)
 		{
 			orn.setEuler(yaw,pitch,roll);
 			transforms[i].setRotation(orn);
 		}
 	}
-	myMink.SetTransformA(SimdTransform(transforms[0].getRotation()));
+	myMink.SetTransformA(btSimdTransform(transforms[0].getRotation()));
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 	glDisable(GL_LIGHTING);
@@ -184,7 +184,7 @@ void Raytracer::displayCallback()
 
 
 
-	SimdVector4 rgba(1.f,0.f,0.f,0.5f);
+	btSimdVector4 rgba(1.f,0.f,0.f,0.5f);
 
 	float top = 1.f;
 	float bottom = -1.f;
@@ -195,15 +195,15 @@ void Raytracer::displayCallback()
 	float fov = 2.0 * atanf (tanFov);
 
 
-	SimdVector3	rayFrom = getCameraPosition();
-	SimdVector3 rayForward = getCameraTargetPosition()-getCameraPosition();
+	btSimdVector3	rayFrom = getCameraPosition();
+	btSimdVector3 rayForward = getCameraTargetPosition()-getCameraPosition();
 	rayForward.normalize();
 	float farPlane = 600.f;
 	rayForward*= farPlane;
 
-	SimdVector3 rightOffset;
-	SimdVector3 vertical(0.f,1.f,0.f);
-	SimdVector3 hor;
+	btSimdVector3 rightOffset;
+	btSimdVector3 vertical(0.f,1.f,0.f);
+	btSimdVector3 hor;
 	hor = rayForward.cross(vertical);
 	hor.normalize();
 	vertical = hor.cross(rayForward);
@@ -214,20 +214,20 @@ void Raytracer::displayCallback()
 	hor *= 2.f * farPlane * tanfov;
 	vertical *= 2.f * farPlane * tanfov;
 
-	SimdVector3 rayToCenter = rayFrom + rayForward;
+	btSimdVector3 rayToCenter = rayFrom + rayForward;
 
-	SimdVector3 dHor = hor * 1.f/float(screenWidth);
-	SimdVector3 dVert = vertical * 1.f/float(screenHeight);
+	btSimdVector3 dHor = hor * 1.f/float(screenWidth);
+	btSimdVector3 dVert = vertical * 1.f/float(screenHeight);
 
-	SimdTransform rayFromTrans;
+	btSimdTransform rayFromTrans;
 	rayFromTrans.setIdentity();
 	rayFromTrans.setOrigin(rayFrom);
 
-	SimdTransform rayFromLocal;
-	SimdTransform	rayToLocal;
+	btSimdTransform rayFromLocal;
+	btSimdTransform	rayToLocal;
 
 
-	SphereShape pointShape(0.0f);
+	btSphereShape pointShape(0.0f);
 
 
 	///clear texture
@@ -235,16 +235,16 @@ void Raytracer::displayCallback()
 	{
 		for (int y=0;y<screenHeight;y++)
 		{
-			SimdVector4 rgba(0.f,0.f,0.f,0.f);
+			btSimdVector4 rgba(0.f,0.f,0.f,0.f);
 			raytracePicture->SetPixel(x,y,rgba);
 		}
 	}
 	
 
-	ConvexCast::CastResult rayResult;
-	SimdTransform rayToTrans;
+	btConvexCast::CastResult rayResult;
+	btSimdTransform rayToTrans;
 	rayToTrans.setIdentity();
-	SimdVector3 rayTo;
+	btSimdVector3 rayTo;
 	for (int x=0;x<screenWidth;x++)
 	{
 		for (int y=0;y<screenHeight;y++)
@@ -259,11 +259,11 @@ void Raytracer::displayCallback()
 			//	rayToLocal = transforms[s].inverse()* rayToTrans;
 
 				//choose the continuous collision detection method
-				SubsimplexConvexCast convexCaster(&pointShape,shapePtr[s],&simplexSolver);
+				btSubsimplexConvexCast convexCaster(&pointShape,shapePtr[s],&simplexSolver);
 				//GjkConvexCast convexCaster(&pointShape,shapePtr[0],&simplexSolver);
 				//ContinuousConvexCollision convexCaster(&pointShape,shapePtr[0],&simplexSolver,0);
 				
-				//	BU_Simplex1to4	ptShape(SimdVector3(0,0,0));//algebraic needs features, doesnt use 'supporting vertex'
+				//	btBU_Simplex1to4	ptShape(btSimdVector3(0,0,0));//algebraic needs features, doesnt use 'supporting vertex'
 				//	BU_CollisionPair convexCaster(&ptShape,shapePtr[0]);
 
 
@@ -276,21 +276,21 @@ void Raytracer::displayCallback()
 					//float fog = 1.f - 0.1f * rayResult.m_fraction;
 					rayResult.m_normal.normalize();
 
-					SimdVector3 worldNormal;
+					btSimdVector3 worldNormal;
 					worldNormal = transforms[s].getBasis() *rayResult.m_normal;
 
-					float light = worldNormal.dot(SimdVector3(0.4f,-1.f,-0.4f));
+					float light = worldNormal.dot(btSimdVector3(0.4f,-1.f,-0.4f));
 					if (light < 0.2f)
 						light = 0.2f;
 					if (light > 1.f)
 						light = 1.f;
 
-					rgba = SimdVector4(light,light,light,1.f);
+					rgba = btSimdVector4(light,light,light,1.f);
 					raytracePicture->SetPixel(x,y,rgba);
 				} else
 				{
 					//clear is already done
-					//rgba = SimdVector4(0.f,0.f,0.f,0.f);
+					//rgba = btSimdVector4(0.f,0.f,0.f,0.f);
 					//raytracePicture->SetPixel(x,y,rgba);
 
 				}
@@ -386,7 +386,7 @@ void Raytracer::displayCallback()
 
 		transA.getOpenGLMatrix( m );
 		/// draw the simplex
-		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],SimdVector3(1,1,1));
+		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,1,1));
 		/// calculate closest point from simplex to the origin, and draw this vector
 		simplex.CalcClosest(m);
 

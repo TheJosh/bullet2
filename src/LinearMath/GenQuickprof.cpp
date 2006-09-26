@@ -33,13 +33,13 @@
 
 // Note: We must declare these private static variables again here to 
 // avoid link errors.
-bool Profiler::mEnabled = false;
-hidden::Clock Profiler::mClock;
-unsigned long int Profiler::mCurrentCycleStartMicroseconds = 0;
-unsigned long int Profiler::mLastCycleDurationMicroseconds = 0;
-std::map<std::string, hidden::ProfileBlock*> Profiler::mProfileBlocks;
-std::ofstream Profiler::mOutputFile;
-bool Profiler::mFirstFileOutput = true;
-Profiler::BlockTimingMethod Profiler::mFileOutputMethod;
-unsigned long int Profiler::mCycleNumber = 0;
+bool btProfiler::mEnabled = false;
+hidden::Clock btProfiler::mClock;
+unsigned long int btProfiler::mCurrentCycleStartMicroseconds = 0;
+unsigned long int btProfiler::mLastCycleDurationMicroseconds = 0;
+std::map<std::string, hidden::ProfileBlock*> btProfiler::mProfileBlocks;
+std::ofstream btProfiler::mOutputFile;
+bool btProfiler::mFirstFileOutput = true;
+btProfiler::BlockTimingMethod btProfiler::mFileOutputMethod;
+unsigned long int btProfiler::mCycleNumber = 0;
 #endif //USE_QUICKPROF

@@ -31,7 +31,7 @@ public:
 	bool GetTimeOfImpact(
 		const BU_Screwing& screwAB,
 		const SimdPoint3& vtx,
-		const SimdVector4& planeEq,
+		const btSimdVector4& planeEq,
 		SimdScalar &minTime,
 		bool swapAB);
 

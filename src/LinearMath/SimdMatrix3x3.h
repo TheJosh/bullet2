@@ -13,8 +13,8 @@ subject to the following restrictions:
 */
 
 
-#ifndef SimdMatrix3x3_H
-#define SimdMatrix3x3_H
+#ifndef btSimdMatrix3x3_H
+#define btSimdMatrix3x3_H
 
 #include "LinearMath/SimdScalar.h"
 
@@ -22,13 +22,13 @@ subject to the following restrictions:
 #include "LinearMath/SimdQuaternion.h"
 
 
-class SimdMatrix3x3 {
+class btSimdMatrix3x3 {
 	public:
-		SimdMatrix3x3 () {}
+		btSimdMatrix3x3 () {}
 		
-//		explicit SimdMatrix3x3(const SimdScalar *m) { setFromOpenGLSubMatrix(m); }
+//		explicit btSimdMatrix3x3(const SimdScalar *m) { setFromOpenGLSubMatrix(m); }
 		
-		explicit SimdMatrix3x3(const SimdQuaternion& q) { setRotation(q); }
+		explicit btSimdMatrix3x3(const btSimdQuaternion& q) { setRotation(q); }
 		/*
 		template <typename SimdScalar>
 		Matrix3x3(const SimdScalar& yaw, const SimdScalar& pitch, const SimdScalar& roll)
@@ -36,7 +36,7 @@ class SimdMatrix3x3 {
 			setEulerYPR(yaw, pitch, roll);
 		}
 		*/
-		SimdMatrix3x3(const SimdScalar& xx, const SimdScalar& xy, const SimdScalar& xz,
+		btSimdMatrix3x3(const SimdScalar& xx, const SimdScalar& xy, const SimdScalar& xz,
 				  const SimdScalar& yx, const SimdScalar& yy, const SimdScalar& yz,
 				  const SimdScalar& zx, const SimdScalar& zy, const SimdScalar& zz)
 		{ 
@@ -45,30 +45,30 @@ class SimdMatrix3x3 {
 					 zx, zy, zz);
 		}
 		
-		SimdVector3 getColumn(int i) const
+		btSimdVector3 getColumn(int i) const
 		{
-			return SimdVector3(m_el[0][i],m_el[1][i],m_el[2][i]);
+			return btSimdVector3(m_el[0][i],m_el[1][i],m_el[2][i]);
 		}
 
-		const SimdVector3& getRow(int i) const
+		const btSimdVector3& getRow(int i) const
 		{
 			return m_el[i];
 		}
 
 
-		SIMD_FORCE_INLINE SimdVector3&  operator[](int i)
+		SIMD_FORCE_INLINE btSimdVector3&  operator[](int i)
 		{ 
 			assert(0 <= i && i < 3);
 			return m_el[i]; 
 		}
 		
-		const SimdVector3& operator[](int i) const
+		const btSimdVector3& operator[](int i) const
 		{
 			assert(0 <= i && i < 3);
 			return m_el[i]; 
 		}
 		
-		SimdMatrix3x3& operator*=(const SimdMatrix3x3& m); 
+		btSimdMatrix3x3& operator*=(const btSimdMatrix3x3& m); 
 		
 	
 	void setFromOpenGLSubMatrix(const SimdScalar *m)
@@ -99,7 +99,7 @@ class SimdMatrix3x3 {
 			m_el[2][2] = SimdScalar(zz);
 		}
   
-		void setRotation(const SimdQuaternion& q) 
+		void setRotation(const btSimdQuaternion& q) 
 		{
 			SimdScalar d = q.length2();
 			assert(d != SimdScalar(0.0));
@@ -136,7 +136,7 @@ class SimdMatrix3x3 {
 
 	/**
 	 * setEulerZYX
-	 * @param euler a const reference to a SimdVector3 of euler angles
+	 * @param euler a const reference to a btSimdVector3 of euler angles
 	 * These angles are used to produce a rotation matrix. The euler
 	 * angles are applied in ZYX order. I.e a vector is first rotated 
 	 * about X then Y and then Z
@@ -182,7 +182,7 @@ class SimdMatrix3x3 {
 			m[11] = SimdScalar(0.0); 
 		}
 
-		void getRotation(SimdQuaternion& q) const
+		void getRotation(btSimdQuaternion& q) const
 		{
 			SimdScalar trace = m_el[0][0] + m_el[1][1] + m_el[2][2];
 			
@@ -239,31 +239,31 @@ class SimdMatrix3x3 {
 			}
 		}
 
-		SimdVector3 getScaling() const
+		btSimdVector3 getScaling() const
 		{
-			return SimdVector3(m_el[0][0] * m_el[0][0] + m_el[1][0] * m_el[1][0] + m_el[2][0] * m_el[2][0],
+			return btSimdVector3(m_el[0][0] * m_el[0][0] + m_el[1][0] * m_el[1][0] + m_el[2][0] * m_el[2][0],
 								   m_el[0][1] * m_el[0][1] + m_el[1][1] * m_el[1][1] + m_el[2][1] * m_el[2][1],
 								   m_el[0][2] * m_el[0][2] + m_el[1][2] * m_el[1][2] + m_el[2][2] * m_el[2][2]);
 		}
 		
 		
-		SimdMatrix3x3 scaled(const SimdVector3& s) const
+		btSimdMatrix3x3 scaled(const btSimdVector3& s) const
 		{
-			return SimdMatrix3x3(m_el[0][0] * s[0], m_el[0][1] * s[1], m_el[0][2] * s[2],
+			return btSimdMatrix3x3(m_el[0][0] * s[0], m_el[0][1] * s[1], m_el[0][2] * s[2],
 									 m_el[1][0] * s[0], m_el[1][1] * s[1], m_el[1][2] * s[2],
 									 m_el[2][0] * s[0], m_el[2][1] * s[1], m_el[2][2] * s[2]);
 		}
 
 		SimdScalar            determinant() const;
-		SimdMatrix3x3 adjoint() const;
-		SimdMatrix3x3 absolute() const;
-		SimdMatrix3x3 transpose() const;
-		SimdMatrix3x3 inverse() const; 
+		btSimdMatrix3x3 adjoint() const;
+		btSimdMatrix3x3 absolute() const;
+		btSimdMatrix3x3 transpose() const;
+		btSimdMatrix3x3 inverse() const; 
 		
-		SimdMatrix3x3 transposeTimes(const SimdMatrix3x3& m) const;
-		SimdMatrix3x3 timesTranspose(const SimdMatrix3x3& m) const;
+		btSimdMatrix3x3 transposeTimes(const btSimdMatrix3x3& m) const;
+		btSimdMatrix3x3 timesTranspose(const btSimdMatrix3x3& m) const;
 		
-		SimdScalar tdot(int c, const SimdVector3& v) const 
+		SimdScalar tdot(int c, const btSimdVector3& v) const 
 		{
 			return m_el[0][c] * v[0] + m_el[1][c] * v[1] + m_el[2][c] * v[2];
 		}
@@ -274,11 +274,11 @@ class SimdMatrix3x3 {
 			return m_el[r1][c1] * m_el[r2][c2] - m_el[r1][c2] * m_el[r2][c1];
 		}
 
-		SimdVector3 m_el[3];
+		btSimdVector3 m_el[3];
 	};
 	
-	SIMD_FORCE_INLINE SimdMatrix3x3& 
-	SimdMatrix3x3::operator*=(const SimdMatrix3x3& m)
+	SIMD_FORCE_INLINE btSimdMatrix3x3& 
+	btSimdMatrix3x3::operator*=(const btSimdMatrix3x3& m)
 	{
 		setValue(m.tdot(0, m_el[0]), m.tdot(1, m_el[0]), m.tdot(2, m_el[0]),
 				 m.tdot(0, m_el[1]), m.tdot(1, m_el[1]), m.tdot(2, m_el[1]),
@@ -287,53 +287,53 @@ class SimdMatrix3x3 {
 	}
 	
 	SIMD_FORCE_INLINE SimdScalar 
-	SimdMatrix3x3::determinant() const
+	btSimdMatrix3x3::determinant() const
 	{ 
 		return triple((*this)[0], (*this)[1], (*this)[2]);
 	}
 	
 
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	SimdMatrix3x3::absolute() const
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	btSimdMatrix3x3::absolute() const
 	{
-		return SimdMatrix3x3(
+		return btSimdMatrix3x3(
 			SimdFabs(m_el[0][0]), SimdFabs(m_el[0][1]), SimdFabs(m_el[0][2]),
 			SimdFabs(m_el[1][0]), SimdFabs(m_el[1][1]), SimdFabs(m_el[1][2]),
 			SimdFabs(m_el[2][0]), SimdFabs(m_el[2][1]), SimdFabs(m_el[2][2]));
 	}
 
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	SimdMatrix3x3::transpose() const 
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	btSimdMatrix3x3::transpose() const 
 	{
-		return SimdMatrix3x3(m_el[0][0], m_el[1][0], m_el[2][0],
+		return btSimdMatrix3x3(m_el[0][0], m_el[1][0], m_el[2][0],
 								 m_el[0][1], m_el[1][1], m_el[2][1],
 								 m_el[0][2], m_el[1][2], m_el[2][2]);
 	}
 	
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	SimdMatrix3x3::adjoint() const 
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	btSimdMatrix3x3::adjoint() const 
 	{
-		return SimdMatrix3x3(cofac(1, 1, 2, 2), cofac(0, 2, 2, 1), cofac(0, 1, 1, 2),
+		return btSimdMatrix3x3(cofac(1, 1, 2, 2), cofac(0, 2, 2, 1), cofac(0, 1, 1, 2),
 								 cofac(1, 2, 2, 0), cofac(0, 0, 2, 2), cofac(0, 2, 1, 0),
 								 cofac(1, 0, 2, 1), cofac(0, 1, 2, 0), cofac(0, 0, 1, 1));
 	}
 	
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	SimdMatrix3x3::inverse() const
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	btSimdMatrix3x3::inverse() const
 	{
-		SimdVector3 co(cofac(1, 1, 2, 2), cofac(1, 2, 2, 0), cofac(1, 0, 2, 1));
+		btSimdVector3 co(cofac(1, 1, 2, 2), cofac(1, 2, 2, 0), cofac(1, 0, 2, 1));
 		SimdScalar det = (*this)[0].dot(co);
 		assert(det != SimdScalar(0.0f));
 		SimdScalar s = SimdScalar(1.0f) / det;
-		return SimdMatrix3x3(co[0] * s, cofac(0, 2, 2, 1) * s, cofac(0, 1, 1, 2) * s,
+		return btSimdMatrix3x3(co[0] * s, cofac(0, 2, 2, 1) * s, cofac(0, 1, 1, 2) * s,
 								 co[1] * s, cofac(0, 0, 2, 2) * s, cofac(0, 2, 1, 0) * s,
 								 co[2] * s, cofac(0, 1, 2, 0) * s, cofac(0, 0, 1, 1) * s);
 	}
 	
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	SimdMatrix3x3::transposeTimes(const SimdMatrix3x3& m) const
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	btSimdMatrix3x3::transposeTimes(const btSimdMatrix3x3& m) const
 	{
-		return SimdMatrix3x3(
+		return btSimdMatrix3x3(
 			m_el[0][0] * m[0][0] + m_el[1][0] * m[1][0] + m_el[2][0] * m[2][0],
 			m_el[0][0] * m[0][1] + m_el[1][0] * m[1][1] + m_el[2][0] * m[2][1],
 			m_el[0][0] * m[0][2] + m_el[1][0] * m[1][2] + m_el[2][0] * m[2][2],
@@ -345,41 +345,41 @@ class SimdMatrix3x3 {
 			m_el[0][2] * m[0][2] + m_el[1][2] * m[1][2] + m_el[2][2] * m[2][2]);
 	}
 	
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	SimdMatrix3x3::timesTranspose(const SimdMatrix3x3& m) const
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	btSimdMatrix3x3::timesTranspose(const btSimdMatrix3x3& m) const
 	{
-		return SimdMatrix3x3(
+		return btSimdMatrix3x3(
 			m_el[0].dot(m[0]), m_el[0].dot(m[1]), m_el[0].dot(m[2]),
 			m_el[1].dot(m[0]), m_el[1].dot(m[1]), m_el[1].dot(m[2]),
 			m_el[2].dot(m[0]), m_el[2].dot(m[1]), m_el[2].dot(m[2]));
 		
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 
-	operator*(const SimdMatrix3x3& m, const SimdVector3& v) 
+	SIMD_FORCE_INLINE btSimdVector3 
+	operator*(const btSimdMatrix3x3& m, const btSimdVector3& v) 
 	{
-		return SimdVector3(m[0].dot(v), m[1].dot(v), m[2].dot(v));
+		return btSimdVector3(m[0].dot(v), m[1].dot(v), m[2].dot(v));
 	}
 	
 
-	SIMD_FORCE_INLINE SimdVector3
-	operator*(const SimdVector3& v, const SimdMatrix3x3& m)
+	SIMD_FORCE_INLINE btSimdVector3
+	operator*(const btSimdVector3& v, const btSimdMatrix3x3& m)
 	{
-		return SimdVector3(m.tdot(0, v), m.tdot(1, v), m.tdot(2, v));
+		return btSimdVector3(m.tdot(0, v), m.tdot(1, v), m.tdot(2, v));
 	}
 
-	SIMD_FORCE_INLINE SimdMatrix3x3 
-	operator*(const SimdMatrix3x3& m1, const SimdMatrix3x3& m2)
+	SIMD_FORCE_INLINE btSimdMatrix3x3 
+	operator*(const btSimdMatrix3x3& m1, const btSimdMatrix3x3& m2)
 	{
-		return SimdMatrix3x3(
+		return btSimdMatrix3x3(
 			m2.tdot(0, m1[0]), m2.tdot(1, m1[0]), m2.tdot(2, m1[0]),
 			m2.tdot(0, m1[1]), m2.tdot(1, m1[1]), m2.tdot(2, m1[1]),
 			m2.tdot(0, m1[2]), m2.tdot(1, m1[2]), m2.tdot(2, m1[2]));
 	}
 
 
-	SIMD_FORCE_INLINE SimdMatrix3x3 SimdMultTransposeLeft(const SimdMatrix3x3& m1, const SimdMatrix3x3& m2) {
-    return SimdMatrix3x3(
+	SIMD_FORCE_INLINE btSimdMatrix3x3 SimdMultTransposeLeft(const btSimdMatrix3x3& m1, const btSimdMatrix3x3& m2) {
+    return btSimdMatrix3x3(
         m1[0][0] * m2[0][0] + m1[1][0] * m2[1][0] + m1[2][0] * m2[2][0],
         m1[0][0] * m2[0][1] + m1[1][0] * m2[1][1] + m1[2][0] * m2[2][1],
         m1[0][0] * m2[0][2] + m1[1][0] * m2[1][2] + m1[2][0] * m2[2][2],

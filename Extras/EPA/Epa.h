@@ -34,11 +34,11 @@ class Epa
 
 	public :
 
-		Epa( ConvexShape* pConvexShapeA, ConvexShape* pConvexShapeB,
-			 const SimdTransform& transformA, const SimdTransform& transformB );
+		Epa( btConvexShape* pConvexShapeA, btConvexShape* pConvexShapeB,
+			 const btSimdTransform& transformA, const btSimdTransform& transformB );
 		~Epa();
 
-		bool				Initialize( SimplexSolverInterface& simplexSolver );
+		bool				Initialize( btSimplexSolverInterface& simplexSolver );
 
 		SimdScalar			CalcPenDepth( SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB );
 
@@ -53,11 +53,11 @@ class Epa
 		//! Priority queue
 		std::vector< EpaFace* >	m_faceEntries;
 
-		ConvexShape*			m_pConvexShapeA;
-		ConvexShape*			m_pConvexShapeB;
+		btConvexShape*			m_pConvexShapeA;
+		btConvexShape*			m_pConvexShapeB;
 
-		SimdTransform			m_transformA;
-		SimdTransform			m_transformB;
+		btSimdTransform			m_transformA;
+		btSimdTransform			m_transformB;
 
 		EpaPolyhedron			m_polyhedron;
 };

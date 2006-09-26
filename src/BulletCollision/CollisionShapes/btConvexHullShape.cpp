@@ -18,7 +18,7 @@ subject to the following restrictions:
 #include "LinearMath/SimdQuaternion.h"
 
 
-ConvexHullShape ::ConvexHullShape (SimdPoint3* points,int numPoints,int stride)
+btConvexHullShape ::btConvexHullShape (SimdPoint3* points,int numPoints,int stride)
 {
 	m_points.resize(numPoints);
 	unsigned char* pointsBaseAddress = (unsigned char*)points;
@@ -30,12 +30,12 @@ ConvexHullShape ::ConvexHullShape (SimdPoint3* points,int numPoints,int stride)
 	}
 }
 
-SimdVector3	ConvexHullShape::LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec0)const
+btSimdVector3	btConvexHullShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec0)const
 {
-	SimdVector3 supVec(0.f,0.f,0.f);
+	btSimdVector3 supVec(0.f,0.f,0.f);
 	SimdScalar newDot,maxDot = -1e30f;
 
-	SimdVector3 vec = vec0;
+	btSimdVector3 vec = vec0;
 	SimdScalar lenSqr = vec.length2();
 	if (lenSqr < 0.0001f)
 	{
@@ -61,7 +61,7 @@ SimdVector3	ConvexHullShape::LocalGetSupportingVertexWithoutMargin(const SimdVec
 	return supVec;
 }
 
-void	ConvexHullShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const
+void	btConvexHullShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
 {
 	SimdScalar newDot;
 	//use 'w' component of supportVerticesOut?
@@ -77,7 +77,7 @@ void	ConvexHullShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const Si
 
 		for (int j=0;j<numVectors;j++)
 		{
-			const SimdVector3& vec = vectors[j];
+			const btSimdVector3& vec = vectors[j];
 			
 			newDot = vec.dot(vtx);
 			if (newDot > supportVerticesOut[j][3])
@@ -95,13 +95,13 @@ void	ConvexHullShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const Si
 	
 
 
-SimdVector3	ConvexHullShape::LocalGetSupportingVertex(const SimdVector3& vec)const
+btSimdVector3	btConvexHullShape::LocalGetSupportingVertex(const btSimdVector3& vec)const
 {
-	SimdVector3 supVertex = LocalGetSupportingVertexWithoutMargin(vec);
+	btSimdVector3 supVertex = LocalGetSupportingVertexWithoutMargin(vec);
 
 	if ( GetMargin()!=0.f )
 	{
-		SimdVector3 vecnorm = vec;
+		btSimdVector3 vecnorm = vec;
 		if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 		{
 			vecnorm.setValue(-1.f,-1.f,-1.f);
@@ -121,18 +121,18 @@ SimdVector3	ConvexHullShape::LocalGetSupportingVertex(const SimdVector3& vec)con
 
 
 //currently just for debugging (drawing), perhaps future support for algebraic continuous collision detection
-//Please note that you can debug-draw ConvexHullShape with the Raytracer Demo
-int	ConvexHullShape::GetNumVertices() const
+//Please note that you can debug-draw btConvexHullShape with the Raytracer Demo
+int	btConvexHullShape::GetNumVertices() const
 {
 	return m_points.size();
 }
 
-int ConvexHullShape::GetNumEdges() const
+int btConvexHullShape::GetNumEdges() const
 {
 	return m_points.size()*m_points.size();
 }
 
-void ConvexHullShape::GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
+void btConvexHullShape::GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
 {
 
 	int index0 = i%m_points.size();
@@ -141,23 +141,23 @@ void ConvexHullShape::GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
 	pb = m_points[index1]*m_localScaling;
 }
 
-void ConvexHullShape::GetVertex(int i,SimdPoint3& vtx) const
+void btConvexHullShape::GetVertex(int i,SimdPoint3& vtx) const
 {
 	vtx = m_points[i]*m_localScaling;
 }
 
-int	ConvexHullShape::GetNumPlanes() const
+int	btConvexHullShape::GetNumPlanes() const
 {
 	return 0;
 }
 
-void ConvexHullShape::GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
+void btConvexHullShape::GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
 {
 	assert(0);
 }
 
 //not yet
-bool ConvexHullShape::IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
+bool btConvexHullShape::IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
 {
 	assert(0);
 	return false;

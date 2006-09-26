@@ -27,30 +27,30 @@ subject to the following restrictions:
 
 
 
-/// EmptyShape is a collision shape without actual collision detection. 
+/// btEmptyShape is a collision shape without actual collision detection. 
 ///It can be replaced by another shape during runtime
-class EmptyShape	: public ConcaveShape
+class btEmptyShape	: public ConcaveShape
 {
 public:
-	EmptyShape();
+	btEmptyShape();
 
-	virtual ~EmptyShape();
+	virtual ~btEmptyShape();
 
 
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-	void GetAabb(const SimdTransform& t,SimdVector3& aabbMin,SimdVector3& aabbMax) const;
+	void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
 
 
-	virtual void	setLocalScaling(const SimdVector3& scaling)
+	virtual void	setLocalScaling(const btSimdVector3& scaling)
 	{
 		m_localScaling = scaling;
 	}
-	virtual const SimdVector3& getLocalScaling() const 
+	virtual const btSimdVector3& getLocalScaling() const 
 	{
 		return m_localScaling;
 	}
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia);
+	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
 	
 	virtual int	GetShapeType() const { return EMPTY_SHAPE_PROXYTYPE;}
 
@@ -62,7 +62,7 @@ public:
 
 
 protected:
-	SimdVector3	m_localScaling;
+	btSimdVector3	m_localScaling;
 
 };
 

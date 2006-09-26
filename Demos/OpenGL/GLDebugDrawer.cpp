@@ -22,7 +22,7 @@ GLDebugDrawer::GLDebugDrawer()
 {
 
 }
-void	GLDebugDrawer::DrawLine(const SimdVector3& from,const SimdVector3& to,const SimdVector3& color)
+void	GLDebugDrawer::DrawLine(const btSimdVector3& from,const btSimdVector3& to,const btSimdVector3& color)
 {
 	if (m_debugMode > 0)
 	{
@@ -40,12 +40,12 @@ void	GLDebugDrawer::SetDebugMode(int debugMode)
 
 }
 
-void	GLDebugDrawer::DrawContactPoint(const SimdVector3& pointOnB,const SimdVector3& normalOnB,float distance,int lifeTime,const SimdVector3& color)
+void	GLDebugDrawer::DrawContactPoint(const btSimdVector3& pointOnB,const btSimdVector3& normalOnB,float distance,int lifeTime,const btSimdVector3& color)
 {
-	if (m_debugMode & IDebugDraw::DBG_DrawContactPoints)
+	if (m_debugMode & btIDebugDraw::DBG_DrawContactPoints)
 	{
-		SimdVector3 to=pointOnB+normalOnB*distance;
-		const SimdVector3&from = pointOnB;
+		btSimdVector3 to=pointOnB+normalOnB*distance;
+		const btSimdVector3&from = pointOnB;
 		glBegin(GL_LINES);
 		glColor3f(color.getX(), color.getY(), color.getZ());
 		glVertex3d(from.getX(), from.getY(), from.getZ());

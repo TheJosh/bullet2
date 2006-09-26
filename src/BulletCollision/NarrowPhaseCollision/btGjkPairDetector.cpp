@@ -29,7 +29,7 @@ float maxdist2 = 1.e30f;
 
 int gGjkMaxIter=1000;
 
-GjkPairDetector::GjkPairDetector(ConvexShape* objectA,ConvexShape* objectB,SimplexSolverInterface* simplexSolver,ConvexPenetrationDepthSolver*	penetrationDepthSolver)
+btGjkPairDetector::btGjkPairDetector(btConvexShape* objectA,btConvexShape* objectB,btSimplexSolverInterface* simplexSolver,btConvexPenetrationDepthSolver*	penetrationDepthSolver)
 :m_cachedSeparatingAxis(0.f,0.f,1.f),
 m_penetrationDepthSolver(penetrationDepthSolver),
 m_simplexSolver(simplexSolver),
@@ -43,11 +43,11 @@ m_index1(-1)
 {
 }
 
-void GjkPairDetector::GetClosestPoints(const ClosestPointInput& input,Result& output,class IDebugDraw* debugDraw)
+void btGjkPairDetector::GetClosestPoints(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw)
 {
 	SimdScalar distance=0.f;
-	SimdVector3	normalInB(0.f,0.f,0.f);
-	SimdVector3 pointOnA,pointOnB;
+	btSimdVector3	normalInB(0.f,0.f,0.f);
+	btSimdVector3 pointOnA,pointOnB;
 
 	float marginA = m_minkowskiA->GetMargin();
 	float marginB = m_minkowskiB->GetMargin();
@@ -77,11 +77,11 @@ int curIter = 0;
 		
 		while (true)
 		{
-			//degeneracy, this is typically due to invalid/uninitialized worldtransforms for a CollisionObject
+			//degeneracy, this is typically due to invalid/uninitialized worldtransforms for a btCollisionObject
 			if (curIter++ > gGjkMaxIter)
 			{
 				#if defined(DEBUG) || defined (_DEBUG)
-					printf("GjkPairDetector maxIter exceeded:%i\n",curIter);
+					printf("btGjkPairDetector maxIter exceeded:%i\n",curIter);
 					printf("sepAxis=(%f,%f,%f), squaredDistance = %f, shapeTypeA=%i,shapeTypeB=%i\n",
 					m_cachedSeparatingAxis.getX(),
 					m_cachedSeparatingAxis.getY(),
@@ -94,15 +94,15 @@ int curIter = 0;
 
 			}
 
-			SimdVector3 seperatingAxisInA = (-m_cachedSeparatingAxis)* input.m_transformA.getBasis();
-			SimdVector3 seperatingAxisInB = m_cachedSeparatingAxis* input.m_transformB.getBasis();
+			btSimdVector3 seperatingAxisInA = (-m_cachedSeparatingAxis)* input.m_transformA.getBasis();
+			btSimdVector3 seperatingAxisInB = m_cachedSeparatingAxis* input.m_transformB.getBasis();
 
-			SimdVector3 pInA = m_minkowskiA->LocalGetSupportingVertexWithoutMargin(seperatingAxisInA);
-			SimdVector3 qInB = m_minkowskiB->LocalGetSupportingVertexWithoutMargin(seperatingAxisInB);
+			btSimdVector3 pInA = m_minkowskiA->LocalGetSupportingVertexWithoutMargin(seperatingAxisInA);
+			btSimdVector3 qInB = m_minkowskiB->LocalGetSupportingVertexWithoutMargin(seperatingAxisInB);
 			SimdPoint3  pWorld = input.m_transformA(pInA);	
 			SimdPoint3  qWorld = input.m_transformB(qInB);
 			
-			SimdVector3 w	= pWorld - qWorld;
+			btSimdVector3 w	= pWorld - qWorld;
 			delta = m_cachedSeparatingAxis.dot(w);
 
 			// potential exit, they don't overlap

@@ -223,7 +223,7 @@ protected:  // Attribute
  */
 	xsNCName attrSid;
 
-protected:  // Elements
+protected:  // btElements
 	domSurfaceRef elemSurface;
 	domSampler_stateRef elemSampler_state;
 	domTexcoordRef elemTexcoord;

@@ -33,7 +33,7 @@ protected:  // Attribute
  */
 	xsID attrId;
 
-protected:  // Element
+protected:  // btElement
 /**
  * The input element must occur at least one time. These inputs are local
  * inputs. @see domInput

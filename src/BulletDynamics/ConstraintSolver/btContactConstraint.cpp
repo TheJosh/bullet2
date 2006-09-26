@@ -37,9 +37,9 @@ SimdScalar contactTau = .02f;//0.02f;//*0.02f;
 
 
 //bilateral constraint between two dynamic objects
-void resolveSingleBilateral(RigidBody& body1, const SimdVector3& pos1,
-                      RigidBody& body2, const SimdVector3& pos2,
-                      SimdScalar distance, const SimdVector3& normal,SimdScalar& impulse ,float timeStep)
+void resolveSingleBilateral(btRigidBody& body1, const btSimdVector3& pos1,
+                      btRigidBody& body2, const btSimdVector3& pos2,
+                      SimdScalar distance, const btSimdVector3& normal,SimdScalar& impulse ,float timeStep)
 {
 	float normalLenSqr = normal.length2();
 	ASSERT2(fabs(normalLenSqr) < 1.1f);
@@ -48,16 +48,16 @@ void resolveSingleBilateral(RigidBody& body1, const SimdVector3& pos1,
 		impulse = 0.f;
 		return;
 	}
-	SimdVector3 rel_pos1 = pos1 - body1.getCenterOfMassPosition(); 
-	SimdVector3 rel_pos2 = pos2 - body2.getCenterOfMassPosition();
+	btSimdVector3 rel_pos1 = pos1 - body1.getCenterOfMassPosition(); 
+	btSimdVector3 rel_pos2 = pos2 - body2.getCenterOfMassPosition();
 	//this jacobian entry could be re-used for all iterations
 	
-	SimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
-	SimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
-	SimdVector3 vel = vel1 - vel2;
+	btSimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
+	btSimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
+	btSimdVector3 vel = vel1 - vel2;
 	
 
-	  JacobianEntry jac(body1.getCenterOfMassTransform().getBasis().transpose(),
+	  btJacobianEntry jac(body1.getCenterOfMassTransform().getBasis().transpose(),
 		body2.getCenterOfMassTransform().getBasis().transpose(),
 		rel_pos1,rel_pos2,normal,body1.getInvInertiaDiagLocal(),body1.getInvMass(),
 		body2.getInvInertiaDiagLocal(),body2.getInvMass());
@@ -92,28 +92,28 @@ void resolveSingleBilateral(RigidBody& body1, const SimdVector3& pos1,
 //velocity + friction
 //response  between two dynamic objects with friction
 float resolveSingleCollision(
-	RigidBody& body1,
-	RigidBody& body2,
-	ManifoldPoint& contactPoint,
-	const ContactSolverInfo& solverInfo
+	btRigidBody& body1,
+	btRigidBody& body2,
+	btManifoldPoint& contactPoint,
+	const btContactSolverInfo& solverInfo
 
 		)
 {
 
-	const SimdVector3& pos1 = contactPoint.GetPositionWorldOnA();
-	const SimdVector3& pos2 = contactPoint.GetPositionWorldOnB();
+	const btSimdVector3& pos1 = contactPoint.GetPositionWorldOnA();
+	const btSimdVector3& pos2 = contactPoint.GetPositionWorldOnB();
     
 	
 //	printf("distance=%f\n",distance);
 
-	const SimdVector3& normal = contactPoint.m_normalWorldOnB;
+	const btSimdVector3& normal = contactPoint.m_normalWorldOnB;
 
-	SimdVector3 rel_pos1 = pos1 - body1.getCenterOfMassPosition(); 
-	SimdVector3 rel_pos2 = pos2 - body2.getCenterOfMassPosition();
+	btSimdVector3 rel_pos1 = pos1 - body1.getCenterOfMassPosition(); 
+	btSimdVector3 rel_pos2 = pos2 - body2.getCenterOfMassPosition();
 	
-	SimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
-	SimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
-	SimdVector3 vel = vel1 - vel2;
+	btSimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
+	btSimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
+	btSimdVector3 vel = vel1 - vel2;
 	SimdScalar rel_vel;
 	rel_vel = normal.dot(vel);
 	
@@ -133,7 +133,7 @@ float resolveSingleCollision(
 
 	//printf("dist=%f\n",distance);
 
-		ConstraintPersistentData* cpd = (ConstraintPersistentData*) contactPoint.m_userPersistentData;
+		btConstraintPersistentData* cpd = (btConstraintPersistentData*) contactPoint.m_userPersistentData;
 	assert(cpd);
 
 	SimdScalar distance = cpd->m_penetration;//contactPoint.GetDistance();
@@ -166,21 +166,21 @@ float resolveSingleCollision(
 
 
 float resolveSingleFriction(
-	RigidBody& body1,
-	RigidBody& body2,
-	ManifoldPoint& contactPoint,
-	const ContactSolverInfo& solverInfo
+	btRigidBody& body1,
+	btRigidBody& body2,
+	btManifoldPoint& contactPoint,
+	const btContactSolverInfo& solverInfo
 
 		)
 {
 
-	const SimdVector3& pos1 = contactPoint.GetPositionWorldOnA();
-	const SimdVector3& pos2 = contactPoint.GetPositionWorldOnB();
+	const btSimdVector3& pos1 = contactPoint.GetPositionWorldOnA();
+	const btSimdVector3& pos2 = contactPoint.GetPositionWorldOnB();
 
-	SimdVector3 rel_pos1 = pos1 - body1.getCenterOfMassPosition(); 
-	SimdVector3 rel_pos2 = pos2 - body2.getCenterOfMassPosition();
+	btSimdVector3 rel_pos1 = pos1 - body1.getCenterOfMassPosition(); 
+	btSimdVector3 rel_pos2 = pos2 - body2.getCenterOfMassPosition();
 	
-	ConstraintPersistentData* cpd = (ConstraintPersistentData*) contactPoint.m_userPersistentData;
+	btConstraintPersistentData* cpd = (btConstraintPersistentData*) contactPoint.m_userPersistentData;
 	assert(cpd);
 
 	float combinedFriction = cpd->m_friction;
@@ -193,9 +193,9 @@ float resolveSingleFriction(
 		
 		{
 			// 1st tangent
-			SimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
-			SimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
-			SimdVector3 vel = vel1 - vel2;
+			btSimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
+			btSimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
+			btSimdVector3 vel = vel1 - vel2;
 			
 			SimdScalar vrel = cpd->m_frictionWorldTangential0.dot(vel);
 
@@ -213,9 +213,9 @@ float resolveSingleFriction(
 				
 		{
 			// 2nd tangent
-			SimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
-			SimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
-			SimdVector3 vel = vel1 - vel2;
+			btSimdVector3 vel1 = body1.getVelocityInLocalPoint(rel_pos1);
+			btSimdVector3 vel2 = body2.getVelocityInLocalPoint(rel_pos2);
+			btSimdVector3 vel = vel1 - vel2;
 
 			SimdScalar vrel = cpd->m_frictionWorldTangential1.dot(vel);
 			

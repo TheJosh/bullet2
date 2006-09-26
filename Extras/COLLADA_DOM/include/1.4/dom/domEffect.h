@@ -40,7 +40,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The effect element may contain an asset element.  @see domAsset
  */

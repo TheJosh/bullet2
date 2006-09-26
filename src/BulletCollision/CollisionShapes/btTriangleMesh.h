@@ -21,25 +21,25 @@ subject to the following restrictions:
 #include <vector>
 #include <LinearMath/SimdVector3.h>
 
-struct MyTriangle
+struct btMyTriangle
 {
-	SimdVector3	m_vert0;
-	SimdVector3	m_vert1;
-	SimdVector3	m_vert2;
+	btSimdVector3	m_vert0;
+	btSimdVector3	m_vert1;
+	btSimdVector3	m_vert2;
 };
 
-///TriangleMesh provides storage for a concave triangle mesh. It can be used as data for the TriangleMeshShape.
-class TriangleMesh : public StridingMeshInterface
+///TriangleMesh provides storage for a concave triangle mesh. It can be used as data for the btTriangleMeshShape.
+class btTriangleMesh : public btStridingMeshInterface
 {
-	std::vector<MyTriangle>	m_triangles;
+	std::vector<btMyTriangle>	m_triangles;
 	
 
 	public:
-		TriangleMesh ();
+		btTriangleMesh ();
 
-		void	AddTriangle(const SimdVector3& vertex0,const SimdVector3& vertex1,const SimdVector3& vertex2)
+		void	AddTriangle(const btSimdVector3& vertex0,const btSimdVector3& vertex1,const btSimdVector3& vertex2)
 		{
-			MyTriangle tri;
+			btMyTriangle tri;
 			tri.m_vert0 = vertex0;
 			tri.m_vert1 = vertex1;
 			tri.m_vert2 = vertex2;

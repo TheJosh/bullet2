@@ -25,20 +25,20 @@ subject to the following restrictions:
 ///No connectivity is needed. LocalGetSupportingVertex iterates linearly though all vertices.
 ///on modern hardware, due to cache coherency this isn't that bad. Complex algorithms tend to trash the cash.
 ///(memory is much slower then the cpu)
-class ConvexHullShape : public PolyhedralConvexShape
+class btConvexHullShape : public btPolyhedralConvexShape
 {
 	std::vector<SimdPoint3>	m_points;
 
 public:
-	ConvexHullShape(SimdPoint3* points,int numPoints, int stride=sizeof(SimdPoint3));
+	btConvexHullShape(SimdPoint3* points,int numPoints, int stride=sizeof(SimdPoint3));
 
 	void AddPoint(const SimdPoint3& point)
 	{
 		m_points.push_back(point);
 	}
-	virtual SimdVector3	LocalGetSupportingVertex(const SimdVector3& vec)const;
-	virtual SimdVector3	LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec)const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec)const;
+	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
 	
 
 	virtual int	GetShapeType()const { return CONVEX_HULL_SHAPE_PROXYTYPE; }
@@ -52,7 +52,7 @@ public:
 	virtual void GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const;
 	virtual void GetVertex(int i,SimdPoint3& vtx) const;
 	virtual int	GetNumPlanes() const;
-	virtual void GetPlane(SimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const;
+	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const;
 	virtual	bool IsInside(const SimdPoint3& pt,SimdScalar tolerance) const;
 
 

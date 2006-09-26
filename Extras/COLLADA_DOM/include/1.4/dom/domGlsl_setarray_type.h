@@ -31,7 +31,7 @@ protected:  // Attribute
  */
 	xsPositiveInteger attrLength;
 
-protected:  // Elements
+protected:  // btElements
 	domGlsl_param_type_Array elemGlsl_param_type_array;
 /**
  * You may recursively nest glsl_newarray elements to create multidimensional

@@ -202,7 +202,7 @@ public: // Static Interface
 		/** string reference atomic type */
 		StringRefType,
 		/** element reference atomic type */
-		ElementRefType,
+		btElementRefType,
 		/** memory reference atomic type */
 		MemoryRefType,
 		/** void reference atomic type */

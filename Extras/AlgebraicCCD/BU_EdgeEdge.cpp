@@ -37,9 +37,9 @@ BU_EdgeEdge::BU_EdgeEdge()
 bool BU_EdgeEdge::GetTimeOfImpact(
 								  const BU_Screwing& screwAB,
 								  const SimdPoint3& a,//edge in object A
-								  const SimdVector3& u,
+								  const btSimdVector3& u,
 								  const SimdPoint3& c,//edge in object B
-								  const SimdVector3& v,
+								  const btSimdVector3& v,
 								  SimdScalar &minTime,
 								  SimdScalar &lambda1,
 								  SimdScalar& mu1
@@ -280,9 +280,9 @@ bool BU_EdgeEdge::GetTimeOfImpact(
 bool BU_EdgeEdge::GetTimeOfImpactGeneralCase(
 											 const BU_Screwing& screwAB,
 											 const SimdPoint3& a,//edge in object A
-											 const SimdVector3& u,
+											 const btSimdVector3& u,
 											 const SimdPoint3& c,//edge in object B
-											 const SimdVector3& v,
+											 const btSimdVector3& v,
 											 SimdScalar &minTime,
 											 SimdScalar &lambda,
 											 SimdScalar& mu
@@ -527,9 +527,9 @@ bool BU_EdgeEdge::Calc2DRotationPointPoint(const SimdPoint3& rotPt, SimdScalar r
 	SimdSin(rotW)*rotPt.x()+SimdCos(rotW)*rotPt.y(),
 	0.f);
 
-	SimdVector3 rotVec = rotPt1-rotPt;
+	btSimdVector3 rotVec = rotPt1-rotPt;
 	
-	SimdVector3 planeNormal( -rotVec.y() , rotVec.x() ,0.f);
+	btSimdVector3 planeNormal( -rotVec.y() , rotVec.x() ,0.f);
 	
 	//SimdPoint3 pt(a.x(),a.y());//for sake of readability,could write dot directly
 	SimdScalar planeD = planeNormal.dot(rotPt1);
@@ -565,9 +565,9 @@ bool BU_EdgeEdge::Calc2DRotationPointPoint(const SimdPoint3& rotPt, SimdScalar r
 bool BU_EdgeEdge::GetTimeOfImpactVertexEdge(
 											const BU_Screwing& screwAB,
 											const SimdPoint3& a,//edge in object A
-											const SimdVector3& u,
+											const btSimdVector3& u,
 											const SimdPoint3& c,//edge in object B
-											const SimdVector3& v,
+											const btSimdVector3& v,
 											SimdScalar &minTime,
 											SimdScalar &lamda,
 											SimdScalar& mu

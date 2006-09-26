@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 #include "LinearMath/SimdVector3.h"
 
 
-class	IDebugDraw
+class	btIDebugDraw
 {
 	public:
 
@@ -52,11 +52,11 @@ class	IDebugDraw
 		DBG_MAX_DEBUG_DRAW_MODE
 	};
 
-	virtual ~IDebugDraw() {};
+	virtual ~btIDebugDraw() {};
 
-	virtual void	DrawLine(const SimdVector3& from,const SimdVector3& to,const SimdVector3& color)=0;
+	virtual void	DrawLine(const btSimdVector3& from,const btSimdVector3& to,const btSimdVector3& color)=0;
 
-	virtual void	DrawContactPoint(const SimdVector3& PointOnB,const SimdVector3& normalOnB,float distance,int lifeTime,const SimdVector3& color)=0;
+	virtual void	DrawContactPoint(const btSimdVector3& PointOnB,const btSimdVector3& normalOnB,float distance,int lifeTime,const btSimdVector3& color)=0;
 
 	virtual void	SetDebugMode(int debugMode) =0;
 	

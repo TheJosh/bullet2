@@ -63,11 +63,11 @@ void GL_ShapeDrawer::DrawCoordSystem()  {
 
 
 
-class GlDrawcallback : public TriangleCallback
+class GlDrawcallback : public btTriangleCallback
 {
 public:
 
-	virtual void ProcessTriangle(SimdVector3* triangle,int partId, int triangleIndex)
+	virtual void ProcessTriangle(btSimdVector3* triangle,int partId, int triangleIndex)
 	{
 		glBegin(GL_LINES);
 		glColor3f(1, 0, 0);
@@ -84,10 +84,10 @@ public:
 	}
 };
 
-class TriangleGlDrawcallback : public InternalTriangleIndexCallback
+class TriangleGlDrawcallback : public btInternalTriangleIndexCallback
 {
 public:
-	virtual void InternalProcessTriangleIndex(SimdVector3* triangle,int partId,int  triangleIndex)
+	virtual void InternalProcessTriangleIndex(btSimdVector3* triangle,int partId,int  triangleIndex)
 	{
 		glBegin(GL_TRIANGLES);//LINES);
 		glColor3f(1, 0, 0);
@@ -104,7 +104,7 @@ public:
 };
 
 
-void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const SimdVector3& color,int	debugMode)
+void GL_ShapeDrawer::DrawOpenGL(float* m, const btCollisionShape* shape, const btSimdVector3& color,int	debugMode)
 {
 
 	
@@ -113,11 +113,11 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 
 	if (shape->GetShapeType() == COMPOUND_SHAPE_PROXYTYPE)
 	{
-		const CompoundShape* compoundShape = static_cast<const CompoundShape*>(shape);
+		const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(shape);
 		for (int i=compoundShape->GetNumChildShapes()-1;i>=0;i--)
 		{
-			SimdTransform childTrans = compoundShape->GetChildTransform(i);
-			const CollisionShape* colShape = compoundShape->GetChildShape(i);
+			btSimdTransform childTrans = compoundShape->GetChildTransform(i);
+			const btCollisionShape* colShape = compoundShape->GetChildShape(i);
 			float childMat[16];
 			childTrans.getOpenGLMatrix(childMat);
 			DrawOpenGL(childMat,colShape,color,debugMode);
@@ -135,14 +135,14 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 
 		bool useWireframeFallback = true;
 
-		if (!(debugMode & IDebugDraw::DBG_DrawWireframe))
+		if (!(debugMode & btIDebugDraw::DBG_DrawWireframe))
 		{
 			switch (shape->GetShapeType())
 			{
 			case BOX_SHAPE_PROXYTYPE:
 				{
-					const BoxShape* boxShape = static_cast<const BoxShape*>(shape);
-					SimdVector3 halfExtent = boxShape->GetHalfExtents();
+					const btBoxShape* boxShape = static_cast<const btBoxShape*>(shape);
+					btSimdVector3 halfExtent = boxShape->GetHalfExtents();
 					glScaled(2*halfExtent[0], 2*halfExtent[1], 2*halfExtent[2]);
 					glutSolidCube(1.0);
 					useWireframeFallback = false;
@@ -159,7 +159,7 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 				break;
 			case SPHERE_SHAPE_PROXYTYPE:
 				{
-					const SphereShape* sphereShape = static_cast<const SphereShape*>(shape);
+					const btSphereShape* sphereShape = static_cast<const btSphereShape*>(shape);
 					float radius = sphereShape->GetMargin();//radius doesn't include the margin, so draw with margin
 					glutSolidSphere(radius,10,10);
 					useWireframeFallback = false;
@@ -168,7 +168,7 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 			case MULTI_SPHERE_SHAPE_PROXYTYPE:
 			case CONE_SHAPE_PROXYTYPE:
 				{
-					const ConeShape* coneShape = static_cast<const ConeShape*>(shape);
+					const btConeShape* coneShape = static_cast<const btConeShape*>(shape);
 					float radius = coneShape->GetRadius();//+coneShape->GetMargin();
 					float height = coneShape->GetHeight();//+coneShape->GetMargin();
 					//glRotatef(-90.0, 1.0, 0.0, 0.0);
@@ -187,7 +187,7 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 			case CONVEX_SHAPE_PROXYTYPE:
 			case CYLINDER_SHAPE_PROXYTYPE:
 				{
-					const CylinderShape* cylinder = static_cast<const CylinderShape*>(shape);
+					const btCylinderShape* cylinder = static_cast<const btCylinderShape*>(shape);
 					int upAxis = cylinder->GetUpAxis();
 					
 					GLUquadricObj *quadObj = gluNewQuadric();
@@ -246,7 +246,7 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 			/// for polyhedral shapes
 			if (shape->IsPolyhedral())
 			{
-				PolyhedralConvexShape* polyshape = (PolyhedralConvexShape*) shape;
+				btPolyhedralConvexShape* polyshape = (btPolyhedralConvexShape*) shape;
 				
 				
 				glBegin(GL_LINES);
@@ -266,7 +266,7 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 				glEnd();
 
 				
-				if (debugMode==IDebugDraw::DBG_DrawFeaturesText)
+				if (debugMode==btIDebugDraw::DBG_DrawFeaturesText)
 				{
 					glRasterPos3f(0.0,  0.0,  0.0);
 					BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),polyshape->GetExtraDebugInfo());
@@ -284,7 +284,7 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 
 					for (i=0;i<polyshape->GetNumPlanes();i++)
 					{
-						SimdVector3 normal;
+						btSimdVector3 normal;
 						SimdPoint3 vtx;
 						polyshape->GetPlane(normal,vtx,i);
 						SimdScalar d = vtx.dot(normal);
@@ -303,13 +303,13 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 
 		if (shape->GetShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
 		{
-			TriangleMeshShape* concaveMesh = (TriangleMeshShape*) shape;
+			btTriangleMeshShape* concaveMesh = (btTriangleMeshShape*) shape;
 			//SimdVector3 aabbMax(1e30f,1e30f,1e30f);
 			//SimdVector3 aabbMax(100,100,100);//1e30f,1e30f,1e30f);
 
 			//todo pass camera, for some culling
-			SimdVector3 aabbMax(1e30f,1e30f,1e30f);
-			SimdVector3 aabbMin(-1e30f,-1e30f,-1e30f);
+			btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
+			btSimdVector3 aabbMin(-1e30f,-1e30f,-1e30f);
 
 			GlDrawcallback drawCallback;
 
@@ -320,23 +320,23 @@ void GL_ShapeDrawer::DrawOpenGL(float* m, const CollisionShape* shape, const Sim
 
 		if (shape->GetShapeType() == CONVEX_TRIANGLEMESH_SHAPE_PROXYTYPE)
 		{
-			ConvexTriangleMeshShape* convexMesh = (ConvexTriangleMeshShape*) shape;
+			btConvexTriangleMeshShape* convexMesh = (btConvexTriangleMeshShape*) shape;
 			
 			//todo: pass camera for some culling			
-			SimdVector3 aabbMax(1e30f,1e30f,1e30f);
-			SimdVector3 aabbMin(-1e30f,-1e30f,-1e30f);
+			btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
+			btSimdVector3 aabbMin(-1e30f,-1e30f,-1e30f);
 			TriangleGlDrawcallback drawCallback;
 			convexMesh->GetStridingMesh()->InternalProcessAllTriangles(&drawCallback,aabbMin,aabbMax);
 
 		}
 		
 		/*glDisable(GL_DEPTH_BUFFER_BIT);
-		if (debugMode==IDebugDraw::DBG_DrawText)
+		if (debugMode==btIDebugDraw::DBG_DrawText)
 		{
 			BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),shape->GetName());
 		}
 
-		if (debugMode==IDebugDraw::DBG_DrawFeaturesText)
+		if (debugMode==btIDebugDraw::DBG_DrawFeaturesText)
 		{
 			BMF_DrawString(BMF_GetFont(BMF_kHelvetica10),shape->GetExtraDebugInfo());
 		}

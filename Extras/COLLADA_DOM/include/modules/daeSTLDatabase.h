@@ -42,7 +42,7 @@ public:
 	virtual ~daeSTLDatabase();
 
 public:
-	// Element Types of all Elements
+	// btElement Types of all btElements
 	virtual daeUInt			getTypeCount();
 	virtual daeString		getTypeName(daeUInt index);
 	virtual daeInt			setMeta(daeMetaElement *_topMeta);
@@ -61,7 +61,7 @@ public:
 	virtual daeString		getDocumentName(daeUInt index);
 	virtual daeBool			isDocumentLoaded(daeString name);
 
-	// Elements 
+	// btElements 
 	virtual daeInt			insertElement(daeDocument* document, daeElement* element);  
 	virtual daeInt			removeElement(daeDocument* document, daeElement* element); 
 	virtual daeInt			clear();

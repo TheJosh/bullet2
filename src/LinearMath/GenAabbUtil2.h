@@ -24,8 +24,8 @@ subject to the following restrictions:
 
 
 /// conservative test for overlap between two aabbs
-SIMD_FORCE_INLINE bool TestAabbAgainstAabb2(const SimdVector3 &aabbMin1, const SimdVector3 &aabbMax1,
-								const SimdVector3 &aabbMin2, const SimdVector3 &aabbMax2)
+SIMD_FORCE_INLINE bool TestAabbAgainstAabb2(const btSimdVector3 &aabbMin1, const btSimdVector3 &aabbMax1,
+								const btSimdVector3 &aabbMin2, const btSimdVector3 &aabbMax2)
 {
 	bool overlap = true;
 	overlap = (aabbMin1[0] > aabbMax2[0] || aabbMax1[0] < aabbMin2[0]) ? false : overlap;
@@ -35,12 +35,12 @@ SIMD_FORCE_INLINE bool TestAabbAgainstAabb2(const SimdVector3 &aabbMin1, const S
 }
 
 /// conservative test for overlap between triangle and aabb
-SIMD_FORCE_INLINE bool TestTriangleAgainstAabb2(const SimdVector3 *vertices,
-									const SimdVector3 &aabbMin, const SimdVector3 &aabbMax)
+SIMD_FORCE_INLINE bool TestTriangleAgainstAabb2(const btSimdVector3 *vertices,
+									const btSimdVector3 &aabbMin, const btSimdVector3 &aabbMax)
 {
-	const SimdVector3 &p1 = vertices[0];
-	const SimdVector3 &p2 = vertices[1];
-	const SimdVector3 &p3 = vertices[2];
+	const btSimdVector3 &p1 = vertices[0];
+	const btSimdVector3 &p2 = vertices[1];
+	const btSimdVector3 &p3 = vertices[2];
 
 	if (SimdMin(SimdMin(p1[0], p2[0]), p3[0]) > aabbMax[0]) return false;
 	if (SimdMax(SimdMax(p1[0], p2[0]), p3[0]) < aabbMin[0]) return false;

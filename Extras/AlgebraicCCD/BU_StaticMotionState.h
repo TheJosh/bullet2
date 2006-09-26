@@ -18,18 +18,18 @@ subject to the following restrictions:
 #define BU_STATIC_MOTIONSTATE
 
 
-#include <CollisionShapes/BU_MotionStateInterface.h>
+#include <btCollisionShapes/BU_MotionStateInterface.h>
 
 class BU_StaticMotionState :public BU_MotionStateInterface
 {
 public:
 	virtual ~BU_StaticMotionState(){};
 
-	virtual void	SetTransform(const SimdTransform& trans)
+	virtual void	SetTransform(const btSimdTransform& trans)
 	{
 		m_trans = trans;
 	}
-	virtual void	GetTransform(SimdTransform& trans) const
+	virtual void	GetTransform(btSimdTransform& trans) const
 	{
 		trans = m_trans;
 	}
@@ -42,38 +42,38 @@ public:
 		position = m_trans.getOrigin();
 	}
 
-	virtual void	SetOrientation(const SimdQuaternion& orientation)
+	virtual void	SetOrientation(const btSimdQuaternion& orientation)
 	{
 		m_trans.setRotation( orientation);
 	}
-	virtual void	GetOrientation(SimdQuaternion& orientation) const
+	virtual void	GetOrientation(btSimdQuaternion& orientation) const
 	{
 		orientation = m_trans.getRotation();
 	}
 
-	virtual void	SetBasis(const SimdMatrix3x3& basis)
+	virtual void	SetBasis(const btSimdMatrix3x3& basis)
 	{
 		m_trans.setBasis( basis);
 	}
-	virtual void	GetBasis(SimdMatrix3x3& basis) const
+	virtual void	GetBasis(btSimdMatrix3x3& basis) const
 	{ 
 		basis = m_trans.getBasis();
 	}
 
-	virtual void	SetLinearVelocity(const SimdVector3& linvel)
+	virtual void	SetLinearVelocity(const btSimdVector3& linvel)
 	{
 		m_linearVelocity = linvel;
 	}
-	virtual void	GetLinearVelocity(SimdVector3& linvel) const
+	virtual void	GetLinearVelocity(btSimdVector3& linvel) const
 	{
 		linvel = m_linearVelocity;
 	}
 	
-	virtual void	SetAngularVelocity(const SimdVector3& angvel)
+	virtual void	SetAngularVelocity(const btSimdVector3& angvel)
 	{
 		m_angularVelocity = angvel;
 	}
-	virtual void	GetAngularVelocity(SimdVector3& angvel) const
+	virtual void	GetAngularVelocity(btSimdVector3& angvel) const
 	{
 		angvel = m_angularVelocity;
 	}
@@ -82,9 +82,9 @@ public:
 
 protected:
 
-	SimdTransform	m_trans;
-	SimdVector3		m_angularVelocity;
-	SimdVector3		m_linearVelocity;
+	btSimdTransform	m_trans;
+	btSimdVector3		m_angularVelocity;
+	btSimdVector3		m_linearVelocity;
 
 };
 

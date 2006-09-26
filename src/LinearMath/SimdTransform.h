@@ -14,15 +14,15 @@ subject to the following restrictions:
 
 
 
-#ifndef SimdTransform_H
-#define SimdTransform_H
+#ifndef btSimdTransform_H
+#define btSimdTransform_H
 
 #include "LinearMath/SimdVector3.h"
 #include "LinearMath/SimdMatrix3x3.h"
 
 
 
-class SimdTransform {
+class btSimdTransform {
 	
 
 public:
@@ -36,17 +36,17 @@ public:
 		AFFINE      = TRANSLATION | LINEAR
 	};
 
-	SimdTransform() {}
+	btSimdTransform() {}
 
-	explicit SIMD_FORCE_INLINE SimdTransform(const SimdQuaternion& q, 
-		const SimdVector3& c = SimdVector3(SimdScalar(0), SimdScalar(0), SimdScalar(0))) 
+	explicit SIMD_FORCE_INLINE btSimdTransform(const btSimdQuaternion& q, 
+		const btSimdVector3& c = btSimdVector3(SimdScalar(0), SimdScalar(0), SimdScalar(0))) 
 		: m_basis(q),
 		m_origin(c),
 		m_type(RIGID)
 	{}
 
-	explicit SIMD_FORCE_INLINE SimdTransform(const SimdMatrix3x3& b, 
-		const SimdVector3& c = SimdVector3(SimdScalar(0), SimdScalar(0), SimdScalar(0)), 
+	explicit SIMD_FORCE_INLINE btSimdTransform(const btSimdMatrix3x3& b, 
+		const btSimdVector3& c = btSimdVector3(SimdScalar(0), SimdScalar(0), SimdScalar(0)), 
 		unsigned int type = AFFINE)
 		: m_basis(b),
 		m_origin(c),
@@ -54,16 +54,16 @@ public:
 	{}
 
 
-		SIMD_FORCE_INLINE void mult(const SimdTransform& t1, const SimdTransform& t2) {
+		SIMD_FORCE_INLINE void mult(const btSimdTransform& t1, const btSimdTransform& t2) {
 			m_basis = t1.m_basis * t2.m_basis;
 			m_origin = t1(t2.m_origin);
 			m_type = t1.m_type | t2.m_type;
 		}
 
-		void multInverseLeft(const SimdTransform& t1, const SimdTransform& t2) {
-			SimdVector3 v = t2.m_origin - t1.m_origin;
+		void multInverseLeft(const btSimdTransform& t1, const btSimdTransform& t2) {
+			btSimdVector3 v = t2.m_origin - t1.m_origin;
 			if (t1.m_type & SCALING) {
-				SimdMatrix3x3 inv = t1.m_basis.inverse();
+				btSimdMatrix3x3 inv = t1.m_basis.inverse();
 				m_basis = inv * t2.m_basis;
 				m_origin = inv * v;
 			}
@@ -74,26 +74,26 @@ public:
 			m_type = t1.m_type | t2.m_type;
 		}
 
-	SIMD_FORCE_INLINE SimdVector3 operator()(const SimdVector3& x) const
+	SIMD_FORCE_INLINE btSimdVector3 operator()(const btSimdVector3& x) const
 	{
-		return SimdVector3(m_basis[0].dot(x) + m_origin[0], 
+		return btSimdVector3(m_basis[0].dot(x) + m_origin[0], 
 			m_basis[1].dot(x) + m_origin[1], 
 			m_basis[2].dot(x) + m_origin[2]);
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 operator*(const SimdVector3& x) const
+	SIMD_FORCE_INLINE btSimdVector3 operator*(const btSimdVector3& x) const
 	{
 		return (*this)(x);
 	}
 
-	SIMD_FORCE_INLINE SimdMatrix3x3&       getBasis()          { return m_basis; }
-	SIMD_FORCE_INLINE const SimdMatrix3x3& getBasis()    const { return m_basis; }
+	SIMD_FORCE_INLINE btSimdMatrix3x3&       getBasis()          { return m_basis; }
+	SIMD_FORCE_INLINE const btSimdMatrix3x3& getBasis()    const { return m_basis; }
 
-	SIMD_FORCE_INLINE SimdVector3&         getOrigin()         { return m_origin; }
-	SIMD_FORCE_INLINE const SimdVector3&   getOrigin()   const { return m_origin; }
+	SIMD_FORCE_INLINE btSimdVector3&         getOrigin()         { return m_origin; }
+	SIMD_FORCE_INLINE const btSimdVector3&   getOrigin()   const { return m_origin; }
 
-	SimdQuaternion getRotation() const { 
-		SimdQuaternion q;
+	btSimdQuaternion getRotation() const { 
+		btSimdQuaternion q;
 		m_basis.getRotation(q);
 		return q;
 	}
@@ -123,29 +123,29 @@ public:
 		m[15] = SimdScalar(1.0f);
 	}
 
-	SIMD_FORCE_INLINE void setOrigin(const SimdVector3& origin) 
+	SIMD_FORCE_INLINE void setOrigin(const btSimdVector3& origin) 
 	{ 
 		m_origin = origin;
 		m_type |= TRANSLATION;
 	}
 
-	SIMD_FORCE_INLINE SimdVector3 invXform(const SimdVector3& inVec) const;
+	SIMD_FORCE_INLINE btSimdVector3 invXform(const btSimdVector3& inVec) const;
 
 
 
-	SIMD_FORCE_INLINE void setBasis(const SimdMatrix3x3& basis)
+	SIMD_FORCE_INLINE void setBasis(const btSimdMatrix3x3& basis)
 	{ 
 		m_basis = basis;
 		m_type |= LINEAR;
 	}
 
-	SIMD_FORCE_INLINE void setRotation(const SimdQuaternion& q)
+	SIMD_FORCE_INLINE void setRotation(const btSimdQuaternion& q)
 	{
 		m_basis.setRotation(q);
 		m_type = (m_type & ~LINEAR) | ROTATION;
 	}
 
-	SIMD_FORCE_INLINE void scale(const SimdVector3& scaling)
+	SIMD_FORCE_INLINE void scale(const btSimdVector3& scaling)
 	{
 		m_basis = m_basis.scaled(scaling);
 		m_type |= SCALING;
@@ -160,7 +160,7 @@ public:
 
 	SIMD_FORCE_INLINE bool isIdentity() const { return m_type == 0x0; }
 
-	SimdTransform& operator*=(const SimdTransform& t) 
+	btSimdTransform& operator*=(const btSimdTransform& t) 
 	{
 		m_origin += m_basis * t.m_origin;
 		m_basis *= t.m_basis;
@@ -168,60 +168,60 @@ public:
 		return *this;
 	}
 
-	SimdTransform inverse() const
+	btSimdTransform inverse() const
 	{ 
 		if (m_type)
 		{
-			SimdMatrix3x3 inv = (m_type & SCALING) ? 
+			btSimdMatrix3x3 inv = (m_type & SCALING) ? 
 				m_basis.inverse() : 
 			m_basis.transpose();
 
-			return SimdTransform(inv, inv * -m_origin, m_type);
+			return btSimdTransform(inv, inv * -m_origin, m_type);
 		}
 
 		return *this;
 	}
 
-	SimdTransform inverseTimes(const SimdTransform& t) const;  
+	btSimdTransform inverseTimes(const btSimdTransform& t) const;  
 
-	SimdTransform operator*(const SimdTransform& t) const;
+	btSimdTransform operator*(const btSimdTransform& t) const;
 
 private:
 
-	SimdMatrix3x3 m_basis;
-	SimdVector3   m_origin;
+	btSimdMatrix3x3 m_basis;
+	btSimdVector3   m_origin;
 	unsigned int      m_type;
 };
 
 
-SIMD_FORCE_INLINE SimdVector3
-SimdTransform::invXform(const SimdVector3& inVec) const
+SIMD_FORCE_INLINE btSimdVector3
+btSimdTransform::invXform(const btSimdVector3& inVec) const
 {
-	SimdVector3 v = inVec - m_origin;
+	btSimdVector3 v = inVec - m_origin;
 	return (m_basis.transpose() * v);
 }
 
-SIMD_FORCE_INLINE SimdTransform 
-SimdTransform::inverseTimes(const SimdTransform& t) const  
+SIMD_FORCE_INLINE btSimdTransform 
+btSimdTransform::inverseTimes(const btSimdTransform& t) const  
 {
-	SimdVector3 v = t.getOrigin() - m_origin;
+	btSimdVector3 v = t.getOrigin() - m_origin;
 	if (m_type & SCALING) 
 	{
-		SimdMatrix3x3 inv = m_basis.inverse();
-		return SimdTransform(inv * t.getBasis(), inv * v, 
+		btSimdMatrix3x3 inv = m_basis.inverse();
+		return btSimdTransform(inv * t.getBasis(), inv * v, 
 			m_type | t.m_type);
 	}
 	else 
 	{
-		return SimdTransform(m_basis.transposeTimes(t.m_basis),
+		return btSimdTransform(m_basis.transposeTimes(t.m_basis),
 			v * m_basis, m_type | t.m_type);
 	}
 }
 
-SIMD_FORCE_INLINE SimdTransform 
-SimdTransform::operator*(const SimdTransform& t) const
+SIMD_FORCE_INLINE btSimdTransform 
+btSimdTransform::operator*(const btSimdTransform& t) const
 {
-	return SimdTransform(m_basis * t.m_basis, 
+	return btSimdTransform(m_basis * t.m_basis, 
 		(*this)(t.m_origin), 
 		m_type | t.m_type);
 }	

@@ -41,7 +41,7 @@ public:
 	class domTechnique_common : public daeElement
 	{
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * Dynamic friction coefficient @see domDynamic_friction
  */
@@ -124,7 +124,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The physics_material element may contain an asset element.  @see domAsset
  */

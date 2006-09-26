@@ -53,7 +53,7 @@ public:
 		protected:  // Attribute
 			xsNCName attrRef;
 
-		protected:  // Elements
+		protected:  // btElements
 			domFx_annotate_common_Array elemAnnotate_array;
 			domGles_basic_type_commonRef elemGles_basic_type_common;
 
@@ -605,7 +605,7 @@ public:
  */
 			xsNCName attrSid;
 
-		protected:  // Elements
+		protected:  // btElements
 			domFx_annotate_common_Array elemAnnotate_array;
 			domColor_targetRef elemColor_target;
 			domDepth_targetRef elemDepth_target;
@@ -764,7 +764,7 @@ public:
  */
 		xsNCName attrSid;
 
-	protected:  // Elements
+	protected:  // btElements
 		domAssetRef elemAsset;
 		domFx_annotate_common_Array elemAnnotate_array;
 		domImage_Array elemImage_array;
@@ -940,7 +940,7 @@ protected:  // Attributes
  */
 	xsNCName attrPlatform;
 
-protected:  // Elements
+protected:  // btElements
 	domAssetRef elemAsset;
 	domImage_Array elemImage_array;
 	domGles_newparam_Array elemNewparam_array;

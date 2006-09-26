@@ -22,25 +22,25 @@ subject to the following restrictions:
 #include "btJacobianEntry.h"
 
 
-void Solve2LinearConstraint::resolveUnilateralPairConstraint(
-												   RigidBody* body1,
-		RigidBody* body2,
+void btSolve2LinearConstraint::resolveUnilateralPairConstraint(
+												   btRigidBody* body1,
+		btRigidBody* body2,
 
-						const SimdMatrix3x3& world2A,
-						const SimdMatrix3x3& world2B,
+						const btSimdMatrix3x3& world2A,
+						const btSimdMatrix3x3& world2B,
 						
-						const SimdVector3& invInertiaADiag,
+						const btSimdVector3& invInertiaADiag,
 						const SimdScalar invMassA,
-						const SimdVector3& linvelA,const SimdVector3& angvelA,
-						const SimdVector3& rel_posA1,
-						const SimdVector3& invInertiaBDiag,
+						const btSimdVector3& linvelA,const btSimdVector3& angvelA,
+						const btSimdVector3& rel_posA1,
+						const btSimdVector3& invInertiaBDiag,
 						const SimdScalar invMassB,
-						const SimdVector3& linvelB,const SimdVector3& angvelB,
-						const SimdVector3& rel_posA2,
+						const btSimdVector3& linvelB,const btSimdVector3& angvelB,
+						const btSimdVector3& rel_posA2,
 
-					  SimdScalar depthA, const SimdVector3& normalA, 
-					  const SimdVector3& rel_posB1,const SimdVector3& rel_posB2,
-					  SimdScalar depthB, const SimdVector3& normalB, 
+					  SimdScalar depthA, const btSimdVector3& normalA, 
+					  const btSimdVector3& rel_posB1,const btSimdVector3& rel_posB2,
+					  SimdScalar depthB, const btSimdVector3& normalB, 
 					  SimdScalar& imp0,SimdScalar& imp1)
 {
 
@@ -55,9 +55,9 @@ void Solve2LinearConstraint::resolveUnilateralPairConstraint(
 
 
 	//this jacobian entry could be re-used for all iterations
-	JacobianEntry jacA(world2A,world2B,rel_posA1,rel_posA2,normalA,invInertiaADiag,invMassA,
+	btJacobianEntry jacA(world2A,world2B,rel_posA1,rel_posA2,normalA,invInertiaADiag,invMassA,
 		invInertiaBDiag,invMassB);
-	JacobianEntry jacB(world2A,world2B,rel_posB1,rel_posB2,normalB,invInertiaADiag,invMassA,
+	btJacobianEntry jacB(world2A,world2B,rel_posB1,rel_posB2,normalB,invInertiaADiag,invMassA,
 		invInertiaBDiag,invMassB);
 	
 	//const SimdScalar vel0 = jacA.getRelativeVelocity(linvelA,angvelA,linvelB,angvelB);
@@ -105,24 +105,24 @@ void Solve2LinearConstraint::resolveUnilateralPairConstraint(
 
 
 
-void Solve2LinearConstraint::resolveBilateralPairConstraint(
-						RigidBody* body1,
-						RigidBody* body2,
-						const SimdMatrix3x3& world2A,
-						const SimdMatrix3x3& world2B,
+void btSolve2LinearConstraint::resolveBilateralPairConstraint(
+						btRigidBody* body1,
+						btRigidBody* body2,
+						const btSimdMatrix3x3& world2A,
+						const btSimdMatrix3x3& world2B,
 						
-						const SimdVector3& invInertiaADiag,
+						const btSimdVector3& invInertiaADiag,
 						const SimdScalar invMassA,
-						const SimdVector3& linvelA,const SimdVector3& angvelA,
-						const SimdVector3& rel_posA1,
-						const SimdVector3& invInertiaBDiag,
+						const btSimdVector3& linvelA,const btSimdVector3& angvelA,
+						const btSimdVector3& rel_posA1,
+						const btSimdVector3& invInertiaBDiag,
 						const SimdScalar invMassB,
-						const SimdVector3& linvelB,const SimdVector3& angvelB,
-						const SimdVector3& rel_posA2,
+						const btSimdVector3& linvelB,const btSimdVector3& angvelB,
+						const btSimdVector3& rel_posA2,
 
-					  SimdScalar depthA, const SimdVector3& normalA, 
-					  const SimdVector3& rel_posB1,const SimdVector3& rel_posB2,
-					  SimdScalar depthB, const SimdVector3& normalB, 
+					  SimdScalar depthA, const btSimdVector3& normalA, 
+					  const btSimdVector3& rel_posB1,const btSimdVector3& rel_posB2,
+					  SimdScalar depthB, const btSimdVector3& normalB, 
 					  SimdScalar& imp0,SimdScalar& imp1)
 {
 
@@ -137,9 +137,9 @@ void Solve2LinearConstraint::resolveBilateralPairConstraint(
 
 
 	//this jacobian entry could be re-used for all iterations
-	JacobianEntry jacA(world2A,world2B,rel_posA1,rel_posA2,normalA,invInertiaADiag,invMassA,
+	btJacobianEntry jacA(world2A,world2B,rel_posA1,rel_posA2,normalA,invInertiaADiag,invMassA,
 		invInertiaBDiag,invMassB);
-	JacobianEntry jacB(world2A,world2B,rel_posB1,rel_posB2,normalB,invInertiaADiag,invMassA,
+	btJacobianEntry jacB(world2A,world2B,rel_posB1,rel_posB2,normalB,invInertiaADiag,invMassA,
 		invInertiaBDiag,invMassB);
 	
 	//const SimdScalar vel0 = jacA.getRelativeVelocity(linvelA,angvelA,linvelB,angvelB);
@@ -222,18 +222,18 @@ void Solve2LinearConstraint::resolveBilateralPairConstraint(
 
 
 
-void Solve2LinearConstraint::resolveAngularConstraint(	const SimdMatrix3x3& invInertiaAWS,
+void btSolve2LinearConstraint::resolveAngularConstraint(	const btSimdMatrix3x3& invInertiaAWS,
 											const SimdScalar invMassA,
-											const SimdVector3& linvelA,const SimdVector3& angvelA,
-											const SimdVector3& rel_posA1,
-											const SimdMatrix3x3& invInertiaBWS,
+											const btSimdVector3& linvelA,const btSimdVector3& angvelA,
+											const btSimdVector3& rel_posA1,
+											const btSimdMatrix3x3& invInertiaBWS,
 											const SimdScalar invMassB,
-											const SimdVector3& linvelB,const SimdVector3& angvelB,
-											const SimdVector3& rel_posA2,
+											const btSimdVector3& linvelB,const btSimdVector3& angvelB,
+											const btSimdVector3& rel_posA2,
 
-											SimdScalar depthA, const SimdVector3& normalA, 
-											const SimdVector3& rel_posB1,const SimdVector3& rel_posB2,
-											SimdScalar depthB, const SimdVector3& normalB, 
+											SimdScalar depthA, const btSimdVector3& normalA, 
+											const btSimdVector3& rel_posB1,const btSimdVector3& rel_posB2,
+											SimdScalar depthB, const btSimdVector3& normalB, 
 											SimdScalar& imp0,SimdScalar& imp1)
 {
 

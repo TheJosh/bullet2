@@ -34,7 +34,7 @@ subject to the following restrictions:
 #define VERTD  3
 
 #define CATCH_DEGENERATE_TETRAHEDRON 1
-void	VoronoiSimplexSolver::removeVertex(int index)
+void	btVoronoiSimplexSolver::removeVertex(int index)
 {
 	
 	assert(m_numVertices>0);
@@ -44,7 +44,7 @@ void	VoronoiSimplexSolver::removeVertex(int index)
 	m_simplexPointsQ[index] = m_simplexPointsQ[m_numVertices];
 }
 
-void	VoronoiSimplexSolver::ReduceVertices (const UsageBitfield& usedVerts)
+void	btVoronoiSimplexSolver::ReduceVertices (const btUsageBitfield& usedVerts)
 {
 	if ((numVertices() >= 4) && (!usedVerts.usedVertexD))
 		removeVertex(3);
@@ -65,19 +65,19 @@ void	VoronoiSimplexSolver::ReduceVertices (const UsageBitfield& usedVerts)
 
 
 //clear the simplex, remove all the vertices
-void VoronoiSimplexSolver::reset()
+void btVoronoiSimplexSolver::reset()
 {
 	m_cachedValidClosest = false;
 	m_numVertices = 0;
 	m_needsUpdate = true;
-	m_lastW = SimdVector3(1e30f,1e30f,1e30f);
+	m_lastW = btSimdVector3(1e30f,1e30f,1e30f);
 	m_cachedBC.Reset();
 }
 
 
 
 	//add a vertex
-void VoronoiSimplexSolver::addVertex(const SimdVector3& w, const SimdPoint3& p, const SimdPoint3& q)
+void btVoronoiSimplexSolver::addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q)
 {
 	m_lastW = w;
 	m_needsUpdate = true;
@@ -89,7 +89,7 @@ void VoronoiSimplexSolver::addVertex(const SimdVector3& w, const SimdPoint3& p, 
 	m_numVertices++;
 }
 
-bool	VoronoiSimplexSolver::UpdateClosestVectorAndPoints()
+bool	btVoronoiSimplexSolver::UpdateClosestVectorAndPoints()
 {
 	
 	if (m_needsUpdate)
@@ -116,13 +116,13 @@ bool	VoronoiSimplexSolver::UpdateClosestVectorAndPoints()
 		case 2:
 			{
 			//closest point origin from line segment
-					const SimdVector3& from = m_simplexVectorW[0];
-					const SimdVector3& to = m_simplexVectorW[1];
-					SimdVector3 nearest;
+					const btSimdVector3& from = m_simplexVectorW[0];
+					const btSimdVector3& to = m_simplexVectorW[1];
+					btSimdVector3 nearest;
 
-					SimdVector3 p (0.f,0.f,0.f);
-					SimdVector3 diff = p - from;
-					SimdVector3 v = to - from;
+					btSimdVector3 p (0.f,0.f,0.f);
+					btSimdVector3 diff = p - from;
+					btSimdVector3 v = to - from;
 					float t = v.dot(diff);
 					
 					if (t > 0) {
@@ -159,11 +159,11 @@ bool	VoronoiSimplexSolver::UpdateClosestVectorAndPoints()
 		case 3:
 			{
 				//closest point origin from triangle
-				SimdVector3 p (0.f,0.f,0.f);
+				btSimdVector3 p (0.f,0.f,0.f);
 				
-				const SimdVector3& a = m_simplexVectorW[0];
-				const SimdVector3& b = m_simplexVectorW[1];
-				const SimdVector3& c = m_simplexVectorW[2];
+				const btSimdVector3& a = m_simplexVectorW[0];
+				const btSimdVector3& b = m_simplexVectorW[1];
+				const btSimdVector3& c = m_simplexVectorW[2];
 
 				ClosestPtPointTriangle(p,a,b,c,m_cachedBC);
 				m_cachedP1 = m_simplexPointsP[0] * m_cachedBC.m_barycentricCoords[0] +
@@ -187,12 +187,12 @@ bool	VoronoiSimplexSolver::UpdateClosestVectorAndPoints()
 			{
 
 				
-				SimdVector3 p (0.f,0.f,0.f);
+				btSimdVector3 p (0.f,0.f,0.f);
 				
-				const SimdVector3& a = m_simplexVectorW[0];
-				const SimdVector3& b = m_simplexVectorW[1];
-				const SimdVector3& c = m_simplexVectorW[2];
-				const SimdVector3& d = m_simplexVectorW[3];
+				const btSimdVector3& a = m_simplexVectorW[0];
+				const btSimdVector3& b = m_simplexVectorW[1];
+				const btSimdVector3& c = m_simplexVectorW[2];
+				const btSimdVector3& d = m_simplexVectorW[3];
 
 				bool hasSeperation = ClosestPtPointTetrahedron(p,a,b,c,d,m_cachedBC);
 
@@ -244,7 +244,7 @@ bool	VoronoiSimplexSolver::UpdateClosestVectorAndPoints()
 }
 
 //return/calculate the closest vertex
-bool VoronoiSimplexSolver::closest(SimdVector3& v)
+bool btVoronoiSimplexSolver::closest(btSimdVector3& v)
 {
 	bool succes = UpdateClosestVectorAndPoints();
 	v = m_cachedV;
@@ -253,7 +253,7 @@ bool VoronoiSimplexSolver::closest(SimdVector3& v)
 
 
 
-SimdScalar VoronoiSimplexSolver::maxVertex()
+SimdScalar btVoronoiSimplexSolver::maxVertex()
 {
 	int i, numverts = numVertices();
 	SimdScalar maxV = 0.f;
@@ -269,7 +269,7 @@ SimdScalar VoronoiSimplexSolver::maxVertex()
 
 
 	//return the current simplex
-int VoronoiSimplexSolver::getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, SimdVector3 *yBuf) const
+int btVoronoiSimplexSolver::getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const
 {
 	int i;
 	for (i=0;i<numVertices();i++)
@@ -284,7 +284,7 @@ int VoronoiSimplexSolver::getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, SimdVec
 
 
 
-bool VoronoiSimplexSolver::inSimplex(const SimdVector3& w)
+bool btVoronoiSimplexSolver::inSimplex(const btSimdVector3& w)
 {
 	bool found = false;
 	int i, numverts = numVertices();
@@ -304,19 +304,19 @@ bool VoronoiSimplexSolver::inSimplex(const SimdVector3& w)
 	return found;
 }
 
-void VoronoiSimplexSolver::backup_closest(SimdVector3& v) 
+void btVoronoiSimplexSolver::backup_closest(btSimdVector3& v) 
 {
 	v = m_cachedV;
 }
 
 
-bool VoronoiSimplexSolver::emptySimplex() const 
+bool btVoronoiSimplexSolver::emptySimplex() const 
 {
 	return (numVertices() == 0);
 
 }
 
-void VoronoiSimplexSolver::compute_points(SimdPoint3& p1, SimdPoint3& p2) 
+void btVoronoiSimplexSolver::compute_points(SimdPoint3& p1, SimdPoint3& p2) 
 {
 	UpdateClosestVectorAndPoints();
 	p1 = m_cachedP1;
@@ -327,14 +327,14 @@ void VoronoiSimplexSolver::compute_points(SimdPoint3& p1, SimdPoint3& p2)
 
 
 
-bool	VoronoiSimplexSolver::ClosestPtPointTriangle(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c,SubSimplexClosestResult& result)
+bool	btVoronoiSimplexSolver::ClosestPtPointTriangle(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c,btSubSimplexClosestResult& result)
 {
 	result.m_usedVertices.reset();
 
     // Check if P in vertex region outside A
-    SimdVector3 ab = b - a;
-    SimdVector3 ac = c - a;
-    SimdVector3 ap = p - a;
+    btSimdVector3 ab = b - a;
+    btSimdVector3 ac = c - a;
+    btSimdVector3 ap = p - a;
     float d1 = ab.dot(ap);
     float d2 = ac.dot(ap);
     if (d1 <= 0.0f && d2 <= 0.0f) 
@@ -346,7 +346,7 @@ bool	VoronoiSimplexSolver::ClosestPtPointTriangle(const SimdPoint3& p, const Sim
 	}
 
     // Check if P in vertex region outside B
-    SimdVector3 bp = p - b;
+    btSimdVector3 bp = p - b;
     float d3 = ab.dot(bp);
     float d4 = ac.dot(bp);
     if (d3 >= 0.0f && d4 <= d3) 
@@ -370,7 +370,7 @@ bool	VoronoiSimplexSolver::ClosestPtPointTriangle(const SimdPoint3& p, const Sim
     }
 
     // Check if P in vertex region outside C
-    SimdVector3 cp = p - c;
+    btSimdVector3 cp = p - c;
     float d5 = ab.dot(cp);
     float d6 = ac.dot(cp);
     if (d6 >= 0.0f && d5 <= d6) 
@@ -427,9 +427,9 @@ bool	VoronoiSimplexSolver::ClosestPtPointTriangle(const SimdPoint3& p, const Sim
 
 
 /// Test if point p and d lie on opposite sides of plane through abc
-int VoronoiSimplexSolver::PointOutsideOfPlane(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d)
+int btVoronoiSimplexSolver::PointOutsideOfPlane(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d)
 {
-	SimdVector3 normal = (b-a).cross(c-a);
+	btSimdVector3 normal = (b-a).cross(c-a);
 
     float signp = (p - a).dot(normal); // [AP AB AC]
     float signd = (d - a).dot( normal); // [AD AB AC]
@@ -446,9 +446,9 @@ int VoronoiSimplexSolver::PointOutsideOfPlane(const SimdPoint3& p, const SimdPoi
 }
 
 
-bool	VoronoiSimplexSolver::ClosestPtPointTetrahedron(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d, SubSimplexClosestResult& finalResult)
+bool	btVoronoiSimplexSolver::ClosestPtPointTetrahedron(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d, btSubSimplexClosestResult& finalResult)
 {
-	SubSimplexClosestResult tempResult;
+	btSubSimplexClosestResult tempResult;
 
     // Start out assuming point inside all halfspaces, so closest to itself
 	finalResult.m_closestPointOnSimplex = p;

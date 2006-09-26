@@ -34,7 +34,7 @@
 class domMesh : public daeElement
 {
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The mesh element must contain one or more source elements.  @see domSource
  */

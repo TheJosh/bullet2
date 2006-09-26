@@ -25,21 +25,21 @@ subject to the following restrictions:
 #define DISABLE_DEACTIVATION 4
 #define DISABLE_SIMULATION 5
 
-struct	BroadphaseProxy;
-class	CollisionShape;
+struct	btBroadphaseProxy;
+class	btCollisionShape;
 
-/// CollisionObject can be used to manage collision detection objects. 
-/// CollisionObject maintains all information that is needed for a collision detection: Shape, Transform and AABB proxy.
-/// They can be added to the CollisionWorld.
-struct	CollisionObject
+/// btCollisionObject can be used to manage collision detection objects. 
+/// btCollisionObject maintains all information that is needed for a collision detection: Shape, Transform and AABB proxy.
+/// They can be added to the btCollisionWorld.
+struct	btCollisionObject
 {
-	SimdTransform	m_worldTransform;
+	btSimdTransform	m_worldTransform;
 	
 	//m_interpolationWorldTransform is used for CCD and interpolation
 	//it can be either previous or future (predicted) transform
-	SimdTransform	m_interpolationWorldTransform;
+	btSimdTransform	m_interpolationWorldTransform;
 
-	SimdTransform	m_cachedInvertedWorldTransform;
+	btSimdTransform	m_cachedInvertedWorldTransform;
 
 	enum CollisionFlags
 	{
@@ -57,8 +57,8 @@ struct	CollisionObject
 	SimdScalar		m_friction;
 	SimdScalar		m_restitution;
 
-	BroadphaseProxy*	m_broadphaseHandle;
-	CollisionShape*		m_collisionShape;
+	btBroadphaseProxy*	m_broadphaseHandle;
+	btCollisionShape*		m_collisionShape;
 
 	//users can point to their objects, m_userPointer is not used by Bullet
 	void*			m_userObjectPointer;
@@ -69,7 +69,7 @@ struct	CollisionObject
 	///time of impact calculation
 	float			m_hitFraction; 
 	
-	///Swept sphere radius (0.0 by default), see ConvexConvexAlgorithm::
+	///Swept sphere radius (0.0 by default), see btConvexConvexAlgorithm::
 	float			m_ccdSweptShereRadius;
 
 	/// Don't do continuous collision detection if square motion (in one step) is less then m_ccdSquareMotionTreshold
@@ -88,10 +88,10 @@ struct	CollisionObject
 	
 
 
-	CollisionObject();
+	btCollisionObject();
 
 
-	void	SetCollisionShape(CollisionShape* collisionShape)
+	void	SetCollisionShape(btCollisionShape* collisionShape)
 	{
 		m_collisionShape = collisionShape;
 	}

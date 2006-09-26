@@ -55,7 +55,7 @@ public:
 		class domAmbient : public daeElement
 		{
 
-		protected:  // Element
+		protected:  // btElement
 /**
  * The color element contains three floating point numbers specifying the
  * color of the light. The color element must occur exactly once. @see domColor
@@ -123,7 +123,7 @@ public:
 		class domDirectional : public daeElement
 		{
 
-		protected:  // Element
+		protected:  // btElement
 /**
  * The color element contains three floating point numbers specifying the
  * color of the light. The color element must occur exactly once. @see domColor
@@ -190,7 +190,7 @@ public:
 		class domPoint : public daeElement
 		{
 
-		protected:  // Elements
+		protected:  // btElements
 /**
  * The color element contains three floating point numbers specifying the
  * color of the light. The color element must occur exactly once. @see domColor
@@ -296,7 +296,7 @@ public:
 		class domSpot : public daeElement
 		{
 
-		protected:  // Elements
+		protected:  // btElements
 /**
  * The color element contains three floating point numbers specifying the
  * color of the light. The color element must occur exactly once. @see domColor
@@ -403,7 +403,7 @@ public:
 
 
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * The ambient element declares the parameters required to describe an ambient
  * light source.   An ambient light is one that lights everything evenly,
@@ -536,7 +536,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The light element may contain an asset element.  @see domAsset
  */

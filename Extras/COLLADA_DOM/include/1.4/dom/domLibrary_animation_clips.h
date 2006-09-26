@@ -38,7 +38,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The library_animation_clips element may contain an asset element.  @see
  * domAsset

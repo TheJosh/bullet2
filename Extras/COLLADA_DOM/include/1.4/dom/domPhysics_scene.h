@@ -39,7 +39,7 @@ public:
 	class domTechnique_common : public daeElement
 	{
 
-	protected:  // Elements
+	protected:  // btElements
 /**
  * The gravity vector to use for the physics_scene. @see domGravity
  */
@@ -112,7 +112,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The physics_scene element may contain an asset element.  @see domAsset
  */

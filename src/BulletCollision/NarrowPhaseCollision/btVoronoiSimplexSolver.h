@@ -15,8 +15,8 @@ subject to the following restrictions:
 
 
 
-#ifndef VoronoiSimplexSolver_H
-#define VoronoiSimplexSolver_H
+#ifndef btVoronoiSimplexSolver_H
+#define btVoronoiSimplexSolver_H
 
 #include "btSimplexSolverInterface.h"
 
@@ -24,8 +24,8 @@ subject to the following restrictions:
 
 #define VORONOI_SIMPLEX_MAX_VERTS 5
 
-struct UsageBitfield{
-	UsageBitfield()
+struct btUsageBitfield{
+	btUsageBitfield()
 	{
 		reset();
 	}
@@ -48,13 +48,13 @@ struct UsageBitfield{
 };
 
 
-struct	SubSimplexClosestResult
+struct	btSubSimplexClosestResult
 {
 	SimdPoint3	m_closestPointOnSimplex;
 	//MASK for m_usedVertices
 	//stores the simplex vertex-usage, using the MASK, 
 	// if m_usedVertices & MASK then the related vertex is used
-	UsageBitfield	m_usedVertices;
+	btUsageBitfield	m_usedVertices;
 	float	m_barycentricCoords[4];
 	bool m_degenerate;
 
@@ -84,19 +84,19 @@ struct	SubSimplexClosestResult
 
 };
 
-/// VoronoiSimplexSolver is an implementation of the closest point distance algorithm from a 1-4 points simplex to the origin.
+/// btVoronoiSimplexSolver is an implementation of the closest point distance algorithm from a 1-4 points simplex to the origin.
 /// Can be used with GJK, as an alternative to Johnson distance algorithm.
 #ifdef NO_VIRTUAL_INTERFACE
-class VoronoiSimplexSolver
+class btVoronoiSimplexSolver
 #else
-class VoronoiSimplexSolver : public SimplexSolverInterface
+class btVoronoiSimplexSolver : public btSimplexSolverInterface
 #endif
 {
 public:
 
 	int	m_numVertices;
 
-	SimdVector3	m_simplexVectorW[VORONOI_SIMPLEX_MAX_VERTS];
+	btSimdVector3	m_simplexVectorW[VORONOI_SIMPLEX_MAX_VERTS];
 	SimdPoint3	m_simplexPointsP[VORONOI_SIMPLEX_MAX_VERTS];
 	SimdPoint3	m_simplexPointsQ[VORONOI_SIMPLEX_MAX_VERTS];
 
@@ -104,30 +104,30 @@ public:
 
 	SimdPoint3	m_cachedP1;
 	SimdPoint3	m_cachedP2;
-	SimdVector3	m_cachedV;
-	SimdVector3	m_lastW;
+	btSimdVector3	m_cachedV;
+	btSimdVector3	m_lastW;
 	bool		m_cachedValidClosest;
 
-	SubSimplexClosestResult m_cachedBC;
+	btSubSimplexClosestResult m_cachedBC;
 
 	bool	m_needsUpdate;
 	
 	void	removeVertex(int index);
-	void	ReduceVertices (const UsageBitfield& usedVerts);
+	void	ReduceVertices (const btUsageBitfield& usedVerts);
 	bool	UpdateClosestVectorAndPoints();
 
-	bool	ClosestPtPointTetrahedron(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d, SubSimplexClosestResult& finalResult);
+	bool	ClosestPtPointTetrahedron(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d, btSubSimplexClosestResult& finalResult);
 	int		PointOutsideOfPlane(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d);
-	bool	ClosestPtPointTriangle(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c,SubSimplexClosestResult& result);
+	bool	ClosestPtPointTriangle(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c,btSubSimplexClosestResult& result);
 
 public:
 
 	 void reset();
 
-	 void addVertex(const SimdVector3& w, const SimdPoint3& p, const SimdPoint3& q);
+	 void addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q);
 
 
-	 bool closest(SimdVector3& v);
+	 bool closest(btSimdVector3& v);
 
 	 SimdScalar maxVertex();
 
@@ -136,11 +136,11 @@ public:
 		 return (m_numVertices == 4);
 	 }
 
-	 int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, SimdVector3 *yBuf) const;
+	 int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const;
 
-	 bool inSimplex(const SimdVector3& w);
+	 bool inSimplex(const btSimdVector3& w);
 	
-	 void backup_closest(SimdVector3& v) ;
+	 void backup_closest(btSimdVector3& v) ;
 
 	 bool emptySimplex() const ;
 

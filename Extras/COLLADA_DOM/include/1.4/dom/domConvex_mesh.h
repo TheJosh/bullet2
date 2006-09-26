@@ -43,7 +43,7 @@ protected:  // Attribute
  */
 	xsAnyURI attrConvex_hull_of;
 
-protected:  // Elements
+protected:  // btElements
 	domSource_Array elemSource_array;
 	domVerticesRef elemVertices;
 	domLines_Array elemLines_array;

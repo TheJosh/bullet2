@@ -44,7 +44,7 @@ public:
 	class domTechnique_common : public daeElement
 	{
 
-	protected:  // Element
+	protected:  // btElement
 /**
  *  The source's technique_common must have one and only one accessor.  @see
  * domAccessor
@@ -109,7 +109,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // Elements
+protected:  // btElements
 /**
  *  The source element may contain an asset element.  @see domAsset
  */

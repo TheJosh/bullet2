@@ -18,14 +18,14 @@ subject to the following restrictions:
 
 #include <LinearMath/SimdVector3.h>
 
-struct MassProps {
-	MassProps(float mass,const SimdVector3& inertiaLocal):
+struct btMassProps {
+	btMassProps(float mass,const btSimdVector3& inertiaLocal):
 	m_mass(mass),
 		m_inertiaLocal(inertiaLocal)
 	{
 	}
 	float   m_mass;
-	SimdVector3	m_inertiaLocal;
+	btSimdVector3	m_inertiaLocal;
 };
 
 

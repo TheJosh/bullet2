@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #include <BulletCollision/CollisionShapes/btPolyhedralConvexShape.h>
 
-PolyhedralConvexShape::PolyhedralConvexShape()
+btPolyhedralConvexShape::btPolyhedralConvexShape()
 :m_optionalHull(0)
 {
 
@@ -23,14 +23,14 @@ PolyhedralConvexShape::PolyhedralConvexShape()
 
 
 
-SimdVector3	PolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(const SimdVector3& vec0)const
+btSimdVector3	btPolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec0)const
 {
 	int i;
-	SimdVector3 supVec(0,0,0);
+	btSimdVector3 supVec(0,0,0);
 
 	SimdScalar maxDot(-1e30f);
 
-	SimdVector3 vec = vec0;
+	btSimdVector3 vec = vec0;
 	SimdScalar lenSqr = vec.length2();
 	if (lenSqr < 0.0001f)
 	{
@@ -41,7 +41,7 @@ SimdVector3	PolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(const S
 		vec *= rlen;
 	}
 
-	SimdVector3 vtx;
+	btSimdVector3 vtx;
 	SimdScalar newDot;
 
 	for (i=0;i<GetNumVertices();i++)
@@ -59,11 +59,11 @@ SimdVector3	PolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(const S
 
 }
 
-void	PolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const SimdVector3* vectors,SimdVector3* supportVerticesOut,int numVectors) const
+void	btPolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
 {
 	int i;
 
-	SimdVector3 vtx;
+	btSimdVector3 vtx;
 	SimdScalar newDot;
 
 	for (int i=0;i<numVectors;i++)
@@ -74,7 +74,7 @@ void	PolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(co
 	for (int j=0;j<numVectors;j++)
 	{
 	
-		const SimdVector3& vec = vectors[j];
+		const btSimdVector3& vec = vectors[j];
 
 		for (i=0;i<GetNumVertices();i++)
 		{
@@ -92,17 +92,17 @@ void	PolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(co
 
 
 
-void	PolyhedralConvexShape::CalculateLocalInertia(SimdScalar mass,SimdVector3& inertia)
+void	btPolyhedralConvexShape::CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
 {
 	//not yet, return box inertia
 
 	float margin = GetMargin();
 
-	SimdTransform ident;
+	btSimdTransform ident;
 	ident.setIdentity();
-	SimdVector3 aabbMin,aabbMax;
+	btSimdVector3 aabbMin,aabbMax;
 	GetAabb(ident,aabbMin,aabbMax);
-	SimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
+	btSimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
 
 	SimdScalar lx=2.f*(halfExtents.x()+margin);
 	SimdScalar ly=2.f*(halfExtents.y()+margin);
@@ -112,7 +112,7 @@ void	PolyhedralConvexShape::CalculateLocalInertia(SimdScalar mass,SimdVector3& i
 	const SimdScalar z2 = lz*lz;
 	const SimdScalar scaledmass = mass * 0.08333333f;
 
-	inertia = scaledmass * (SimdVector3(y2+z2,x2+z2,x2+y2));
+	inertia = scaledmass * (btSimdVector3(y2+z2,x2+z2,x2+y2));
 
 }
 

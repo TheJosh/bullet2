@@ -220,7 +220,7 @@ void dSetValue1 (SimdScalar *a, int n, SimdScalar value)
 // compute iMJ = inv(M)*J'
 
 static void compute_invM_JT (int m, dRealMutablePtr J, dRealMutablePtr iMJ, int *jb,
-	RigidBody * const *body, dRealPtr invI)
+	btRigidBody * const *body, dRealPtr invI)
 {
 	int i,j;
 	dRealMutablePtr iMJ_ptr = iMJ;
@@ -378,7 +378,7 @@ int dRandInt2 (int n)
 }
 
 
-static void SOR_LCP (int m, int nb, dRealMutablePtr J, int *jb, RigidBody * const *body,
+static void SOR_LCP (int m, int nb, dRealMutablePtr J, int *jb, btRigidBody * const *body,
 	dRealPtr invI, dRealMutablePtr lambda, dRealMutablePtr invMforce, dRealMutablePtr rhs,
 	dRealMutablePtr lo, dRealMutablePtr hi, dRealPtr cfm, int *findex,
 	int numiter,float overRelax)
@@ -597,10 +597,10 @@ static void SOR_LCP (int m, int nb, dRealMutablePtr J, int *jb, RigidBody * cons
 
 void SolveInternal1 (float global_cfm,
 					 float global_erp,
-					 RigidBody * const *body, int nb,
+					 btRigidBody * const *body, int nb,
 					BU_Joint * const *_joint, 
 					int nj, 
-					const ContactSolverInfo& solverInfo)
+					const btContactSolverInfo& solverInfo)
 {
 
 	int numIter = solverInfo.m_numIterations;
@@ -803,8 +803,8 @@ void SolveInternal1 (float global_cfm,
 		
 		// add stepsize * cforce to the body velocity
 		for (i=0; i<nb; i++) {
-			SimdVector3 linvel = body[i]->getLinearVelocity();
-			SimdVector3 angvel = body[i]->getAngularVelocity();
+			btSimdVector3 linvel = body[i]->getLinearVelocity();
+			btSimdVector3 angvel = body[i]->getAngularVelocity();
 			
 			for (j=0; j<3; j++) 
 				linvel[j] += solverInfo.m_timeStep* cforce[i*6+j];
@@ -825,8 +825,8 @@ void SolveInternal1 (float global_cfm,
 
 	for (i=0; i<nb; i++) {
 		SimdScalar body_invMass = body[i]->getInvMass();
-		SimdVector3 linvel = body[i]->getLinearVelocity();
-		SimdVector3 angvel = body[i]->getAngularVelocity();
+		btSimdVector3 linvel = body[i]->getLinearVelocity();
+		btSimdVector3 angvel = body[i]->getAngularVelocity();
 
 		for (j=0; j<3; j++) 
 		{

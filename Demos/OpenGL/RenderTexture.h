@@ -33,7 +33,7 @@ public:
 	RenderTexture(int width,int height);
 	~RenderTexture();
 
-	inline void	SetPixel(int x,int y,const SimdVector4& rgba)
+	inline void	SetPixel(int x,int y,const btSimdVector4& rgba)
 	{
 		unsigned char* pixel = &m_buffer[ (x+y*m_width) * 4];
 

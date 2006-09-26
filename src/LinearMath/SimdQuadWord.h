@@ -22,7 +22,7 @@ subject to the following restrictions:
 
 
 
-class	SimdQuadWord
+class	btSimdQuadWord
 {
 	protected:
 		ATTRIBUTE_ALIGNED16	(SimdScalar	m_x);
@@ -79,25 +79,25 @@ class	SimdQuadWord
 			m_unusedW=w;
 		}
 
-		SIMD_FORCE_INLINE SimdQuadWord() :
+		SIMD_FORCE_INLINE btSimdQuadWord() :
 		m_x(0.f),m_y(0.f),m_z(0.f),m_unusedW(0.f)
 		{
 		}
 
-		SIMD_FORCE_INLINE SimdQuadWord(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z) 
+		SIMD_FORCE_INLINE btSimdQuadWord(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z) 
 		:m_x(x),m_y(y),m_z(z)
 		//todo, remove this in release/simd ?
 		,m_unusedW(0.f)
 		{
 		}
 
-		SIMD_FORCE_INLINE SimdQuadWord(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z,const SimdScalar& w) 
+		SIMD_FORCE_INLINE btSimdQuadWord(const SimdScalar& x, const SimdScalar& y, const SimdScalar& z,const SimdScalar& w) 
 			:m_x(x),m_y(y),m_z(z),m_unusedW(w)
 		{
 		}
 
 
-		SIMD_FORCE_INLINE void	setMax(const SimdQuadWord& other)
+		SIMD_FORCE_INLINE void	setMax(const btSimdQuadWord& other)
 		{
 			if (other.m_x > m_x)
 				m_x = other.m_x;
@@ -112,7 +112,7 @@ class	SimdQuadWord
 				m_unusedW = other.m_unusedW;
 		}
 
-		SIMD_FORCE_INLINE void	setMin(const SimdQuadWord& other)
+		SIMD_FORCE_INLINE void	setMin(const btSimdQuadWord& other)
 		{
 			if (other.m_x < m_x)
 				m_x = other.m_x;
