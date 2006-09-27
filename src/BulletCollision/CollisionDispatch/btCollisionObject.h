@@ -34,7 +34,9 @@ class	btCollisionShape;
 struct	btCollisionObject
 {
 	btTransform	m_worldTransform;
-	
+	btBroadphaseProxy*	m_broadphaseHandle;
+	btCollisionShape*		m_collisionShape;
+
 	//m_interpolationWorldTransform is used for CCD and interpolation
 	//it can be either previous or future (predicted) transform
 	btTransform	m_interpolationWorldTransform;
@@ -56,9 +58,6 @@ struct	btCollisionObject
 
 	btScalar		m_friction;
 	btScalar		m_restitution;
-
-	btBroadphaseProxy*	m_broadphaseHandle;
-	btCollisionShape*		m_collisionShape;
 
 	//users can point to their objects, m_userPointer is not used by Bullet
 	void*			m_userObjectPointer;

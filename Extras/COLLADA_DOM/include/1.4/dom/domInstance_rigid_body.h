@@ -290,7 +290,7 @@ public:
 		class domMass_frame : public daeElement
 		{
 
-		protected:  // btElements
+		protected:  // Elements
 			domTranslate_Array elemTranslate_array;
 			domRotate_Array elemRotate_array;
 			/**
@@ -468,7 +468,7 @@ public:
 
 
 
-		protected:  // btElements
+		protected:  // Elements
 			domHollowRef elemHollow;
 			domTargetableFloatRef elemMass;
 			domTargetableFloatRef elemDensity;
@@ -646,7 +646,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * Specifies the initial angular velocity of the rigid_body instance in degrees
  * per second  around each axis, in the form of an X-Y-Z Euler rotation. @see
@@ -799,7 +799,7 @@ protected:  // Attributes
  */
 	xsAnyURI attrTarget;
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The technique_common element specifies the instance_rigid_body information
  * for the common  profile which all COLLADA implementations need to support.

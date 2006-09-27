@@ -121,7 +121,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The skeleton element is used to indicate where a skin controller is to
  * start to search for  the joint nodes it needs.  This element is meaningless

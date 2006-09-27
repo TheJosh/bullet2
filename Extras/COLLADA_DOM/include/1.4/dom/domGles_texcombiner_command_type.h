@@ -23,7 +23,7 @@
 class domGles_texcombiner_command_type_complexType 
 {
 
-protected:  // btElements
+protected:  // Elements
 	domGles_texture_constant_typeRef elemConstant;
 	domGles_texcombiner_commandRGB_typeRef elemRGB;
 	domGles_texcombiner_commandAlpha_typeRef elemAlpha;

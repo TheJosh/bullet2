@@ -40,7 +40,7 @@ public:
 	class domTechnique_common : public daeElement
 	{
 
-	protected:  // btElement
+	protected:  // Element
 /**
  *  The instance_material element specifies the information needed to bind
  * a geometry to a material. This element must appear at least once.  @see
@@ -100,7 +100,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The bind_material element may contain any number of param elements.  @see
  * domParam

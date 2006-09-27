@@ -132,7 +132,7 @@ public:
  */
 			xsAnyURI attrCamera_node;
 
-		protected:  // btElements
+		protected:  // Elements
 /**
  * The layer element specifies which layer to render in this compositing step
  * while evaluating the scene. You may specify any number of layers. @see
@@ -224,7 +224,7 @@ public:
  */
 		xsNCName attrName;
 
-	protected:  // btElement
+	protected:  // Element
 /**
  * The render element describes one effect pass to evaluate the scene. There
  * must be at least one render element. @see domRender
@@ -306,7 +306,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The visual_scene element may contain an asset element.  @see domAsset
  */

@@ -44,7 +44,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElement
+protected:  // Element
 /**
  *  The extra element may occur any number of times.  @see domExtra
  */

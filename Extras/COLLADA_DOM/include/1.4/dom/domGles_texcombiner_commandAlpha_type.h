@@ -24,7 +24,7 @@ protected:  // Attributes
 	domGles_texcombiner_operatorAlpha_enums attrOperator;
 	xsFloat attrScale;
 
-protected:  // btElement
+protected:  // Element
 	domGles_texcombiner_argumentAlpha_type_Array elemArgument_array;
 
 public:	//Accessors and Mutators

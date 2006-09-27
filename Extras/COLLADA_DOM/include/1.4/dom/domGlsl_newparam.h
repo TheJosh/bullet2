@@ -157,7 +157,7 @@ public:
 protected:  // Attribute
 	domGlsl_identifier attrSid;
 
-protected:  // btElements
+protected:  // Elements
 	domFx_annotate_common_Array elemAnnotate_array;
 	domSemanticRef elemSemantic;
 	domModifierRef elemModifier;

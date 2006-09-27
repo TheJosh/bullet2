@@ -402,7 +402,7 @@ protected:  // Attribute
  */
 	domFx_surface_type_enum attrType;
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The common set of initalization options for surfaces.  Choose which is
  * appropriate for your surface based on the type attribute and other characteristics

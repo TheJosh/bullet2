@@ -770,42 +770,18 @@ CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic,
 
 	startTransforms[numObjects] = startTransform;
 
-	PHY_ShapeProps shapeProps;
-
-	shapeProps.m_do_anisotropic = false;
-	shapeProps.m_do_fh = false;
-	shapeProps.m_do_rot_fh = false;
-	shapeProps.m_friction_scaling[0] = 1.;
-	shapeProps.m_friction_scaling[1] = 1.;
-	shapeProps.m_friction_scaling[2] = 1.;
-
-	shapeProps.m_inertia = 1.f;
-	shapeProps.m_lin_drag = 0.2f;
-	shapeProps.m_ang_drag = 0.1f;
-	shapeProps.m_mass = 10.0f;
-
-	PHY_MaterialProps materialProps;
-	materialProps.m_friction = 10.5f;
-	materialProps.m_restitution = 0.0f;
-
 	btCcdConstructionInfo ccdObjectCi;
 	ccdObjectCi.m_friction = 0.5f;
-
-	ccdObjectCi.m_linearDamping = shapeProps.m_lin_drag;
-	ccdObjectCi.m_angularDamping = shapeProps.m_ang_drag;
-
+	
 	btTransform tr;
 	tr.setIdentity();
 
 	int i = numObjects;
 	{
 		gShapePtr[i] = shape;
-
-		shapeProps.m_shape = gShapePtr[i];
-		shapeProps.m_shape->SetMargin(0.05f);
+		gShapePtr[i]->SetMargin(0.05f);
 
 		btQuaternion orn = startTransform.getRotation();
-
 
 		ms[i].setWorldOrientation(orn[0],orn[1],orn[2],orn[3]);
 		ms[i].setWorldPosition(startTransform.getOrigin().getX(),startTransform.getOrigin().getY(),startTransform.getOrigin().getZ());
@@ -815,25 +791,22 @@ CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic,
 		ccdObjectCi.m_localInertiaTensor =btVector3(0,0,0);
 		if (!isDynamic)
 		{
-			shapeProps.m_mass = 0.f;
-			ccdObjectCi.m_mass = shapeProps.m_mass;
+			ccdObjectCi.m_mass = 0.f;
 			ccdObjectCi.m_collisionFlags = btCollisionObject::isStatic;
 			ccdObjectCi.m_collisionFilterGroup = btCcdConstructionInfo::StaticFilter;
 			ccdObjectCi.m_collisionFilterMask = btCcdConstructionInfo::AllFilter ^ btCcdConstructionInfo::StaticFilter;
 		}
 		else
 		{
-			shapeProps.m_mass = mass;
-			ccdObjectCi.m_mass = shapeProps.m_mass;
+			ccdObjectCi.m_mass = mass;
 			ccdObjectCi.m_collisionFlags = 0;
 		}
-
 
 		btVector3 localInertia(0.f,0.f,0.f);
 
 		if (isDynamic)
 		{
-			gShapePtr[i]->CalculateLocalInertia(shapeProps.m_mass,localInertia);
+			gShapePtr[i]->CalculateLocalInertia(ccdObjectCi.m_mass,localInertia);
 		}
 
 		ccdObjectCi.m_localInertiaTensor = localInertia;
@@ -925,9 +898,7 @@ void DemoApplication::renderme()
 
 
 		bool isSatEnabled = (getDebugMode() & btIDebugDraw::DBG_EnableSatComparison);
-
 		m_physicsEnvironmentPtr->EnableSatCollisionDetection(isSatEnabled);
-
 
 
 		int numPhysicsObjects = m_physicsEnvironmentPtr->GetNumControllers();
@@ -970,7 +941,7 @@ void DemoApplication::renderme()
 			}
 
 			char	extraDebug[125];
-			sprintf(extraDebug,"islId, Body=%i , %i",ctrl->GetRigidBody()->m_islandTag1,ctrl->GetRigidBody()->m_debugBodyId);
+			sprintf(extraDebug,"Island:%i, Body:%i",ctrl->GetRigidBody()->m_islandTag1,ctrl->GetRigidBody()->m_debugBodyId);
 			ctrl->GetRigidBody()->GetCollisionShape()->SetExtraDebugInfo(extraDebug);
 
 			float vec[16];

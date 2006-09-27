@@ -42,7 +42,7 @@ public:
 		target_loaded,
 		/** Resolution failed because target was not found */
 		sid_failed_not_found,
-		/** Resolution successful to the btElement level */
+		/** Resolution successful to the Element level */
 		sid_success_element,
 		/** Resolution successful to the Double Array level */
 		sid_success_array,

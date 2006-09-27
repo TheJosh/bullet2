@@ -132,7 +132,7 @@ public:
 
 	/**
 	 * Sets the containing @c daeMetaElement for this attribute.
-	 * @param container btElement on which this @c daeMetaAttribute belongs.
+	 * @param container Element on which this @c daeMetaAttribute belongs.
 	 */
 	void setContainer(daeMetaElement* container) { _container = container; }
 
@@ -191,7 +191,7 @@ public:
 	 * Sets the value of this attribute on <tt><i>element</i></tt> by converting string <tt><i>s</i></tt> 
 	 * to a binary value and assigning it via the underlying @c daeAtomicType
 	 * system.
-	 * @param element btElement on which to set this attribute.
+	 * @param element Element on which to set this attribute.
 	 * @param s String containing the value to be converted via the
 	 * atomic type system.
 	 */
@@ -210,7 +210,7 @@ public:
 	 * this attribute.  It is very useful for performing generic processing
 	 * on elements and attributes from external tools regardless of element
 	 * and attribute type.
-	 * @param e btElement from which to apply this attributes offset.
+	 * @param e Element from which to apply this attributes offset.
 	 * @return Returns the storage associate with this attribute in <tt><i>e.</i></tt> 
 	 */
 	daeChar* getWritableMemory(daeElement* e) {
@@ -230,7 +230,7 @@ class daeMetaArrayAttribute : public daeMetaAttribute
 public:
 	/**
 	 * Defines the override version of this method from @c daeMetaAttribute.
-	 * @param element btElement on which to set this attribute.
+	 * @param element Element on which to set this attribute.
 	 * @param s String containing the value to be converted via the
 	 * atomic type system.
 	 */

@@ -105,8 +105,8 @@ domCg_surface_type::registerElement()
 
 	mea = new daeMetaElementAttribute( _Meta, cm, 0, 0, 1 );
 	mea->setName( "generator" );
-	mea->setOffset( daeOffsetOf(domCg_surface_type,elembterator) );
-	mea->setElementType( dombterator::registerElement() );
+	mea->setOffset( daeOffsetOf(domCg_surface_type,elemGenerator) );
+	mea->setElementType( domGenerator::registerElement() );
 	cm->appendChild( mea );
 	
 	cm->setMaxOrdinal( 0 );
@@ -140,21 +140,21 @@ domCg_surface_type::registerElement()
 }
 
 daeElementRef
-domCg_surface_type::dombterator::create(daeInt bytes)
+domCg_surface_type::domGenerator::create(daeInt bytes)
 {
-	domCg_surface_type::dombteratorRef ref = new(bytes) domCg_surface_type::dombterator;
+	domCg_surface_type::domGeneratorRef ref = new(bytes) domCg_surface_type::domGenerator;
 	return ref;
 }
 
 
 daeMetaElement *
-domCg_surface_type::dombterator::registerElement()
+domCg_surface_type::domGenerator::registerElement()
 {
     if ( _Meta != NULL ) return _Meta;
     
     _Meta = new daeMetaElement;
     _Meta->setName( "generator" );
-	_Meta->registerConstructor(domCg_surface_type::dombterator::create);
+	_Meta->registerConstructor(domCg_surface_type::domGenerator::create);
 
 	_Meta->setIsInnerClass( true );
 	daeMetaCMPolicy *cm = NULL;
@@ -163,7 +163,7 @@ domCg_surface_type::dombterator::registerElement()
 
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 0, 0, -1 );
 	mea->setName( "annotate" );
-	mea->setOffset( daeOffsetOf(domCg_surface_type::dombterator,elemAnnotate_array) );
+	mea->setOffset( daeOffsetOf(domCg_surface_type::domGenerator,elemAnnotate_array) );
 	mea->setElementType( domFx_annotate_common::registerElement() );
 	cm->appendChild( mea );
 	
@@ -171,13 +171,13 @@ domCg_surface_type::dombterator::registerElement()
 
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 0, 1, 1 );
 	mea->setName( "code" );
-	mea->setOffset( daeOffsetOf(domCg_surface_type::dombterator,elemCode_array) );
+	mea->setOffset( daeOffsetOf(domCg_surface_type::domGenerator,elemCode_array) );
 	mea->setElementType( domFx_code_profile::registerElement() );
 	cm->appendChild( mea );
 	
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 0, 1, 1 );
 	mea->setName( "include" );
-	mea->setOffset( daeOffsetOf(domCg_surface_type::dombterator,elemInclude_array) );
+	mea->setOffset( daeOffsetOf(domCg_surface_type::domGenerator,elemInclude_array) );
 	mea->setElementType( domFx_include_common::registerElement() );
 	cm->appendChild( mea );
 	
@@ -187,46 +187,46 @@ domCg_surface_type::dombterator::registerElement()
 	
 	mea = new daeMetaElementAttribute( _Meta, cm, 3002, 1, 1 );
 	mea->setName( "name" );
-	mea->setOffset( daeOffsetOf(domCg_surface_type::dombterator,elemName) );
-	mea->setElementType( domCg_surface_type::dombterator::domName::registerElement() );
+	mea->setOffset( daeOffsetOf(domCg_surface_type::domGenerator,elemName) );
+	mea->setElementType( domCg_surface_type::domGenerator::domName::registerElement() );
 	cm->appendChild( mea );
 	
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 3003, 0, -1 );
 	mea->setName( "setparam" );
-	mea->setOffset( daeOffsetOf(domCg_surface_type::dombterator,elemSetparam_array) );
+	mea->setOffset( daeOffsetOf(domCg_surface_type::domGenerator,elemSetparam_array) );
 	mea->setElementType( domCg_setparam_simple::registerElement() );
 	cm->appendChild( mea );
 	
 	cm->setMaxOrdinal( 3003 );
 	_Meta->setCMRoot( cm );	
 	// Ordered list of sub-elements
-    _Meta->addContents(daeOffsetOf(domCg_surface_type::dombterator,_contents));
-    _Meta->addContentsOrder(daeOffsetOf(domCg_surface_type::dombterator,_contentsOrder));
+    _Meta->addContents(daeOffsetOf(domCg_surface_type::domGenerator,_contents));
+    _Meta->addContentsOrder(daeOffsetOf(domCg_surface_type::domGenerator,_contentsOrder));
 
 	
 	
-	_Meta->setElementSize(sizeof(domCg_surface_type::dombterator));
+	_Meta->setElementSize(sizeof(domCg_surface_type::domGenerator));
 	_Meta->validate();
 
 	return _Meta;
 }
 
 daeElementRef
-domCg_surface_type::dombterator::domName::create(daeInt bytes)
+domCg_surface_type::domGenerator::domName::create(daeInt bytes)
 {
-	domCg_surface_type::dombterator::domNameRef ref = new(bytes) domCg_surface_type::dombterator::domName;
+	domCg_surface_type::domGenerator::domNameRef ref = new(bytes) domCg_surface_type::domGenerator::domName;
 	return ref;
 }
 
 
 daeMetaElement *
-domCg_surface_type::dombterator::domName::registerElement()
+domCg_surface_type::domGenerator::domName::registerElement()
 {
     if ( _Meta != NULL ) return _Meta;
     
     _Meta = new daeMetaElement;
     _Meta->setName( "name" );
-	_Meta->registerConstructor(domCg_surface_type::dombterator::domName::create);
+	_Meta->registerConstructor(domCg_surface_type::domGenerator::domName::create);
 
 	_Meta->setIsInnerClass( true );
 	//	Add attribute: _value
@@ -234,7 +234,7 @@ domCg_surface_type::dombterator::domName::registerElement()
 		daeMetaAttribute *ma = new daeMetaAttribute;
 		ma->setName( "_value" );
 		ma->setType( daeAtomicType::get("xsNCName"));
-		ma->setOffset( daeOffsetOf( domCg_surface_type::dombterator::domName , _value ));
+		ma->setOffset( daeOffsetOf( domCg_surface_type::domGenerator::domName , _value ));
 		ma->setContainer( _Meta );
 		_Meta->appendAttribute(ma);
 	}
@@ -244,7 +244,7 @@ domCg_surface_type::dombterator::domName::registerElement()
 		daeMetaAttribute *ma = new daeMetaAttribute;
 		ma->setName( "source" );
 		ma->setType( daeAtomicType::get("xsNCName"));
-		ma->setOffset( daeOffsetOf( domCg_surface_type::dombterator::domName , attrSource ));
+		ma->setOffset( daeOffsetOf( domCg_surface_type::domGenerator::domName , attrSource ));
 		ma->setContainer( _Meta );
 		ma->setIsRequired( false );
 	
@@ -252,7 +252,7 @@ domCg_surface_type::dombterator::domName::registerElement()
 	}
 	
 	
-	_Meta->setElementSize(sizeof(domCg_surface_type::dombterator::domName));
+	_Meta->setElementSize(sizeof(domCg_surface_type::domGenerator::domName));
 	_Meta->validate();
 
 	return _Meta;
@@ -260,7 +260,7 @@ domCg_surface_type::dombterator::domName::registerElement()
 
 
 daeMetaElement * domCg_surface_type::_Meta = NULL;
-daeMetaElement * domCg_surface_type::dombterator::_Meta = NULL;
-daeMetaElement * domCg_surface_type::dombterator::domName::_Meta = NULL;
+daeMetaElement * domCg_surface_type::domGenerator::_Meta = NULL;
+daeMetaElement * domCg_surface_type::domGenerator::domName::_Meta = NULL;
 
 

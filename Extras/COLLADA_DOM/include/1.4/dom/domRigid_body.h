@@ -155,7 +155,7 @@ public:
 		class domMass_frame : public daeElement
 		{
 
-		protected:  // btElements
+		protected:  // Elements
 			domTranslate_Array elemTranslate_array;
 			domRotate_Array elemRotate_array;
 			/**
@@ -339,7 +339,7 @@ public:
 
 
 
-		protected:  // btElements
+		protected:  // Elements
 /**
  * If true, the mass is distributed along the surface of the shape @see domHollow
  */
@@ -562,7 +562,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * If false, the rigid_body is not moveable @see domDynamic
  */
@@ -710,7 +710,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The technique_common element specifies the rigid_body information for the
  * common profile which all  COLLADA implementations need to support. @see

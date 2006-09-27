@@ -80,7 +80,7 @@ extern "C" {
                                                     content);
 
 /*
- * btElements
+ * Elements
  */
     XMLPUBFUN int XMLCALL
         xmlTextWriterStartElement(xmlTextWriterPtr writer,
@@ -97,7 +97,7 @@ extern "C" {
                                                       writer);
 
 /*
- * btElements conveniency functions
+ * Elements conveniency functions
  */
     XMLPUBFUN int XMLCALL
         xmlTextWriterWriteFormatElement(xmlTextWriterPtr writer,

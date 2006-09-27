@@ -217,7 +217,7 @@ struct _xmlAttribute {
     const xmlChar  *defaultValue;	/* or the default value */
     xmlEnumerationPtr       tree;       /* or the enumeration tree if any */
     const xmlChar        *prefix;	/* the namespace prefix if any */
-    const xmlChar          *elem;	/* btElement holding the attribute */
+    const xmlChar          *elem;	/* Element holding the attribute */
 };
 
 /**
@@ -247,7 +247,7 @@ typedef enum {
 /**
  * xmlElementContent:
  *
- * An XML btElement content as stored after parsing an element definition
+ * An XML Element content as stored after parsing an element definition
  * in a DTD.
  */
 
@@ -256,7 +256,7 @@ typedef xmlElementContent *xmlElementContentPtr;
 struct _xmlElementContent {
     xmlElementContentType     type;	/* PCDATA, ELEMENT, SEQ or OR */
     xmlElementContentOccur    ocur;	/* ONCE, OPT, MULT or PLUS */
-    const xmlChar             *name;	/* btElement name */
+    const xmlChar             *name;	/* Element name */
     struct _xmlElementContent *c1;	/* first child */
     struct _xmlElementContent *c2;	/* second child */
     struct _xmlElementContent *parent;	/* parent */
@@ -288,7 +288,7 @@ extern "C" {
 /**
  * xmlElement:
  *
- * An XML btElement declaration from a DTD.
+ * An XML Element declaration from a DTD.
  */
 
 typedef struct _xmlElement xmlElement;
@@ -296,7 +296,7 @@ typedef xmlElement *xmlElementPtr;
 struct _xmlElement {
     void           *_private;	        /* application data */
     xmlElementType          type;       /* XML_ELEMENT_DECL, must be second ! */
-    const xmlChar          *name;	/* btElement name */
+    const xmlChar          *name;	/* Element name */
     struct _xmlNode    *children;	/* NULL */
     struct _xmlNode        *last;	/* NULL */
     struct _xmlDtd       *parent;	/* -> DTD */

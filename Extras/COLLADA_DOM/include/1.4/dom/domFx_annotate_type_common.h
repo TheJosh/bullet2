@@ -1125,7 +1125,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 	domBoolRef elemBool;
 	domBool2Ref elemBool2;
 	domBool3Ref elemBool3;

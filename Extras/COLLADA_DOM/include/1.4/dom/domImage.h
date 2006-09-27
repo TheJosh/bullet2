@@ -211,7 +211,7 @@ protected:  // Attributes
  */
 	domUint attrDepth;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The image element may contain an asset element.  @see domAsset
  */

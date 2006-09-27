@@ -61,7 +61,7 @@ private:
 	/** Reference to the actual element the ID refers to */
 	daeElementRef element;
 
-	/** btElement that owns this ID (if any) */
+	/** Element that owns this ID (if any) */
 	daeElement* container;
 	
 	/** Current state of this id's resolution */ 

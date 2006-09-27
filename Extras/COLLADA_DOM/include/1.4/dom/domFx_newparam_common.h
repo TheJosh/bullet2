@@ -171,7 +171,7 @@ protected:  // Attribute
  */
 	xsNCName attrSid;
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The annotate element allows you to specify an annotation for this new param.
  * @see domAnnotate

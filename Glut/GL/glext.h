@@ -1799,7 +1799,7 @@ typedef void (APIENTRY * PFNGLGETCOLORTABLEPARAMETERIVSGIPROC) (GLenum target, G
 #ifndef GL_SGIX_pixel_texture
 #define GL_SGIX_pixel_texture 1
 #ifdef GL_GLEXT_PROTOTYPES
-extern void APIENTRY glPixelTexbtSGIX (GLenum);
+extern void APIENTRY glPixelTexGenSGIX (GLenum);
 #endif /* GL_GLEXT_PROTOTYPES */
 typedef void (APIENTRY * PFNGLPIXELTEXGENSGIXPROC) (GLenum mode);
 #endif
@@ -1807,12 +1807,12 @@ typedef void (APIENTRY * PFNGLPIXELTEXGENSGIXPROC) (GLenum mode);
 #ifndef GL_SGIS_pixel_texture
 #define GL_SGIS_pixel_texture 1
 #ifdef GL_GLEXT_PROTOTYPES
-extern void APIENTRY glPixelTexbtParameteriSGIS (GLenum, GLint);
-extern void APIENTRY glPixelTexbtParameterivSGIS (GLenum, const GLint *);
-extern void APIENTRY glPixelTexbtParameterfSGIS (GLenum, GLfloat);
-extern void APIENTRY glPixelTexbtParameterfvSGIS (GLenum, const GLfloat *);
-extern void APIENTRY glGetPixelTexbtParameterivSGIS (GLenum, GLint *);
-extern void APIENTRY glGetPixelTexbtParameterfvSGIS (GLenum, GLfloat *);
+extern void APIENTRY glPixelTexGenParameteriSGIS (GLenum, GLint);
+extern void APIENTRY glPixelTexGenParameterivSGIS (GLenum, const GLint *);
+extern void APIENTRY glPixelTexGenParameterfSGIS (GLenum, GLfloat);
+extern void APIENTRY glPixelTexGenParameterfvSGIS (GLenum, const GLfloat *);
+extern void APIENTRY glGetPixelTexGenParameterivSGIS (GLenum, GLint *);
+extern void APIENTRY glGetPixelTexGenParameterfvSGIS (GLenum, GLfloat *);
 #endif /* GL_GLEXT_PROTOTYPES */
 typedef void (APIENTRY * PFNGLPIXELTEXGENPARAMETERISGISPROC) (GLenum pname, GLint param);
 typedef void (APIENTRY * PFNGLPIXELTEXGENPARAMETERIVSGISPROC) (GLenum pname, const GLint *params);

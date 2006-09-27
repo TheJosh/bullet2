@@ -32,7 +32,7 @@ protected:  // Attribute
  */
 	xsPositiveInteger attrLength;
 
-protected:  // btElements
+protected:  // Elements
 	domCg_param_type_Array elemCg_param_type_array;
 /**
  * Nested array elements allow you to create multidemensional arrays. @see

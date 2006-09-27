@@ -24,7 +24,7 @@ class domFx_setparam_common_complexType
 protected:  // Attribute
 	xsNCName attrRef;
 
-protected:  // btElements
+protected:  // Elements
 	domFx_annotate_common_Array elemAnnotate_array;
 	domFx_basic_type_commonRef elemFx_basic_type_common;
 

@@ -81,7 +81,7 @@ daeInt daeLIBXMLPlugin::read(daeURI& uri, daeString docBuffer)
 		return DAE_ERR_BACKEND_IO;
 	}
 
-	// bterate a version of the URI with the fragment removed
+	// Generate a version of the URI with the fragment removed
 
 	daeURI fileURI(uri.getURI(),true);
 

@@ -57,7 +57,7 @@ public:
 	class domScene : public daeElement
 	{
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * The instance_physics_scene element declares the instantiation of a COLLADA
  * physics_scene resource. The instance_physics_scene element may appear any
@@ -157,7 +157,7 @@ protected:  // Attributes
  */
 	xsAnyURI attrXml_base;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The COLLADA element must contain an asset element.  @see domAsset
  */

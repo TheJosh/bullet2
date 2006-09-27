@@ -96,7 +96,7 @@ public:
 
 
 
-protected:  // btElement
+protected:  // Element
 /**
  * Init the entire surface with one compound image such as DDS @see domAll
  */

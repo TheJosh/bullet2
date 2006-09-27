@@ -38,7 +38,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The force_field element may contain an asset element.  @see domAsset
  */

@@ -29,15 +29,15 @@
 class domCg_surface_type_complexType : public domFx_surface_common_complexType
 {
 public:
-	class dombterator;
+	class domGenerator;
 
-	typedef daeSmartRef<dombterator> dombteratorRef;
-	typedef daeTArray<dombteratorRef> dombterator_Array;
+	typedef daeSmartRef<domGenerator> domGeneratorRef;
+	typedef daeTArray<domGeneratorRef> domGenerator_Array;
 
 /**
  * A procedural surface generator for the cg profile.
  */
-	class dombterator : public daeElement
+	class domGenerator : public daeElement
 	{
 	public:
 		class domName;
@@ -124,7 +124,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * The annotate element allows you to specify an annotation for this generator.
  * @see domAnnotate
@@ -219,19 +219,19 @@ public:
 		/**
 		 * Constructor
 		 */
-		dombterator() : elemAnnotate_array(), elemCode_array(), elemInclude_array(), elemName(), elemSetparam_array() {}
+		domGenerator() : elemAnnotate_array(), elemCode_array(), elemInclude_array(), elemName(), elemSetparam_array() {}
 		/**
 		 * Destructor
 		 */
-		virtual ~dombterator() {}
+		virtual ~domGenerator() {}
 		/**
 		 * Copy Constructor
 		 */
-		dombterator( const dombterator &cpy ) : daeElement() { (void)cpy; }
+		domGenerator( const domGenerator &cpy ) : daeElement() { (void)cpy; }
 		/**
 		 * Overloaded assignment operator
 		 */
-		virtual dombterator &operator=( const dombterator &cpy ) { (void)cpy; return *this; }
+		virtual domGenerator &operator=( const domGenerator &cpy ) { (void)cpy; return *this; }
 
 	public: // STATIC METHODS
 		/**
@@ -256,23 +256,23 @@ public:
 
 
 
-protected:  // btElement
+protected:  // Element
 /**
- * A procedural surface generator for the cg profile. @see dombterator
+ * A procedural surface generator for the cg profile. @see domGenerator
  */
-	dombteratorRef elembterator;
+	domGeneratorRef elemGenerator;
 
 public:	//Accessors and Mutators
 	/**
 	 * Gets the generator element.
 	 * @return a daeSmartRef to the generator element.
 	 */
-	const dombteratorRef getbterator() const { return elembterator; }
+	const domGeneratorRef getGenerator() const { return elemGenerator; }
 protected:
 	/**
 	 * Constructor
 	 */
-	domCg_surface_type_complexType() : elembterator() {}
+	domCg_surface_type_complexType() : elemGenerator() {}
 	/**
 	 * Destructor
 	 */

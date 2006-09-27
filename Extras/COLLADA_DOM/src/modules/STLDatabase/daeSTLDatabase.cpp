@@ -38,7 +38,7 @@ daeSTLDatabase::isDocumentLoaded(daeString name)
 		return(false);
 }
 
-// btElement Types of all btElements
+// Element Types of all Elements
 daeUInt daeSTLDatabase::getTypeCount()
 {
 	validate();
@@ -228,7 +228,7 @@ daeString daeSTLDatabase::getDocumentName(daeUInt index)
 		return NULL;
 }
 
-// btElements
+// Elements
 daeInt daeSTLDatabase::insertElement(daeDocument* document,daeElement* element)
 {
 	insertChildren( document, element );
@@ -550,7 +550,7 @@ daeInt daeSTLDatabase::getElement(daeElement** pElement,daeInt index,daeString n
 	return DAE_OK;
 }
 
-// btGeneric Query
+// Generic Query
 daeInt daeSTLDatabase::queryElement(daeElement** pElement, daeString genericQuery)
 {
 	(void)pElement; 

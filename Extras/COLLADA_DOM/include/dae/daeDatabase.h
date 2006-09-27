@@ -114,7 +114,7 @@ public:
 	virtual daeBool isDocumentLoaded(daeString name) = 0;
 	//@}
 	
-	/** @name btElements */ 
+	/** @name Elements */ 
 	//@{
 	/**
 	* Gets the number of types in the database.
@@ -138,7 +138,7 @@ public:
 	/**
 	* Removes a @c daeElement from the runtime database; not implemented in the reference STL implementation.
 	* @param document Document in which the @c daeElement lives.
-	* @param element btElement to remove.
+	* @param element Element to remove.
 	* @return Returns @c DAE_OK if element successfully removed, otherwise returns a negative value as defined in daeError.h.
 	* @note This function is not implemented in the reference STL implementation.
 	*/
@@ -205,8 +205,8 @@ public:
 							daeString file = NULL ) = 0;
 	/**
 	* Returns the @c daeElement which matches the <tt><i>genericQuery</i></tt> parameter; not implemented.
-	* @param pElement btElement to return.
-	* @param genericQuery btGeneric query
+	* @param pElement Element to return.
+	* @param genericQuery Generic query
 	* @return Returns DAE_OK if it succeeds, returns DAE_ERR_QUERY_NO_MATCH if there is no match, otherwise returns a negative value as defined in daeError.h.
 	* @note This function is not implemented.
 	*/

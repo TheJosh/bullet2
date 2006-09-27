@@ -41,6 +41,24 @@ extern float gAngularSleepingTreshold;
 /// 
 class btRigidBody  : public btCollisionObject
 {
+
+	btMatrix3x3	m_invInertiaTensorWorld;
+	btVector3		m_linearVelocity;
+	btVector3		m_angularVelocity;
+	btScalar		m_inverseMass;
+
+	btVector3		m_gravity;	
+	btVector3		m_invInertiaLocal;
+	btVector3		m_totalForce;
+	btVector3		m_totalTorque;
+	
+	btScalar		m_linearDamping;
+	btScalar		m_angularDamping;
+	
+	btScalar		m_kinematicTimeStep;
+
+	btBroadphaseProxy*	m_broadphaseProxy;
+
 public:
 
 	btRigidBody(const btMassProps& massProps,btScalar linearDamping=0.f,btScalar angularDamping=0.f,btScalar friction=0.5f,btScalar restitution=0.f);
@@ -235,35 +253,7 @@ public:
 	}
 
 
-
-private:
 	
-	btMatrix3x3	m_invInertiaTensorWorld;
-	btVector3		m_gravity;	
-	btVector3		m_invInertiaLocal;
-	btVector3		m_totalForce;
-	btVector3		m_totalTorque;
-//	btQuaternion	m_orn1;
-	
-	btVector3		m_linearVelocity;
-	
-	btVector3		m_angularVelocity;
-	
-	btScalar		m_linearDamping;
-	btScalar		m_angularDamping;
-	btScalar		m_inverseMass;
-
-
-	btScalar		m_kinematicTimeStep;
-
-	btBroadphaseProxy*	m_broadphaseProxy;
-
-
-	
-
-
-	
-public:
 	const btBroadphaseProxy*	GetBroadphaseProxy() const
 	{
 		return m_broadphaseProxy;
@@ -281,19 +271,7 @@ public:
 	int	m_contactSolverType;
 	int	m_frictionSolverType;
 
-/*
-	/// for ode solver-binding
-	dMatrix3		m_R;//temp
-	dMatrix3		m_I;
-	dMatrix3		m_invI;
-
-	int				m_odeTag;
 	
-	btVector3		m_tacc;//temp
-	btVector3		m_facc;
-*/
-
-
 
 	int	m_debugBodyId;
 };

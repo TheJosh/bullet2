@@ -616,7 +616,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 	domSourceRef elemSource;
 	domWrap_sRef elemWrap_s;
 	domWrap_tRef elemWrap_t;

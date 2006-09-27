@@ -47,7 +47,7 @@ protected:  // Attributes
  */
 	xsNCName attrMaterial;
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The input element may occur any number of times. This input is a local
  * input with the offset  and set attributes. @see domInput

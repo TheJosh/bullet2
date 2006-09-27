@@ -192,7 +192,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFuncRef elemFunc;
 		domValueRef elemValue;
 
@@ -408,7 +408,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domSrcRef elemSrc;
 		domDestRef elemDest;
 
@@ -776,7 +776,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domSrc_rgbRef elemSrc_rgb;
 		domDest_rgbRef elemDest_rgb;
 		domSrc_alphaRef elemSrc_alpha;
@@ -1080,7 +1080,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domRgbRef elemRgb;
 		domAlphaRef elemAlpha;
 
@@ -1296,7 +1296,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFaceRef elemFace;
 		domModeRef elemMode;
 
@@ -2044,7 +2044,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFaceRef elemFace;
 		domModeRef elemMode;
 
@@ -2412,7 +2412,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFuncRef elemFunc;
 		domRefRef elemRef;
 		domMaskRef elemMask;
@@ -2710,7 +2710,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFailRef elemFail;
 		domZfailRef elemZfail;
 		domZpassRef elemZpass;
@@ -3084,7 +3084,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFrontRef elemFront;
 		domBackRef elemBack;
 		domRefRef elemRef;
@@ -3464,7 +3464,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFaceRef elemFace;
 		domFailRef elemFail;
 		domZfailRef elemZfail;
@@ -3692,7 +3692,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 		domFaceRef elemFace;
 		domMaskRef elemMask;
 
@@ -4827,7 +4827,7 @@ public:
 	protected:  // Attribute
 		domGL_MAX_TEXTURE_IMAGE_UNITS_index attrIndex;
 
-	protected:  // btElements
+	protected:  // Elements
 		domGl_sampler1DRef elemValue;
 		domParamRef elemParam;
 		/**
@@ -4990,7 +4990,7 @@ public:
 	protected:  // Attribute
 		domGL_MAX_TEXTURE_IMAGE_UNITS_index attrIndex;
 
-	protected:  // btElements
+	protected:  // Elements
 		domGl_sampler2DRef elemValue;
 		domParamRef elemParam;
 		/**
@@ -5153,7 +5153,7 @@ public:
 	protected:  // Attribute
 		domGL_MAX_TEXTURE_IMAGE_UNITS_index attrIndex;
 
-	protected:  // btElements
+	protected:  // Elements
 		domGl_sampler3DRef elemValue;
 		domParamRef elemParam;
 		/**
@@ -5316,7 +5316,7 @@ public:
 	protected:  // Attribute
 		domGL_MAX_TEXTURE_IMAGE_UNITS_index attrIndex;
 
-	protected:  // btElements
+	protected:  // Elements
 		domGl_samplerCUBERef elemValue;
 		domParamRef elemParam;
 		/**
@@ -5479,7 +5479,7 @@ public:
 	protected:  // Attribute
 		domGL_MAX_TEXTURE_IMAGE_UNITS_index attrIndex;
 
-	protected:  // btElements
+	protected:  // Elements
 		domGl_samplerRECTRef elemValue;
 		domParamRef elemParam;
 		/**
@@ -5642,7 +5642,7 @@ public:
 	protected:  // Attribute
 		domGL_MAX_TEXTURE_IMAGE_UNITS_index attrIndex;
 
-	protected:  // btElements
+	protected:  // Elements
 		domGl_samplerDEPTHRef elemValue;
 		domParamRef elemParam;
 		/**
@@ -11351,7 +11351,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 	domAlpha_funcRef elemAlpha_func;
 	domBlend_funcRef elemBlend_func;
 	domBlend_func_separateRef elemBlend_func_separate;

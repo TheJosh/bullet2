@@ -99,7 +99,7 @@ public:
 
 	/**
 	 * Defines the override version of base method.
-	 * @param element btElement on which to set this attribute.
+	 * @param element Element on which to set this attribute.
 	 * @param s String containing the value to be converted via the
 	 * atomic type system.
 	 */

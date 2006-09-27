@@ -43,7 +43,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The animation element may contain an asset element.  @see domAsset
  */

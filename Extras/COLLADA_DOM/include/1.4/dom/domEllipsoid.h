@@ -92,7 +92,7 @@ public:
 
 
 
-protected:  // btElement
+protected:  // Element
 	domSizeRef elemSize;
 
 public:	//Accessors and Mutators

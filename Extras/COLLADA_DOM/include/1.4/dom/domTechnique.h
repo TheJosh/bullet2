@@ -40,7 +40,7 @@ protected:  // Attribute
  */
 	xsNMTOKEN attrProfile;
 
-protected:  // btElement
+protected:  // Element
 	/**
 	 * Used to preserve order in elements that do not specify strict sequencing of sub-elements.
 	 */

@@ -40,7 +40,7 @@ public:
 	class domTargets : public daeElement
 	{
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * The input element must occur at least twice. These inputs are local inputs.
  * @see domInput
@@ -124,7 +124,7 @@ protected:  // Attributes
  */
 	xsAnyURI attrSource;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The morph element must contain at least two source elements.  @see domSource
  */

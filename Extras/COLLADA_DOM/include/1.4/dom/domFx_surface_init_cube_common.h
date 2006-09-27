@@ -177,7 +177,7 @@ public:
 	protected:  // Attribute
 		xsIDREF attrRef;
 
-	protected:  // btElement
+	protected:  // Element
 /**
  * If the image dues not natively describe the face ordering then this series
  * of order elements will describe which face the index belongs too @see domOrder
@@ -324,7 +324,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 /**
  * Init the entire surface with one compound image such as DDS @see domAll
  */

@@ -40,7 +40,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The controller element may contain an asset element.  @see domAsset
  */

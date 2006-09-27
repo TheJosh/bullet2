@@ -171,7 +171,7 @@ XMLPUBFUN void XMLCALL
 					 xmlNotationTablePtr table);
 #endif /* LIBXML_OUTPUT_ENABLED */
 
-/* btElement Content */
+/* Element Content */
 /* the non Doc version are being deprecated */
 XMLPUBFUN xmlElementContentPtr XMLCALL 
 		xmlNewElementContent	(const xmlChar *name,
@@ -205,7 +205,7 @@ XMLPUBFUN void XMLCALL
 #endif /* LIBXML_OUTPUT_ENABLED */
 /* DEPRECATED */
 
-/* btElement */
+/* Element */
 XMLPUBFUN xmlElementPtr XMLCALL	   
 		xmlAddElementDecl	(xmlValidCtxtPtr ctxt,
 					 xmlDtdPtr dtd,

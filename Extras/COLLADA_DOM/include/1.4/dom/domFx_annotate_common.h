@@ -23,7 +23,7 @@ class domFx_annotate_common_complexType
 protected:  // Attribute
 	xsNCName attrName;
 
-protected:  // btElement
+protected:  // Element
 	domFx_annotate_type_commonRef elemFx_annotate_type_common;
 
 public:	//Accessors and Mutators

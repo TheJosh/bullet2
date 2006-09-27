@@ -129,7 +129,7 @@ daeURI::daeURI(daeString uriString, daeBool nofrag)
 	}
 	else
 	{
-		// bterate the URI without changing the string
+		// Generate the URI without changing the string
 		setURI(uriString);
 	}
 	if(nofrag)

@@ -34,7 +34,7 @@ protected:  // Attributes
  */
 	xsNCName attrSource;
 
-protected:  // btElements
+protected:  // Elements
 	domCg_param_type_Array elemCg_param_type_array;
 	domCg_setarray_type_Array elemArray_array;
 	domCg_setuser_type_Array elemUsertype_array;

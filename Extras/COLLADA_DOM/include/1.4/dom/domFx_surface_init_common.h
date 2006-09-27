@@ -136,7 +136,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 /**
  * This surface is intended to be initialized later externally by a "setparam"
  * element.  If it is used before being initialized there is profile and platform

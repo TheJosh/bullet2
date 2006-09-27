@@ -168,7 +168,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 /**
  * A float value that represents the length of the line segment connecting
  * the centers  of the capping hemispheres. @see domHeight

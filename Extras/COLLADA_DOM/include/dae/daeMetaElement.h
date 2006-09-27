@@ -294,7 +294,7 @@ public:
 	/**
 	 * Places a child element into the <tt><i>parent</i></tt> element where the
 	 * calling object is the @c daeMetaElement for the parent element.
-	 * @param parent btElement to act as the container.
+	 * @param parent Element to act as the container.
 	 * @param child Child element to place in the parent.
 	 * @return Returns true if the operation was successful, false otherwise.
 	 */
@@ -303,10 +303,10 @@ public:
 	 * Places a child element into the <tt><i>parent</i></tt> element at a specific location
 	 * where the calling object is the @c daeMetaElement for the parent element.
 	 * @param index The location in the contents array to insert.
-	 * @param parent btElement to act as the container.
+	 * @param parent Element to act as the container.
 	 * @param child Child element to place in the parent.
 	 * @return Returns true if the operation was successful, false otherwise.
-	 * @note This should only be called on elements that have a _contents array. btElements without
+	 * @note This should only be called on elements that have a _contents array. Elements without
 	 * a _contents array will be placed normally.
 	 */
 	daeBool placeAt( daeInt index, daeElement *parent, daeElement *child );
@@ -314,7 +314,7 @@ public:
 	 * Places a child element into the <tt><i>parent</i></tt> element at a specific location which is right
 	 * before the marker element.
 	 * @param marker The element location in the contents array to insert before.
-	 * @param parent btElement to act as the container.
+	 * @param parent Element to act as the container.
 	 * @param child Child element to place in the parent.
 	 * @return Returns true if the operation was successful, false otherwise.
 	 */
@@ -323,7 +323,7 @@ public:
 	 * Places a child element into the <tt><i>parent</i></tt> element at a specific location which is right
 	 * after the marker element.
 	 * @param marker The element location in the contents array to insert after.
-	 * @param parent btElement to act as the container.
+	 * @param parent Element to act as the container.
 	 * @param child Child element to place in the parent.
 	 * @return Returns true if the operation was successful, false otherwise.
 	 */
@@ -331,7 +331,7 @@ public:
 
 	/**
 	 * Removes a child element from its parent element.
-	 * @param parent btElement That is the parent.
+	 * @param parent Element That is the parent.
 	 * @param child Child element to remove.
 	 * @return Returns true if the operation was successful, false otherwise.
 	 */

@@ -387,7 +387,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * The author element contains a string with the author's name. There may
  * be only one author element. @see domAuthor
@@ -1057,7 +1057,7 @@ public:
 
 
 
-protected:  // btElements
+protected:  // Elements
 /**
  * The contributor element defines authoring information for asset management
  * @see domContributor

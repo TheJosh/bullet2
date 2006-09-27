@@ -64,7 +64,7 @@ public:
 			class domOrthographic : public daeElement
 			{
 
-			protected:  // btElements
+			protected:  // Elements
 /**
  * The xmag element contains a floating point number describing the horizontal
  * magnification of the view. @see domXmag
@@ -191,7 +191,7 @@ public:
 			class domPerspective : public daeElement
 			{
 
-			protected:  // btElements
+			protected:  // Elements
 /**
  * The xfov element contains a floating point number describing the horizontal
  * field of view in degrees. @see domXfov
@@ -309,7 +309,7 @@ public:
 
 
 
-		protected:  // btElements
+		protected:  // Elements
 /**
  * The orthographic element describes the field of view of an orthographic
  * camera. @see domOrthographic
@@ -393,7 +393,7 @@ public:
 
 
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  * The technique_common element specifies the optics information for the common
  * profile  which all COLLADA implementations need to support. @see domTechnique_common
@@ -485,7 +485,7 @@ public:
 	class domImager : public daeElement
 	{
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  *  This element may contain any number of non-common profile techniques.
  * There is no common technique for imager.  @see domTechnique
@@ -569,7 +569,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The camera element may contain an asset element.  @see domAsset
  */

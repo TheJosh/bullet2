@@ -37,7 +37,7 @@ protected:  // Attributes
  */
 	xsNCName attrName;
 
-protected:  // btElements
+protected:  // Elements
 /**
  *  The library_controllers element may contain an asset element.  @see domAsset
  */

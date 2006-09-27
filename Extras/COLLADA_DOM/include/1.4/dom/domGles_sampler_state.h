@@ -489,7 +489,7 @@ protected:  // Attribute
  */
 	xsNCName attrSid;
 
-protected:  // btElements
+protected:  // Elements
 	domWrap_sRef elemWrap_s;
 	domWrap_tRef elemWrap_t;
 	domMinfilterRef elemMinfilter;

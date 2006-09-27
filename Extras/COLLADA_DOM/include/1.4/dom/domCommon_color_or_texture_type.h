@@ -179,7 +179,7 @@ public:
 		xsNCName attrTexture;
 		xsNCName attrTexcoord;
 
-	protected:  // btElement
+	protected:  // Element
 		domExtraRef elemExtra;
 
 	public:	//Accessors and Mutators
@@ -252,7 +252,7 @@ public:
 	};
 
 
-protected:  // btElements
+protected:  // Elements
 	domColorRef elemColor;
 	domParamRef elemParam;
 	domTextureRef elemTexture;

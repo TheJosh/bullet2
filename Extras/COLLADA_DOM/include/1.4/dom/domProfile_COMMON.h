@@ -51,7 +51,7 @@ public:
 		class domConstant : public daeElement
 		{
 
-		protected:  // btElements
+		protected:  // Elements
 			domCommon_color_or_texture_typeRef elemEmission;
 			domCommon_color_or_texture_typeRef elemReflective;
 			domCommon_float_or_param_typeRef elemReflectivity;
@@ -138,7 +138,7 @@ public:
 		class domLambert : public daeElement
 		{
 
-		protected:  // btElements
+		protected:  // Elements
 			domCommon_color_or_texture_typeRef elemEmission;
 			domCommon_color_or_texture_typeRef elemAmbient;
 			domCommon_color_or_texture_typeRef elemDiffuse;
@@ -237,7 +237,7 @@ public:
 		class domPhong : public daeElement
 		{
 
-		protected:  // btElements
+		protected:  // Elements
 			domCommon_color_or_texture_typeRef elemEmission;
 			domCommon_color_or_texture_typeRef elemAmbient;
 			domCommon_color_or_texture_typeRef elemDiffuse;
@@ -348,7 +348,7 @@ public:
 		class domBlinn : public daeElement
 		{
 
-		protected:  // btElements
+		protected:  // Elements
 			domCommon_color_or_texture_typeRef elemEmission;
 			domCommon_color_or_texture_typeRef elemAmbient;
 			domCommon_color_or_texture_typeRef elemDiffuse;
@@ -465,7 +465,7 @@ public:
  */
 		xsNCName attrSid;
 
-	protected:  // btElements
+	protected:  // Elements
 /**
  *  The technique element may contain an asset element.  @see domAsset
  */
@@ -629,7 +629,7 @@ protected:  // Attribute
  */
 	xsID attrId;
 
-protected:  // btElements
+protected:  // Elements
 	domAssetRef elemAsset;
 	domImage_Array elemImage_array;
 	domCommon_newparam_type_Array elemNewparam_array;
