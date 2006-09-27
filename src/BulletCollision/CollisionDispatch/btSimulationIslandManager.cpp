@@ -36,21 +36,15 @@ void btSimulationIslandManager::FindUnions(btDispatcher* dispatcher)
 			 const  btCollisionObject* colObj0 = static_cast<const btCollisionObject*>(manifold->GetBody0());
 			 const  btCollisionObject* colObj1 = static_cast<const btCollisionObject*>(manifold->GetBody1());
 
-			 if (colObj0 && colObj1 && dispatcher->NeedsResponse(*colObj0,*colObj1))
-			 {
-				if (((colObj0) && ((colObj0)->mergesSimulationIslands())) &&
-					((colObj1) && ((colObj1)->mergesSimulationIslands())))
-				{
+			if (((colObj0) && ((colObj0)->mergesSimulationIslands())) &&
+				((colObj1) && ((colObj1)->mergesSimulationIslands())))
+			{
 
-					m_unionFind.unite((colObj0)->m_islandTag1,
-						(colObj1)->m_islandTag1);
-				}
-			 }
-			
-			
+				m_unionFind.unite((colObj0)->m_islandTag1,
+					(colObj1)->m_islandTag1);
+			}
 		}
 	}
-	
 }
 
 

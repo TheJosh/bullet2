@@ -66,6 +66,11 @@ public:
 		return m_manifoldsPtr.size();
 	}
 
+	btPersistentManifold**	getInternalManifoldPointer()
+	{
+		return &m_manifoldsPtr[0];
+	}
+
 	 btPersistentManifold* GetManifoldByIndexInternal(int index)
 	{
 		return m_manifoldsPtr[index];

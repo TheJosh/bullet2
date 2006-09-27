@@ -31,6 +31,10 @@ typedef btScalar dMatrix3[4*3];
 extern float gLinearAirDamping;
 extern bool gUseEpa;
 
+extern float gDeactivationTime;
+extern bool gDisableDeactivation;
+extern float gLinearSleepingTreshold;
+extern float gAngularSleepingTreshold;
 
 
 /// btRigidBody class for btRigidBody Dynamics
@@ -39,7 +43,7 @@ class btRigidBody  : public btCollisionObject
 {
 public:
 
-	btRigidBody(const btMassProps& massProps,btScalar linearDamping,btScalar angularDamping,btScalar friction,btScalar restitution);
+	btRigidBody(const btMassProps& massProps,btScalar linearDamping=0.f,btScalar angularDamping=0.f,btScalar friction=0.5f,btScalar restitution=0.f);
 
 	void			proceedToTransform(const btTransform& newTrans); 
 	
@@ -193,6 +197,43 @@ public:
 		return axis.dot(vec);
 	}
 
+	inline void	updateDeactivation(float timeStep)
+	{
+		if ( (GetActivationState() == ISLAND_SLEEPING) || (GetActivationState() == DISABLE_DEACTIVATION))
+			return;
+
+		if ((getLinearVelocity().length2() < gLinearSleepingTreshold*gLinearSleepingTreshold) &&
+			(getAngularVelocity().length2() < gAngularSleepingTreshold*gAngularSleepingTreshold))
+		{
+			m_deactivationTime += timeStep;
+		} else
+		{
+			m_deactivationTime=0.f;
+			SetActivationState(0);
+		}
+
+	}
+
+	inline bool	wantsSleeping()
+	{
+
+		if (GetActivationState() == DISABLE_DEACTIVATION)
+			return false;
+
+		//disable deactivation
+		if (gDisableDeactivation || (gDeactivationTime == 0.f))
+			return false;
+
+		if ( (GetActivationState() == ISLAND_SLEEPING) || (GetActivationState() == WANTS_DEACTIVATION))
+			return true;
+
+		if (m_deactivationTime> gDeactivationTime)
+		{
+			return true;
+		}
+		return false;
+	}
+
 
 
 private:
@@ -240,7 +281,7 @@ public:
 	int	m_contactSolverType;
 	int	m_frictionSolverType;
 
-
+/*
 	/// for ode solver-binding
 	dMatrix3		m_R;//temp
 	dMatrix3		m_I;
@@ -250,6 +291,7 @@ public:
 	
 	btVector3		m_tacc;//temp
 	btVector3		m_facc;
+*/
 
 
 

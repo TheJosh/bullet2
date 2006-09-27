@@ -13,27 +13,16 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-
 //#define USER_DEFINED_FRICTION_MODEL 1
 //#define PRINT_CONTACT_STATISTICS 1
 #define REGISTER_CUSTOM_COLLISION_ALGORITHM 1
 
-#include "CcdPhysicsEnvironment.h"
-#include "ParallelPhysicsEnvironment.h"
-
 #include "btBulletDynamicsCommon.h"
-
-#include "CcdPhysicsController.h"
-#include "MyMotionState.h"
-
-#include "ParallelIslandDispatcher.h"
 
 #include "LinearMath/btQuickprof.h"
 #include "LinearMath/btIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
-
-
 
 #include "PHY_Pro.h"
 #include "BMF_Api.h"
@@ -68,11 +57,6 @@ const int maxNumObjects = 32760;
 
 int	shapeIndex[maxNumObjects];
 
-#ifdef USE_PARALLEL_DISPATCHER
-ParallelPhysicsEnvironment* m_physicsEnvironmentPtr = 0;
-#else
-CcdPhysicsEnvironment* m_physicsEnvironmentPtr = 0;
-#endif
 
 #define CUBE_HALF_EXTENTS 1
 
@@ -138,11 +122,9 @@ void CcdPhysicsDemo::clientMoveAndDisplay()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
-
-
-	if (m_physicsEnvironmentPtr)
-		m_physicsEnvironmentPtr->proceedDeltaTime(0.f,deltaTime);
-
+	if (m_dynamicsWorld)
+		m_dynamicsWorld->stepSimulation(deltaTime);
+	
 #ifdef USE_QUICKPROF 
         btProfiler::beginBlock("render"); 
 #endif //USE_QUICKPROF 
@@ -171,12 +153,15 @@ void CcdPhysicsDemo::displayCallback(void) {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
+	/*
 	if (m_physicsEnvironmentPtr)
 	{
 		m_physicsEnvironmentPtr->UpdateAabbs(deltaTime);
 		//draw contactpoints
 		m_physicsEnvironmentPtr->CallbackTriggers();
 	}
+	*/
+
 
 	renderme();
 
@@ -192,7 +177,7 @@ void CcdPhysicsDemo::displayCallback(void) {
 void CcdPhysicsDemo::clientResetScene()
 {
 
-	
+/*	
 	int i;
 	int numObjects = m_physicsEnvironmentPtr->GetNumControllers();
 
@@ -236,6 +221,8 @@ void CcdPhysicsDemo::clientResetScene()
 			ctrl->SetAngularVelocity(0,0,0,false);
 		} 
 	}
+	*/
+
 }
 
 
@@ -261,17 +248,10 @@ void	CcdPhysicsDemo::initPhysics()
 	dispatcher->RegisterCollisionCreateFunc(SPHERE_SHAPE_PROXYTYPE,SPHERE_SHAPE_PROXYTYPE,new btSphereSphereCollisionAlgorithm::CreateFunc);
 #endif //REGISTER_CUSTOM_COLLISION_ALGORITHM
 
+		btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
 
-#ifdef USE_PARALLEL_DISPATCHER
-	m_physicsEnvironmentPtr = new ParallelPhysicsEnvironment(dispatcher2,broadphase);
-#else
-	m_physicsEnvironmentPtr = new CcdPhysicsEnvironment(dispatcher,broadphase);
-#endif
-	m_physicsEnvironmentPtr->setDeactivationTime(2.f);
+		m_dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher,broadphase,solver);
 
-	m_physicsEnvironmentPtr->setGravity(0,-10,0);
-
-	m_physicsEnvironmentPtr->setDebugDrawer(&debugDrawer);
 
 #ifdef USER_DEFINED_FRICTION_MODEL
 	btSequentialImpulseConstraintSolver* solver = (btSequentialImpulseConstraintSolver*) m_physicsEnvironmentPtr->GetConstraintSolver();
@@ -352,13 +332,16 @@ void	CcdPhysicsDemo::initPhysics()
 		if (!isDyna)
 			mass = 0.f;
 	
-		CcdPhysicsController* ctrl = LocalCreatePhysicsObject(isDyna,mass,trans,shape);
-
+		btRigidBody* body = LocalCreateRigidBody(isDyna,mass,trans,shape);
+		
+		m_dynamicsWorld->AddCollisionObject(body);
+		
 		// Only do CCD if  motion in one timestep (1.f/60.f) exceeds CUBE_HALF_EXTENTS
-		ctrl->GetRigidBody()->m_ccdSquareMotionTreshold = CUBE_HALF_EXTENTS;
+		body->m_ccdSquareMotionTreshold = CUBE_HALF_EXTENTS;
 		
 		//Experimental: better estimation of CCD Time of Impact:
-		ctrl->GetRigidBody()->m_ccdSweptShereRadius = 0.2*CUBE_HALF_EXTENTS;
+		body->m_ccdSweptShereRadius = 0.2*CUBE_HALF_EXTENTS;
+
 #ifdef USER_DEFINED_FRICTION_MODEL	
 		///Advanced use: override the friction solver
 		ctrl->GetRigidBody()->m_frictionSolverType = USER_CONTACT_SOLVER_TYPE1;
@@ -369,7 +352,6 @@ void	CcdPhysicsDemo::initPhysics()
 
 	clientResetScene();
 
-	m_physicsEnvironmentPtr->SyncMotionStates(0.f);
 
 }
 	

@@ -15,6 +15,7 @@ subject to the following restrictions:
 
 #include "DemoApplication.h"
 #include "LinearMath/btIDebugDraw.h"
+#include "BulletDynamics/Dynamics/btDynamicsWorld.h"
 
 #include "CcdPhysicsEnvironment.h"
 #include "CcdPhysicsController.h"
@@ -25,6 +26,7 @@ subject to the following restrictions:
 #include "GL_ShapeDrawer.h"
 #include "LinearMath/btQuickprof.h"
 #include "BMF_Api.h"
+#include "BulletDynamics/Dynamics/btMassProps.h"
 
 int numObjects = 0;
 const int maxNumObjects = 16384;
@@ -38,6 +40,8 @@ DemoApplication::DemoApplication()
 		//see btIDebugDraw.h for modes
 :
 m_physicsEnvironmentPtr(0),
+m_dynamicsWorld(0),
+m_pickConstraint(0),
 	m_cameraDistance(15.0),
 	m_debugMode(0),
 	m_ele(0.f),
@@ -382,6 +386,30 @@ void DemoApplication::displayCallback()
 
 void	DemoApplication::shootBox(const btVector3& destination)
 {
+
+	if (m_dynamicsWorld)
+	{
+		bool isDynamic = true;
+		float mass = 1.f;
+		btTransform startTransform;
+		startTransform.setIdentity();
+		btVector3 camPos = getCameraPosition();
+		startTransform.setOrigin(camPos);
+		btCollisionShape* boxShape = new btBoxShape(btVector3(1.f,1.f,1.f));
+
+		btRigidBody* body = this->LocalCreateRigidBody(isDynamic, mass, startTransform,boxShape);
+		m_dynamicsWorld->AddCollisionObject(body);
+
+		btVector3 linVel(destination[0]-camPos[0],destination[1]-camPos[1],destination[2]-camPos[2]);
+		linVel.normalize();
+		linVel*=m_ShootBoxInitialSpeed;
+
+		body->m_worldTransform.setOrigin(camPos);
+		body->m_worldTransform.setRotation(btQuaternion(0,0,0,1));
+		body->setLinearVelocity(linVel);
+		body->setAngularVelocity(btVector3(0,0,0));
+	}
+
 	if (m_physicsEnvironmentPtr)
 	{
 		bool isDynamic = true;
@@ -468,8 +496,40 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 		};
 	case 1:
 		{
+
+
 			if (state==0)
 			{
+
+				//apply an impulse
+				if (m_dynamicsWorld)
+				{
+					float hit[3];
+					float normal[3];
+					
+					btCollisionWorld::ClosestRayResultCallback rayCallback(m_cameraPosition,rayTo);
+					m_dynamicsWorld->RayTest(m_cameraPosition,rayTo,rayCallback);
+					if (rayCallback.HasHit())
+					{
+						
+						if (rayCallback.m_collisionObject->m_internalOwner)
+						{
+							btRigidBody* body = (btRigidBody*)rayCallback.m_collisionObject->m_internalOwner;
+							if (body)
+							{
+								body->SetActivationState(ACTIVE_TAG);
+								btVector3 impulse = rayTo;
+								impulse.normalize();
+								float impulseStrength = 10.f;
+								impulse *= impulseStrength;
+								btVector3 relPos = rayCallback.m_hitPointWorld - body->getCenterOfMassPosition();
+								body->applyImpulse(impulse,relPos);
+							}
+						}
+
+					}
+				}
+
 				//apply an impulse
 				if (m_physicsEnvironmentPtr)
 				{
@@ -509,6 +569,48 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 		{
 			if (state==0)
 			{
+
+				//add a point to point constraint for picking
+				if (m_dynamicsWorld)
+				{
+					float hit[3];
+					float normal[3];
+					btCollisionWorld::ClosestRayResultCallback rayCallback(m_cameraPosition,rayTo);
+					m_dynamicsWorld->RayTest(m_cameraPosition,rayTo,rayCallback);
+					if (rayCallback.HasHit())
+					{
+						
+						if (rayCallback.m_collisionObject->m_internalOwner)
+						{
+							btRigidBody* body = (btRigidBody*)rayCallback.m_collisionObject->m_internalOwner;
+							if (body && !body->IsStatic())
+							{
+								pickedBody = body;
+								pickedBody->SetActivationState(DISABLE_DEACTIVATION);
+
+								
+								btVector3 pickPos = rayCallback.m_hitPointWorld;
+
+								btVector3 localPivot = body->getCenterOfMassTransform().inverse() * pickPos;
+
+								btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*body,localPivot);
+								m_dynamicsWorld->addConstraint(p2p);
+								m_pickConstraint = p2p;
+								
+								//save mouse position for dragging
+								gOldPickingPos = rayTo;
+
+								btVector3 eyePos(m_cameraPosition[0],m_cameraPosition[1],m_cameraPosition[2]);
+
+								gOldPickingDist  = (pickPos-eyePos).length();
+
+								//very weak constraint for picking
+								p2p->m_setting.m_tau = 0.1f;
+							}
+						}
+					}
+				}
+
 				//add a point to point constraint for picking
 				if (m_physicsEnvironmentPtr)
 				{
@@ -556,6 +658,18 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 				}
 			} else
 			{
+
+				if (m_pickConstraint && m_dynamicsWorld)
+				{
+					m_dynamicsWorld->removeConstraint(m_pickConstraint);
+					delete m_pickConstraint;
+					//printf("removed constraint %i",gPickingConstraintId);
+					m_pickConstraint = 0;
+					pickedBody->ForceActivationState(ACTIVE_TAG);
+					pickedBody->m_deactivationTime = 0.f;
+					pickedBody = 0;
+				}
+
 				if (gPickingConstraintId && m_physicsEnvironmentPtr)
 				{
 					m_physicsEnvironmentPtr->removeConstraint(gPickingConstraintId);
@@ -582,6 +696,26 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 void	DemoApplication::mouseMotionFunc(int x,int y)
 {
 
+	if (m_pickConstraint)
+	{
+		//move the constraint pivot
+		btPoint2PointConstraint* p2p = static_cast<btPoint2PointConstraint*>(m_pickConstraint);
+		if (p2p)
+		{
+			//keep it at the same picking distance
+
+			btVector3 newRayTo = GetRayTo(x,y);
+			btVector3 eyePos(m_cameraPosition[0],m_cameraPosition[1],m_cameraPosition[2]);
+			btVector3 dir = newRayTo-eyePos;
+			dir.normalize();
+			dir *= gOldPickingDist;
+
+			btVector3 newPos = eyePos + dir;
+			p2p->SetPivotB(newPos);
+		}
+
+	}
+
 	if (gPickingConstraintId && m_physicsEnvironmentPtr)
 	{
 
@@ -604,6 +738,30 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 
 	}
 }
+
+
+
+btRigidBody*	DemoApplication::LocalCreateRigidBody(bool isDynamic, float mass, const btTransform& startTransform,btCollisionShape* shape)
+{
+	btVector3 localInertia(0,0,0);
+	if (isDynamic)
+		shape->CalculateLocalInertia(mass,localInertia);
+
+	btMassProps massProps(0.f,localInertia);
+	
+	btRigidBody* body = new btRigidBody(massProps);
+	body->m_collisionShape = shape;
+	body->m_worldTransform = startTransform;
+	body->m_internalOwner = body;
+	body->setMassProps( mass, localInertia);
+	body->setGravity(btVector3(0,-9.8f,0));
+	if (!isDynamic)
+	{
+		body->m_collisionFlags = btCollisionObject::isStatic;//??
+	}
+	return body;
+}
+
 
 
 ///Very basic import
@@ -703,6 +861,46 @@ void DemoApplication::renderme()
 	updateCamera();
 
 	float m[16];
+
+	if (m_dynamicsWorld)
+	{
+		int numObjects = m_dynamicsWorld->GetNumCollisionObjects();
+		btVector3 wireColor(1,0,0);
+		for (int i=0;i<numObjects;i++)
+		{
+			btCollisionObject* colObj = m_dynamicsWorld->GetCollisionObjectArray()[i];
+			colObj->m_worldTransform.getOpenGLMatrix(m);
+
+			btVector3 wireColor(1.f,1.0f,0.5f); //wants deactivation
+			if (i & 1)
+			{
+				wireColor = btVector3(0.f,0.0f,1.f);
+			}
+			///color differently for active, sleeping, wantsdeactivation states
+			if (colObj->GetActivationState() == 1) //active
+			{
+				if (i & 1)
+				{
+					wireColor += btVector3 (1.f,0.f,0.f);
+				} else
+				{			
+					wireColor += btVector3 (.5f,0.f,0.f);
+				}
+			}
+			if (colObj->GetActivationState() == 2) //ISLAND_SLEEPING
+			{
+				if (i & 1)
+				{
+					wireColor += btVector3 (0.f,1.f, 0.f);
+				} else
+				{
+					wireColor += btVector3 (0.f,0.5f,0.f);
+				}
+			}
+
+			GL_ShapeDrawer::DrawOpenGL(m,colObj->m_collisionShape,wireColor,getDebugMode());
+		}
+	}
 
 	if (m_physicsEnvironmentPtr)
 	{

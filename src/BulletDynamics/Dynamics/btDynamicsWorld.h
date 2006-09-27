@@ -13,22 +13,34 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef BULLET_DYNAMICS_COMMON_H
-#define BULLET_DYNAMICS_COMMON_H
+#ifndef BT_DYNAMICS_WORLD_H
+#define BT_DYNAMICS_WORLD_H
 
-///Common headerfile includes for Bullet Dynamics, including Collision Detection
-#include "btBulletCollisionCommon.h"
+#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
+class btTypedConstraint;
 
-#include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
-#include "BulletDynamics/Dynamics/btSimpleDynamicsWorld.h"
-#include "BulletDynamics/Dynamics/btRigidBody.h"
-#include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
-#include "BulletDynamics/ConstraintSolver/btHingeConstraint.h"
-#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
-///Vehicle simulation, with wheel contact simulated by raycasts
-#include "BulletDynamics/Vehicle/btRaycastVehicle.h"
+///btDynamicsWorld is the baseclass for several dynamics implementation, basic, discrete, parallel, and continuous
+class btDynamicsWorld : public btCollisionWorld
+{
+	public:
+		
+		btDynamicsWorld(btDispatcher* dispatcher,btOverlappingPairCache* pairCache)
+		:btCollisionWorld(dispatcher,pairCache)
+		{
 
+		}
+		virtual ~btDynamicsWorld()
+		{
+		}
+		
+		///stepSimulation proceeds the simulation over timeStep units
+		virtual void	stepSimulation( float timeStep) = 0;
+				
+				
+		virtual void	addConstraint(btTypedConstraint* constraint) {};
 
+		virtual void	removeConstraint(btTypedConstraint* constraint) {};
+					
+};
 
-#endif //BULLET_DYNAMICS_COMMON_H
-
+#endif //BT_DYNAMICS_WORLD_H

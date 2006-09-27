@@ -39,10 +39,12 @@ subject to the following restrictions:
 #include "LinearMath/btMatrix3x3.h"
 #include "LinearMath/btTransform.h"
 
-class CcdPhysicsEnvironment;
-class CcdPhysicsController;
-class btCollisionShape;
-
+class	CcdPhysicsEnvironment;
+class	CcdPhysicsController;
+class	btCollisionShape;
+class	btDynamicsWorld;
+class	btRigidBody;
+class	btTypedConstraint;
 
 class DemoApplication
 {
@@ -53,6 +55,9 @@ class DemoApplication
 	///this is the most important class
 	CcdPhysicsEnvironment* m_physicsEnvironmentPtr;
 	
+	btDynamicsWorld*		m_dynamicsWorld;
+
+	btTypedConstraint*		m_pickConstraint;
 
 	float	m_cameraDistance;
 	int	m_debugMode;
@@ -140,6 +145,8 @@ class DemoApplication
 	btVector3	GetRayTo(int x,int y);
 
 	CcdPhysicsController*  LocalCreatePhysicsObject(bool isDynamic, float mass, const btTransform& startTransform,btCollisionShape* shape);
+
+	btRigidBody*	LocalCreateRigidBody(bool isDynamic, float mass, const btTransform& startTransform,btCollisionShape* shape);
 
 	///callback methods by glut	
 

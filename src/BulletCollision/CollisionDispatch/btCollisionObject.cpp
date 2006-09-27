@@ -52,5 +52,6 @@ void btCollisionObject::activate()
 
 bool btCollisionObject::mergesSimulationIslands() const
 {
-	return ( !(m_collisionFlags & isStatic));
+	//only objects that are non-static and have no contact response merge islands
+	return ( !(m_collisionFlags & (isStatic | noContactResponse)));
 }

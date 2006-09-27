@@ -81,6 +81,7 @@ class btCollisionWorld
 {
 
 	
+protected:
 
 	std::vector<btCollisionObject*>	m_collisionObjects;
 	
