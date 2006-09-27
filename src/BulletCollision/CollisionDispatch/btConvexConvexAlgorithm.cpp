@@ -133,9 +133,9 @@ public:
 
 	}
 
-	virtual void AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)
+	virtual void AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth)
 	{
-		btSimdVector3 flippedNormal = -normalOnBInWorld;
+		btVector3 flippedNormal = -normalOnBInWorld;
 
 		m_org->AddContactPoint(flippedNormal,pointInWorld,depth);
 	}
@@ -171,15 +171,15 @@ void	btConvexConvexAlgorithm::CheckPenetrationDepthSolver()
 
 #ifdef USE_HULL
 
-Transform	GetTransformFromSimdTransform(const btSimdTransform& trans)
+Transform	GetTransformFrombtTransform(const btTransform& trans)
 {
-			//const btSimdVector3& rowA0 = trans.getBasis().getRow(0);
-			////const btSimdVector3& rowA1 = trans.getBasis().getRow(1);
-			//const btSimdVector3& rowA2 = trans.getBasis().getRow(2);
+			//const btVector3& rowA0 = trans.getBasis().getRow(0);
+			////const btVector3& rowA1 = trans.getBasis().getRow(1);
+			//const btVector3& rowA2 = trans.getBasis().getRow(2);
 
-			btSimdVector3 rowA0 = trans.getBasis().getColumn(0);
-			btSimdVector3 rowA1 = trans.getBasis().getColumn(1);
-			btSimdVector3 rowA2 = trans.getBasis().getColumn(2);
+			btVector3 rowA0 = trans.getBasis().getColumn(0);
+			btVector3 rowA1 = trans.getBasis().getColumn(1);
+			btVector3 rowA2 = trans.getBasis().getColumn(2);
 
 
 			Vector3	x(rowA0.getX(),rowA0.getY(),rowA0.getZ());
@@ -215,9 +215,9 @@ public:
 		for (int i=0;i<numContacts;i++)
 		{
 			//printf("numContacts = %i\n",numContacts);
-			btSimdVector3 normalOnBInWorld(sep.m_axis.GetX(),sep.m_axis.GetY(),sep.m_axis.GetZ());
+			btVector3 normalOnBInWorld(sep.m_axis.GetX(),sep.m_axis.GetY(),sep.m_axis.GetZ());
 			//normalOnBInWorld.normalize();
-			btSimdVector3 pointInWorld(positionsWorld[i].GetX(),positionsWorld[i].GetY(),positionsWorld[i].GetZ());
+			btVector3 pointInWorld(positionsWorld[i].GetX(),positionsWorld[i].GetY(),positionsWorld[i].GetZ());
 			float depth = -depths[i];
 			m_manifoldResult.AddContactPoint(normalOnBInWorld,pointInWorld,depth);
 
@@ -277,10 +277,10 @@ void btConvexConvexAlgorithm ::ProcessCollision (btBroadphaseProxy* ,btBroadphas
 				sep.m_contact = -1;
 				sep.m_separator = 0;
 
-				//convert from btSimdTransform to Transform
+				//convert from btTransform to Transform
 				
-				Transform trA = GetTransformFromSimdTransform(col0->m_worldTransform);
-				Transform trB = GetTransformFromSimdTransform(col1->m_worldTransform);
+				Transform trA = GetTransformFrombtTransform(col0->m_worldTransform);
+				Transform trB = GetTransformFrombtTransform(col1->m_worldTransform);
 
 				//either use persistent manifold or clear it every time
 				m_dispatcher->ClearManifold(m_manifoldPtr);

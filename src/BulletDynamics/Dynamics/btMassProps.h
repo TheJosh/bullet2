@@ -16,16 +16,16 @@ subject to the following restrictions:
 #ifndef MASS_PROPS_H
 #define MASS_PROPS_H
 
-#include <LinearMath/SimdVector3.h>
+#include <LinearMath/btVector3.h>
 
 struct btMassProps {
-	btMassProps(float mass,const btSimdVector3& inertiaLocal):
+	btMassProps(float mass,const btVector3& inertiaLocal):
 	m_mass(mass),
 		m_inertiaLocal(inertiaLocal)
 	{
 	}
 	float   m_mass;
-	btSimdVector3	m_inertiaLocal;
+	btVector3	m_inertiaLocal;
 };
 
 

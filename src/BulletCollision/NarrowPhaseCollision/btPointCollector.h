@@ -24,9 +24,9 @@ struct btPointCollector : public btDiscreteCollisionDetectorInterface::Result
 {
 	
 	
-	btSimdVector3 m_normalOnBInWorld;
-	btSimdVector3 m_pointInWorld;
-	SimdScalar	m_distance;//negative means penetration
+	btVector3 m_normalOnBInWorld;
+	btVector3 m_pointInWorld;
+	btScalar	m_distance;//negative means penetration
 
 	bool	m_hasResult;
 
@@ -40,7 +40,7 @@ struct btPointCollector : public btDiscreteCollisionDetectorInterface::Result
 		//??
 	}
 
-	virtual void AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)
+	virtual void AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth)
 	{
 		if (depth< m_distance)
 		{

@@ -17,11 +17,11 @@ subject to the following restrictions:
 #ifndef CONVEX_CAST_H
 #define CONVEX_CAST_H
 
-#include <LinearMath/SimdTransform.h>
-#include <LinearMath/SimdVector3.h>
-#include <LinearMath/SimdScalar.h>
+#include <LinearMath/btTransform.h>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btScalar.h>
 class btMinkowskiSumShape;
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 /// btConvexCast is an interface for Casting
 class btConvexCast
@@ -35,10 +35,10 @@ public:
 	/// alternatively, add a callback method to decide about closest/all results
 	struct	CastResult
 	{
-		//virtual bool	addRayResult(const btSimdVector3& normal,SimdScalar	fraction) = 0;
+		//virtual bool	addRayResult(const btVector3& normal,btScalar	fraction) = 0;
 				
-		virtual void	DebugDraw(SimdScalar	fraction) {}
-		virtual void	DrawCoordSystem(const btSimdTransform& trans) {}
+		virtual void	DebugDraw(btScalar	fraction) {}
+		virtual void	DrawCoordSystem(const btTransform& trans) {}
 
 		CastResult()
 			:m_fraction(1e30f),
@@ -49,10 +49,10 @@ public:
 
 		virtual ~CastResult() {};
 
-		btSimdVector3	m_normal;
-		SimdScalar	m_fraction;
-		btSimdTransform	m_hitTransformA;
-		btSimdTransform	m_hitTransformB;
+		btVector3	m_normal;
+		btScalar	m_fraction;
+		btTransform	m_hitTransformA;
+		btTransform	m_hitTransformB;
 
 		btIDebugDraw* m_debugDrawer;
 
@@ -61,10 +61,10 @@ public:
 
 	/// cast a convex against another convex object
 	virtual bool	calcTimeOfImpact(
-					const btSimdTransform& fromA,
-					const btSimdTransform& toA,
-					const btSimdTransform& fromB,
-					const btSimdTransform& toB,
+					const btTransform& fromA,
+					const btTransform& toA,
+					const btTransform& fromB,
+					const btTransform& toB,
 					CastResult& result) = 0;
 };
 

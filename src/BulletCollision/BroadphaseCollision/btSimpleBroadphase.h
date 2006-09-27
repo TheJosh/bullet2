@@ -22,12 +22,12 @@ subject to the following restrictions:
 
 struct btSimpleBroadphaseProxy : public btBroadphaseProxy
 {
-	btSimdVector3	m_min;
-	btSimdVector3	m_max;
+	btVector3	m_min;
+	btVector3	m_max;
 	
 	btSimpleBroadphaseProxy() {};
 
-	btSimpleBroadphaseProxy(const SimdPoint3& minpt,const SimdPoint3& maxpt,int shapeType,void* userPtr,short int collisionFilterGroup,short int collisionFilterMask)
+	btSimpleBroadphaseProxy(const btPoint3& minpt,const btPoint3& maxpt,int shapeType,void* userPtr,short int collisionFilterGroup,short int collisionFilterMask)
 	:btBroadphaseProxy(userPtr,collisionFilterGroup,collisionFilterMask),
 	m_min(minpt),m_max(maxpt)		
 	{
@@ -73,11 +73,11 @@ public:
 		static bool	AabbOverlap(btSimpleBroadphaseProxy* proxy0,btSimpleBroadphaseProxy* proxy1);
 
 
-	virtual btBroadphaseProxy*	CreateProxy(  const btSimdVector3& min,  const btSimdVector3& max,int shapeType,void* userPtr ,short int collisionFilterGroup,short int collisionFilterMask);
+	virtual btBroadphaseProxy*	CreateProxy(  const btVector3& min,  const btVector3& max,int shapeType,void* userPtr ,short int collisionFilterGroup,short int collisionFilterMask);
 
 
 	virtual void	DestroyProxy(btBroadphaseProxy* proxy);
-	virtual void	SetAabb(btBroadphaseProxy* proxy,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax);
+	virtual void	SetAabb(btBroadphaseProxy* proxy,const btVector3& aabbMin,const btVector3& aabbMax);
 		
 	
 	

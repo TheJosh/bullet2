@@ -20,12 +20,12 @@ subject to the following restrictions:
 #include "btContactConstraint.h"
 #include "btSolve2LinearConstraint.h"
 #include "btContactSolverInfo.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 #include "btJacobianEntry.h"
-#include "LinearMath/GenMinMax.h"
+#include "LinearMath/btMinMax.h"
 
 #ifdef USE_PROFILE
-#include "LinearMath/GenQuickprof.h"
+#include "LinearMath/btQuickprof.h"
 #endif //USE_PROFILE
 
 int totalCpd = 0;
@@ -124,9 +124,9 @@ float btSequentialImpulseConstraintSolver::SolveGroup(btPersistentManifold** man
 
 
 float penetrationResolveFactor = 0.9f;
-SimdScalar restitutionCurve(SimdScalar rel_vel, SimdScalar restitution)
+btScalar restitutionCurve(btScalar rel_vel, btScalar restitution)
 {
-	SimdScalar rest = restitution * -rel_vel;
+	btScalar rest = restitution * -rel_vel;
 	return rest;
 }
 
@@ -146,17 +146,17 @@ void	btSequentialImpulseConstraintSolver::PrepareConstraints(btPersistentManifol
 
 		gTotalContactPoints += numpoints;
 
-		btSimdVector3 color(0,1,0);
+		btVector3 color(0,1,0);
 		for (int i=0;i<numpoints ;i++)
 		{
 			btManifoldPoint& cp = manifoldPtr->GetContactPoint(i);
 			if (cp.GetDistance() <= 0.f)
 			{
-				const btSimdVector3& pos1 = cp.GetPositionWorldOnA();
-				const btSimdVector3& pos2 = cp.GetPositionWorldOnB();
+				const btVector3& pos1 = cp.GetPositionWorldOnA();
+				const btVector3& pos2 = cp.GetPositionWorldOnB();
 
-				btSimdVector3 rel_pos1 = pos1 - body0->getCenterOfMassPosition(); 
-				btSimdVector3 rel_pos2 = pos2 - body1->getCenterOfMassPosition();
+				btVector3 rel_pos1 = pos1 - body0->getCenterOfMassPosition(); 
+				btVector3 rel_pos2 = pos2 - body1->getCenterOfMassPosition();
 				
 
 				//this jacobian entry is re-used for all iterations
@@ -166,7 +166,7 @@ void	btSequentialImpulseConstraintSolver::PrepareConstraints(btPersistentManifol
 					body1->getInvInertiaDiagLocal(),body1->getInvMass());
 
 				
-				SimdScalar jacDiagAB = jac.getDiagonal();
+				btScalar jacDiagAB = jac.getDiagonal();
 
 				btConstraintPersistentData* cpd = (btConstraintPersistentData*) cp.m_userPersistentData;
 				if (cpd)
@@ -205,10 +205,10 @@ void	btSequentialImpulseConstraintSolver::PrepareConstraints(btPersistentManifol
 				cpd->m_frictionSolverFunc = m_frictionDispatch[body0->m_frictionSolverType][body1->m_frictionSolverType];
 				cpd->m_contactSolverFunc = m_contactDispatch[body0->m_contactSolverType][body1->m_contactSolverType];
 				
-				btSimdVector3 vel1 = body0->getVelocityInLocalPoint(rel_pos1);
-				btSimdVector3 vel2 = body1->getVelocityInLocalPoint(rel_pos2);
-				btSimdVector3 vel = vel1 - vel2;
-				SimdScalar rel_vel;
+				btVector3 vel1 = body0->getVelocityInLocalPoint(rel_pos1);
+				btVector3 vel2 = body1->getVelocityInLocalPoint(rel_pos2);
+				btVector3 vel = vel1 - vel2;
+				btScalar rel_vel;
 				rel_vel = cp.m_normalWorldOnB.dot(vel);
 				
 				float combinedRestitution = cp.m_combinedRestitution;
@@ -225,7 +225,7 @@ void	btSequentialImpulseConstraintSolver::PrepareConstraints(btPersistentManifol
 				//restitution and penetration work in same direction so
 				//rel_vel 
 				
-				SimdScalar penVel = -cpd->m_penetration/info.m_timeStep;
+				btScalar penVel = -cpd->m_penetration/info.m_timeStep;
 
 				if (cpd->m_restitution >= penVel)
 				{
@@ -239,7 +239,7 @@ void	btSequentialImpulseConstraintSolver::PrepareConstraints(btPersistentManifol
 				cpd->m_prevAppliedImpulse = cpd->m_appliedImpulse;
 				
 				//re-calculate friction direction every frame, todo: check if this is really needed
-				SimdPlaneSpace1(cp.m_normalWorldOnB,cpd->m_frictionWorldTangential0,cpd->m_frictionWorldTangential1);
+				btPlaneSpace1(cp.m_normalWorldOnB,cpd->m_frictionWorldTangential0,cpd->m_frictionWorldTangential1);
 
 
 #define NO_FRICTION_WARMSTART 1
@@ -259,7 +259,7 @@ void	btSequentialImpulseConstraintSolver::PrepareConstraints(btPersistentManifol
 				denom = relaxation/(denom0+denom1);
 				cpd->m_jacDiagABInvTangent1 = denom;
 
-				btSimdVector3 totalImpulse = 
+				btVector3 totalImpulse = 
 	#ifndef NO_FRICTION_WARMSTART
 					cp.m_frictionWorldTangential0*cp.m_accumulatedTangentImpulse0+
 					cp.m_frictionWorldTangential1*cp.m_accumulatedTangentImpulse1+
@@ -286,7 +286,7 @@ float btSequentialImpulseConstraintSolver::Solve(btPersistentManifold* manifoldP
 	{
 		const int numpoints = manifoldPtr->GetNumContacts();
 
-		btSimdVector3 color(0,1,0);
+		btVector3 color(0,1,0);
 		for (int i=0;i<numpoints ;i++)
 		{
 
@@ -333,7 +333,7 @@ float btSequentialImpulseConstraintSolver::SolveFriction(btPersistentManifold* m
 	{
 		const int numpoints = manifoldPtr->GetNumContacts();
 
-		btSimdVector3 color(0,1,0);
+		btVector3 color(0,1,0);
 		for (int i=0;i<numpoints ;i++)
 		{
 

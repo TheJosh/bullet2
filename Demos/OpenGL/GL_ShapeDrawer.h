@@ -16,14 +16,14 @@ subject to the following restrictions:
 #define GL_SHAPE_DRAWER_H
 
 class btCollisionShape;
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
 /// OpenGL shape drawing
 class GL_ShapeDrawer
 {
 	public:
 
-		static 	void	DrawOpenGL(float* m, const btCollisionShape* shape, const btSimdVector3& color,int	debugMode);
+		static 	void	DrawOpenGL(float* m, const btCollisionShape* shape, const btVector3& color,int	debugMode);
 		static void		DrawCoordSystem();
 		
 };

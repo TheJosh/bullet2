@@ -21,8 +21,8 @@ subject to the following restrictions:
 
 
 
-extern const SimdScalar EPA_MAX_RELATIVE_ERROR;
-extern const SimdScalar EPA_MAX_RELATIVE_ERROR_SQRD;
+extern const btScalar EPA_MAX_RELATIVE_ERROR;
+extern const btScalar EPA_MAX_RELATIVE_ERROR_SQRD;
 
 class Epa
 {
@@ -35,18 +35,18 @@ class Epa
 	public :
 
 		Epa( btConvexShape* pConvexShapeA, btConvexShape* pConvexShapeB,
-			 const btSimdTransform& transformA, const btSimdTransform& transformB );
+			 const btTransform& transformA, const btTransform& transformB );
 		~Epa();
 
 		bool				Initialize( btSimplexSolverInterface& simplexSolver );
 
-		SimdScalar			CalcPenDepth( SimdPoint3& wWitnessOnA, SimdPoint3& wWitnessOnB );
+		btScalar			CalcPenDepth( btPoint3& wWitnessOnA, btPoint3& wWitnessOnB );
 
 	private :
 
-		bool				TetrahedronContainsOrigin( SimdPoint3* pPoints );
-		bool				TetrahedronContainsOrigin( const SimdPoint3& point0, const SimdPoint3& point1,
-													   const SimdPoint3& point2, const SimdPoint3& point3 );
+		bool				TetrahedronContainsOrigin( btPoint3* pPoints );
+		bool				TetrahedronContainsOrigin( const btPoint3& point0, const btPoint3& point1,
+													   const btPoint3& point2, const btPoint3& point3 );
 
 	private :
 
@@ -56,8 +56,8 @@ class Epa
 		btConvexShape*			m_pConvexShapeA;
 		btConvexShape*			m_pConvexShapeB;
 
-		btSimdTransform			m_transformA;
-		btSimdTransform			m_transformB;
+		btTransform			m_transformA;
+		btTransform			m_transformB;
 
 		EpaPolyhedron			m_polyhedron;
 };

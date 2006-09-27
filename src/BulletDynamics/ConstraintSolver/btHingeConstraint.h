@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef HINGECONSTRAINT_H
 #define HINGECONSTRAINT_H
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
 #include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
 #include "btTypedConstraint.h"
@@ -31,26 +31,26 @@ class btHingeConstraint : public btTypedConstraint
 	btJacobianEntry	m_jac[3]; //3 orthogonal linear constraints
 	btJacobianEntry	m_jacAng[2]; //2 orthogonal angular constraints
 
-	btSimdVector3	m_pivotInA;
-	btSimdVector3	m_pivotInB;
-	btSimdVector3	m_axisInA;
-	btSimdVector3	m_axisInB;
+	btVector3	m_pivotInA;
+	btVector3	m_pivotInB;
+	btVector3	m_axisInA;
+	btVector3	m_axisInB;
 
 	bool	m_angularOnly;
 	
 public:
 
-	btHingeConstraint(btRigidBody& rbA,btRigidBody& rbB, const btSimdVector3& pivotInA,const btSimdVector3& pivotInB,btSimdVector3& axisInA,btSimdVector3& axisInB);
+	btHingeConstraint(btRigidBody& rbA,btRigidBody& rbB, const btVector3& pivotInA,const btVector3& pivotInB,btVector3& axisInA,btVector3& axisInB);
 
-	btHingeConstraint(btRigidBody& rbA,const btSimdVector3& pivotInA,btSimdVector3& axisInA);
+	btHingeConstraint(btRigidBody& rbA,const btVector3& pivotInA,btVector3& axisInA);
 
 	btHingeConstraint();
 
 	virtual void	BuildJacobian();
 
-	virtual	void	SolveConstraint(SimdScalar	timeStep);
+	virtual	void	SolveConstraint(btScalar	timeStep);
 
-	void	UpdateRHS(SimdScalar	timeStep);
+	void	UpdateRHS(btScalar	timeStep);
 
 	const btRigidBody& GetRigidBodyA() const
 	{

@@ -550,7 +550,7 @@ daeInt daeSTLDatabase::getElement(daeElement** pElement,daeInt index,daeString n
 	return DAE_OK;
 }
 
-// Generic Query
+// btGeneric Query
 daeInt daeSTLDatabase::queryElement(daeElement** pElement, daeString genericQuery)
 {
 	(void)pElement; 

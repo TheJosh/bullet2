@@ -25,16 +25,16 @@ class  btTriangleRaycastCallback: public btTriangleCallback
 public:
 
 		//input
-	btSimdVector3 m_from;
-	btSimdVector3 m_to;
+	btVector3 m_from;
+	btVector3 m_to;
 
 	float	m_hitFraction;
 
-	btTriangleRaycastCallback(const btSimdVector3& from,const btSimdVector3& to);
+	btTriangleRaycastCallback(const btVector3& from,const btVector3& to);
 	
-	virtual void ProcessTriangle(btSimdVector3* triangle, int partId, int triangleIndex);
+	virtual void ProcessTriangle(btVector3* triangle, int partId, int triangleIndex);
 
-	virtual float ReportHit(const btSimdVector3& hitNormalLocal, float hitFraction, int partId, int triangleIndex ) = 0;
+	virtual float ReportHit(const btVector3& hitNormalLocal, float hitFraction, int partId, int triangleIndex ) = 0;
 	
 };
 

@@ -35,9 +35,9 @@ subject to the following restrictions:
 #include <math.h>
 
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdMatrix3x3.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btMatrix3x3.h"
+#include "LinearMath/btTransform.h"
 
 class CcdPhysicsEnvironment;
 class CcdPhysicsController;
@@ -59,12 +59,12 @@ class DemoApplication
 	
 	float m_ele;
 	float m_azi;
-	btSimdVector3 m_cameraPosition;
-	btSimdVector3 m_cameraTargetPosition;//look at
+	btVector3 m_cameraPosition;
+	btVector3 m_cameraTargetPosition;//look at
 
 	float m_scaleBottom;
 	float m_scaleFactor;
-	btSimdVector3 m_cameraUp;
+	btVector3 m_cameraUp;
 	int	m_forwardAxis;
 
 	int m_glutScreenWidth;
@@ -99,7 +99,7 @@ class DemoApplication
 		return m_physicsEnvironmentPtr;
 	}
 	
-	void	setCameraUp(const btSimdVector3& camUp)
+	void	setCameraUp(const btVector3& camUp)
 	{
 		m_cameraUp = camUp;
 	}
@@ -114,11 +114,11 @@ class DemoApplication
 	
 	virtual void updateCamera();
 
-	btSimdVector3	getCameraPosition()
+	btVector3	getCameraPosition()
 	{
 		return m_cameraPosition;
 	}
-	btSimdVector3	getCameraTargetPosition()
+	btVector3	getCameraTargetPosition()
 	{
 		return m_cameraTargetPosition;
 	}
@@ -135,11 +135,11 @@ class DemoApplication
 	virtual void	clientResetScene() =0 ;
 
 	///Demo functions
-	void	shootBox(const btSimdVector3& destination);
+	void	shootBox(const btVector3& destination);
 
-	btSimdVector3	GetRayTo(int x,int y);
+	btVector3	GetRayTo(int x,int y);
 
-	CcdPhysicsController*  LocalCreatePhysicsObject(bool isDynamic, float mass, const btSimdTransform& startTransform,btCollisionShape* shape);
+	CcdPhysicsController*  LocalCreatePhysicsObject(bool isDynamic, float mass, const btTransform& startTransform,btCollisionShape* shape);
 
 	///callback methods by glut	
 

@@ -16,8 +16,8 @@ subject to the following restrictions:
 
 #ifndef DISCRETE_COLLISION_DETECTOR_INTERFACE_H
 #define DISCRETE_COLLISION_DETECTOR_INTERFACE_H
-#include "LinearMath/SimdTransform.h"
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btVector3.h"
 
 
 /// This interface is made to be used by an iterative approach to do TimeOfImpact calculations
@@ -37,7 +37,7 @@ struct btDiscreteCollisionDetectorInterface
 
 		///SetShapeIdentifiers provides experimental support for per-triangle material / custom material combiner
 		virtual void SetShapeIdentifiers(int partId0,int index0,	int partId1,int index1)=0;
-		virtual void AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)=0;
+		virtual void AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth)=0;
 	};
 
 	struct ClosestPointInput
@@ -47,9 +47,9 @@ struct btDiscreteCollisionDetectorInterface
 		{
 		}
 
-		btSimdTransform m_transformA;
-		btSimdTransform m_transformB;
-		SimdScalar	m_maximumDistanceSquared;
+		btTransform m_transformA;
+		btTransform m_transformB;
+		btScalar	m_maximumDistanceSquared;
 	};
 
 	virtual ~btDiscreteCollisionDetectorInterface() {};
@@ -60,14 +60,14 @@ struct btDiscreteCollisionDetectorInterface
 	//
 	virtual void	GetClosestPoints(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw) = 0;
 
-	SimdScalar	getCollisionMargin() { return 0.2f;}
+	btScalar	getCollisionMargin() { return 0.2f;}
 };
 
 struct btStorageResult : public btDiscreteCollisionDetectorInterface::Result
 {
-		btSimdVector3	m_normalOnSurfaceB;
-		btSimdVector3	m_closestPointInB;
-		SimdScalar	m_distance; //negative means penetration !
+		btVector3	m_normalOnSurfaceB;
+		btVector3	m_closestPointInB;
+		btScalar	m_distance; //negative means penetration !
 
 		btStorageResult() : m_distance(1e30f)
 		{
@@ -75,7 +75,7 @@ struct btStorageResult : public btDiscreteCollisionDetectorInterface::Result
 		}
 		virtual ~btStorageResult() {};
 
-		virtual void AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)
+		virtual void AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth)
 		{
 			if (depth < m_distance)
 			{

@@ -19,8 +19,8 @@ subject to the following restrictions:
 #include "PHY_IPhysicsEnvironment.h"
 #include <vector>
 class CcdPhysicsController;
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
 
 
 
@@ -49,7 +49,7 @@ class PHY_IVehicle;
 /// A derived class may be able to 'construct' entities by loading and/or converting
 class CcdPhysicsEnvironment : public PHY_IPhysicsEnvironment
 {
-	btSimdVector3 m_gravity;
+	btVector3 m_gravity;
 	
 	
 
@@ -127,12 +127,12 @@ protected:
 		//Following the COLLADA physics specification for constraints
 		virtual int			createUniversalD6Constraint(
 		class PHY_IPhysicsController* ctrlRef,class PHY_IPhysicsController* ctrlOther,
-			btSimdTransform& localAttachmentFrameRef,
-			btSimdTransform& localAttachmentOther,
-			const btSimdVector3& linearMinLimits,
-			const btSimdVector3& linearMaxLimits,
-			const btSimdVector3& angularMinLimits,
-			const btSimdVector3& angularMaxLimits
+			btTransform& localAttachmentFrameRef,
+			btTransform& localAttachmentOther,
+			const btVector3& linearMinLimits,
+			const btVector3& linearMaxLimits,
+			const btVector3& angularMinLimits,
+			const btVector3& angularMaxLimits
 			);
 
 

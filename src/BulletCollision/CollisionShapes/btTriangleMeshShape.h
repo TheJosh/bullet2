@@ -25,8 +25,8 @@ class btTriangleMeshShape : public ConcaveShape
 {
 protected:
 	btStridingMeshInterface* m_meshInterface;
-	btSimdVector3	m_localAabbMin;
-	btSimdVector3	m_localAabbMax;
+	btVector3	m_localAabbMin;
+	btVector3	m_localAabbMax;
 	
 
 public:
@@ -34,9 +34,9 @@ public:
 
 	virtual ~btTriangleMeshShape();
 
-	virtual btSimdVector3 LocalGetSupportingVertex(const btSimdVector3& vec) const;
+	virtual btVector3 LocalGetSupportingVertex(const btVector3& vec) const;
 
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const
 	{
 		assert(0);
 		return LocalGetSupportingVertex(vec);
@@ -49,14 +49,14 @@ public:
 		return TRIANGLE_MESH_SHAPE_PROXYTYPE;
 	}
 
-	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
+	virtual void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
 
-	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
-	virtual void	setLocalScaling(const btSimdVector3& scaling);
-	virtual const btSimdVector3& getLocalScaling() const;
+	virtual void	setLocalScaling(const btVector3& scaling);
+	virtual const btVector3& getLocalScaling() const;
 	
 
 	//debugging

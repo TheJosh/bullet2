@@ -22,7 +22,7 @@ subject to the following restrictions:
  *
  * Bullet is a Collision Detection and Rigid Body Dynamics Library. The Library is Open Source and free for commercial use, under the ZLib license ( http://opensource.org/licenses/zlib-license.php ).
  *
- * There is the Physics Forum for Feedback and General Collision Detection and Physics discussions.
+ * There is the Physics Forum for Feedback and bteral Collision Detection and Physics discussions.
  * Please visit http://www.continuousphysics.com/Bullet/phpBB2/index.php
  *
  * @section install_sec Installation
@@ -66,8 +66,8 @@ subject to the following restrictions:
 
 class btCollisionShape;
 class btBroadphaseInterface;
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
 #include "btCollisionObject.h"
 #include "btCollisionDispatcher.h" //for definition of btCollisionObjectArray
 #include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
@@ -124,14 +124,14 @@ public:
 		int	m_triangleIndex;
 		
 		//const btCollisionShape*	m_shapeTemp;
-		//const btSimdTransform*	m_shapeLocalTransform;
+		//const btTransform*	m_shapeLocalTransform;
 	};
 
 	struct	LocalRayResult
 	{
 		LocalRayResult(const btCollisionObject*	collisionObject, 
 			LocalShapeInfo*	localShapeInfo,
-			const btSimdVector3&		hitNormalLocal,
+			const btVector3&		hitNormalLocal,
 			float hitFraction)
 		:m_collisionObject(collisionObject),
 		m_localShapeInfo(m_localShapeInfo),
@@ -142,7 +142,7 @@ public:
 
 		const btCollisionObject*	m_collisionObject;
 		LocalShapeInfo*			m_localShapeInfo;
-		const btSimdVector3&		m_hitNormalLocal;
+		const btVector3&		m_hitNormalLocal;
 		float					m_hitFraction;
 
 	};
@@ -168,18 +168,18 @@ public:
 
 	struct	ClosestRayResultCallback : public RayResultCallback
 	{
-		ClosestRayResultCallback(btSimdVector3	rayFromWorld,btSimdVector3	rayToWorld)
+		ClosestRayResultCallback(btVector3	rayFromWorld,btVector3	rayToWorld)
 		:m_rayFromWorld(rayFromWorld),
 		m_rayToWorld(rayToWorld),
 		m_collisionObject(0)
 		{
 		}
 
-		btSimdVector3	m_rayFromWorld;//used to calculate hitPointWorld from hitFraction
-		btSimdVector3	m_rayToWorld;
+		btVector3	m_rayFromWorld;//used to calculate hitPointWorld from hitFraction
+		btVector3	m_rayToWorld;
 
-		btSimdVector3	m_hitNormalWorld;
-		btSimdVector3	m_hitPointWorld;
+		btVector3	m_hitNormalWorld;
+		btVector3	m_hitPointWorld;
 		const btCollisionObject*	m_collisionObject;
 		
 		virtual	float	AddSingleResult(const LocalRayResult& rayResult)
@@ -206,15 +206,15 @@ public:
 
 	/// RayTest performs a raycast on all objects in the btCollisionWorld, and calls the resultCallback
 	/// This allows for several queries: first hit, all hits, any hit, dependent on the value returned by the callback.
-	void	RayTest(const btSimdVector3& rayFromWorld, const btSimdVector3& rayToWorld, RayResultCallback& resultCallback);
+	void	RayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld, RayResultCallback& resultCallback);
 
 	/// RayTestSingle performs a raycast call and calls the resultCallback. It is used internally by RayTest.
 	/// In a future implementation, we consider moving the ray test as a virtual method in btCollisionShape.
 	/// This allows more customization.
-	void	RayTestSingle(const btSimdTransform& rayFromTrans,const btSimdTransform& rayToTrans,
+	void	RayTestSingle(const btTransform& rayFromTrans,const btTransform& rayToTrans,
 					  btCollisionObject* collisionObject,
 					  const btCollisionShape* collisionShape,
-					  const btSimdTransform& colObjWorldTransform,
+					  const btTransform& colObjWorldTransform,
 					  RayResultCallback& resultCallback);
 
 	void	AddCollisionObject(btCollisionObject* collisionObject,short int collisionFilterGroup=1,short int collisionFilterMask=1);

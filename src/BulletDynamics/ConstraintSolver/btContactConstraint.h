@@ -19,8 +19,8 @@ subject to the following restrictions:
 //todo: make into a proper class working with the iterative constraint solver
 
 class btRigidBody;
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdScalar.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btScalar.h"
 struct btContactSolverInfo;
 class btManifoldPoint;
 
@@ -69,8 +69,8 @@ struct btConstraintPersistentData
 			float	m_restitution;
 			float	m_friction;
 			float	m_penetration;
-			btSimdVector3	m_frictionWorldTangential0;
-			btSimdVector3	m_frictionWorldTangential1;
+			btVector3	m_frictionWorldTangential0;
+			btVector3	m_frictionWorldTangential1;
 		
 			ContactSolverFunc	m_contactSolverFunc;
 			ContactSolverFunc	m_frictionSolverFunc;
@@ -79,9 +79,9 @@ struct btConstraintPersistentData
 
 ///bilateral constraint between two dynamic objects
 ///positive distance = separation, negative distance = penetration
-void resolveSingleBilateral(btRigidBody& body1, const btSimdVector3& pos1,
-                      btRigidBody& body2, const btSimdVector3& pos2,
-                      SimdScalar distance, const btSimdVector3& normal,SimdScalar& impulse ,float timeStep);
+void resolveSingleBilateral(btRigidBody& body1, const btVector3& pos1,
+                      btRigidBody& body2, const btVector3& pos2,
+                      btScalar distance, const btVector3& normal,btScalar& impulse ,float timeStep);
 
 
 ///contact constraint resolution:

@@ -24,7 +24,7 @@ subject to the following restrictions:
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "BulletCollision/CollisionShapes/btTriangleShape.h"
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 #include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
 
 btConvexConcaveCollisionAlgorithm::btConvexConcaveCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci,btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1)
@@ -68,7 +68,7 @@ void	btConvexTriangleCallback::ClearCache()
 
 
 
-void btConvexTriangleCallback::ProcessTriangle(btSimdVector3* triangle,int partId, int triangleIndex)
+void btConvexTriangleCallback::ProcessTriangle(btVector3* triangle,int partId, int triangleIndex)
 {
  
 	//just for debugging purposes
@@ -87,13 +87,13 @@ void btConvexTriangleCallback::ProcessTriangle(btSimdVector3* triangle,int partI
 	///debug drawing of the overlapping triangles
 	if (m_dispatchInfoPtr && m_dispatchInfoPtr->m_debugDraw && m_dispatchInfoPtr->m_debugDraw->GetDebugMode() > 0)
 	{
-		btSimdVector3 color(255,255,0);
-		btSimdTransform& tr = ob->m_worldTransform;
+		btVector3 color(255,255,0);
+		btTransform& tr = ob->m_worldTransform;
 		m_dispatchInfoPtr->m_debugDraw->DrawLine(tr(triangle[0]),tr(triangle[1]),color);
 		m_dispatchInfoPtr->m_debugDraw->DrawLine(tr(triangle[1]),tr(triangle[2]),color);
 		m_dispatchInfoPtr->m_debugDraw->DrawLine(tr(triangle[2]),tr(triangle[0]),color);
 
-		//SimdVector3 center = triangle[0] + triangle[1]+triangle[2];
+		//btVector3 center = triangle[0] + triangle[1]+triangle[2];
 		//center *= 0.333333f;
 		//m_dispatchInfoPtr->m_debugDraw->DrawLine(tr(triangle[0]),tr(center),color);
 		//m_dispatchInfoPtr->m_debugDraw->DrawLine(tr(triangle[1]),tr(center),color);
@@ -136,7 +136,7 @@ void	btConvexTriangleCallback::SetTimeStepAndCounters(float collisionMarginTrian
 	btCollisionObject* convexBody = (btCollisionObject* )m_convexProxy->m_clientObject;
 	btCollisionObject* triBody = (btCollisionObject* )m_triangleProxy.m_clientObject;
 
-	btSimdTransform convexInTriangleSpace;
+	btTransform convexInTriangleSpace;
 	convexInTriangleSpace = triBody->m_worldTransform.inverse() * convexBody->m_worldTransform;
 
 	btCollisionShape* convexShape = static_cast<btCollisionShape*>(convexBody->m_collisionShape);
@@ -146,7 +146,7 @@ void	btConvexTriangleCallback::SetTimeStepAndCounters(float collisionMarginTrian
 
 	float extraMargin = collisionMarginTriangle;//CONVEX_DISTANCE_MARGIN;//+0.1f;
 
-	btSimdVector3 extra(extraMargin,extraMargin,extraMargin);
+	btVector3 extra(extraMargin,extraMargin,extraMargin);
 
 	m_aabbMax += extra;
 	m_aabbMin -= extra;
@@ -213,24 +213,24 @@ float btConvexConcaveCollisionAlgorithm::CalculateTimeOfImpact(btBroadphaseProxy
 		return 1.f;
 	}
 
-	//const btSimdVector3& from = convexbody->m_worldTransform.getOrigin();
-	//SimdVector3 to = convexbody->m_interpolationWorldTransform.getOrigin();
+	//const btVector3& from = convexbody->m_worldTransform.getOrigin();
+	//btVector3 to = convexbody->m_interpolationWorldTransform.getOrigin();
 	//todo: only do if the motion exceeds the 'radius'
 
-	btSimdTransform convexFromLocal = triBody->m_cachedInvertedWorldTransform * convexbody->m_worldTransform;
-	btSimdTransform convexToLocal = triBody->m_cachedInvertedWorldTransform * convexbody->m_interpolationWorldTransform;
+	btTransform convexFromLocal = triBody->m_cachedInvertedWorldTransform * convexbody->m_worldTransform;
+	btTransform convexToLocal = triBody->m_cachedInvertedWorldTransform * convexbody->m_interpolationWorldTransform;
 
 	struct LocalTriangleSphereCastCallback	: public btTriangleCallback
 	{
-		btSimdTransform m_ccdSphereFromTrans;
-		btSimdTransform m_ccdSphereToTrans;
-		btSimdTransform	m_meshTransform;
+		btTransform m_ccdSphereFromTrans;
+		btTransform m_ccdSphereToTrans;
+		btTransform	m_meshTransform;
 
 		float	m_ccdSphereRadius;
 		float	m_hitFraction;
 	
 
-		LocalTriangleSphereCastCallback(const btSimdTransform& from,const btSimdTransform& to,float ccdSphereRadius,float hitFraction)
+		LocalTriangleSphereCastCallback(const btTransform& from,const btTransform& to,float ccdSphereRadius,float hitFraction)
 			:m_ccdSphereFromTrans(from),
 			m_ccdSphereToTrans(to),
 			m_ccdSphereRadius(ccdSphereRadius),
@@ -239,10 +239,10 @@ float btConvexConcaveCollisionAlgorithm::CalculateTimeOfImpact(btBroadphaseProxy
 		}
 		
 		
-		virtual void ProcessTriangle(btSimdVector3* triangle, int partId, int triangleIndex)
+		virtual void ProcessTriangle(btVector3* triangle, int partId, int triangleIndex)
 		{
 			//do a swept sphere for now
-			btSimdTransform ident;
+			btTransform ident;
 			ident.setIdentity();
 			btConvexCast::CastResult castResult;
 			castResult.m_fraction = m_hitFraction;
@@ -271,12 +271,12 @@ float btConvexConcaveCollisionAlgorithm::CalculateTimeOfImpact(btBroadphaseProxy
 	
 	if (triBody->m_collisionShape->IsConcave())
 	{
-		btSimdVector3 rayAabbMin = convexFromLocal.getOrigin();
+		btVector3 rayAabbMin = convexFromLocal.getOrigin();
 		rayAabbMin.setMin(convexToLocal.getOrigin());
-		btSimdVector3 rayAabbMax = convexFromLocal.getOrigin();
+		btVector3 rayAabbMax = convexFromLocal.getOrigin();
 		rayAabbMax.setMax(convexToLocal.getOrigin());
-		rayAabbMin -= btSimdVector3(convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius);
-		rayAabbMax += btSimdVector3(convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius);
+		rayAabbMin -= btVector3(convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius);
+		rayAabbMax += btVector3(convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius,convexbody->m_ccdSweptShereRadius);
 
 		float curHitFraction = 1.f; //is this available?
 		LocalTriangleSphereCastCallback raycastCallback(convexFromLocal,convexToLocal,

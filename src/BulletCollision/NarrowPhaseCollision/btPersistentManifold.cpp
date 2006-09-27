@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 
 #include "btPersistentManifold.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btTransform.h"
 #include <assert.h>
 
 float						gContactBreakingTreshold = 0.02f;
@@ -111,39 +111,39 @@ int btPersistentManifold::SortCachedPoints(const btManifoldPoint& pt)
 		}
 #endif //KEEP_DEEPEST_POINT
 		
-		SimdScalar res0(0.f),res1(0.f),res2(0.f),res3(0.f);
+		btScalar res0(0.f),res1(0.f),res2(0.f),res3(0.f);
 		if (maxPenetrationIndex != 0)
 		{
-			btSimdVector3 a0 = pt.m_localPointA-m_pointCache[1].m_localPointA;
-			btSimdVector3 b0 = m_pointCache[3].m_localPointA-m_pointCache[2].m_localPointA;
-			btSimdVector3 cross = a0.cross(b0);
+			btVector3 a0 = pt.m_localPointA-m_pointCache[1].m_localPointA;
+			btVector3 b0 = m_pointCache[3].m_localPointA-m_pointCache[2].m_localPointA;
+			btVector3 cross = a0.cross(b0);
 			res0 = cross.length2();
 		}
 		if (maxPenetrationIndex != 1)
 		{
-			btSimdVector3 a1 = pt.m_localPointA-m_pointCache[0].m_localPointA;
-			btSimdVector3 b1 = m_pointCache[3].m_localPointA-m_pointCache[2].m_localPointA;
-			btSimdVector3 cross = a1.cross(b1);
+			btVector3 a1 = pt.m_localPointA-m_pointCache[0].m_localPointA;
+			btVector3 b1 = m_pointCache[3].m_localPointA-m_pointCache[2].m_localPointA;
+			btVector3 cross = a1.cross(b1);
 			res1 = cross.length2();
 		}
 
 		if (maxPenetrationIndex != 2)
 		{
-			btSimdVector3 a2 = pt.m_localPointA-m_pointCache[0].m_localPointA;
-			btSimdVector3 b2 = m_pointCache[3].m_localPointA-m_pointCache[1].m_localPointA;
-			btSimdVector3 cross = a2.cross(b2);
+			btVector3 a2 = pt.m_localPointA-m_pointCache[0].m_localPointA;
+			btVector3 b2 = m_pointCache[3].m_localPointA-m_pointCache[1].m_localPointA;
+			btVector3 cross = a2.cross(b2);
 			res2 = cross.length2();
 		}
 
 		if (maxPenetrationIndex != 3)
 		{
-			btSimdVector3 a3 = pt.m_localPointA-m_pointCache[0].m_localPointA;
-			btSimdVector3 b3 = m_pointCache[2].m_localPointA-m_pointCache[1].m_localPointA;
-			btSimdVector3 cross = a3.cross(b3);
+			btVector3 a3 = pt.m_localPointA-m_pointCache[0].m_localPointA;
+			btVector3 b3 = m_pointCache[2].m_localPointA-m_pointCache[1].m_localPointA;
+			btVector3 cross = a3.cross(b3);
 			res3 = cross.length2();
 		}
 
-		btSimdVector4 maxvec(res0,res1,res2,res3);
+		btVector4 maxvec(res0,res1,res2,res3);
 		int biggestarea = maxvec.closestAxis4();
 		return biggestarea;
 }
@@ -151,15 +151,15 @@ int btPersistentManifold::SortCachedPoints(const btManifoldPoint& pt)
 
 int btPersistentManifold::GetCacheEntry(const btManifoldPoint& newPoint) const
 {
-	SimdScalar shortestDist =  GetContactBreakingTreshold() * GetContactBreakingTreshold();
+	btScalar shortestDist =  GetContactBreakingTreshold() * GetContactBreakingTreshold();
 	int size = GetNumContacts();
 	int nearestPoint = -1;
 	for( int i = 0; i < size; i++ )
 	{
 		const btManifoldPoint &mp = m_pointCache[i];
 
-		btSimdVector3 diffA =  mp.m_localPointA- newPoint.m_localPointA;
-		const SimdScalar distToManiPoint = diffA.dot(diffA);
+		btVector3 diffA =  mp.m_localPointA- newPoint.m_localPointA;
+		const btScalar distToManiPoint = diffA.dot(diffA);
 		if( distToManiPoint < shortestDist )
 		{
 			shortestDist = distToManiPoint;
@@ -198,7 +198,7 @@ float	btPersistentManifold::GetContactBreakingTreshold() const
 	return gContactBreakingTreshold;
 }
 
-void btPersistentManifold::RefreshContactPoints(const btSimdTransform& trA,const btSimdTransform& trB)
+void btPersistentManifold::RefreshContactPoints(const btTransform& trA,const btTransform& trB)
 {
 	int i;
 
@@ -213,8 +213,8 @@ void btPersistentManifold::RefreshContactPoints(const btSimdTransform& trA,const
 	}
 
 	/// then 
-	SimdScalar distance2d;
-	btSimdVector3 projectedDifference,projectedPoint;
+	btScalar distance2d;
+	btVector3 projectedDifference,projectedPoint;
 	for (i=GetNumContacts()-1;i>=0;i--)
 	{
 		

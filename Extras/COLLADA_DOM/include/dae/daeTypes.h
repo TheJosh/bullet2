@@ -57,3 +57,4 @@ typedef daeChar				daeFixedName[512];
 #include <dae/daeArrayTypes.h>
 
 #endif //__DAE_TYPES_H__
+

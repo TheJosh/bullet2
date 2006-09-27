@@ -30,18 +30,18 @@ m_convexA(convexA),m_convexB(convexB)
 #define MAX_ITERATIONS 1000
 
 bool	btSubsimplexConvexCast::calcTimeOfImpact(
-		const btSimdTransform& fromA,
-		const btSimdTransform& toA,
-		const btSimdTransform& fromB,
-		const btSimdTransform& toB,
+		const btTransform& fromA,
+		const btTransform& toA,
+		const btTransform& fromB,
+		const btTransform& toB,
 		CastResult& result)
 {
 
 	btMinkowskiSumShape combi(m_convexA,m_convexB);
 	btMinkowskiSumShape* convex = &combi;
 
-	btSimdTransform	rayFromLocalA;
-	btSimdTransform	rayToLocalA;
+	btTransform	rayFromLocalA;
+	btTransform	rayToLocalA;
 
 	rayFromLocalA = fromA.inverse()* fromB;
 	rayToLocalA = toA.inverse()* toB;
@@ -49,28 +49,28 @@ bool	btSubsimplexConvexCast::calcTimeOfImpact(
 
 	m_simplexSolver->reset();
 
-	convex->SetTransformB(btSimdTransform(rayFromLocalA.getBasis()));
+	convex->SetTransformB(btTransform(rayFromLocalA.getBasis()));
 
 	//float radius = 0.01f;
 
-	SimdScalar lambda = 0.f;
+	btScalar lambda = 0.f;
 	//todo: need to verify this:
 	//because of minkowski difference, we need the inverse direction
 	
-	btSimdVector3 s = -rayFromLocalA.getOrigin();
-	btSimdVector3 r = -(rayToLocalA.getOrigin()-rayFromLocalA.getOrigin());
-	btSimdVector3 x = s;
-	btSimdVector3 v;
-	btSimdVector3 arbitraryPoint = convex->LocalGetSupportingVertex(r);
+	btVector3 s = -rayFromLocalA.getOrigin();
+	btVector3 r = -(rayToLocalA.getOrigin()-rayFromLocalA.getOrigin());
+	btVector3 x = s;
+	btVector3 v;
+	btVector3 arbitraryPoint = convex->LocalGetSupportingVertex(r);
 	
 	v = x - arbitraryPoint;
 
 	int maxIter = MAX_ITERATIONS;
 
-	btSimdVector3 n;
+	btVector3 n;
 	n.setValue(0.f,0.f,0.f);
 	bool hasResult = false;
-	btSimdVector3 c;
+	btVector3 c;
 
 	float lastLambda = lambda;
 
@@ -78,7 +78,7 @@ bool	btSubsimplexConvexCast::calcTimeOfImpact(
 	float dist2 = v.length2();
 	float epsilon = 0.0001f;
 
-	btSimdVector3	w,p;
+	btVector3	w,p;
 	float VdotR;
 	
 	while ( (dist2 > epsilon) && maxIter--)

@@ -20,8 +20,8 @@ subject to the following restrictions:
 ///
 
 #include "GL_Simplex1to4.h"
-#include "LinearMath/SimdQuaternion.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btQuaternion.h"
+#include "LinearMath/btTransform.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/CollisionShapes/btConvexHullShape.h"
 
@@ -53,7 +53,7 @@ GL_Simplex1to4 simplex;
 
 btPolyhedralConvexShape*	shapePtr[maxNumObjects];
 
-btSimdTransform tr[numObjects];
+btTransform tr[numObjects];
 int screenWidth = 640.f;
 int screenHeight = 480.f;
 
@@ -62,17 +62,17 @@ int main(int argc,char** argv)
 {
 	clientResetScene();
 
-	btSimdMatrix3x3 basisA;
+	btMatrix3x3 basisA;
 	basisA.setIdentity();
 
-	btSimdMatrix3x3 basisB;
+	btMatrix3x3 basisB;
 	basisB.setIdentity();
 
 	tr[0].setBasis(basisA);
 	tr[1].setBasis(basisB);
 
-	SimdPoint3	points0[3]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1)};
-	SimdPoint3	points1[5]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1),SimdPoint3(0,0,-1),SimdPoint3(-1,-1,0)};
+	btPoint3	points0[3]={btPoint3(1,0,0),btPoint3(0,1,0),btPoint3(0,0,1)};
+	btPoint3	points1[5]={btPoint3(1,0,0),btPoint3(0,1,0),btPoint3(0,0,1),btPoint3(0,0,-1),btPoint3(-1,-1,0)};
 	
 	btConvexHullShape	hullA(points0,3);
 	btConvexHullShape	hullB(points1,5);
@@ -81,7 +81,7 @@ int main(int argc,char** argv)
 	shapePtr[1] = &hullB;
 	
 
-	btSimdTransform tr;
+	btTransform tr;
 	tr.setIdentity();
 
 
@@ -114,7 +114,7 @@ void clientDisplay(void) {
 
 	btGjkPairDetector	convexConvex(shapePtr[0],shapePtr[1],&sGjkSimplexSolver,0);
 
-	btSimdVector3 seperatingAxis(0.00000000f,0.059727669f,0.29259586f);
+	btVector3 seperatingAxis(0.00000000f,0.059727669f,0.29259586f);
 	convexConvex.SetCachedSeperatingAxis(seperatingAxis);
 
 	btPointCollector gjkOutput;
@@ -126,7 +126,7 @@ void clientDisplay(void) {
 
 	if (gjkOutput.m_hasResult)
 	{
-		btSimdVector3 endPt = gjkOutput.m_pointInWorld +
+		btVector3 endPt = gjkOutput.m_pointInWorld +
 			gjkOutput.m_normalOnBInWorld*gjkOutput.m_distance;
 
 		 glBegin(GL_LINES);
@@ -142,26 +142,26 @@ void clientDisplay(void) {
 		
 		tr[i].getOpenGLMatrix( m );
 
-		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btVector3(1,1,1),getDebugMode());
 
 
 	}
 
 	simplex.SetSimplexSolver(&sGjkSimplexSolver);
-	SimdPoint3 ybuf[4],pbuf[4],qbuf[4];
+	btPoint3 ybuf[4],pbuf[4],qbuf[4];
 	int numpoints = sGjkSimplexSolver.getSimplex(pbuf,qbuf,ybuf);
 	simplex.Reset();
 	
 	for (i=0;i<numpoints;i++)
 		simplex.AddVertex(ybuf[i]);
 
-	btSimdTransform ident;
+	btTransform ident;
 	ident.setIdentity();
 	ident.getOpenGLMatrix(m);
-	GL_ShapeDrawer::DrawOpenGL(m,&simplex,btSimdVector3(1,1,1),getDebugMode());
+	GL_ShapeDrawer::DrawOpenGL(m,&simplex,btVector3(1,1,1),getDebugMode());
 
 
-	btSimdQuaternion orn;
+	btQuaternion orn;
 	orn.setEuler(yaw,pitch,roll);
 	tr[0].setRotation(orn);
 	tr[1].setRotation(orn);
@@ -175,8 +175,8 @@ void clientDisplay(void) {
 
 void clientResetScene()
 {
-	tr[0].setOrigin(btSimdVector3(0.0f,3.f,7.f));
-	tr[1].setOrigin(btSimdVector3(0.0f,9.f,2.f));
+	tr[0].setOrigin(btVector3(0.0f,3.f,7.f));
+	tr[1].setOrigin(btVector3(0.0f,9.f,2.f));
 }
 
 void clientKeyboard(unsigned char key, int x, int y)

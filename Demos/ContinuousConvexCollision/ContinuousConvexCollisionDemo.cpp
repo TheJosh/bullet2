@@ -20,8 +20,8 @@
 
 
 ///This low level demo need internal access, and intentionally doesn't include the btBulletCollisionCommon.h headerfile
-#include "LinearMath/SimdQuaternion.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btQuaternion.h"
+#include "LinearMath/btTransform.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
@@ -31,7 +31,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
 #include "BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.h"
 
-#include "LinearMath/SimdTransformUtil.h"
+#include "LinearMath/btTransformUtil.h"
 #include "DebugCastResult.h"
 
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
@@ -50,14 +50,14 @@ float yaw=0.f,pitch=0.f,roll=0.f;
 const int maxNumObjects = 4;
 const int numObjects = 2;
 
-btSimdVector3 angVels[numObjects];
-btSimdVector3 linVels[numObjects];
+btVector3 angVels[numObjects];
+btVector3 linVels[numObjects];
 
 btPolyhedralConvexShape*	shapePtr[maxNumObjects];
 
 
-btSimdTransform	fromTrans[maxNumObjects];
-btSimdTransform	toTrans[maxNumObjects];
+btTransform	fromTrans[maxNumObjects];
+btTransform	toTrans[maxNumObjects];
 
 
 int screenWidth = 640;
@@ -77,15 +77,15 @@ int main(int argc,char** argv)
 
 void	btContinuousConvexCollisionDemo::initPhysics()
 {
-	fromTrans[0].setOrigin(btSimdVector3(0,10,20));
-	  toTrans[0].setOrigin(btSimdVector3(0,10,-20));
-	fromTrans[1].setOrigin(btSimdVector3(-2,7,0));
-	  toTrans[1].setOrigin(btSimdVector3(-2,10,0));
+	fromTrans[0].setOrigin(btVector3(0,10,20));
+	  toTrans[0].setOrigin(btVector3(0,10,-20));
+	fromTrans[1].setOrigin(btVector3(-2,7,0));
+	  toTrans[1].setOrigin(btVector3(-2,10,0));
 
-	  btSimdMatrix3x3 identBasis;
+	  btMatrix3x3 identBasis;
 	identBasis.setIdentity();
 
-	btSimdMatrix3x3 basisA;
+	btMatrix3x3 basisA;
 	basisA.setIdentity();
 	basisA.setEulerZYX(0.f,-SIMD_HALF_PI,0.f);
 
@@ -96,15 +96,15 @@ void	btContinuousConvexCollisionDemo::initPhysics()
 	  toTrans[1].setBasis(identBasis);
 
 	toTrans[1].setBasis(identBasis);
-	btSimdVector3 boxHalfExtentsA(10,1,1);
-	btSimdVector3 boxHalfExtentsB(1.1f,1.1f,1.1f);
+	btVector3 boxHalfExtentsA(10,1,1);
+	btVector3 boxHalfExtentsB(1.1f,1.1f,1.1f);
 	btBoxShape*	boxA = new btBoxShape(boxHalfExtentsA);
-//	btBU_Simplex1to4* boxA = new btBU_Simplex1to4(SimdPoint3(-2,0,-2),SimdPoint3(2,0,-2),SimdPoint3(0,0,2),SimdPoint3(0,2,0));
-//	btBU_Simplex1to4* boxA = new btBU_Simplex1to4(SimdPoint3(-12,0,0),SimdPoint3(12,0,0));
+//	btBU_Simplex1to4* boxA = new btBU_Simplex1to4(btPoint3(-2,0,-2),btPoint3(2,0,-2),btPoint3(0,0,2),btPoint3(0,2,0));
+//	btBU_Simplex1to4* boxA = new btBU_Simplex1to4(btPoint3(-12,0,0),btPoint3(12,0,0));
 	
 
 	btBoxShape*	boxB = new btBoxShape(boxHalfExtentsB);
-//	btBU_Simplex1to4 boxB(SimdPoint3(0,10,0),SimdPoint3(0,-10,0));
+//	btBU_Simplex1to4 boxB(btPoint3(0,10,0),btPoint3(0,-10,0));
 
 
 	shapePtr[0] = boxA;
@@ -115,7 +115,7 @@ void	btContinuousConvexCollisionDemo::initPhysics()
 
 	for (int i=0;i<numObjects;i++)
 	{
-		btSimdTransformUtil::CalculateVelocity(fromTrans[i],toTrans[i],1.f,linVels[i],angVels[i]);
+		btTransformUtil::CalculateVelocity(fromTrans[i],toTrans[i],1.f,linVels[i],angVels[i]);
 	}
 
 }
@@ -165,10 +165,10 @@ void btContinuousConvexCollisionDemo::displayCallback(void) {
 			int numSubSteps = 10;
 			for (int s=0;s<10;s++)
 			{
-				SimdScalar subStep = s * 1.f/(float)numSubSteps;
-				btSimdTransform interpolatedTrans;
+				btScalar subStep = s * 1.f/(float)numSubSteps;
+				btTransform interpolatedTrans;
 				
-				btSimdTransformUtil::IntegrateTransform(fromTrans[i],linVels[i],angVels[i],subStep,interpolatedTrans);
+				btTransformUtil::IntegrateTransform(fromTrans[i],linVels[i],angVels[i],subStep,interpolatedTrans);
 
 				//fromTrans[i].getOpenGLMatrix(m);
 				//GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i]);
@@ -177,15 +177,15 @@ void btContinuousConvexCollisionDemo::displayCallback(void) {
 				//GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i]);
 
 				interpolatedTrans.getOpenGLMatrix( m );
-				GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,0,1),getDebugMode());
+				GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btVector3(1,0,1),getDebugMode());
 			}
 		}
 	}
 
 	
-	btSimdMatrix3x3 mat;
+	btMatrix3x3 mat;
 	mat.setEulerZYX(yaw,pitch,roll);
-	btSimdQuaternion orn;
+	btQuaternion orn;
 	mat.getRotation(orn);
 	orn.setEuler(yaw,pitch,roll);
 	fromTrans[1].setRotation(orn);
@@ -198,17 +198,17 @@ void btContinuousConvexCollisionDemo::displayCallback(void) {
 		pitch += 0.005f;
 //		yaw += 0.01f;
 	}
-//	btSimdVector3 fromA(-25,11,0);
-//	btSimdVector3 toA(-15,11,0);
+//	btVector3 fromA(-25,11,0);
+//	btVector3 toA(-15,11,0);
 
-//	btSimdQuaternion ornFromA(0.f,0.f,0.f,1.f);
-//	btSimdQuaternion ornToA(0.f,0.f,0.f,1.f);
+//	btQuaternion ornFromA(0.f,0.f,0.f,1.f);
+//	btQuaternion ornToA(0.f,0.f,0.f,1.f);
 
-//	btSimdTransform	rayFromWorld(ornFromA,fromA);
-//	btSimdTransform	rayToWorld(ornToA,toA);
+//	btTransform	rayFromWorld(ornFromA,fromA);
+//	btTransform	rayToWorld(ornToA,toA);
 
-	btSimdTransform	rayFromWorld = fromTrans[0];
-	btSimdTransform	rayToWorld = toTrans[0];
+	btTransform	rayFromWorld = fromTrans[0];
+	btTransform	rayToWorld = toTrans[0];
 	
 
 	if (drawLine)
@@ -229,7 +229,7 @@ void btContinuousConvexCollisionDemo::displayCallback(void) {
 	for (i=0;i<numObjects;i++)
 	{	
 		fromTrans[i].getOpenGLMatrix(m);
-		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btVector3(1,1,1),getDebugMode());
 	}
 
 	btDebugCastResult	rayResult1(fromTrans[0],shapePtr[0],linVels[0],angVels[0]);
@@ -263,16 +263,16 @@ void btContinuousConvexCollisionDemo::displayCallback(void) {
 
 			glDisable(GL_DEPTH_TEST);
 
-			btSimdTransform hitTrans;
-			btSimdTransformUtil::IntegrateTransform(fromTrans[0],linVels[0],angVels[0],rayResultPtr->m_fraction,hitTrans);
+			btTransform hitTrans;
+			btTransformUtil::IntegrateTransform(fromTrans[0],linVels[0],angVels[0],rayResultPtr->m_fraction,hitTrans);
 
 			hitTrans.getOpenGLMatrix(m);
-			GL_ShapeDrawer::DrawOpenGL(m,shapePtr[0],btSimdVector3(0,1,0),getDebugMode());
+			GL_ShapeDrawer::DrawOpenGL(m,shapePtr[0],btVector3(0,1,0),getDebugMode());
 
-			btSimdTransformUtil::IntegrateTransform(fromTrans[i],linVels[i],angVels[i],rayResultPtr->m_fraction,hitTrans);
+			btTransformUtil::IntegrateTransform(fromTrans[i],linVels[i],angVels[i],rayResultPtr->m_fraction,hitTrans);
 
 			hitTrans.getOpenGLMatrix(m);
-			GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(0,1,1),getDebugMode());
+			GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btVector3(0,1,1),getDebugMode());
 	
 
 		}

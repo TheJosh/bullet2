@@ -75,7 +75,7 @@ public:
 	                        daeString type = NULL,
 	                        daeString file = NULL);
 
-	// Generic Query
+	// btGeneric Query
 	virtual daeInt queryElement(daeElement** pElement, daeString genericQuery);
 
 private:

@@ -21,10 +21,10 @@ subject to the following restrictions:
 
 ///	PHY_IPhysicsController is the abstract simplified Interface to a physical object.
 ///	It contains the IMotionState and IDeformableMesh Interfaces.
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdScalar.h"	
-#include "LinearMath/SimdMatrix3x3.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btScalar.h"	
+#include "LinearMath/btMatrix3x3.h"
+#include "LinearMath/btTransform.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 
 #include "PHY_IMotionState.h"
@@ -74,14 +74,14 @@ struct btCcdConstructionInfo
 	{
 	}
 
-	btSimdVector3	m_localInertiaTensor;
-	btSimdVector3	m_gravity;
-	btSimdVector3	m_scaling;
-	SimdScalar	m_mass;
-	SimdScalar	m_restitution;
-	SimdScalar	m_friction;
-	SimdScalar	m_linearDamping;
-	SimdScalar	m_angularDamping;
+	btVector3	m_localInertiaTensor;
+	btVector3	m_gravity;
+	btVector3	m_scaling;
+	btScalar	m_mass;
+	btScalar	m_restitution;
+	btScalar	m_friction;
+	btScalar	m_linearDamping;
+	btScalar	m_angularDamping;
 	int			m_collisionFlags;
 
 	///optional use of collision group/mask:
@@ -113,7 +113,7 @@ class CcdPhysicsController : public PHY_IPhysicsController
 	void*		m_newClientInfo;
 
 	btCcdConstructionInfo	m_cci;//needed for replication
-	void GetWorldOrientation(btSimdMatrix3x3& mat);
+	void GetWorldOrientation(btMatrix3x3& mat);
 
 	void CreateRigidbody();
 
@@ -206,9 +206,9 @@ class CcdPhysicsController : public PHY_IPhysicsController
 
 		void	UpdateDeactivation(float timeStep);
 
-		static btSimdTransform	GetTransformFromMotionState(PHY_IMotionState* motionState);
+		static btTransform	GetTransformFromMotionState(PHY_IMotionState* motionState);
 
-		void	SetAabb(const btSimdVector3& aabbMin,const btSimdVector3& aabbMax);
+		void	SetAabb(const btVector3& aabbMin,const btVector3& aabbMax);
 
 
 		class	PHY_IMotionState*			GetMotionState()
@@ -227,7 +227,7 @@ class CcdPhysicsController : public PHY_IPhysicsController
 
 
 
-///DefaultMotionState implements standard motionstate, using btSimdTransform
+///DefaultMotionState implements standard motionstate, using btTransform
 class	DefaultMotionState : public PHY_IMotionState
 
 {
@@ -245,8 +245,8 @@ class	DefaultMotionState : public PHY_IMotionState
 		
 		virtual	void	calculateWorldTransformations();
 		
-		btSimdTransform	m_worldTransform;
-		btSimdVector3		m_localScaling;
+		btTransform	m_worldTransform;
+		btVector3		m_localScaling;
 
 };
 

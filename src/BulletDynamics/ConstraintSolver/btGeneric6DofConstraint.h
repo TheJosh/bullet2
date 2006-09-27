@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef GENERIC_6DOF_CONSTRAINT_H
 #define GENERIC_6DOF_CONSTRAINT_H
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
 #include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
 #include "btTypedConstraint.h"
@@ -33,50 +33,50 @@ class btGeneric6DofConstraint : public btTypedConstraint
 	btJacobianEntry	m_jacLinear[3];			// 3 orthogonal linear constraints
 	btJacobianEntry	m_jacAng[3];		// 3 orthogonal angular constraints
 
-	btSimdTransform	m_frameInA;			// the constraint space w.r.t body A
-	btSimdTransform	m_frameInB;			// the constraint space w.r.t body B
+	btTransform	m_frameInA;			// the constraint space w.r.t body A
+	btTransform	m_frameInB;			// the constraint space w.r.t body B
 
-	SimdScalar      m_lowerLimit[6];	// the constraint lower limits
-	SimdScalar      m_upperLimit[6];	// the constraint upper limits
+	btScalar      m_lowerLimit[6];	// the constraint lower limits
+	btScalar      m_upperLimit[6];	// the constraint upper limits
 
-	SimdScalar		m_accumulatedImpulse[6];
+	btScalar		m_accumulatedImpulse[6];
 
 		
 public:
-	btGeneric6DofConstraint(btRigidBody& rbA, btRigidBody& rbB, const btSimdTransform& frameInA, const btSimdTransform& frameInB );
+	btGeneric6DofConstraint(btRigidBody& rbA, btRigidBody& rbB, const btTransform& frameInA, const btTransform& frameInB );
 
 	btGeneric6DofConstraint();
 
 	virtual void	BuildJacobian();
 
-	virtual	void	SolveConstraint(SimdScalar	timeStep);
+	virtual	void	SolveConstraint(btScalar	timeStep);
 
-	void	UpdateRHS(SimdScalar	timeStep);
+	void	UpdateRHS(btScalar	timeStep);
 
-	SimdScalar ComputeAngle(int axis) const;
+	btScalar ComputeAngle(int axis) const;
 
-	void	setLinearLowerLimit(const btSimdVector3& linearLower)
+	void	setLinearLowerLimit(const btVector3& linearLower)
 	{
 		m_lowerLimit[0] = linearLower.getX();
 		m_lowerLimit[1] = linearLower.getY();
 		m_lowerLimit[2] = linearLower.getZ();
 	}
 
-	void	setLinearUpperLimit(const btSimdVector3& linearUpper)
+	void	setLinearUpperLimit(const btVector3& linearUpper)
 	{
 		m_upperLimit[0] = linearUpper.getX();
 		m_upperLimit[1] = linearUpper.getY();
 		m_upperLimit[2] = linearUpper.getZ();
 	}
 
-	void	setAngularLowerLimit(const btSimdVector3& angularLower)
+	void	setAngularLowerLimit(const btVector3& angularLower)
 	{
 		m_lowerLimit[3] = angularLower.getX();
 		m_lowerLimit[4] = angularLower.getY();
 		m_lowerLimit[5] = angularLower.getZ();
 	}
 
-	void	setAngularUpperLimit(const btSimdVector3& angularUpper)
+	void	setAngularUpperLimit(const btVector3& angularUpper)
 	{
 		m_upperLimit[3] = angularUpper.getX();
 		m_upperLimit[4] = angularUpper.getY();
@@ -84,7 +84,7 @@ public:
 	}
 
 	//first 3 are linear, next 3 are angular
-	void SetLimit(int axis, SimdScalar lo, SimdScalar hi)
+	void SetLimit(int axis, btScalar lo, btScalar hi)
 	{
 		m_lowerLimit[axis] = lo; 
 		m_upperLimit[axis] = hi; 

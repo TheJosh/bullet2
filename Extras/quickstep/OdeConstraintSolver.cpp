@@ -25,7 +25,7 @@ subject to the following restrictions:
 #include "Dynamics/BU_Joint.h"
 #include "Dynamics/ContactJoint.h"
 
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #define USE_SOR_SOLVER
 
@@ -104,15 +104,15 @@ float OdeConstraintSolver::SolveGroup(btPersistentManifold** manifoldPtr, int nu
 /////////////////////////////////////////////////////////////////////////////////
 
 
-typedef SimdScalar dQuaternion[4];
+typedef btScalar dQuaternion[4];
 #define _R(i,j) R[(i)*4+(j)]
 
 void dRfromQ1 (dMatrix3 R, const dQuaternion q)
 {
   // q = (s,vx,vy,vz)
-  SimdScalar qq1 = 2.f*q[1]*q[1];
-  SimdScalar qq2 = 2.f*q[2]*q[2];
-  SimdScalar qq3 = 2.f*q[3]*q[3];
+  btScalar qq1 = 2.f*q[1]*q[1];
+  btScalar qq2 = 2.f*q[2]*q[2];
+  btScalar qq3 = 2.f*q[3]*q[3];
   _R(0,0) = 1.f - qq2 - qq3;
   _R(0,1) = 2*(q[1]*q[2] - q[0]*q[3]);
   _R(0,2) = 2*(q[1]*q[3] + q[0]*q[2]);
@@ -227,7 +227,7 @@ void OdeConstraintSolver::ConvertConstraint(btPersistentManifold* manifold,BU_Jo
 
 	assert(bodyId0 >= 0);
 
-	btSimdVector3 color(0,1,0);
+	btVector3 color(0,1,0);
 	for (i=0;i<numContacts;i++)
 	{
 

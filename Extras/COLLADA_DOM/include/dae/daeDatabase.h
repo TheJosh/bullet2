@@ -206,7 +206,7 @@ public:
 	/**
 	* Returns the @c daeElement which matches the <tt><i>genericQuery</i></tt> parameter; not implemented.
 	* @param pElement btElement to return.
-	* @param genericQuery Generic query
+	* @param genericQuery btGeneric query
 	* @return Returns DAE_OK if it succeeds, returns DAE_ERR_QUERY_NO_MATCH if there is no match, otherwise returns a negative value as defined in daeError.h.
 	* @note This function is not implemented.
 	*/

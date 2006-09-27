@@ -29,15 +29,15 @@
 class domGlsl_surface_type_complexType : public domFx_surface_common_complexType
 {
 public:
-	class domGenerator;
+	class dombterator;
 
-	typedef daeSmartRef<domGenerator> domGeneratorRef;
-	typedef daeTArray<domGeneratorRef> domGenerator_Array;
+	typedef daeSmartRef<dombterator> dombteratorRef;
+	typedef daeTArray<dombteratorRef> dombterator_Array;
 
 /**
  * A procedural surface generator.
  */
-	class domGenerator : public daeElement
+	class dombterator : public daeElement
 	{
 	public:
 		class domName;
@@ -220,19 +220,19 @@ public:
 		/**
 		 * Constructor
 		 */
-		domGenerator() : elemAnnotate_array(), elemCode_array(), elemInclude_array(), elemName(), elemSetparam_array() {}
+		dombterator() : elemAnnotate_array(), elemCode_array(), elemInclude_array(), elemName(), elemSetparam_array() {}
 		/**
 		 * Destructor
 		 */
-		virtual ~domGenerator() {}
+		virtual ~dombterator() {}
 		/**
 		 * Copy Constructor
 		 */
-		domGenerator( const domGenerator &cpy ) : daeElement() { (void)cpy; }
+		dombterator( const dombterator &cpy ) : daeElement() { (void)cpy; }
 		/**
 		 * Overloaded assignment operator
 		 */
-		virtual domGenerator &operator=( const domGenerator &cpy ) { (void)cpy; return *this; }
+		virtual dombterator &operator=( const dombterator &cpy ) { (void)cpy; return *this; }
 
 	public: // STATIC METHODS
 		/**
@@ -259,21 +259,21 @@ public:
 
 protected:  // btElement
 /**
- * A procedural surface generator. @see domGenerator
+ * A procedural surface generator. @see dombterator
  */
-	domGeneratorRef elemGenerator;
+	dombteratorRef elembterator;
 
 public:	//Accessors and Mutators
 	/**
 	 * Gets the generator element.
 	 * @return a daeSmartRef to the generator element.
 	 */
-	const domGeneratorRef getGenerator() const { return elemGenerator; }
+	const dombteratorRef getbterator() const { return elembterator; }
 protected:
 	/**
 	 * Constructor
 	 */
-	domGlsl_surface_type_complexType() : elemGenerator() {}
+	domGlsl_surface_type_complexType() : elembterator() {}
 	/**
 	 * Destructor
 	 */

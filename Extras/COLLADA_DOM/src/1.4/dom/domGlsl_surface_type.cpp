@@ -105,8 +105,8 @@ domGlsl_surface_type::registerElement()
 
 	mea = new daeMetaElementAttribute( _Meta, cm, 0, 0, 1 );
 	mea->setName( "generator" );
-	mea->setOffset( daeOffsetOf(domGlsl_surface_type,elemGenerator) );
-	mea->setElementType( domGenerator::registerElement() );
+	mea->setOffset( daeOffsetOf(domGlsl_surface_type,elembterator) );
+	mea->setElementType( dombterator::registerElement() );
 	cm->appendChild( mea );
 	
 	cm->setMaxOrdinal( 0 );
@@ -140,21 +140,21 @@ domGlsl_surface_type::registerElement()
 }
 
 daeElementRef
-domGlsl_surface_type::domGenerator::create(daeInt bytes)
+domGlsl_surface_type::dombterator::create(daeInt bytes)
 {
-	domGlsl_surface_type::domGeneratorRef ref = new(bytes) domGlsl_surface_type::domGenerator;
+	domGlsl_surface_type::dombteratorRef ref = new(bytes) domGlsl_surface_type::dombterator;
 	return ref;
 }
 
 
 daeMetaElement *
-domGlsl_surface_type::domGenerator::registerElement()
+domGlsl_surface_type::dombterator::registerElement()
 {
     if ( _Meta != NULL ) return _Meta;
     
     _Meta = new daeMetaElement;
     _Meta->setName( "generator" );
-	_Meta->registerConstructor(domGlsl_surface_type::domGenerator::create);
+	_Meta->registerConstructor(domGlsl_surface_type::dombterator::create);
 
 	_Meta->setIsInnerClass( true );
 	daeMetaCMPolicy *cm = NULL;
@@ -163,7 +163,7 @@ domGlsl_surface_type::domGenerator::registerElement()
 
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 0, 0, -1 );
 	mea->setName( "annotate" );
-	mea->setOffset( daeOffsetOf(domGlsl_surface_type::domGenerator,elemAnnotate_array) );
+	mea->setOffset( daeOffsetOf(domGlsl_surface_type::dombterator,elemAnnotate_array) );
 	mea->setElementType( domFx_annotate_common::registerElement() );
 	cm->appendChild( mea );
 	
@@ -171,13 +171,13 @@ domGlsl_surface_type::domGenerator::registerElement()
 
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 0, 1, 1 );
 	mea->setName( "code" );
-	mea->setOffset( daeOffsetOf(domGlsl_surface_type::domGenerator,elemCode_array) );
+	mea->setOffset( daeOffsetOf(domGlsl_surface_type::dombterator,elemCode_array) );
 	mea->setElementType( domFx_code_profile::registerElement() );
 	cm->appendChild( mea );
 	
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 0, 1, 1 );
 	mea->setName( "include" );
-	mea->setOffset( daeOffsetOf(domGlsl_surface_type::domGenerator,elemInclude_array) );
+	mea->setOffset( daeOffsetOf(domGlsl_surface_type::dombterator,elemInclude_array) );
 	mea->setElementType( domFx_include_common::registerElement() );
 	cm->appendChild( mea );
 	
@@ -187,46 +187,46 @@ domGlsl_surface_type::domGenerator::registerElement()
 	
 	mea = new daeMetaElementAttribute( _Meta, cm, 3002, 1, 1 );
 	mea->setName( "name" );
-	mea->setOffset( daeOffsetOf(domGlsl_surface_type::domGenerator,elemName) );
-	mea->setElementType( domGlsl_surface_type::domGenerator::domName::registerElement() );
+	mea->setOffset( daeOffsetOf(domGlsl_surface_type::dombterator,elemName) );
+	mea->setElementType( domGlsl_surface_type::dombterator::domName::registerElement() );
 	cm->appendChild( mea );
 	
 	mea = new daeMetaElementArrayAttribute( _Meta, cm, 3003, 0, -1 );
 	mea->setName( "setparam" );
-	mea->setOffset( daeOffsetOf(domGlsl_surface_type::domGenerator,elemSetparam_array) );
+	mea->setOffset( daeOffsetOf(domGlsl_surface_type::dombterator,elemSetparam_array) );
 	mea->setElementType( domGlsl_setparam_simple::registerElement() );
 	cm->appendChild( mea );
 	
 	cm->setMaxOrdinal( 3003 );
 	_Meta->setCMRoot( cm );	
 	// Ordered list of sub-elements
-    _Meta->addContents(daeOffsetOf(domGlsl_surface_type::domGenerator,_contents));
-    _Meta->addContentsOrder(daeOffsetOf(domGlsl_surface_type::domGenerator,_contentsOrder));
+    _Meta->addContents(daeOffsetOf(domGlsl_surface_type::dombterator,_contents));
+    _Meta->addContentsOrder(daeOffsetOf(domGlsl_surface_type::dombterator,_contentsOrder));
 
 	
 	
-	_Meta->setElementSize(sizeof(domGlsl_surface_type::domGenerator));
+	_Meta->setElementSize(sizeof(domGlsl_surface_type::dombterator));
 	_Meta->validate();
 
 	return _Meta;
 }
 
 daeElementRef
-domGlsl_surface_type::domGenerator::domName::create(daeInt bytes)
+domGlsl_surface_type::dombterator::domName::create(daeInt bytes)
 {
-	domGlsl_surface_type::domGenerator::domNameRef ref = new(bytes) domGlsl_surface_type::domGenerator::domName;
+	domGlsl_surface_type::dombterator::domNameRef ref = new(bytes) domGlsl_surface_type::dombterator::domName;
 	return ref;
 }
 
 
 daeMetaElement *
-domGlsl_surface_type::domGenerator::domName::registerElement()
+domGlsl_surface_type::dombterator::domName::registerElement()
 {
     if ( _Meta != NULL ) return _Meta;
     
     _Meta = new daeMetaElement;
     _Meta->setName( "name" );
-	_Meta->registerConstructor(domGlsl_surface_type::domGenerator::domName::create);
+	_Meta->registerConstructor(domGlsl_surface_type::dombterator::domName::create);
 
 	_Meta->setIsInnerClass( true );
 	//	Add attribute: _value
@@ -234,7 +234,7 @@ domGlsl_surface_type::domGenerator::domName::registerElement()
 		daeMetaAttribute *ma = new daeMetaAttribute;
 		ma->setName( "_value" );
 		ma->setType( daeAtomicType::get("xsNCName"));
-		ma->setOffset( daeOffsetOf( domGlsl_surface_type::domGenerator::domName , _value ));
+		ma->setOffset( daeOffsetOf( domGlsl_surface_type::dombterator::domName , _value ));
 		ma->setContainer( _Meta );
 		_Meta->appendAttribute(ma);
 	}
@@ -244,7 +244,7 @@ domGlsl_surface_type::domGenerator::domName::registerElement()
 		daeMetaAttribute *ma = new daeMetaAttribute;
 		ma->setName( "source" );
 		ma->setType( daeAtomicType::get("xsNCName"));
-		ma->setOffset( daeOffsetOf( domGlsl_surface_type::domGenerator::domName , attrSource ));
+		ma->setOffset( daeOffsetOf( domGlsl_surface_type::dombterator::domName , attrSource ));
 		ma->setContainer( _Meta );
 		ma->setIsRequired( false );
 	
@@ -252,7 +252,7 @@ domGlsl_surface_type::domGenerator::domName::registerElement()
 	}
 	
 	
-	_Meta->setElementSize(sizeof(domGlsl_surface_type::domGenerator::domName));
+	_Meta->setElementSize(sizeof(domGlsl_surface_type::dombterator::domName));
 	_Meta->validate();
 
 	return _Meta;
@@ -260,7 +260,7 @@ domGlsl_surface_type::domGenerator::domName::registerElement()
 
 
 daeMetaElement * domGlsl_surface_type::_Meta = NULL;
-daeMetaElement * domGlsl_surface_type::domGenerator::_Meta = NULL;
-daeMetaElement * domGlsl_surface_type::domGenerator::domName::_Meta = NULL;
+daeMetaElement * domGlsl_surface_type::dombterator::_Meta = NULL;
+daeMetaElement * domGlsl_surface_type::dombterator::domName::_Meta = NULL;
 
 

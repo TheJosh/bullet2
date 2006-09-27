@@ -28,7 +28,7 @@ void	btTriangleMesh::getLockedVertexIndexBase(unsigned char **vertexbase, int& n
 	numverts = 3;
 	*vertexbase = (unsigned char*)&m_triangles[subpart];
 	type = PHY_FLOAT;
-	stride = sizeof(btSimdVector3);
+	stride = sizeof(btVector3);
 
 
 	numfaces = 1;
@@ -43,7 +43,7 @@ void	btTriangleMesh::getLockedReadOnlyVertexIndexBase(const unsigned char **vert
 	numverts = 3;
 	*vertexbase = (unsigned char*)&m_triangles[subpart];
 	type = PHY_FLOAT;
-	stride = sizeof(btSimdVector3);
+	stride = sizeof(btVector3);
 
 
 	numfaces = 1;

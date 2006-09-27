@@ -23,11 +23,11 @@ subject to the following restrictions:
 ContactAddedCallback		gContactAddedCallback=0;
 
 ///User can override this material combiner by implementing gContactAddedCallback and setting body0->m_collisionFlags |= btCollisionObject::customMaterialCallback;
-inline SimdScalar	calculateCombinedFriction(const btCollisionObject* body0,const btCollisionObject* body1)
+inline btScalar	calculateCombinedFriction(const btCollisionObject* body0,const btCollisionObject* body1)
 {
-	SimdScalar friction = body0->getFriction() * body1->getFriction();
+	btScalar friction = body0->getFriction() * body1->getFriction();
 
-	const SimdScalar MAX_FRICTION  = 10.f;
+	const btScalar MAX_FRICTION  = 10.f;
 	if (friction < -MAX_FRICTION)
 		friction = -MAX_FRICTION;
 	if (friction > MAX_FRICTION)
@@ -36,7 +36,7 @@ inline SimdScalar	calculateCombinedFriction(const btCollisionObject* body0,const
 
 }
 
-inline SimdScalar	calculateCombinedRestitution(const btCollisionObject* body0,const btCollisionObject* body1)
+inline btScalar	calculateCombinedRestitution(const btCollisionObject* body0,const btCollisionObject* body1)
 {
 	return body0->getRestitution() * body1->getRestitution();
 }
@@ -51,20 +51,20 @@ btManifoldResult::btManifoldResult(btCollisionObject* body0,btCollisionObject* b
 	}
 
 
-void btManifoldResult::AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)
+void btManifoldResult::AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth)
 {
 	if (depth > m_manifoldPtr->GetContactBreakingTreshold())
 		return;
 
 
-	btSimdTransform transAInv = m_body0->m_cachedInvertedWorldTransform;
-	btSimdTransform transBInv= m_body1->m_cachedInvertedWorldTransform;
+	btTransform transAInv = m_body0->m_cachedInvertedWorldTransform;
+	btTransform transBInv= m_body1->m_cachedInvertedWorldTransform;
 
 	//transAInv = m_body0->m_worldTransform.inverse();
 	//transBInv= m_body1->m_worldTransform.inverse();
-	btSimdVector3 pointA = pointInWorld + normalOnBInWorld * depth;
-	btSimdVector3 localA = transAInv(pointA );
-	btSimdVector3 localB = transBInv(pointInWorld);
+	btVector3 pointA = pointInWorld + normalOnBInWorld * depth;
+	btVector3 localA = transAInv(pointA );
+	btVector3 localB = transBInv(pointInWorld);
 	btManifoldPoint newPt(localA,localB,normalOnBInWorld,depth);
 
 	

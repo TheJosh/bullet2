@@ -14,7 +14,7 @@ subject to the following restrictions:
 */
 
 #include "btConeShape.h"
-#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/btPoint3.h"
 
 #ifdef WIN32
 static int coneindices[3] = {1,2,0};
@@ -22,23 +22,23 @@ static int coneindices[3] = {1,2,0};
 static int coneindices[3] = {2,1,0};
 #endif
 
-btConeShape::btConeShape (SimdScalar radius,SimdScalar height):
+btConeShape::btConeShape (btScalar radius,btScalar height):
 m_radius (radius),
 m_height(height)
 {
-	btSimdVector3 halfExtents;
+	btVector3 halfExtents;
 	m_sinAngle = (m_radius / sqrt(m_radius * m_radius + m_height * m_height));
 }
 
 
-btSimdVector3 btConeShape::ConeLocalSupport(const btSimdVector3& v) const
+btVector3 btConeShape::ConeLocalSupport(const btVector3& v) const
 {
 	
 	float halfHeight = m_height * 0.5f;
 
  if (v[coneindices[1]] > v.length() * m_sinAngle)
  {
-	btSimdVector3 tmp;
+	btVector3 tmp;
 
 	tmp[coneindices[0]] = 0.f;
 	tmp[coneindices[1]] = halfHeight;
@@ -46,17 +46,17 @@ btSimdVector3 btConeShape::ConeLocalSupport(const btSimdVector3& v) const
 	return tmp;
  }
   else {
-    SimdScalar s = SimdSqrt(v[coneindices[0]] * v[coneindices[0]] + v[coneindices[2]] * v[coneindices[2]]);
+    btScalar s = btSqrt(v[coneindices[0]] * v[coneindices[0]] + v[coneindices[2]] * v[coneindices[2]]);
     if (s > SIMD_EPSILON) {
-      SimdScalar d = m_radius / s;
-	  btSimdVector3 tmp;
+      btScalar d = m_radius / s;
+	  btVector3 tmp;
 	  tmp[coneindices[0]] = v[coneindices[0]] * d;
 	  tmp[coneindices[1]] = -halfHeight;
 	  tmp[coneindices[2]] = v[coneindices[2]] * d;
 	  return tmp;
     }
     else  {
-		btSimdVector3 tmp;
+		btVector3 tmp;
 		tmp[coneindices[0]] = 0.f;
 		tmp[coneindices[1]] = -halfHeight;
 		tmp[coneindices[2]] = 0.f;
@@ -66,27 +66,27 @@ btSimdVector3 btConeShape::ConeLocalSupport(const btSimdVector3& v) const
 
 }
 
-btSimdVector3	btConeShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec) const
+btVector3	btConeShape::LocalGetSupportingVertexWithoutMargin(const btVector3& vec) const
 {
 		return ConeLocalSupport(vec);
 }
 
-void	btConeShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
+void	btConeShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 {
 	for (int i=0;i<numVectors;i++)
 	{
-		const btSimdVector3& vec = vectors[i];
+		const btVector3& vec = vectors[i];
 		supportVerticesOut[i] = ConeLocalSupport(vec);
 	}
 }
 
 
-btSimdVector3	btConeShape::LocalGetSupportingVertex(const btSimdVector3& vec)  const
+btVector3	btConeShape::LocalGetSupportingVertex(const btVector3& vec)  const
 {
-	btSimdVector3 supVertex = ConeLocalSupport(vec);
+	btVector3 supVertex = ConeLocalSupport(vec);
 	if ( GetMargin()!=0.f )
 	{
-		btSimdVector3 vecnorm = vec;
+		btVector3 vecnorm = vec;
 		if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 		{
 			vecnorm.setValue(-1.f,-1.f,-1.f);

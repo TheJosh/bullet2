@@ -50,8 +50,8 @@ subject to the following restrictions:
 
 
 ///Math library
-#include "LinearMath/SimdQuaternion.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btQuaternion.h"
+#include "LinearMath/btTransform.h"
 
 
 

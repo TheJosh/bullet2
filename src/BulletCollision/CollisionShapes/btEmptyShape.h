@@ -18,9 +18,9 @@ subject to the following restrictions:
 
 #include "btConcaveShape.h"
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
-#include "LinearMath/SimdMatrix3x3.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btMatrix3x3.h"
 #include <vector>
 #include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
@@ -38,19 +38,19 @@ public:
 
 
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-	void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
+	void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
 
 
-	virtual void	setLocalScaling(const btSimdVector3& scaling)
+	virtual void	setLocalScaling(const btVector3& scaling)
 	{
 		m_localScaling = scaling;
 	}
-	virtual const btSimdVector3& getLocalScaling() const 
+	virtual const btVector3& getLocalScaling() const 
 	{
 		return m_localScaling;
 	}
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 	
 	virtual int	GetShapeType() const { return EMPTY_SHAPE_PROXYTYPE;}
 
@@ -62,7 +62,7 @@ public:
 
 
 protected:
-	btSimdVector3	m_localScaling;
+	btVector3	m_localScaling;
 
 };
 

@@ -14,7 +14,7 @@ subject to the following restrictions:
 */
 
 #include "SimulationIsland.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btTransform.h"
 #include "CcdPhysicsController.h"
 #include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
@@ -22,7 +22,7 @@ subject to the following restrictions:
 #include "BulletDynamics/ConstraintSolver/btContactSolverInfo.h"
 #include "BulletDynamics/ConstraintSolver/btConstraintSolver.h"
 #include "BulletDynamics/ConstraintSolver/btTypedConstraint.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 extern float gContactBreakingTreshold;
 
@@ -44,7 +44,7 @@ bool	SimulationIsland::Simulate(btIDebugDraw* debugDrawer,int numSolverIteration
 		for (k=0;k<GetNumControllers();k++)
 		{
 			CcdPhysicsController* ctrl = m_controllers[k];
-			//		btSimdTransform predictedTrans;
+			//		btTransform predictedTrans;
 			btRigidBody* body = ctrl->GetRigidBody();
 			//todo: only do this when necessary, it's used for contact points
 			body->m_cachedInvertedWorldTransform = body->m_worldTransform.inverse();
@@ -243,7 +243,7 @@ bool	SimulationIsland::Simulate(btIDebugDraw* debugDrawer,int numSolverIteration
 
 					CcdPhysicsController* ctrl = *i;
 
-					btSimdTransform predictedTrans;
+					btTransform predictedTrans;
 					btRigidBody* body = ctrl->GetRigidBody();
 
 					if (body->IsActive())
@@ -378,7 +378,7 @@ void	SimulationIsland::UpdateAabbs(btIDebugDraw* debugDrawer,btBroadphaseInterfa
 				btRigidBody* body = ctrl->GetRigidBody();
 
 
-				SimdPoint3 minAabb,maxAabb;
+				btPoint3 minAabb,maxAabb;
 				btCollisionShape* shapeinterface = ctrl->GetCollisionShape();
 
 
@@ -386,11 +386,11 @@ void	SimulationIsland::UpdateAabbs(btIDebugDraw* debugDrawer,btBroadphaseInterfa
 				shapeinterface->CalculateTemporalAabb(body->getCenterOfMassTransform(),
 					body->getLinearVelocity(),
 					//body->getAngularVelocity(),
-					btSimdVector3(0.f,0.f,0.f),//no angular effect for now //body->getAngularVelocity(),
+					btVector3(0.f,0.f,0.f),//no angular effect for now //body->getAngularVelocity(),
 					timeStep,minAabb,maxAabb);
 
 
-				btSimdVector3 manifoldExtraExtents(gContactBreakingTreshold,gContactBreakingTreshold,gContactBreakingTreshold);
+				btVector3 manifoldExtraExtents(gContactBreakingTreshold,gContactBreakingTreshold,gContactBreakingTreshold);
 				minAabb -= manifoldExtraExtents;
 				maxAabb += manifoldExtraExtents;
 
@@ -398,7 +398,7 @@ void	SimulationIsland::UpdateAabbs(btIDebugDraw* debugDrawer,btBroadphaseInterfa
 				if (bp)
 				{
 
-					btSimdVector3 color (1,1,0);
+					btVector3 color (1,1,0);
 
 /*
 					class btIDebugDraw*	m_debugDrawer = 0;

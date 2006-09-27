@@ -16,20 +16,20 @@ subject to the following restrictions:
 #include "btSphereShape.h"
 #include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
-#include "LinearMath/SimdQuaternion.h"
+#include "LinearMath/btQuaternion.h"
 
 
-btSphereShape ::btSphereShape (SimdScalar radius)
+btSphereShape ::btSphereShape (btScalar radius)
 : m_radius(radius)
 {	
 }
 
-btSimdVector3	btSphereShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const
+btVector3	btSphereShape::LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const
 {
-	return btSimdVector3(0.f,0.f,0.f);
+	return btVector3(0.f,0.f,0.f);
 }
 
-void	btSphereShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
+void	btSphereShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 {
 	for (int i=0;i<numVectors;i++)
 	{
@@ -38,12 +38,12 @@ void	btSphereShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSi
 }
 
 
-btSimdVector3	btSphereShape::LocalGetSupportingVertex(const btSimdVector3& vec)const
+btVector3	btSphereShape::LocalGetSupportingVertex(const btVector3& vec)const
 {
-	btSimdVector3 supVertex;
+	btVector3 supVertex;
 	supVertex = LocalGetSupportingVertexWithoutMargin(vec);
 
-	btSimdVector3 vecnorm = vec;
+	btVector3 vecnorm = vec;
 	if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 	{
 		vecnorm.setValue(-1.f,-1.f,-1.f);
@@ -55,19 +55,19 @@ btSimdVector3	btSphereShape::LocalGetSupportingVertex(const btSimdVector3& vec)c
 
 
 //broken due to scaling
-void btSphereShape::GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
+void btSphereShape::GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
 {
-	const btSimdVector3& center = t.getOrigin();
-	btSimdVector3 extent(GetMargin(),GetMargin(),GetMargin());
+	const btVector3& center = t.getOrigin();
+	btVector3 extent(GetMargin(),GetMargin(),GetMargin());
 	aabbMin = center - extent;
 	aabbMax = center + extent;
 }
 
 
 
-void	btSphereShape::CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
+void	btSphereShape::CalculateLocalInertia(btScalar mass,btVector3& inertia)
 {
-	SimdScalar elem = 0.4f * mass * GetMargin()*GetMargin();
+	btScalar elem = 0.4f * mass * GetMargin()*GetMargin();
 	inertia[0] = inertia[1] = inertia[2] = elem;
 
 }

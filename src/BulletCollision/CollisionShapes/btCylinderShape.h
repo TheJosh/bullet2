@@ -18,7 +18,7 @@ subject to the following restrictions:
 
 #include "btBoxShape.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" // for the types
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
 /// implements cylinder shape interface
 class btCylinderShape : public btBoxShape
@@ -26,27 +26,27 @@ class btCylinderShape : public btBoxShape
 {
 
 public:
-	btCylinderShape (const btSimdVector3& halfExtents);
+	btCylinderShape (const btVector3& halfExtents);
 	
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-	void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
+	void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
 	{
 		GetAabbSlow(t,aabbMin,aabbMax);
 	}
 
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const;
 
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
 
-	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec) const
+	virtual btVector3	LocalGetSupportingVertex(const btVector3& vec) const
 	{
 
-		btSimdVector3 supVertex;
+		btVector3 supVertex;
 		supVertex = LocalGetSupportingVertexWithoutMargin(vec);
 		
 		if ( GetMargin()!=0.f )
 		{
-			btSimdVector3 vecnorm = vec;
+			btVector3 vecnorm = vec;
 			if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 			{
 				vecnorm.setValue(-1.f,-1.f,-1.f);
@@ -59,7 +59,7 @@ public:
 
 
 	//use box inertia
-	//	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	//	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
 	virtual int	GetShapeType() const
 	{
@@ -89,10 +89,10 @@ public:
 class btCylinderShapeX : public btCylinderShape
 {
 public:
-	btCylinderShapeX (const btSimdVector3& halfExtents);
+	btCylinderShapeX (const btVector3& halfExtents);
 
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
 	virtual int	GetUpAxis() const
 	{
 		return 0;
@@ -113,10 +113,10 @@ public:
 class btCylinderShapeZ : public btCylinderShape
 {
 public:
-	btCylinderShapeZ (const btSimdVector3& halfExtents);
+	btCylinderShapeZ (const btVector3& halfExtents);
 
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
 
 	virtual int	GetUpAxis() const
 	{

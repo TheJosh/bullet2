@@ -15,7 +15,7 @@ subject to the following restrictions:
 #include "btConvexTriangleMeshShape.h"
 #include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
-#include "LinearMath/SimdQuaternion.h"
+#include "LinearMath/btQuaternion.h"
 #include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
 
 
@@ -32,24 +32,24 @@ btConvexTriangleMeshShape ::btConvexTriangleMeshShape (btStridingMeshInterface* 
 class LocalSupportVertexCallback: public btInternalTriangleIndexCallback
 {
 
-	btSimdVector3 m_supportVertexLocal;
+	btVector3 m_supportVertexLocal;
 public:
 
-	SimdScalar m_maxDot;
-	btSimdVector3 m_supportVecLocal;
+	btScalar m_maxDot;
+	btVector3 m_supportVecLocal;
 
-	LocalSupportVertexCallback(const btSimdVector3& supportVecLocal)
+	LocalSupportVertexCallback(const btVector3& supportVecLocal)
 		: m_supportVertexLocal(0.f,0.f,0.f),
 		m_maxDot(-1e30f),
                 m_supportVecLocal(supportVecLocal)
 	{
 	}
 
-	virtual void InternalProcessTriangleIndex(btSimdVector3* triangle,int partId,int  triangleIndex)
+	virtual void InternalProcessTriangleIndex(btVector3* triangle,int partId,int  triangleIndex)
 	{
 		for (int i=0;i<3;i++)
 		{
-			SimdScalar dot = m_supportVecLocal.dot(triangle[i]);
+			btScalar dot = m_supportVecLocal.dot(triangle[i]);
 			if (dot > m_maxDot)
 			{
 				m_maxDot = dot;
@@ -58,7 +58,7 @@ public:
 		}
 	}
 	
-	btSimdVector3	GetSupportVertexLocal()
+	btVector3	GetSupportVertexLocal()
 	{
 		return m_supportVertexLocal;
 	}
@@ -69,30 +69,30 @@ public:
 
 
 
-btSimdVector3	btConvexTriangleMeshShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec0)const
+btVector3	btConvexTriangleMeshShape::LocalGetSupportingVertexWithoutMargin(const btVector3& vec0)const
 {
-	btSimdVector3 supVec(0.f,0.f,0.f);
+	btVector3 supVec(0.f,0.f,0.f);
 
-	btSimdVector3 vec = vec0;
-	SimdScalar lenSqr = vec.length2();
+	btVector3 vec = vec0;
+	btScalar lenSqr = vec.length2();
 	if (lenSqr < 0.0001f)
 	{
 		vec.setValue(1,0,0);
 	} else
 	{
-		float rlen = 1.f / SimdSqrt(lenSqr );
+		float rlen = 1.f / btSqrt(lenSqr );
 		vec *= rlen;
 	}
 
 	LocalSupportVertexCallback	supportCallback(vec);
-	btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
+	btVector3 aabbMax(1e30f,1e30f,1e30f);
 	m_stridingMesh->InternalProcessAllTriangles(&supportCallback,-aabbMax,aabbMax);
 	supVec = supportCallback.GetSupportVertexLocal();
 
 	return supVec;
 }
 
-void	btConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
+void	btConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 {
 	//use 'w' component of supportVerticesOut?
 	{
@@ -107,9 +107,9 @@ void	btConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargi
 
 	for (int j=0;j<numVectors;j++)
 	{
-		const btSimdVector3& vec = vectors[j];
+		const btVector3& vec = vectors[j];
 		LocalSupportVertexCallback	supportCallback(vec);
-		btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
+		btVector3 aabbMax(1e30f,1e30f,1e30f);
 		m_stridingMesh->InternalProcessAllTriangles(&supportCallback,-aabbMax,aabbMax);
 		supportVerticesOut[j] = supportCallback.GetSupportVertexLocal();
 	}
@@ -118,13 +118,13 @@ void	btConvexTriangleMeshShape::BatchedUnitVectorGetSupportingVertexWithoutMargi
 	
 
 
-btSimdVector3	btConvexTriangleMeshShape::LocalGetSupportingVertex(const btSimdVector3& vec)const
+btVector3	btConvexTriangleMeshShape::LocalGetSupportingVertex(const btVector3& vec)const
 {
-	btSimdVector3 supVertex = LocalGetSupportingVertexWithoutMargin(vec);
+	btVector3 supVertex = LocalGetSupportingVertexWithoutMargin(vec);
 
 	if ( GetMargin()!=0.f )
 	{
-		btSimdVector3 vecnorm = vec;
+		btVector3 vecnorm = vec;
 		if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 		{
 			vecnorm.setValue(-1.f,-1.f,-1.f);
@@ -159,12 +159,12 @@ int btConvexTriangleMeshShape::GetNumEdges() const
 	return 0;
 }
 
-void btConvexTriangleMeshShape::GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
+void btConvexTriangleMeshShape::GetEdge(int i,btPoint3& pa,btPoint3& pb) const
 {
 	assert(0);	
 }
 
-void btConvexTriangleMeshShape::GetVertex(int i,SimdPoint3& vtx) const
+void btConvexTriangleMeshShape::GetVertex(int i,btPoint3& vtx) const
 {
 	assert(0);
 }
@@ -174,13 +174,13 @@ int	btConvexTriangleMeshShape::GetNumPlanes() const
 	return 0;
 }
 
-void btConvexTriangleMeshShape::GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
+void btConvexTriangleMeshShape::GetPlane(btVector3& planeNormal,btPoint3& planeSupport,int i ) const
 {
 	assert(0);
 }
 
 //not yet
-bool btConvexTriangleMeshShape::IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
+bool btConvexTriangleMeshShape::IsInside(const btPoint3& pt,btScalar tolerance) const
 {
 	assert(0);
 	return false;
@@ -188,7 +188,7 @@ bool btConvexTriangleMeshShape::IsInside(const SimdPoint3& pt,SimdScalar toleran
 
 
 
-void	btConvexTriangleMeshShape::setLocalScaling(const btSimdVector3& scaling)
+void	btConvexTriangleMeshShape::setLocalScaling(const btVector3& scaling)
 {
 	m_stridingMesh->setScaling(scaling);
 }

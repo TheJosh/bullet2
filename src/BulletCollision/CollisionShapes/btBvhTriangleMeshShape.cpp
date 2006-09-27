@@ -40,7 +40,7 @@ btBvhTriangleMeshShape::~btBvhTriangleMeshShape()
 }
 
 //perform bvh tree traversal and report overlapping triangles to 'callback'
-void	btBvhTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const
+void	btBvhTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const
 {
 
 #ifdef DISABLE_BVH
@@ -55,7 +55,7 @@ void	btBvhTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,co
 	{
 		btStridingMeshInterface*	m_meshInterface;
 		btTriangleCallback*		m_callback;
-		btSimdVector3				m_triangle[3];
+		btVector3				m_triangle[3];
 
 
 		MyNodeOverlapCallback(btTriangleCallback* callback,btStridingMeshInterface* meshInterface)
@@ -89,7 +89,7 @@ void	btBvhTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,co
 
 			int* gfxbase = (int*)(indexbase+node->m_triangleIndex*indexstride);
 			
-			const btSimdVector3& meshScaling = m_meshInterface->getScaling();
+			const btVector3& meshScaling = m_meshInterface->getScaling();
 			for (int j=2;j>=0;j--)
 			{
 				
@@ -99,7 +99,7 @@ void	btBvhTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,co
 #endif //DEBUG_TRIANGLE_MESH
 				float* graphicsbase = (float*)(vertexbase+graphicsindex*stride);
 
-				m_triangle[j] = btSimdVector3(
+				m_triangle[j] = btVector3(
 					graphicsbase[0]*meshScaling.getX(),
 					graphicsbase[1]*meshScaling.getY(),
 					graphicsbase[2]*meshScaling.getZ());
@@ -125,7 +125,7 @@ void	btBvhTriangleMeshShape::ProcessAllTriangles(btTriangleCallback* callback,co
 }
 
 
-void	btBvhTriangleMeshShape::setLocalScaling(const btSimdVector3& scaling)
+void	btBvhTriangleMeshShape::setLocalScaling(const btVector3& scaling)
 {
 	if ((getLocalScaling() -scaling).length2() > SIMD_EPSILON)
 	{

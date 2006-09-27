@@ -16,10 +16,10 @@ subject to the following restrictions:
 #ifndef COLLISION_SHAPE_H
 #define COLLISION_SHAPE_H
 
-#include "LinearMath/SimdTransform.h"
-#include "LinearMath/SimdVector3.h"
-#include <LinearMath/SimdMatrix3x3.h>
-#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btVector3.h"
+#include <LinearMath/btMatrix3x3.h>
+#include "LinearMath/btPoint3.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h" //for the shape types
 
 ///CollisionShape provides generic interface for collidable objects
@@ -34,9 +34,9 @@ public:
 	{
 	}
 
-	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const =0;
+	virtual void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const =0;
 
-	virtual void	GetBoundingSphere(btSimdVector3& center,SimdScalar& radius) const;
+	virtual void	GetBoundingSphere(btVector3& center,btScalar& radius) const;
 
 	virtual float	GetAngularMotionDisc() const;
 
@@ -44,7 +44,7 @@ public:
 
 	///CalculateTemporalAabb calculates the enclosing aabb for the moving object over interval [0..timeStep)
 	///result is conservative
-	void CalculateTemporalAabb(const btSimdTransform& curTrans,const btSimdVector3& linvel,const btSimdVector3& angvel,SimdScalar timeStep, btSimdVector3& temporalAabbMin,btSimdVector3& temporalAabbMax);
+	void CalculateTemporalAabb(const btTransform& curTrans,const btVector3& linvel,const btVector3& angvel,btScalar timeStep, btVector3& temporalAabbMin,btVector3& temporalAabbMax);
 
 	inline bool	IsPolyhedral() const
 	{
@@ -64,10 +64,10 @@ public:
 		return btBroadphaseProxy::IsCompound(GetShapeType());
 	}
 
-	virtual void	setLocalScaling(const btSimdVector3& scaling) =0;
-	virtual const btSimdVector3& getLocalScaling() const =0;
+	virtual void	setLocalScaling(const btVector3& scaling) =0;
+	virtual const btVector3& getLocalScaling() const =0;
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia) = 0;
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia) = 0;
 
 //debugging support
 	virtual char*	GetName()const =0 ;

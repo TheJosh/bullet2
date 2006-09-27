@@ -16,7 +16,7 @@ subject to the following restrictions:
 
 #include "BU_Collidable.h"
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
-#include <LinearMath/SimdTransform.h>
+#include <LinearMath/btTransform.h>
 #include "BU_MotionStateInterface.h"
 
 BU_Collidable::BU_Collidable(BU_MotionStateInterface& motion,btPolyhedralConvexShape& shape,void* userPointer )

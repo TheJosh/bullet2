@@ -11,7 +11,7 @@
 #ifndef VEHICLE_RAYCASTER_H
 #define VEHICLE_RAYCASTER_H
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
 /// btVehicleRaycaster is provides interface for between vehicle simulation and raycasting
 struct btVehicleRaycaster
@@ -22,12 +22,12 @@ virtual ~btVehicleRaycaster()
 	struct btVehicleRaycasterResult
 	{
 		btVehicleRaycasterResult() :m_distFraction(-1.f){};
-		btSimdVector3	m_hitPointInWorld;
-		btSimdVector3	m_hitNormalInWorld;
-		SimdScalar	m_distFraction;
+		btVector3	m_hitPointInWorld;
+		btVector3	m_hitNormalInWorld;
+		btScalar	m_distFraction;
 	};
 
-	virtual void* CastRay(const btSimdVector3& from,const btSimdVector3& to, btVehicleRaycasterResult& result) = 0;
+	virtual void* CastRay(const btVector3& from,const btVector3& to, btVehicleRaycasterResult& result) = 0;
 
 };
 

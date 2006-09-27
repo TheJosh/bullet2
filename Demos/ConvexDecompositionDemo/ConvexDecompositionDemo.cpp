@@ -21,8 +21,8 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 #include "btBulletDynamicsCommon.h"
 
-#include "LinearMath/GenQuickprof.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btQuickprof.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
 
@@ -42,7 +42,7 @@ const int maxNumObjects = 450;
 
 int	shapeIndex[maxNumObjects];
 
-btSimdVector3	centroid;
+btVector3	centroid;
 
 #define CUBE_HALF_EXTENTS 4
 
@@ -84,8 +84,8 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher();
 
 
-	btSimdVector3 worldAabbMin(-10000,-10000,-10000);
-	btSimdVector3 worldAabbMax(10000,10000,10000);
+	btVector3 worldAabbMin(-10000,-10000,-10000);
+	btVector3 worldAabbMax(10000,10000,10000);
 
 	btOverlappingPairCache* broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
 	//OverlappingPairCache* broadphase = new btSimpleBroadphase();
@@ -95,11 +95,11 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 
 	m_physicsEnvironmentPtr->setGravity(0,-10,0);
 
-	btSimdTransform startTransform;
+	btTransform startTransform;
 	startTransform.setIdentity();
-	startTransform.setOrigin(btSimdVector3(0,-4,0));
+	startTransform.setOrigin(btVector3(0,-4,0));
 
-	LocalCreatePhysicsObject(false,0,startTransform,new btBoxShape(btSimdVector3(30,2,30)));
+	LocalCreatePhysicsObject(false,0,startTransform,new btBoxShape(btVector3(30,2,30)));
 
 	class MyConvexDecomposition : public ConvexDecomposition::ConvexDecompInterface
 	{
@@ -121,7 +121,7 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 
 				btTriangleMesh* trimesh = new btTriangleMesh();
 
-				btSimdVector3 localScaling(6.f,6.f,6.f);
+				btVector3 localScaling(6.f,6.f,6.f);
 
 				//export data to .obj
 				printf("ConvexResult\n");
@@ -148,9 +148,9 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 							unsigned int index0 = *src++;
 							unsigned int index1 = *src++;
 							unsigned int index2 = *src++;
-							btSimdVector3 vertex0(result.mHullVertices[index0*3], result.mHullVertices[index0*3+1],result.mHullVertices[index0*3+2]);
-							btSimdVector3 vertex1(result.mHullVertices[index1*3], result.mHullVertices[index1*3+1],result.mHullVertices[index1*3+2]);
-							btSimdVector3 vertex2(result.mHullVertices[index2*3], result.mHullVertices[index2*3+1],result.mHullVertices[index2*3+2]);
+							btVector3 vertex0(result.mHullVertices[index0*3], result.mHullVertices[index0*3+1],result.mHullVertices[index0*3+2]);
+							btVector3 vertex1(result.mHullVertices[index1*3], result.mHullVertices[index1*3+1],result.mHullVertices[index1*3+2]);
+							btVector3 vertex2(result.mHullVertices[index2*3], result.mHullVertices[index2*3+1],result.mHullVertices[index2*3+2]);
 							vertex0 *= localScaling;
 							vertex1 *= localScaling;
 							vertex2 *= localScaling;
@@ -173,9 +173,9 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 							unsigned int index2 = *src++;
 
 
-							btSimdVector3 vertex0(result.mHullVertices[index0*3], result.mHullVertices[index0*3+1],result.mHullVertices[index0*3+2]);
-							btSimdVector3 vertex1(result.mHullVertices[index1*3], result.mHullVertices[index1*3+1],result.mHullVertices[index1*3+2]);
-							btSimdVector3 vertex2(result.mHullVertices[index2*3], result.mHullVertices[index2*3+1],result.mHullVertices[index2*3+2]);
+							btVector3 vertex0(result.mHullVertices[index0*3], result.mHullVertices[index0*3+1],result.mHullVertices[index0*3+2]);
+							btVector3 vertex1(result.mHullVertices[index1*3], result.mHullVertices[index1*3+1],result.mHullVertices[index1*3+2]);
+							btVector3 vertex2(result.mHullVertices[index2*3], result.mHullVertices[index2*3+1],result.mHullVertices[index2*3+2]);
 							vertex0 *= localScaling;
 							vertex1 *= localScaling;
 							vertex2 *= localScaling;
@@ -197,7 +197,7 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 					bool isDynamic = true;
 					float mass = 1.f;
 					btCollisionShape* convexShape = new btConvexTriangleMeshShape(trimesh);
-					btSimdTransform trans;
+					btTransform trans;
 					trans.setIdentity();
 					trans.setOrigin(centroid);
 					m_convexDemo->LocalCreatePhysicsObject(isDynamic, mass, trans,convexShape);
@@ -218,7 +218,7 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 	{
 		btTriangleMesh* trimesh = new btTriangleMesh();
 
-		btSimdVector3 localScaling(6.f,6.f,6.f);
+		btVector3 localScaling(6.f,6.f,6.f);
 		
 		for (int i=0;i<wo.mTriCount;i++)
 		{
@@ -226,9 +226,9 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 			int index1 = wo.mIndices[i*3+1];
 			int index2 = wo.mIndices[i*3+2];
 
-			btSimdVector3 vertex0(wo.mVertices[index0*3], wo.mVertices[index0*3+1],wo.mVertices[index0*3+2]);
-			btSimdVector3 vertex1(wo.mVertices[index1*3], wo.mVertices[index1*3+1],wo.mVertices[index1*3+2]);
-			btSimdVector3 vertex2(wo.mVertices[index2*3], wo.mVertices[index2*3+1],wo.mVertices[index2*3+2]);
+			btVector3 vertex0(wo.mVertices[index0*3], wo.mVertices[index0*3+1],wo.mVertices[index0*3+2]);
+			btVector3 vertex1(wo.mVertices[index1*3], wo.mVertices[index1*3+1],wo.mVertices[index1*3+2]);
+			btVector3 vertex2(wo.mVertices[index2*3], wo.mVertices[index2*3+1],wo.mVertices[index2*3+2]);
 			
 			vertex0 *= localScaling;
 			vertex1 *= localScaling;
@@ -241,9 +241,9 @@ void ConvexDecompositionDemo::initPhysics(const char* filename)
 		bool isDynamic = true;
 		float mass = 1.f;
 		
-		btSimdTransform startTransform;
+		btTransform startTransform;
 		startTransform.setIdentity();
-		startTransform.setOrigin(btSimdVector3(20,2,0));
+		startTransform.setOrigin(btVector3(20,2,0));
 
 		LocalCreatePhysicsObject(isDynamic, mass, startTransform,convexShape);
 

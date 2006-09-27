@@ -1,7 +1,7 @@
 #ifndef GL_DEBUG_DRAWER_H
 #define GL_DEBUG_DRAWER_H
 
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 
 
@@ -13,9 +13,9 @@ public:
 
 	GLDebugDrawer();
 
-	virtual void	DrawLine(const btSimdVector3& from,const btSimdVector3& to,const btSimdVector3& color);
+	virtual void	DrawLine(const btVector3& from,const btVector3& to,const btVector3& color);
 
-	virtual void	DrawContactPoint(const btSimdVector3& PointOnB,const btSimdVector3& normalOnB,float distance,int lifeTime,const btSimdVector3& color);
+	virtual void	DrawContactPoint(const btVector3& PointOnB,const btVector3& normalOnB,float distance,int lifeTime,const btVector3& color);
 
 	virtual void	SetDebugMode(int debugMode);
 

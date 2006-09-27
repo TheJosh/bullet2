@@ -33,13 +33,13 @@ btCompoundShape::~btCompoundShape()
 {
 }
 
-void	btCompoundShape::AddChildShape(const btSimdTransform& localTransform,btCollisionShape* shape)
+void	btCompoundShape::AddChildShape(const btTransform& localTransform,btCollisionShape* shape)
 {
 	m_childTransforms.push_back(localTransform);
 	m_childShapes.push_back(shape);
 
 	//extend the local aabbMin/aabbMax
-	btSimdVector3 localAabbMin,localAabbMax;
+	btVector3 localAabbMin,localAabbMax;
 	shape->GetAabb(localTransform,localAabbMin,localAabbMax);
 	for (int i=0;i<3;i++)
 	{
@@ -58,37 +58,37 @@ void	btCompoundShape::AddChildShape(const btSimdTransform& localTransform,btColl
 
 
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-void btCompoundShape::GetAabb(const btSimdTransform& trans,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
+void btCompoundShape::GetAabb(const btTransform& trans,btVector3& aabbMin,btVector3& aabbMax) const
 {
-	btSimdVector3 localHalfExtents = 0.5f*(m_localAabbMax-m_localAabbMin);
-	btSimdVector3 localCenter = 0.5f*(m_localAabbMax+m_localAabbMin);
+	btVector3 localHalfExtents = 0.5f*(m_localAabbMax-m_localAabbMin);
+	btVector3 localCenter = 0.5f*(m_localAabbMax+m_localAabbMin);
 	
-	btSimdMatrix3x3 abs_b = trans.getBasis().absolute();  
+	btMatrix3x3 abs_b = trans.getBasis().absolute();  
 
-	SimdPoint3 center = trans(localCenter);
+	btPoint3 center = trans(localCenter);
 
-	btSimdVector3 extent = btSimdVector3(abs_b[0].dot(localHalfExtents),
+	btVector3 extent = btVector3(abs_b[0].dot(localHalfExtents),
 		   abs_b[1].dot(localHalfExtents),
 		  abs_b[2].dot(localHalfExtents));
-	extent += btSimdVector3(GetMargin(),GetMargin(),GetMargin());
+	extent += btVector3(GetMargin(),GetMargin(),GetMargin());
 
 	aabbMin = center - extent;
 	aabbMax = center + extent;
 }
 
-void	btCompoundShape::CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
+void	btCompoundShape::CalculateLocalInertia(btScalar mass,btVector3& inertia)
 {
 	//approximation: take the inertia from the aabb for now
-	btSimdTransform ident;
+	btTransform ident;
 	ident.setIdentity();
-	btSimdVector3 aabbMin,aabbMax;
+	btVector3 aabbMin,aabbMax;
 	GetAabb(ident,aabbMin,aabbMax);
 	
-	btSimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
+	btVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
 	
-	SimdScalar lx=2.f*(halfExtents.x());
-	SimdScalar ly=2.f*(halfExtents.y());
-	SimdScalar lz=2.f*(halfExtents.z());
+	btScalar lx=2.f*(halfExtents.x());
+	btScalar ly=2.f*(halfExtents.y());
+	btScalar lz=2.f*(halfExtents.z());
 
 	inertia[0] = mass/(12.0f) * (ly*ly + lz*lz);
 	inertia[1] = mass/(12.0f) * (lx*lx + lz*lz);

@@ -20,7 +20,7 @@ subject to the following restrictions:
 
 class btPolyhedralConvexShape;
 class BU_MotionStateInterface;
-#include <LinearMath/SimdPoint3.h>
+#include <LinearMath/btPoint3.h>
 
 class BU_Collidable
 {

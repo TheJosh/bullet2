@@ -30,10 +30,10 @@ m_convexB(convexB)
 }
 
 bool	btGjkConvexCast::calcTimeOfImpact(
-					const btSimdTransform& fromA,
-					const btSimdTransform& toA,
-					const btSimdTransform& fromB,
-					const btSimdTransform& toB,
+					const btTransform& fromA,
+					const btTransform& toA,
+					const btTransform& fromB,
+					const btTransform& toB,
 					CastResult& result)
 {
 
@@ -41,18 +41,18 @@ bool	btGjkConvexCast::calcTimeOfImpact(
 	btMinkowskiSumShape combi(m_convexA,m_convexB);
 	btMinkowskiSumShape* convex = &combi;
 
-	btSimdTransform	rayFromLocalA;
-	btSimdTransform	rayToLocalA;
+	btTransform	rayFromLocalA;
+	btTransform	rayToLocalA;
 
 	rayFromLocalA = fromA.inverse()* fromB;
 	rayToLocalA = toA.inverse()* toB;
 
 
-	btSimdTransform trA,trB;
-	trA = btSimdTransform(fromA);
-	trB = btSimdTransform(fromB);
-	trA.setOrigin(SimdPoint3(0,0,0));
-	trB.setOrigin(SimdPoint3(0,0,0));
+	btTransform trA,trB;
+	trA = btTransform(fromA);
+	trB = btTransform(fromB);
+	trA.setOrigin(btPoint3(0,0,0));
+	trB.setOrigin(btPoint3(0,0,0));
 
 	convex->SetTransformA(trA);
 	convex->SetTransformB(trB);
@@ -62,14 +62,14 @@ bool	btGjkConvexCast::calcTimeOfImpact(
 
 	float radius = 0.01f;
 
-	SimdScalar lambda = 0.f;
-	btSimdVector3 s = rayFromLocalA.getOrigin();
-	btSimdVector3 r = rayToLocalA.getOrigin()-rayFromLocalA.getOrigin();
-	btSimdVector3 x = s;
-	btSimdVector3 n;
+	btScalar lambda = 0.f;
+	btVector3 s = rayFromLocalA.getOrigin();
+	btVector3 r = rayToLocalA.getOrigin()-rayFromLocalA.getOrigin();
+	btVector3 x = s;
+	btVector3 n;
 	n.setValue(0,0,0);
 	bool hasResult = false;
-	btSimdVector3 c;
+	btVector3 c;
 
 	float lastLambda = lambda;
 
@@ -78,13 +78,13 @@ bool	btGjkConvexCast::calcTimeOfImpact(
 	//no penetration support for now, perhaps pass a pointer when we really want it
 	btConvexPenetrationDepthSolver* penSolverPtr = 0;
 
-	btSimdTransform identityTrans;
+	btTransform identityTrans;
 	identityTrans.setIdentity();
 
 	btSphereShape	raySphere(0.0f);
 	raySphere.SetMargin(0.f);
 
-	btSimdTransform sphereTr;
+	btTransform sphereTr;
 	sphereTr.setIdentity();
 	sphereTr.setOrigin( rayFromLocalA.getOrigin());
 
@@ -107,7 +107,7 @@ bool	btGjkConvexCast::calcTimeOfImpact(
 
 	if (hasResult)
 	{
-		SimdScalar dist;
+		btScalar dist;
 		dist = (c-x).length();
 		if (dist < radius)
 		{
@@ -120,7 +120,7 @@ bool	btGjkConvexCast::calcTimeOfImpact(
 		{
 			
 			n = x - c;
-			SimdScalar nDotr = n.dot(r);
+			btScalar nDotr = n.dot(r);
 
 			if (nDotr >= -(SIMD_EPSILON*SIMD_EPSILON))
 				return false;

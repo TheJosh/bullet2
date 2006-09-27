@@ -21,7 +21,7 @@ subject to the following restrictions:
 #include <NarrowPhaseCollision/ConvexCast.h>
 
 
-#include <btSimdQuaternion.h>
+#include <btQuaternion.h>
 
 class btPolyhedralConvexShape;
 
@@ -31,14 +31,14 @@ class BU_CollisionPair : public btConvexCast
 {
 	
 public:
-	BU_CollisionPair(const btPolyhedralConvexShape* convexA,const btPolyhedralConvexShape* convexB,SimdScalar tolerance=0.2f);
+	BU_CollisionPair(const btPolyhedralConvexShape* convexA,const btPolyhedralConvexShape* convexB,btScalar tolerance=0.2f);
 	//toi
 
 	virtual bool	calcTimeOfImpact(
-					const btSimdTransform& fromA,
-					const btSimdTransform& toA,
-					const btSimdTransform& fromB,
-					const btSimdTransform& toB,
+					const btTransform& fromA,
+					const btTransform& toA,
+					const btTransform& fromB,
+					const btTransform& toB,
 					CastResult& result);
 
 	
@@ -48,7 +48,7 @@ private:
 	const btPolyhedralConvexShape*	m_convexA;
 	const btPolyhedralConvexShape*	m_convexB;
 	BU_Screwing	m_screwing;
-	SimdScalar	m_tolerance;
+	btScalar	m_tolerance;
 	
 };
 #endif //BU_COLLISIONPAIR

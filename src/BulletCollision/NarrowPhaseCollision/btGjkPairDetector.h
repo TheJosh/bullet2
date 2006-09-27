@@ -20,7 +20,7 @@ subject to the following restrictions:
 #define GJK_PAIR_DETECTOR_H
 
 #include "btDiscreteCollisionDetectorInterface.h"
-#include "LinearMath/SimdPoint3.h"
+#include "LinearMath/btPoint3.h"
 
 #include <BulletCollision/CollisionShapes/btCollisionMargin.h>
 
@@ -33,7 +33,7 @@ class btGjkPairDetector : public btDiscreteCollisionDetectorInterface
 {
 	
 
-	btSimdVector3	m_cachedSeparatingAxis;
+	btVector3	m_cachedSeparatingAxis;
 	btConvexPenetrationDepthSolver*	m_penetrationDepthSolver;
 	btSimplexSolverInterface* m_simplexSolver;
 	btConvexShape* m_minkowskiA;
@@ -64,7 +64,7 @@ public:
 	{
 		m_minkowskiB = minkB;
 	}
-	void SetCachedSeperatingAxis(const btSimdVector3& seperatingAxis)
+	void SetCachedSeperatingAxis(const btVector3& seperatingAxis)
 	{
 		m_cachedSeparatingAxis = seperatingAxis;
 	}

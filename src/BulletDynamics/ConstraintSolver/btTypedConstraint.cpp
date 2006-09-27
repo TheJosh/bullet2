@@ -18,7 +18,7 @@ subject to the following restrictions:
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "BulletDynamics/Dynamics/btMassProps.h"
 
-static btRigidBody s_fixed(btMassProps(0,btSimdVector3(0.f,0.f,0.f)),0.f,0.f,1.f,1.f);
+static btRigidBody s_fixed(btMassProps(0,btVector3(0.f,0.f,0.f)),0.f,0.f,1.f,1.f);
 
 btTypedConstraint::btTypedConstraint()
 : m_userConstraintType(-1),
@@ -27,7 +27,7 @@ m_rbA(s_fixed),
 m_rbB(s_fixed),
 m_appliedImpulse(0.f)
 {
-	s_fixed.setMassProps(0.f,btSimdVector3(0.f,0.f,0.f));
+	s_fixed.setMassProps(0.f,btVector3(0.f,0.f,0.f));
 }
 btTypedConstraint::btTypedConstraint(btRigidBody& rbA)
 : m_userConstraintType(-1),
@@ -36,7 +36,7 @@ m_rbA(rbA),
 m_rbB(s_fixed),
 m_appliedImpulse(0.f)
 {
-		s_fixed.setMassProps(0.f,btSimdVector3(0.f,0.f,0.f));
+		s_fixed.setMassProps(0.f,btVector3(0.f,0.f,0.f));
 
 }
 
@@ -48,7 +48,7 @@ m_rbA(rbA),
 m_rbB(rbB),
 m_appliedImpulse(0.f)
 {
-		s_fixed.setMassProps(0.f,btSimdVector3(0.f,0.f,0.f));
+		s_fixed.setMassProps(0.f,btVector3(0.f,0.f,0.f));
 
 }
 

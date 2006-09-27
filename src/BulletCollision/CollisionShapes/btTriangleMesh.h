@@ -19,13 +19,13 @@ subject to the following restrictions:
 
 #include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
 #include <vector>
-#include <LinearMath/SimdVector3.h>
+#include <LinearMath/btVector3.h>
 
 struct btMyTriangle
 {
-	btSimdVector3	m_vert0;
-	btSimdVector3	m_vert1;
-	btSimdVector3	m_vert2;
+	btVector3	m_vert0;
+	btVector3	m_vert1;
+	btVector3	m_vert2;
 };
 
 ///TriangleMesh provides storage for a concave triangle mesh. It can be used as data for the btTriangleMeshShape.
@@ -37,7 +37,7 @@ class btTriangleMesh : public btStridingMeshInterface
 	public:
 		btTriangleMesh ();
 
-		void	AddTriangle(const btSimdVector3& vertex0,const btSimdVector3& vertex1,const btSimdVector3& vertex2)
+		void	AddTriangle(const btVector3& vertex0,const btVector3& vertex1,const btVector3& vertex2)
 		{
 			btMyTriangle tri;
 			tri.m_vert0 = vertex0;

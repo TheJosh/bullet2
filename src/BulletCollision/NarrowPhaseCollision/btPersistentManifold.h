@@ -17,8 +17,8 @@ subject to the following restrictions:
 #define PERSISTENT_MANIFOLD_H
 
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
 #include "btManifoldPoint.h"
 
 struct btCollisionResult;
@@ -127,7 +127,7 @@ public:
 		return pt.m_distance1 <= GetContactBreakingTreshold();
 	}
 	/// calculated new worldspace coordinates and depth, and reject points that exceed the collision margin
-	void	RefreshContactPoints(  const btSimdTransform& trA,const btSimdTransform& trB);
+	void	RefreshContactPoints(  const btTransform& trA,const btTransform& trB);
 
 	void	ClearManifold();
 

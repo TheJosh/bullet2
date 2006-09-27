@@ -35,23 +35,23 @@ class CombinedSimplexSolver: public btSimplexSolverInterface
 
 	virtual void reset();
 
-	virtual void addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q);
+	virtual void addVertex(const btVector3& w, const btPoint3& p, const btPoint3& q);
 	
-	virtual bool closest(btSimdVector3& v);
+	virtual bool closest(btVector3& v);
 
-	virtual SimdScalar maxVertex();
+	virtual btScalar maxVertex();
 
 	virtual bool fullSimplex() const;
 
-	virtual int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const;
+	virtual int getSimplex(btPoint3 *pBuf, btPoint3 *qBuf, btVector3 *yBuf) const;
 
-	virtual bool inSimplex(const btSimdVector3& w);
+	virtual bool inSimplex(const btVector3& w);
 	
-	virtual void backup_closest(btSimdVector3& v) ;
+	virtual void backup_closest(btVector3& v) ;
 
 	virtual bool emptySimplex() const;
 
-	virtual void compute_points(SimdPoint3& p1, SimdPoint3& p2);
+	virtual void compute_points(btPoint3& p1, btPoint3& p2);
 
 	virtual int numVertices() const;
 

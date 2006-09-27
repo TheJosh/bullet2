@@ -17,7 +17,7 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 #include "MyMotionState.h"
 #include "btBulletDynamicsCommon.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
 
@@ -66,16 +66,16 @@ void	ConstraintDemo::initPhysics()
 	m_physicsEnvironmentPtr->setGravity(0,-10,0);
 
 
-	btCollisionShape* shape = new btBoxShape(btSimdVector3(CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS));
-	btSimdTransform trans;
+	btCollisionShape* shape = new btBoxShape(btVector3(CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS));
+	btTransform trans;
 	trans.setIdentity();
-	trans.setOrigin(btSimdVector3(0,20,0));
+	trans.setOrigin(btVector3(0,20,0));
 
 	bool isDynamic = false;
 	float mass = 1.f;
 
 	CcdPhysicsController* ctrl0 = LocalCreatePhysicsObject( isDynamic,mass,trans,shape);
-	trans.setOrigin(btSimdVector3(2*CUBE_HALF_EXTENTS,20,0));
+	trans.setOrigin(btVector3(2*CUBE_HALF_EXTENTS,20,0));
 	isDynamic = true;
 	CcdPhysicsController* ctrl1 = LocalCreatePhysicsObject( isDynamic,mass,trans,shape);
 	

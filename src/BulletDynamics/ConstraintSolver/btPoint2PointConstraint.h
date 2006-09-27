@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef POINT2POINTCONSTRAINT_H
 #define POINT2POINTCONSTRAINT_H
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
 #include "BulletDynamics/ConstraintSolver/btJacobianEntry.h"
 #include "btTypedConstraint.h"
@@ -39,8 +39,8 @@ class btPoint2PointConstraint : public btTypedConstraint
 {
 	btJacobianEntry	m_jac[3]; //3 orthogonal linear constraints
 	
-	btSimdVector3	m_pivotInA;
-	btSimdVector3	m_pivotInB;
+	btVector3	m_pivotInA;
+	btVector3	m_pivotInB;
 	
 	
 	
@@ -48,25 +48,25 @@ public:
 
 	btConstraintSetting	m_setting;
 
-	btPoint2PointConstraint(btRigidBody& rbA,btRigidBody& rbB, const btSimdVector3& pivotInA,const btSimdVector3& pivotInB);
+	btPoint2PointConstraint(btRigidBody& rbA,btRigidBody& rbB, const btVector3& pivotInA,const btVector3& pivotInB);
 
-	btPoint2PointConstraint(btRigidBody& rbA,const btSimdVector3& pivotInA);
+	btPoint2PointConstraint(btRigidBody& rbA,const btVector3& pivotInA);
 
 	btPoint2PointConstraint();
 
 	virtual void	BuildJacobian();
 
 
-	virtual	void	SolveConstraint(SimdScalar	timeStep);
+	virtual	void	SolveConstraint(btScalar	timeStep);
 
-	void	UpdateRHS(SimdScalar	timeStep);
+	void	UpdateRHS(btScalar	timeStep);
 
-	void	SetPivotA(const btSimdVector3& pivotA)
+	void	SetPivotA(const btVector3& pivotA)
 	{
 		m_pivotInA = pivotA;
 	}
 
-	void	SetPivotB(const btSimdVector3& pivotB)
+	void	SetPivotB(const btVector3& pivotB)
 	{
 		m_pivotInB = pivotB;
 	}

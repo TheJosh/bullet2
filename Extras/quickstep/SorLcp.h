@@ -5,10 +5,10 @@
  *                                                                       *
  * This library is free software; you can redistribute it and/or         *
  * modify it under the terms of EITHER:                                  *
- *   (1) The GNU Lesser General Public License as published by the Free  *
+ *   (1) The GNU Lesser bteral Public License as published by the Free  *
  *       Software Foundation; either version 2.1 of the License, or (at  *
  *       your option) any later version. The text of the GNU Lesser      *
- *       General Public License is included with this library in the     *
+ *       bteral Public License is included with this library in the     *
  *       file LICENSE.TXT.                                               *
  *   (2) The BSD-style license that is included with this library in     *
  *       the file LICENSE-BSD.TXT.                                       *
@@ -27,7 +27,7 @@
 #define SOR_LCP_H
 class btRigidBody;
 class BU_Joint;
-#include "LinearMath/SimdScalar.h"
+#include "LinearMath/btScalar.h"
 
 struct btContactSolverInfo;
 

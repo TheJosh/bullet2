@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef BU_SHAPE
 #define BU_SHAPE
 
-#include <LinearMath/SimdPoint3.h>
-#include <LinearMath/SimdMatrix3x3.h>
+#include <LinearMath/btPoint3.h>
+#include <LinearMath/btMatrix3x3.h>
 #include <BulletCollision/CollisionShapes/btConvexShape.h>
 
 
@@ -30,22 +30,22 @@ public:
 	btPolyhedralConvexShape();
 
 	//brute force implementations
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
 	
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
 
 
 	virtual int	GetNumVertices() const = 0 ;
 	virtual int GetNumEdges() const = 0;
-	virtual void GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const = 0;
-	virtual void GetVertex(int i,SimdPoint3& vtx) const = 0;
+	virtual void GetEdge(int i,btPoint3& pa,btPoint3& pb) const = 0;
+	virtual void GetVertex(int i,btPoint3& vtx) const = 0;
 	virtual int	GetNumPlanes() const = 0;
-	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const = 0;
+	virtual void GetPlane(btVector3& planeNormal,btPoint3& planeSupport,int i ) const = 0;
 //	virtual int GetIndex(int i) const = 0 ; 
 
-	virtual	bool IsInside(const SimdPoint3& pt,SimdScalar tolerance) const = 0;
+	virtual	bool IsInside(const btPoint3& pt,btScalar tolerance) const = 0;
 	
 	/// optional Hull is for optional Separating Axis Test Hull collision detection, see Hull.cpp
 	class	Hull*	m_optionalHull;

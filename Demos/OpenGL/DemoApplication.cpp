@@ -14,7 +14,7 @@ subject to the following restrictions:
 */
 
 #include "DemoApplication.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #include "CcdPhysicsEnvironment.h"
 #include "CcdPhysicsController.h"
@@ -23,14 +23,14 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "GL_ShapeDrawer.h"
-#include "LinearMath/GenQuickprof.h"
+#include "LinearMath/btQuickprof.h"
 #include "BMF_Api.h"
 
 int numObjects = 0;
 const int maxNumObjects = 16384;
 DefaultMotionState ms[maxNumObjects];
 CcdPhysicsController* physObjects[maxNumObjects];
-btSimdTransform startTransforms[maxNumObjects];
+btTransform startTransforms[maxNumObjects];
 btCollisionShape* gShapePtr[maxNumObjects];//1 rigidbody has 1 shape (no re-use of shapes)
 
 
@@ -133,21 +133,21 @@ void DemoApplication::updateCamera() {
 	float razi = m_azi * 0.01745329251994329547;// rads per deg
 	
 
-	btSimdQuaternion rot(m_cameraUp,razi);
+	btQuaternion rot(m_cameraUp,razi);
 
 
-	btSimdVector3 eyePos(0,0,0);
+	btVector3 eyePos(0,0,0);
 	eyePos[m_forwardAxis] = -m_cameraDistance;
 
-	btSimdVector3 forward(eyePos[0],eyePos[1],eyePos[2]);
+	btVector3 forward(eyePos[0],eyePos[1],eyePos[2]);
 	if (forward.length2() < SIMD_EPSILON)
 	{
 		forward.setValue(1.f,0.f,0.f);
 	}
-	btSimdVector3 right = m_cameraUp.cross(forward);
-	btSimdQuaternion roll(right,-rele);
+	btVector3 right = m_cameraUp.cross(forward);
+	btQuaternion roll(right,-rele);
 
-	eyePos = btSimdMatrix3x3(rot) * btSimdMatrix3x3(roll) * eyePos;
+	eyePos = btMatrix3x3(rot) * btMatrix3x3(roll) * eyePos;
 
 	m_cameraPosition[0] = eyePos.getX();
 	m_cameraPosition[1] = eyePos.getY();
@@ -380,21 +380,21 @@ void DemoApplication::displayCallback()
 
 
 
-void	DemoApplication::shootBox(const btSimdVector3& destination)
+void	DemoApplication::shootBox(const btVector3& destination)
 {
 	if (m_physicsEnvironmentPtr)
 	{
 		bool isDynamic = true;
 		float mass = 1.f;
-		btSimdTransform startTransform;
+		btTransform startTransform;
 		startTransform.setIdentity();
-		btSimdVector3 camPos = getCameraPosition();
+		btVector3 camPos = getCameraPosition();
 		startTransform.setOrigin(camPos);
-		btCollisionShape* boxShape = new btBoxShape(btSimdVector3(1.f,1.f,1.f));
+		btCollisionShape* boxShape = new btBoxShape(btVector3(1.f,1.f,1.f));
 
 		CcdPhysicsController* newBox = LocalCreatePhysicsObject(isDynamic, mass, startTransform,boxShape);
 
-		btSimdVector3 linVel(destination[0]-camPos[0],destination[1]-camPos[1],destination[2]-camPos[2]);
+		btVector3 linVel(destination[0]-camPos[0],destination[1]-camPos[1],destination[2]-camPos[2]);
 		linVel.normalize();
 		linVel*=m_ShootBoxInitialSpeed;
 
@@ -407,12 +407,12 @@ void	DemoApplication::shootBox(const btSimdVector3& destination)
 
 
 int gPickingConstraintId = 0;
-btSimdVector3 gOldPickingPos;
+btVector3 gOldPickingPos;
 float gOldPickingDist  = 0.f;
 btRigidBody* pickedBody = 0;//for deactivation state
 
 
-btSimdVector3	DemoApplication::GetRayTo(int x,int y)
+btVector3	DemoApplication::GetRayTo(int x,int y)
 {
 
 		float top = 1.f;
@@ -421,16 +421,16 @@ btSimdVector3	DemoApplication::GetRayTo(int x,int y)
 	float tanFov = (top-bottom)*0.5f / nearPlane;
 	float fov = 2.0 * atanf (tanFov);
 
-	btSimdVector3	rayFrom = getCameraPosition();
-	btSimdVector3 rayForward = (getCameraTargetPosition()-getCameraPosition());
+	btVector3	rayFrom = getCameraPosition();
+	btVector3 rayForward = (getCameraTargetPosition()-getCameraPosition());
 	rayForward.normalize();
 	float farPlane = 600.f;
 	rayForward*= farPlane;
 
-	btSimdVector3 rightOffset;
-	btSimdVector3 vertical = m_cameraUp;
+	btVector3 rightOffset;
+	btVector3 vertical = m_cameraUp;
 
-	btSimdVector3 hor;
+	btVector3 hor;
 	hor = rayForward.cross(vertical);
 	hor.normalize();
 	vertical = hor.cross(rayForward);
@@ -439,10 +439,10 @@ btSimdVector3	DemoApplication::GetRayTo(int x,int y)
 	float tanfov = tanf(0.5f*fov);
 	hor *= 2.f * farPlane * tanfov;
 	vertical *= 2.f * farPlane * tanfov;
-	btSimdVector3 rayToCenter = rayFrom + rayForward;
-	btSimdVector3 dHor = hor * 1.f/float(m_glutScreenWidth);
-	btSimdVector3 dVert = vertical * 1.f/float(m_glutScreenHeight);
-	btSimdVector3 rayTo = rayToCenter - 0.5f * hor + 0.5f * vertical;
+	btVector3 rayToCenter = rayFrom + rayForward;
+	btVector3 dHor = hor * 1.f/float(m_glutScreenWidth);
+	btVector3 dVert = vertical * 1.f/float(m_glutScreenHeight);
+	btVector3 rayTo = rayToCenter - 0.5f * hor + 0.5f * vertical;
 	rayTo += x * dHor;
 	rayTo -= y * dVert;
 	return rayTo;
@@ -454,7 +454,7 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 	//printf("button %i, state %i, x=%i,y=%i\n",button,state,x,y);
 	//button 0, state 0 means left mouse down
 
-	btSimdVector3 rayTo = GetRayTo(x,y);
+	btVector3 rayTo = GetRayTo(x,y);
 
 	switch (button)
 	{
@@ -483,11 +483,11 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 						if (body)
 						{
 							body->SetActivationState(ACTIVE_TAG);
-							btSimdVector3 impulse = rayTo;
+							btVector3 impulse = rayTo;
 							impulse.normalize();
 							float impulseStrength = 10.f;
 							impulse *= impulseStrength;
-							btSimdVector3 relPos(
+							btVector3 relPos(
 								hit[0] - body->getCenterOfMassPosition().getX(),						
 								hit[1] - body->getCenterOfMassPosition().getY(),
 								hit[2] - body->getCenterOfMassPosition().getZ());
@@ -526,9 +526,9 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 							pickedBody = body;
 							pickedBody->SetActivationState(DISABLE_DEACTIVATION);
 
-							btSimdVector3 pickPos(hit[0],hit[1],hit[2]);
+							btVector3 pickPos(hit[0],hit[1],hit[2]);
 
-							btSimdVector3 localPivot = body->getCenterOfMassTransform().inverse() * pickPos;
+							btVector3 localPivot = body->getCenterOfMassTransform().inverse() * pickPos;
 
 							gPickingConstraintId = m_physicsEnvironmentPtr->createConstraint(physCtrl,0,PHY_POINT2POINT_CONSTRAINT,
 								localPivot.getX(),
@@ -541,7 +541,7 @@ void DemoApplication::mouseFunc(int button, int state, int x, int y)
 							gOldPickingPos = rayTo;
 
 
-							btSimdVector3 eyePos(m_cameraPosition[0],m_cameraPosition[1],m_cameraPosition[2]);
+							btVector3 eyePos(m_cameraPosition[0],m_cameraPosition[1],m_cameraPosition[2]);
 
 							gOldPickingDist  = (pickPos-eyePos).length();
 
@@ -592,13 +592,13 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		{
 			//keep it at the same picking distance
 
-			btSimdVector3 newRayTo = GetRayTo(x,y);
-			btSimdVector3 eyePos(m_cameraPosition[0],m_cameraPosition[1],m_cameraPosition[2]);
-			btSimdVector3 dir = newRayTo-eyePos;
+			btVector3 newRayTo = GetRayTo(x,y);
+			btVector3 eyePos(m_cameraPosition[0],m_cameraPosition[1],m_cameraPosition[2]);
+			btVector3 dir = newRayTo-eyePos;
 			dir.normalize();
 			dir *= gOldPickingDist;
 
-			btSimdVector3 newPos = eyePos + dir;
+			btVector3 newPos = eyePos + dir;
 			p2p->SetPivotB(newPos);
 		}
 
@@ -607,7 +607,7 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 
 
 ///Very basic import
-CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic, float mass, const btSimdTransform& startTransform,btCollisionShape* shape)
+CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic, float mass, const btTransform& startTransform,btCollisionShape* shape)
 {
 
 	startTransforms[numObjects] = startTransform;
@@ -636,7 +636,7 @@ CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic,
 	ccdObjectCi.m_linearDamping = shapeProps.m_lin_drag;
 	ccdObjectCi.m_angularDamping = shapeProps.m_ang_drag;
 
-	btSimdTransform tr;
+	btTransform tr;
 	tr.setIdentity();
 
 	int i = numObjects;
@@ -646,15 +646,15 @@ CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic,
 		shapeProps.m_shape = gShapePtr[i];
 		shapeProps.m_shape->SetMargin(0.05f);
 
-		btSimdQuaternion orn = startTransform.getRotation();
+		btQuaternion orn = startTransform.getRotation();
 
 
 		ms[i].setWorldOrientation(orn[0],orn[1],orn[2],orn[3]);
 		ms[i].setWorldPosition(startTransform.getOrigin().getX(),startTransform.getOrigin().getY(),startTransform.getOrigin().getZ());
 
 		ccdObjectCi.m_MotionState = &ms[i];
-		ccdObjectCi.m_gravity = btSimdVector3(0,-9.8,0);
-		ccdObjectCi.m_localInertiaTensor =btSimdVector3(0,0,0);
+		ccdObjectCi.m_gravity = btVector3(0,-9.8,0);
+		ccdObjectCi.m_localInertiaTensor =btVector3(0,0,0);
 		if (!isDynamic)
 		{
 			shapeProps.m_mass = 0.f;
@@ -671,7 +671,7 @@ CcdPhysicsController*  DemoApplication::LocalCreatePhysicsObject(bool isDynamic,
 		}
 
 
-		btSimdVector3 localInertia(0.f,0.f,0.f);
+		btVector3 localInertia(0.f,0.f,0.f);
 
 		if (isDynamic)
 		{
@@ -744,30 +744,30 @@ void DemoApplication::renderme()
 			
 			body->m_worldTransform.getOpenGLMatrix( m );
 
-			btSimdVector3 wireColor(1.f,1.0f,0.5f); //wants deactivation
+			btVector3 wireColor(1.f,1.0f,0.5f); //wants deactivation
 			if (i & 1)
 			{
-				wireColor = btSimdVector3(0.f,0.0f,1.f);
+				wireColor = btVector3(0.f,0.0f,1.f);
 			}
 			///color differently for active, sleeping, wantsdeactivation states
 			if (ctrl->GetRigidBody()->GetActivationState() == 1) //active
 			{
 				if (i & 1)
 				{
-					wireColor += btSimdVector3 (1.f,0.f,0.f);
+					wireColor += btVector3 (1.f,0.f,0.f);
 				} else
 				{			
-					wireColor += btSimdVector3 (.5f,0.f,0.f);
+					wireColor += btVector3 (.5f,0.f,0.f);
 				}
 			}
 			if (ctrl->GetRigidBody()->GetActivationState() == 2) //ISLAND_SLEEPING
 			{
 				if (i & 1)
 				{
-					wireColor += btSimdVector3 (0.f,1.f, 0.f);
+					wireColor += btVector3 (0.f,1.f, 0.f);
 				} else
 				{
-					wireColor += btSimdVector3 (0.f,0.5f,0.f);
+					wireColor += btVector3 (0.f,0.5f,0.f);
 				}
 			}
 
@@ -776,7 +776,7 @@ void DemoApplication::renderme()
 			ctrl->GetRigidBody()->GetCollisionShape()->SetExtraDebugInfo(extraDebug);
 
 			float vec[16];
-			btSimdTransform ident;
+			btTransform ident;
 			ident.setIdentity();
 			ident.getOpenGLMatrix(vec);
 			

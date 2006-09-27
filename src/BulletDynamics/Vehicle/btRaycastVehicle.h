@@ -45,8 +45,8 @@ public:
 		};
 private:
 
-	SimdScalar	m_tau;
-	SimdScalar	m_damping;
+	btScalar	m_tau;
+	btScalar	m_damping;
 	btVehicleRaycaster*	m_vehicleRaycaster;
 	float		m_pitchControl;
 	float	m_steeringValue; 
@@ -71,26 +71,26 @@ public:
 
 
 
-	SimdScalar Raycast(btWheelInfo& wheel);
+	btScalar Raycast(btWheelInfo& wheel);
 
-	virtual void UpdateVehicle(SimdScalar step);
+	virtual void UpdateVehicle(btScalar step);
 
 	void ResetSuspension();
 
-	SimdScalar	GetSteeringValue(int wheel) const;
+	btScalar	GetSteeringValue(int wheel) const;
 
-	void	SetSteeringValue(SimdScalar steering,int wheel);
+	void	SetSteeringValue(btScalar steering,int wheel);
 
 
-	void	ApplyEngineForce(SimdScalar force, int wheel);
+	void	ApplyEngineForce(btScalar force, int wheel);
 
-	const btSimdTransform&	GetWheelTransformWS( int wheelIndex ) const;
+	const btTransform&	GetWheelTransformWS( int wheelIndex ) const;
 
 	void	UpdateWheelTransform( int wheelIndex );
 	
-	void	SetRaycastWheelInfo( int wheelIndex , bool isInContact, const btSimdVector3& hitPoint, const btSimdVector3& hitNormal,SimdScalar depth);
+	void	SetRaycastWheelInfo( int wheelIndex , bool isInContact, const btVector3& hitPoint, const btVector3& hitNormal,btScalar depth);
 
-	btWheelInfo&	AddWheel( const btSimdVector3& connectionPointCS0, const btSimdVector3& wheelDirectionCS0,const btSimdVector3& wheelAxleCS,SimdScalar suspensionRestLength,SimdScalar wheelRadius,const btVehicleTuning& tuning, bool isFrontWheel);
+	btWheelInfo&	AddWheel( const btVector3& connectionPointCS0, const btVector3& wheelDirectionCS0,const btVector3& wheelAxleCS,btScalar suspensionRestLength,btScalar wheelRadius,const btVehicleTuning& tuning, bool isFrontWheel);
 
 	inline int		GetNumWheels() const {
 		return m_wheelInfo.size();
@@ -113,9 +113,9 @@ public:
 		m_pitchControl = pitch;
 	}
 	
-	void	UpdateSuspension(SimdScalar deltaTime);
+	void	UpdateSuspension(btScalar deltaTime);
 
-	void	UpdateFriction(SimdScalar	timeStep);
+	void	UpdateFriction(btScalar	timeStep);
 
 
 
@@ -155,7 +155,7 @@ public:
 		//not yet
 	}
 
-	virtual	void	SolveConstraint(SimdScalar	timeStep)
+	virtual	void	SolveConstraint(btScalar	timeStep)
 	{
 		//not yet
 	}

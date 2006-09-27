@@ -17,7 +17,7 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 #include "MyMotionState.h"
 #include "btBulletDynamicsCommon.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 #include "GLDebugDrawer.h"
 #include "PHY_Pro.h"
 #include "ConcaveDemo.h"
@@ -30,17 +30,17 @@ GLDebugDrawer	debugDrawer;
 static const int NUM_VERTICES = 5;
 static const int NUM_TRIANGLES=4;
 
-btSimdVector3	gVertices[NUM_VERTICES];
+btVector3	gVertices[NUM_VERTICES];
 int	gIndices[NUM_TRIANGLES*3];
 const float TRIANGLE_SIZE=80.f;
 
 
 ///User can override this material combiner by implementing gContactAddedCallback and setting body0->m_collisionFlags |= btCollisionObject::customMaterialCallback;
-inline SimdScalar	calculateCombinedFriction(float friction0,float friction1)
+inline btScalar	calculateCombinedFriction(float friction0,float friction1)
 {
-	SimdScalar friction = friction0 * friction1;
+	btScalar friction = friction0 * friction1;
 
-	const SimdScalar MAX_FRICTION  = 10.f;
+	const btScalar MAX_FRICTION  = 10.f;
 	if (friction < -MAX_FRICTION)
 		friction = -MAX_FRICTION;
 	if (friction > MAX_FRICTION)
@@ -49,7 +49,7 @@ inline SimdScalar	calculateCombinedFriction(float friction0,float friction1)
 
 }
 
-inline SimdScalar	calculateCombinedRestitution(float restitution0,float restitution1)
+inline btScalar	calculateCombinedRestitution(float restitution0,float restitution1)
 {
 	return restitution0 * restitution1;
 }
@@ -107,7 +107,7 @@ void	ConcaveDemo::initPhysics()
 {
 	#define TRISIZE 10.f
 
-	int vertStride = sizeof(btSimdVector3);
+	int vertStride = sizeof(btVector3);
 	int indexStride = 3*sizeof(int);
 
 	const int NUM_VERTS_X = 50;
@@ -116,7 +116,7 @@ void	ConcaveDemo::initPhysics()
 	
 	const int totalTriangles = 2*(NUM_VERTS_X-1)*(NUM_VERTS_Y-1);
 
-	btSimdVector3*	gVertices = new btSimdVector3[totalVerts];
+	btVector3*	gVertices = new btVector3[totalVerts];
 	int*	gIndices = new int[totalTriangles*3];
 
 	int i;
@@ -164,9 +164,9 @@ void	ConcaveDemo::initPhysics()
 	
 		bool isDynamic = false;
 	float mass = 0.f;
-	btSimdTransform	startTransform;
+	btTransform	startTransform;
 	startTransform.setIdentity();
-	startTransform.setOrigin(btSimdVector3(0,-2,0));
+	startTransform.setOrigin(btVector3(0,-2,0));
 
 	CcdPhysicsController* staticTrimesh = LocalCreatePhysicsObject(isDynamic, mass, startTransform,trimeshShape);
 	//enable custom material callback
@@ -175,8 +175,8 @@ void	ConcaveDemo::initPhysics()
 	{
 		for (int i=0;i<10;i++)
 		{
-			btCollisionShape* boxShape = new btBoxShape(btSimdVector3(1,1,1));
-			startTransform.setOrigin(btSimdVector3(2*i,1,1));
+			btCollisionShape* boxShape = new btBoxShape(btVector3(1,1,1));
+			startTransform.setOrigin(btVector3(2*i,1,1));
 			LocalCreatePhysicsObject(true, 1, startTransform,boxShape);
 		}
 	}

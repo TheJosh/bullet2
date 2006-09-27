@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #ifndef OPTIMIZED_BVH_H
 #define OPTIMIZED_BVH_H
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 #include <vector>
 
 class btStridingMeshInterface;
@@ -29,8 +29,8 @@ class btStridingMeshInterface;
 struct btOptimizedBvhNode
 {
 
-	btSimdVector3	m_aabbMin;
-	btSimdVector3	m_aabbMax;
+	btVector3	m_aabbMin;
+	btVector3	m_aabbMax;
 
 //these 2 pointers are obsolete, the stackless traversal just uses the escape index
 	btOptimizedBvhNode*	m_leftChild;
@@ -79,18 +79,18 @@ public:
 
 	int	SortAndCalcSplittingIndex(NodeArray&	leafNodes,int startIndex,int endIndex,int splitAxis);
 	
-	void	WalkTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	void	WalkTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 	
-	void	WalkStacklessTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	void	WalkStacklessTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 	
 
 	//OptimizedBvhNode*	GetRootNode() { return m_rootNode1;}
 
 	int					GetNumNodes() { return m_numNodes;}
 
-	void	ReportAabbOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	void	ReportAabbOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 
-	void	ReportSphereOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	void	ReportSphereOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 
 
 };

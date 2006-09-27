@@ -19,8 +19,8 @@
 #ifndef AXIS_SWEEP_3_H
 #define AXIS_SWEEP_3_H
 
-#include "LinearMath/SimdPoint3.h"
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btPoint3.h"
+#include "LinearMath/btVector3.h"
 #include "btOverlappingPairCache.h"
 #include "btBroadphaseProxy.h"
 
@@ -60,10 +60,10 @@ public:
 
 	
 private:
-	SimdPoint3 m_worldAabbMin;						// overall system bounds
-	SimdPoint3 m_worldAabbMax;						// overall system bounds
+	btPoint3 m_worldAabbMin;						// overall system bounds
+	btPoint3 m_worldAabbMax;						// overall system bounds
 
-	btSimdVector3 m_quantize;						// scaling factor for quantization
+	btVector3 m_quantize;						// scaling factor for quantization
 
 	int m_numHandles;						// number of active handles
 	int m_maxHandles;						// max number of handles
@@ -83,7 +83,7 @@ private:
 	//Overlap* AddOverlap(unsigned short handleA, unsigned short handleB);
 	//void RemoveOverlap(unsigned short handleA, unsigned short handleB);
 
-	void Quantize(unsigned short* out, const SimdPoint3& point, int isMax) const;
+	void Quantize(unsigned short* out, const btPoint3& point, int isMax) const;
 
 	void SortMinDown(int axis, unsigned short edge, bool updateOverlaps = true);
 	void SortMinUp(int axis, unsigned short edge, bool updateOverlaps = true);
@@ -91,7 +91,7 @@ private:
 	void SortMaxUp(int axis, unsigned short edge, bool updateOverlaps = true);
 
 public:
-	btAxisSweep3(const SimdPoint3& worldAabbMin,const SimdPoint3& worldAabbMax, int maxHandles = 16384);
+	btAxisSweep3(const btPoint3& worldAabbMin,const btPoint3& worldAabbMax, int maxHandles = 16384);
 	virtual	~btAxisSweep3();
 
 	virtual void	RefreshOverlappingPairs()
@@ -99,16 +99,16 @@ public:
 		//this is replace by sweep and prune
 	}
 	
-	unsigned short AddHandle(const SimdPoint3& aabbMin,const SimdPoint3& aabbMax, void* pOwner,short int collisionFilterGroup,short int collisionFilterMask);
+	unsigned short AddHandle(const btPoint3& aabbMin,const btPoint3& aabbMax, void* pOwner,short int collisionFilterGroup,short int collisionFilterMask);
 	void RemoveHandle(unsigned short handle);
-	void UpdateHandle(unsigned short handle, const SimdPoint3& aabbMin,const SimdPoint3& aabbMax);
+	void UpdateHandle(unsigned short handle, const btPoint3& aabbMin,const btPoint3& aabbMax);
 	inline Handle* GetHandle(unsigned short index) const {return m_pHandles + index;}
 
 
 	//Broadphase Interface
-	virtual btBroadphaseProxy*	CreateProxy(  const btSimdVector3& min,  const btSimdVector3& max,int shapeType,void* userPtr ,short int collisionFilterGroup,short int collisionFilterMask);
+	virtual btBroadphaseProxy*	CreateProxy(  const btVector3& min,  const btVector3& max,int shapeType,void* userPtr ,short int collisionFilterGroup,short int collisionFilterMask);
 	virtual void	DestroyProxy(btBroadphaseProxy* proxy);
-	virtual void	SetAabb(btBroadphaseProxy* proxy,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax);
+	virtual void	SetAabb(btBroadphaseProxy* proxy,const btVector3& aabbMin,const btVector3& aabbMax);
 
 };
 

@@ -21,7 +21,7 @@
 
 #include <assert.h>
 
-btBroadphaseProxy*	btAxisSweep3::CreateProxy(  const btSimdVector3& min,  const btSimdVector3& max,int shapeType,void* userPtr,short int collisionFilterGroup,short int collisionFilterMask)
+btBroadphaseProxy*	btAxisSweep3::CreateProxy(  const btVector3& min,  const btVector3& max,int shapeType,void* userPtr,short int collisionFilterGroup,short int collisionFilterMask)
 {
 		unsigned short handleId = AddHandle(min,max, userPtr,collisionFilterGroup,collisionFilterMask);
 		
@@ -36,7 +36,7 @@ void	btAxisSweep3::DestroyProxy(btBroadphaseProxy* proxy)
 	RemoveHandle(handle->m_handleId);
 }
 
-void	btAxisSweep3::SetAabb(btBroadphaseProxy* proxy,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax)
+void	btAxisSweep3::SetAabb(btBroadphaseProxy* proxy,const btVector3& aabbMin,const btVector3& aabbMax)
 {
 	Handle* handle = static_cast<Handle*>(proxy);
 	UpdateHandle(handle->m_handleId,aabbMin,aabbMax);
@@ -47,7 +47,7 @@ void	btAxisSweep3::SetAabb(btBroadphaseProxy* proxy,const btSimdVector3& aabbMin
 
 
 
-btAxisSweep3::btAxisSweep3(const SimdPoint3& worldAabbMin,const SimdPoint3& worldAabbMax, int maxHandles)
+btAxisSweep3::btAxisSweep3(const btPoint3& worldAabbMin,const btPoint3& worldAabbMax, int maxHandles)
 :btOverlappingPairCache()
 {
 	//assert(bounds.HasVolume());
@@ -59,9 +59,9 @@ btAxisSweep3::btAxisSweep3(const SimdPoint3& worldAabbMin,const SimdPoint3& worl
 	m_worldAabbMin = worldAabbMin;
 	m_worldAabbMax = worldAabbMax;
 
-	btSimdVector3 aabbSize = m_worldAabbMax - m_worldAabbMin;
+	btVector3 aabbSize = m_worldAabbMax - m_worldAabbMin;
 
-	m_quantize = btSimdVector3(65535.0f,65535.0f,65535.0f) / aabbSize;
+	m_quantize = btVector3(65535.0f,65535.0f,65535.0f) / aabbSize;
 
 	// allocate handles buffer and put all handles on free list
 	m_pHandles = new Handle[maxHandles];
@@ -107,15 +107,15 @@ btAxisSweep3::~btAxisSweep3()
 	delete[] m_pHandles;
 }
 
-void btAxisSweep3::Quantize(unsigned short* out, const SimdPoint3& point, int isMax) const
+void btAxisSweep3::Quantize(unsigned short* out, const btPoint3& point, int isMax) const
 {
-	SimdPoint3 clampedPoint(point);
+	btPoint3 clampedPoint(point);
 	/*
 	if (isMax)
-		clampedPoint += btSimdVector3(10,10,10);
+		clampedPoint += btVector3(10,10,10);
 	else
 	{
-		clampedPoint -= btSimdVector3(10,10,10);
+		clampedPoint -= btVector3(10,10,10);
 	}
 	*/
 
@@ -123,7 +123,7 @@ void btAxisSweep3::Quantize(unsigned short* out, const SimdPoint3& point, int is
 	clampedPoint.setMax(m_worldAabbMin);
 	clampedPoint.setMin(m_worldAabbMax);
 
-	btSimdVector3 v = (clampedPoint - m_worldAabbMin) * m_quantize;
+	btVector3 v = (clampedPoint - m_worldAabbMin) * m_quantize;
 	out[0] = (unsigned short)(((int)v.getX() & 0xfffc) | isMax);
 	out[1] = (unsigned short)(((int)v.getY() & 0xfffc) | isMax);
 	out[2] = (unsigned short)(((int)v.getZ() & 0xfffc) | isMax);
@@ -155,7 +155,7 @@ void btAxisSweep3::FreeHandle(unsigned short handle)
 
 
 
-unsigned short btAxisSweep3::AddHandle(const SimdPoint3& aabbMin,const SimdPoint3& aabbMax, void* pOwner,short int collisionFilterGroup,short int collisionFilterMask)
+unsigned short btAxisSweep3::AddHandle(const btPoint3& aabbMin,const btPoint3& aabbMax, void* pOwner,short int collisionFilterGroup,short int collisionFilterMask)
 {
 	// quantize the bounds
 	unsigned short min[3], max[3];
@@ -287,7 +287,7 @@ bool btAxisSweep3::TestOverlap(int ignoreAxis,const Handle* pHandleA, const Hand
 	return true;
 }
 
-void btAxisSweep3::UpdateHandle(unsigned short handle, const SimdPoint3& aabbMin,const SimdPoint3& aabbMax)
+void btAxisSweep3::UpdateHandle(unsigned short handle, const btPoint3& aabbMin,const btPoint3& aabbMax)
 {
 //	assert(bounds.IsFinite());
 	//assert(bounds.HasVolume());

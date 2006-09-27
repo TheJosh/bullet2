@@ -19,82 +19,82 @@ subject to the following restrictions:
 #include "btPolyhedralConvexShape.h"
 #include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
-#include "LinearMath/SimdPoint3.h"
-#include "LinearMath/SimdMinMax.h"
+#include "LinearMath/btPoint3.h"
+#include "LinearMath/btSimdMinMax.h"
 
 ///BoxShape implements both a feature based (vertex/edge/plane) and implicit (getSupportingVertex) Box
 class btBoxShape: public btPolyhedralConvexShape
 {
 
-	btSimdVector3	m_boxHalfExtents1;
+	btVector3	m_boxHalfExtents1;
 
 
 public:
 
-	btSimdVector3 GetHalfExtents() const;
+	btVector3 GetHalfExtents() const;
 	//{ return m_boxHalfExtents1 * m_localScaling;}
- 	//const btSimdVector3& GetHalfExtents() const{ return m_boxHalfExtents1;}
+ 	//const btVector3& GetHalfExtents() const{ return m_boxHalfExtents1;}
 
 
 	
 	virtual int	GetShapeType() const { return BOX_SHAPE_PROXYTYPE;}
 
-	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec) const
+	virtual btVector3	LocalGetSupportingVertex(const btVector3& vec) const
 	{
 		
-		btSimdVector3 halfExtents = GetHalfExtents();
+		btVector3 halfExtents = GetHalfExtents();
 		
-		btSimdVector3 supVertex;
-		supVertex = SimdPoint3(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
-                     vec.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
-                     vec.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
+		btVector3 supVertex;
+		supVertex = btPoint3(vec.x() < btScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
+                     vec.y() < btScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
+                     vec.z() < btScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
   
 		return supVertex;
 	}
 
-	virtual inline btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const
+	virtual inline btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const
 	{
-		btSimdVector3 halfExtents = GetHalfExtents();
-		btSimdVector3 margin(GetMargin(),GetMargin(),GetMargin());
+		btVector3 halfExtents = GetHalfExtents();
+		btVector3 margin(GetMargin(),GetMargin(),GetMargin());
 		halfExtents -= margin;
 
-		return btSimdVector3(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
-                    vec.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
-                    vec.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
+		return btVector3(vec.x() < btScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
+                    vec.y() < btScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
+                    vec.z() < btScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
 	}
 
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 	{
-		btSimdVector3 halfExtents = GetHalfExtents();
-		btSimdVector3 margin(GetMargin(),GetMargin(),GetMargin());
+		btVector3 halfExtents = GetHalfExtents();
+		btVector3 margin(GetMargin(),GetMargin(),GetMargin());
 		halfExtents -= margin;
 
 
 		for (int i=0;i<numVectors;i++)
 		{
-			const btSimdVector3& vec = vectors[i];
-			supportVerticesOut[i].setValue(vec.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
-                    vec.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
-                    vec.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
+			const btVector3& vec = vectors[i];
+			supportVerticesOut[i].setValue(vec.x() < btScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
+                    vec.y() < btScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
+                    vec.z() < btScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
 		}
 
 	}
 
 
-	btBoxShape( const btSimdVector3& boxHalfExtents) :  m_boxHalfExtents1(boxHalfExtents){};
+	btBoxShape( const btVector3& boxHalfExtents) :  m_boxHalfExtents1(boxHalfExtents){};
 	
-	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
+	virtual void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
 
 	
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
-	virtual void GetPlane(btSimdVector3& planeNormal,SimdPoint3& planeSupport,int i ) const
+	virtual void GetPlane(btVector3& planeNormal,btPoint3& planeSupport,int i ) const
 	{
 		//this plane might not be aligned...
-		btSimdVector4 plane ;
+		btVector4 plane ;
 		GetPlaneEquation(plane,i);
-		planeNormal = btSimdVector3(plane.getX(),plane.getY(),plane.getZ());
+		planeNormal = btVector3(plane.getX(),plane.getY(),plane.getZ());
 		planeSupport = LocalGetSupportingVertex(-planeNormal);
 	}
 
@@ -115,20 +115,20 @@ public:
 	}
 
 
-	virtual void GetVertex(int i,btSimdVector3& vtx) const
+	virtual void GetVertex(int i,btVector3& vtx) const
 	{
-		btSimdVector3 halfExtents = GetHalfExtents();
+		btVector3 halfExtents = GetHalfExtents();
 
-		vtx = btSimdVector3(
+		vtx = btVector3(
 				halfExtents.x() * (1-(i&1)) - halfExtents.x() * (i&1),
 				halfExtents.y() * (1-((i&2)>>1)) - halfExtents.y() * ((i&2)>>1),
 				halfExtents.z() * (1-((i&4)>>2)) - halfExtents.z() * ((i&4)>>2));
 	}
 	
 
-	virtual void	GetPlaneEquation(btSimdVector4& plane,int i) const
+	virtual void	GetPlaneEquation(btVector4& plane,int i) const
 	{
-		btSimdVector3 halfExtents = GetHalfExtents();
+		btVector3 halfExtents = GetHalfExtents();
 
 		switch (i)
 		{
@@ -162,7 +162,7 @@ public:
 	}
 
 	
-	virtual void GetEdge(int i,SimdPoint3& pa,SimdPoint3& pb) const
+	virtual void GetEdge(int i,btPoint3& pa,btPoint3& pb) const
 	//virtual void GetEdge(int i,Edge& edge) const
 	{
 		int edgeVert0 = 0;
@@ -233,11 +233,11 @@ public:
 
 
 	
-	virtual	bool IsInside(const SimdPoint3& pt,SimdScalar tolerance) const
+	virtual	bool IsInside(const btPoint3& pt,btScalar tolerance) const
 	{
-		btSimdVector3 halfExtents = GetHalfExtents();
+		btVector3 halfExtents = GetHalfExtents();
 
-		//SimdScalar minDist = 2*tolerance;
+		//btScalar minDist = 2*tolerance;
 		
 		bool result =	(pt.x() <= (halfExtents.x()+tolerance)) &&
 						(pt.x() >= (-halfExtents.x()-tolerance)) &&

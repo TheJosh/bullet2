@@ -23,7 +23,7 @@ subject to the following restrictions:
 //include common Bullet Collision Detection headerfiles
 #include "btBulletCollisionCommon.h"
 
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 #include "GL_ShapeDrawer.h"
 #include "CollisionInterfaceDemo.h"
 #include "GlutStuff.h"
@@ -59,31 +59,31 @@ void	CollisionInterfaceDemo::initPhysics()
 			
 	m_debugMode |= btIDebugDraw::DBG_DrawWireframe;
 	
-	btSimdMatrix3x3 basisA;
+	btMatrix3x3 basisA;
 	basisA.setIdentity();
 
-	btSimdMatrix3x3 basisB;
+	btMatrix3x3 basisB;
 	basisB.setIdentity();
 
 	objects[0].m_worldTransform.setBasis(basisA);
 	objects[1].m_worldTransform.setBasis(basisB);
 
-	//SimdPoint3	points0[3]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1)};
-	//SimdPoint3	points1[5]={SimdPoint3(1,0,0),SimdPoint3(0,1,0),SimdPoint3(0,0,1),SimdPoint3(0,0,-1),SimdPoint3(-1,-1,0)};
+	//btPoint3	points0[3]={btPoint3(1,0,0),btPoint3(0,1,0),btPoint3(0,0,1)};
+	//btPoint3	points1[5]={btPoint3(1,0,0),btPoint3(0,1,0),btPoint3(0,0,1),btPoint3(0,0,-1),btPoint3(-1,-1,0)};
 	
-	btBoxShape* boxA = new btBoxShape(btSimdVector3(1,1,1));
-	btBoxShape* boxB = new btBoxShape(btSimdVector3(0.5,0.5,0.5));
+	btBoxShape* boxA = new btBoxShape(btVector3(1,1,1));
+	btBoxShape* boxB = new btBoxShape(btVector3(0.5,0.5,0.5));
 	//ConvexHullShape	hullA(points0,3);
-	//hullA.setLocalScaling(btSimdVector3(3,3,3));
+	//hullA.setLocalScaling(btVector3(3,3,3));
 	//ConvexHullShape	hullB(points1,4);
-	//hullB.setLocalScaling(btSimdVector3(4,4,4));
+	//hullB.setLocalScaling(btVector3(4,4,4));
 
 	objects[0].m_collisionShape = boxA;//&hullA;
 	objects[1].m_collisionShape = boxB;//&hullB;
 
 	btCollisionDispatcher* dispatcher = new btCollisionDispatcher;
-	btSimdVector3	worldAabbMin(-1000,-1000,-1000);
-	btSimdVector3	worldAabbMax(1000,1000,1000);
+	btVector3	worldAabbMin(-1000,-1000,-1000);
+	btVector3	worldAabbMax(1000,1000,1000);
 
 	btAxisSweep3*	broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
 	
@@ -140,8 +140,8 @@ void CollisionInterfaceDemo::displayCallback(void) {
 			glBegin(GL_LINES);
 			glColor3f(1, 0, 1);
 			
-			btSimdVector3 ptA = pt.GetPositionWorldOnA();
-			btSimdVector3 ptB = pt.GetPositionWorldOnB();
+			btVector3 ptA = pt.GetPositionWorldOnA();
+			btVector3 ptB = pt.GetPositionWorldOnB();
 
 			glVertex3d(ptA.x(),ptA.y(),ptA.z());
 			glVertex3d(ptB.x(),ptB.y(),ptB.z());
@@ -162,14 +162,14 @@ void CollisionInterfaceDemo::displayCallback(void) {
 	{
 		
 		objects[i].m_worldTransform.getOpenGLMatrix( m );
-		GL_ShapeDrawer::DrawOpenGL(m,objects[i].m_collisionShape,btSimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,objects[i].m_collisionShape,btVector3(1,1,1),getDebugMode());
 
 	}
 
 
-	btSimdQuaternion orn;
+	btQuaternion orn;
 	orn.setEuler(yaw,pitch,roll);
-	objects[1].m_worldTransform.setOrigin(objects[1].m_worldTransform.getOrigin()+btSimdVector3(0,-0.01,0));
+	objects[1].m_worldTransform.setOrigin(objects[1].m_worldTransform.getOrigin()+btVector3(0,-0.01,0));
 
 	objects[0].m_worldTransform.setRotation(orn);
 
@@ -182,8 +182,8 @@ void CollisionInterfaceDemo::displayCallback(void) {
 
 void CollisionInterfaceDemo::clientResetScene()
 {
-	objects[0].m_worldTransform.setOrigin(btSimdVector3(0.0f,3.f,0.f));
-	objects[1].m_worldTransform.setOrigin(btSimdVector3(0.0f,9.f,0.f));
+	objects[0].m_worldTransform.setOrigin(btVector3(0.0f,3.f,0.f));
+	objects[1].m_worldTransform.setOrigin(btVector3(0.0f,9.f,0.f));
 }
 
 

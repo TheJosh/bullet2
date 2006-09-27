@@ -82,11 +82,11 @@ void btCompoundCollisionAlgorithm::ProcessCollision (btBroadphaseProxy* ,btBroad
 		btCollisionObject* colObj = static_cast<btCollisionObject*>(m_childProxies[i].m_clientObject);
 
 		//backup
-		btSimdTransform	orgTrans = colObj->m_worldTransform;
+		btTransform	orgTrans = colObj->m_worldTransform;
 		btCollisionShape* orgShape = colObj->m_collisionShape;
 
-		btSimdTransform childTrans = compoundShape->GetChildTransform(i);
-		btSimdTransform	newChildWorldTrans = orgTrans*childTrans ;
+		btTransform childTrans = compoundShape->GetChildTransform(i);
+		btTransform	newChildWorldTrans = orgTrans*childTrans ;
 		colObj->m_worldTransform = newChildWorldTrans;
 
 		colObj->m_collisionShape = childShape;
@@ -122,11 +122,11 @@ float	btCompoundCollisionAlgorithm::CalculateTimeOfImpact(btBroadphaseProxy* pro
 		btCollisionObject* colObj = static_cast<btCollisionObject*>(m_childProxies[i].m_clientObject);
 
 		//backup
-		btSimdTransform	orgTrans = colObj->m_worldTransform;
+		btTransform	orgTrans = colObj->m_worldTransform;
 		btCollisionShape* orgShape = colObj->m_collisionShape;
 
-		btSimdTransform childTrans = compoundShape->GetChildTransform(i);
-		btSimdTransform	newChildWorldTrans = orgTrans*childTrans ;
+		btTransform childTrans = compoundShape->GetChildTransform(i);
+		btTransform	newChildWorldTrans = orgTrans*childTrans ;
 		colObj->m_worldTransform = newChildWorldTrans;
 
 		colObj->m_collisionShape = childShape;

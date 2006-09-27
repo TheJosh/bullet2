@@ -39,10 +39,10 @@ public:
 	btContinuousConvexCollision (btConvexShape*	shapeA,btConvexShape*	shapeB ,btSimplexSolverInterface* simplexSolver,btConvexPenetrationDepthSolver* penetrationDepthSolver);
 
 	virtual bool	calcTimeOfImpact(
-				const btSimdTransform& fromA,
-				const btSimdTransform& toA,
-				const btSimdTransform& fromB,
-				const btSimdTransform& toB,
+				const btTransform& fromA,
+				const btTransform& toA,
+				const btTransform& fromB,
+				const btTransform& toB,
 				CastResult& result);
 
 

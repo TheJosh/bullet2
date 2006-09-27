@@ -16,7 +16,7 @@ subject to the following restrictions:
 #include "btManifoldContactAddResult.h"
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 
-btManifoldContactAddResult::btManifoldContactAddResult(btSimdTransform transA,btSimdTransform transB,btPersistentManifold* manifoldPtr)
+btManifoldContactAddResult::btManifoldContactAddResult(btTransform transA,btTransform transB,btPersistentManifold* manifoldPtr)
 		:m_manifoldPtr(manifoldPtr)
 {
 	m_transAInv = transA.inverse();
@@ -25,15 +25,15 @@ btManifoldContactAddResult::btManifoldContactAddResult(btSimdTransform transA,bt
 }
 
 
-void btManifoldContactAddResult::AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth)
+void btManifoldContactAddResult::AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth)
 {
 	if (depth > m_manifoldPtr->GetContactBreakingTreshold())
 		return;
 
 
-	btSimdVector3 pointA = pointInWorld + normalOnBInWorld * depth;
-	btSimdVector3 localA = m_transAInv(pointA );
-	btSimdVector3 localB = m_transBInv(pointInWorld);
+	btVector3 pointA = pointInWorld + normalOnBInWorld * depth;
+	btVector3 localA = m_transAInv(pointA );
+	btVector3 localB = m_transBInv(pointInWorld);
 	btManifoldPoint newPt(localA,localB,normalOnBInWorld,depth);
 
 	int insertIndex = m_manifoldPtr->GetCacheEntry(newPt);

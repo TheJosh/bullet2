@@ -11,19 +11,19 @@
 #ifndef WHEEL_INFO_H
 #define WHEEL_INFO_H
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
 
 class btRigidBody;
 
 struct btWheelInfoConstructionInfo
 {
-	btSimdVector3	m_chassisConnectionCS;
-	btSimdVector3	m_wheelDirectionCS;
-	btSimdVector3	m_wheelAxleCS;
-	SimdScalar	m_suspensionRestLength;
-	SimdScalar	m_maxSuspensionTravelCm;
-	SimdScalar	m_wheelRadius;
+	btVector3	m_chassisConnectionCS;
+	btVector3	m_wheelDirectionCS;
+	btVector3	m_wheelAxleCS;
+	btScalar	m_suspensionRestLength;
+	btScalar	m_maxSuspensionTravelCm;
+	btScalar	m_wheelRadius;
 	
 	float		m_suspensionStiffness;
 	float		m_wheelsDampingCompression;
@@ -39,39 +39,39 @@ struct btWheelInfo
 	struct RaycastInfo
 	{
 		//set by raycaster
-		btSimdVector3	m_contactNormalWS;//contactnormal
-		btSimdVector3	m_contactPointWS;//raycast hitpoint
-		SimdScalar	m_suspensionLength;
-		btSimdVector3	m_hardPointWS;//raycast starting point
-		btSimdVector3	m_wheelDirectionWS; //direction in worldspace
-		btSimdVector3	m_wheelAxleWS; // axle in worldspace
+		btVector3	m_contactNormalWS;//contactnormal
+		btVector3	m_contactPointWS;//raycast hitpoint
+		btScalar	m_suspensionLength;
+		btVector3	m_hardPointWS;//raycast starting point
+		btVector3	m_wheelDirectionWS; //direction in worldspace
+		btVector3	m_wheelAxleWS; // axle in worldspace
 		bool		m_isInContact;
 		void*		m_groundObject; //could be general void* ptr
 	};
 
 	RaycastInfo	m_raycastInfo;
 
-	btSimdTransform	m_worldTransform;
+	btTransform	m_worldTransform;
 	
-	btSimdVector3	m_chassisConnectionPointCS; //const
-	btSimdVector3	m_wheelDirectionCS;//const
-	btSimdVector3	m_wheelAxleCS; // const or modified by steering
-	SimdScalar	m_suspensionRestLength1;//const
-	SimdScalar	m_maxSuspensionTravelCm;
-	SimdScalar GetSuspensionRestLength() const;
-	SimdScalar	m_wheelsRadius;//const
-	SimdScalar	m_suspensionStiffness;//const
-	SimdScalar	m_wheelsDampingCompression;//const
-	SimdScalar	m_wheelsDampingRelaxation;//const
-	SimdScalar	m_frictionSlip;
-	SimdScalar	m_steering;
-	SimdScalar	m_rotation;
-	SimdScalar	m_deltaRotation;
-	SimdScalar	m_rollInfluence;
+	btVector3	m_chassisConnectionPointCS; //const
+	btVector3	m_wheelDirectionCS;//const
+	btVector3	m_wheelAxleCS; // const or modified by steering
+	btScalar	m_suspensionRestLength1;//const
+	btScalar	m_maxSuspensionTravelCm;
+	btScalar GetSuspensionRestLength() const;
+	btScalar	m_wheelsRadius;//const
+	btScalar	m_suspensionStiffness;//const
+	btScalar	m_wheelsDampingCompression;//const
+	btScalar	m_wheelsDampingRelaxation;//const
+	btScalar	m_frictionSlip;
+	btScalar	m_steering;
+	btScalar	m_rotation;
+	btScalar	m_deltaRotation;
+	btScalar	m_rollInfluence;
 
-	SimdScalar	m_engineForce;
+	btScalar	m_engineForce;
 
-	SimdScalar	m_brake;
+	btScalar	m_brake;
 	
 	bool m_bIsFrontWheel;
 	
@@ -104,11 +104,11 @@ struct btWheelInfo
 
 	void	UpdateWheel(const btRigidBody& chassis,RaycastInfo& raycastInfo);
 
-	SimdScalar	m_clippedInvContactDotSuspension;
-	SimdScalar	m_suspensionRelativeVelocity;
+	btScalar	m_clippedInvContactDotSuspension;
+	btScalar	m_suspensionRelativeVelocity;
 	//calculated by suspension
-	SimdScalar	m_wheelsSuspensionForce;
-	SimdScalar	m_skidInfo;
+	btScalar	m_wheelsSuspensionForce;
+	btScalar	m_skidInfo;
 
 };
 

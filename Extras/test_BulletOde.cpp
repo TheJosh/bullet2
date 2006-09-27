@@ -5,10 +5,10 @@
  *                                                                       *
  * This library is free software; you can redistribute it and/or         *
  * modify it under the terms of EITHER:                                  *
- *   (1) The GNU Lesser General Public License as published by the Free  *
+ *   (1) The GNU Lesser bteral Public License as published by the Free  *
  *       Software Foundation; either version 2.1 of the License, or (at  *
  *       your option) any later version. The text of the GNU Lesser      *
- *       General Public License is included with this library in the     *
+ *       bteral Public License is included with this library in the     *
  *       file LICENSE.TXT.                                               *
  *   (2) The BSD-style license that is included with this library in     *
  *       the file LICENSE-BSD.TXT.                                       *
@@ -88,24 +88,24 @@ static int write_world = 0;
 
 
 
-btSimdTransform	GetTransformFromOde(const dReal* pos,const dReal* rot)
+btTransform	GetTransformFromOde(const dReal* pos,const dReal* rot)
 {
-	btSimdTransform trans;
+	btTransform trans;
 	trans.setIdentity();
 
 // rot is pointer to object's rotation matrix, 4*3 format!
 	
-	btSimdMatrix3x3 orn(rot[0],rot[1],rot[2],
+	btMatrix3x3 orn(rot[0],rot[1],rot[2],
 		rot[4],rot[5],rot[6],
 		rot[8],rot[9],rot[10]);
 
-	trans.setOrigin(btSimdVector3(pos[0],pos[1],pos[2]));
+	trans.setOrigin(btVector3(pos[0],pos[1],pos[2]));
 	trans.setBasis(orn);
 
   return trans;
 }
 
-void	GetOdeFromTransform(const btSimdTransform& trans,dReal* pos,dReal* rot)
+void	GetOdeFromTransform(const btTransform& trans,dReal* pos,dReal* rot)
 {
 	pos[0] = trans.getOrigin().x();
 	pos[1] = trans.getOrigin().y();
@@ -210,7 +210,7 @@ static void command (int cmd)
 
     if (cmd == 'b') {
       dMassSetBox (&m,DENSITY,sides[0],sides[1],sides[2]);
-	  obj[i].collider.m_collisionShape = new btBoxShape(btSimdVector3(0.5*sides[0],0.5*sides[1],0.5*sides[2]));
+	  obj[i].collider.m_collisionShape = new btBoxShape(btVector3(0.5*sides[0],0.5*sides[1],0.5*sides[2]));
 	  obj[i].collider.m_worldTransform = GetTransformFromOde(dBodyGetPosition(obj[i].body),dBodyGetRotation(obj[i].body));
 	  collisionWorld->AddCollisionObject(&obj[i].collider);
 	  obj[i].collider.m_userPointer = obj[i].body;
@@ -221,7 +221,7 @@ static void command (int cmd)
 	  sides[1] *= 0.2;
 	  sides[2] *= 0.2;
       dMassSetCappedCylinder (&m,DENSITY,3,sides[0],sides[1]);
-		obj[i].collider.m_collisionShape = new btCylinderShapeZ(btSimdVector3(sides[0],sides[1],sides[1]));
+		obj[i].collider.m_collisionShape = new btCylinderShapeZ(btVector3(sides[0],sides[1],sides[1]));
 	  obj[i].collider.m_worldTransform = GetTransformFromOde(dBodyGetPosition(obj[i].body),dBodyGetRotation(obj[i].body));
 	  collisionWorld->AddCollisionObject(&obj[i].collider);
 	  obj[i].collider.m_userPointer = obj[i].body;
@@ -495,7 +495,7 @@ int main (int argc, char **argv)
   //space = dHashSpaceCreate (0);
 
   float bpsize = 1000.f;
-  btAxisSweep3 broadphase(btSimdVector3(-bpsize,-bpsize,-bpsize),btSimdVector3(bpsize,bpsize,bpsize));
+  btAxisSweep3 broadphase(btVector3(-bpsize,-bpsize,-bpsize),btVector3(bpsize,bpsize,bpsize));
   //SimpleBroadphase broadphase;
 
   btCollisionDispatcher dispatcher;
@@ -512,7 +512,7 @@ int main (int argc, char **argv)
   
   btCollisionObject groundPlane;
   groundPlane.m_worldTransform.setIdentity();
-  groundPlane.m_collisionShape = new btBoxShape(btSimdVector3(50,50,0.04));
+  groundPlane.m_collisionShape = new btBoxShape(btVector3(50,50,0.04));
    groundPlane.m_collisionShape->SetMargin(0.005f);
   collisionWorld->AddCollisionObject(&groundPlane);
   groundPlane.m_userPointer = 0;

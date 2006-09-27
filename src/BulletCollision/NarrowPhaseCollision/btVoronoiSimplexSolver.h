@@ -50,7 +50,7 @@ struct btUsageBitfield{
 
 struct	btSubSimplexClosestResult
 {
-	SimdPoint3	m_closestPointOnSimplex;
+	btPoint3	m_closestPointOnSimplex;
 	//MASK for m_usedVertices
 	//stores the simplex vertex-usage, using the MASK, 
 	// if m_usedVertices & MASK then the related vertex is used
@@ -96,16 +96,16 @@ public:
 
 	int	m_numVertices;
 
-	btSimdVector3	m_simplexVectorW[VORONOI_SIMPLEX_MAX_VERTS];
-	SimdPoint3	m_simplexPointsP[VORONOI_SIMPLEX_MAX_VERTS];
-	SimdPoint3	m_simplexPointsQ[VORONOI_SIMPLEX_MAX_VERTS];
+	btVector3	m_simplexVectorW[VORONOI_SIMPLEX_MAX_VERTS];
+	btPoint3	m_simplexPointsP[VORONOI_SIMPLEX_MAX_VERTS];
+	btPoint3	m_simplexPointsQ[VORONOI_SIMPLEX_MAX_VERTS];
 
 	
 
-	SimdPoint3	m_cachedP1;
-	SimdPoint3	m_cachedP2;
-	btSimdVector3	m_cachedV;
-	btSimdVector3	m_lastW;
+	btPoint3	m_cachedP1;
+	btPoint3	m_cachedP2;
+	btVector3	m_cachedV;
+	btVector3	m_lastW;
 	bool		m_cachedValidClosest;
 
 	btSubSimplexClosestResult m_cachedBC;
@@ -116,35 +116,35 @@ public:
 	void	ReduceVertices (const btUsageBitfield& usedVerts);
 	bool	UpdateClosestVectorAndPoints();
 
-	bool	ClosestPtPointTetrahedron(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d, btSubSimplexClosestResult& finalResult);
-	int		PointOutsideOfPlane(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c, const SimdPoint3& d);
-	bool	ClosestPtPointTriangle(const SimdPoint3& p, const SimdPoint3& a, const SimdPoint3& b, const SimdPoint3& c,btSubSimplexClosestResult& result);
+	bool	ClosestPtPointTetrahedron(const btPoint3& p, const btPoint3& a, const btPoint3& b, const btPoint3& c, const btPoint3& d, btSubSimplexClosestResult& finalResult);
+	int		PointOutsideOfPlane(const btPoint3& p, const btPoint3& a, const btPoint3& b, const btPoint3& c, const btPoint3& d);
+	bool	ClosestPtPointTriangle(const btPoint3& p, const btPoint3& a, const btPoint3& b, const btPoint3& c,btSubSimplexClosestResult& result);
 
 public:
 
 	 void reset();
 
-	 void addVertex(const btSimdVector3& w, const SimdPoint3& p, const SimdPoint3& q);
+	 void addVertex(const btVector3& w, const btPoint3& p, const btPoint3& q);
 
 
-	 bool closest(btSimdVector3& v);
+	 bool closest(btVector3& v);
 
-	 SimdScalar maxVertex();
+	 btScalar maxVertex();
 
 	 bool fullSimplex() const
 	 {
 		 return (m_numVertices == 4);
 	 }
 
-	 int getSimplex(SimdPoint3 *pBuf, SimdPoint3 *qBuf, btSimdVector3 *yBuf) const;
+	 int getSimplex(btPoint3 *pBuf, btPoint3 *qBuf, btVector3 *yBuf) const;
 
-	 bool inSimplex(const btSimdVector3& w);
+	 bool inSimplex(const btVector3& w);
 	
-	 void backup_closest(btSimdVector3& v) ;
+	 void backup_closest(btVector3& v) ;
 
 	 bool emptySimplex() const ;
 
-	 void compute_points(SimdPoint3& p1, SimdPoint3& p2) ;
+	 void compute_points(btPoint3& p1, btPoint3& p2) ;
 
 	 int numVertices() const 
 	 {

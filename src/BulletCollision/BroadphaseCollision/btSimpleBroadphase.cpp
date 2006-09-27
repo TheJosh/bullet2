@@ -17,9 +17,9 @@ subject to the following restrictions:
 #include <BulletCollision/BroadphaseCollision/btDispatcher.h>
 #include <BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h>
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
-#include "LinearMath/SimdMatrix3x3.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btMatrix3x3.h"
 #include <vector>
 
 
@@ -70,7 +70,7 @@ btSimpleBroadphase::~btSimpleBroadphase()
 }
 
 
-btBroadphaseProxy*	btSimpleBroadphase::CreateProxy(  const btSimdVector3& min,  const btSimdVector3& max,int shapeType,void* userPtr ,short int collisionFilterGroup,short int collisionFilterMask)
+btBroadphaseProxy*	btSimpleBroadphase::CreateProxy(  const btVector3& min,  const btVector3& max,int shapeType,void* userPtr ,short int collisionFilterGroup,short int collisionFilterMask)
 {
 	if (m_numProxies >= m_maxProxies)
 	{
@@ -167,7 +167,7 @@ void	btSimpleBroadphase::DestroyProxy(btBroadphaseProxy* proxyOrg)
 		
 }
 
-void	btSimpleBroadphase::SetAabb(btBroadphaseProxy* proxy,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax)
+void	btSimpleBroadphase::SetAabb(btBroadphaseProxy* proxy,const btVector3& aabbMin,const btVector3& aabbMax)
 {
 	btSimpleBroadphaseProxy* sbp = GetSimpleProxyFromProxy(proxy);
 	sbp->m_min = aabbMin;

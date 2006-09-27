@@ -16,8 +16,8 @@ subject to the following restrictions:
 #ifndef MANIFOLD_CONTACT_POINT_H
 #define MANIFOLD_CONTACT_POINT_H
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransformUtil.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransformUtil.h"
 
 
 
@@ -33,9 +33,9 @@ class btManifoldPoint
 			{
 			}
 
-			btManifoldPoint( const btSimdVector3 &pointA, const btSimdVector3 &pointB, 
-					const btSimdVector3 &normal, 
-					SimdScalar distance ) :
+			btManifoldPoint( const btVector3 &pointA, const btVector3 &pointB, 
+					const btVector3 &normal, 
+					btScalar distance ) :
 					m_localPointA( pointA ), 
 					m_localPointB( pointB ), 
 					m_normalWorldOnB( normal ), 
@@ -51,12 +51,12 @@ class btManifoldPoint
 
 			
 
-			btSimdVector3 m_localPointA;			
-			btSimdVector3 m_localPointB;			
-			btSimdVector3	m_positionWorldOnB;
+			btVector3 m_localPointA;			
+			btVector3 m_localPointB;			
+			btVector3	m_positionWorldOnB;
 			///m_positionWorldOnA is redundant information, see GetPositionWorldOnA(), but for clarity
-			btSimdVector3	m_positionWorldOnA;
-			btSimdVector3 m_normalWorldOnB;
+			btVector3	m_positionWorldOnA;
+			btVector3 m_normalWorldOnB;
 		
 			float	m_distance1;
 			float	m_combinedFriction;
@@ -76,12 +76,12 @@ class btManifoldPoint
 				return m_lifeTime;
 			}
 
-			btSimdVector3 GetPositionWorldOnA() {
+			btVector3 GetPositionWorldOnA() {
 				return m_positionWorldOnA;
 //				return m_positionWorldOnB + m_normalWorldOnB * m_distance1;
 			}
 
-			const btSimdVector3& GetPositionWorldOnB()
+			const btVector3& GetPositionWorldOnB()
 			{
 				return m_positionWorldOnB;
 			}

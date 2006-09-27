@@ -17,11 +17,11 @@ subject to the following restrictions:
 #ifndef CONVEX_PENETRATION_DEPTH_H
 #define CONVEX_PENETRATION_DEPTH_H
 
-class btSimdVector3;
+class btVector3;
 #include "btSimplexSolverInterface.h"
 class btConvexShape;
-#include "LinearMath/SimdPoint3.h"
-class btSimdTransform;
+#include "LinearMath/btPoint3.h"
+class btTransform;
 
 ///ConvexPenetrationDepthSolver provides an interface for penetration depth calculation.
 class btConvexPenetrationDepthSolver
@@ -31,8 +31,8 @@ public:
 	virtual ~btConvexPenetrationDepthSolver() {};
 	virtual bool CalcPenDepth( btSimplexSolverInterface& simplexSolver,
 		btConvexShape* convexA,btConvexShape* convexB,
-					const btSimdTransform& transA,const btSimdTransform& transB,
-				btSimdVector3& v, SimdPoint3& pa, SimdPoint3& pb,
+					const btTransform& transA,const btTransform& transB,
+				btVector3& v, btPoint3& pa, btPoint3& pb,
 				class btIDebugDraw* debugDraw
 				) = 0;
 

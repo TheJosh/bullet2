@@ -18,7 +18,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btConvexShape.h"
 #include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
 #include "BulletCollision/NarrowPhaseCollision/btSimplexSolverInterface.h"
-#include "LinearMath/SimdTransformUtil.h"
+#include "LinearMath/btTransformUtil.h"
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
 
 #include "btGjkPairDetector.h"
@@ -38,36 +38,36 @@ m_convexA(convexA),m_convexB(convexB)
 #define MAX_ITERATIONS 1000
 
 bool	btContinuousConvexCollision::calcTimeOfImpact(
-				const btSimdTransform& fromA,
-				const btSimdTransform& toA,
-				const btSimdTransform& fromB,
-				const btSimdTransform& toB,
+				const btTransform& fromA,
+				const btTransform& toA,
+				const btTransform& fromB,
+				const btTransform& toB,
 				CastResult& result)
 {
 
 	m_simplexSolver->reset();
 
 	/// compute linear and angular velocity for this interval, to interpolate
-	btSimdVector3 linVelA,angVelA,linVelB,angVelB;
-	btSimdTransformUtil::CalculateVelocity(fromA,toA,1.f,linVelA,angVelA);
-	btSimdTransformUtil::CalculateVelocity(fromB,toB,1.f,linVelB,angVelB);
+	btVector3 linVelA,angVelA,linVelB,angVelB;
+	btTransformUtil::CalculateVelocity(fromA,toA,1.f,linVelA,angVelA);
+	btTransformUtil::CalculateVelocity(fromB,toB,1.f,linVelB,angVelB);
 
-	SimdScalar boundingRadiusA = m_convexA->GetAngularMotionDisc();
-	SimdScalar boundingRadiusB = m_convexB->GetAngularMotionDisc();
+	btScalar boundingRadiusA = m_convexA->GetAngularMotionDisc();
+	btScalar boundingRadiusB = m_convexB->GetAngularMotionDisc();
 
-	SimdScalar maxAngularProjectedVelocity = angVelA.length() * boundingRadiusA + angVelB.length() * boundingRadiusB;
+	btScalar maxAngularProjectedVelocity = angVelA.length() * boundingRadiusA + angVelB.length() * boundingRadiusB;
 
 	float radius = 0.001f;
 
-	SimdScalar lambda = 0.f;
-	btSimdVector3 v(1,0,0);
+	btScalar lambda = 0.f;
+	btVector3 v(1,0,0);
 
 	int maxIter = MAX_ITERATIONS;
 
-	btSimdVector3 n;
+	btVector3 n;
 	n.setValue(0.f,0.f,0.f);
 	bool hasResult = false;
-	btSimdVector3 c;
+	btVector3 c;
 
 	float lastLambda = lambda;
 	//float epsilon = 0.001f;
@@ -76,7 +76,7 @@ bool	btContinuousConvexCollision::calcTimeOfImpact(
 	//first solution, using GJK
 
 
-	btSimdTransform identityTrans;
+	btTransform identityTrans;
 	identityTrans.setIdentity();
 
 	btSphereShape	raySphere(0.0f);
@@ -105,7 +105,7 @@ bool	btContinuousConvexCollision::calcTimeOfImpact(
 
 	if (hasResult)
 	{
-		SimdScalar dist;
+		btScalar dist;
 		dist = pointCollector1.m_distance;
 		n = pointCollector1.m_normalOnBInWorld;
 		
@@ -143,10 +143,10 @@ bool	btContinuousConvexCollision::calcTimeOfImpact(
 			
 
 			//interpolate to next lambda
-			btSimdTransform interpolatedTransA,interpolatedTransB,relativeTrans;
+			btTransform interpolatedTransA,interpolatedTransB,relativeTrans;
 
-			btSimdTransformUtil::IntegrateTransform(fromA,linVelA,angVelA,lambda,interpolatedTransA);
-			btSimdTransformUtil::IntegrateTransform(fromB,linVelB,angVelB,lambda,interpolatedTransB);
+			btTransformUtil::IntegrateTransform(fromA,linVelA,angVelA,lambda,interpolatedTransA);
+			btTransformUtil::IntegrateTransform(fromB,linVelB,angVelB,lambda,interpolatedTransB);
 			relativeTrans = interpolatedTransB.inverseTimes(interpolatedTransA);
 
 			result.DebugDraw( lambda );
@@ -187,7 +187,7 @@ bool	btContinuousConvexCollision::calcTimeOfImpact(
 /*
 //todo:
 	//if movement away from normal, discard result
-	btSimdVector3 move = transBLocalTo.getOrigin() - transBLocalFrom.getOrigin();
+	btVector3 move = transBLocalTo.getOrigin() - transBLocalFrom.getOrigin();
 	if (result.m_fraction < 1.f)
 	{
 		if (move.dot(result.m_normal) <= 0.f)

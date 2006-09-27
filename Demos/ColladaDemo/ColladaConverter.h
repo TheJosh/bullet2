@@ -18,8 +18,8 @@ subject to the following restrictions:
 #ifndef COLLADA_CONVERTER_H
 #define COLLADA_CONVERTER_H
 
-#include "LinearMath/SimdTransform.h"
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btVector3.h"
 
 class btCollisionShape;
 class PHY_IPhysicsController;
@@ -68,22 +68,22 @@ public:
 	///those 2 virtuals are called for each constraint/physics object
 	virtual int			createUniversalD6Constraint(
 		class PHY_IPhysicsController* ctrlRef,class PHY_IPhysicsController* ctrlOther,
-			btSimdTransform& localAttachmentFrameRef,
-			btSimdTransform& localAttachmentOther,
-			const btSimdVector3& linearMinLimits,
-			const btSimdVector3& linearMaxLimits,
-			const btSimdVector3& angularMinLimits,
-			const btSimdVector3& angularMaxLimits
+			btTransform& localAttachmentFrameRef,
+			btTransform& localAttachmentOther,
+			const btVector3& linearMinLimits,
+			const btVector3& linearMaxLimits,
+			const btVector3& angularMinLimits,
+			const btVector3& angularMaxLimits
 			) = 0;
 
 	virtual CcdPhysicsController*  CreatePhysicsObject(bool isDynamic, 
 		float mass, 
-		const btSimdTransform& startTransform,
+		const btTransform& startTransform,
 		btCollisionShape* shape) = 0;
 
-	virtual	void	SetGravity(const btSimdVector3& gravity) = 0;
+	virtual	void	SetGravity(const btVector3& gravity) = 0;
 	
-	virtual	void	SetCameraInfo(const btSimdVector3& up, int forwardAxis) = 0;
+	virtual	void	SetCameraInfo(const btVector3& up, int forwardAxis) = 0;
 
 };
 

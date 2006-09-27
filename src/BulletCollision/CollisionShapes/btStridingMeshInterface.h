@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef STRIDING_MESHINTERFACE_H
 #define STRIDING_MESHINTERFACE_H
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 #include "btTriangleCallback.h"
 
 /// PHY_ScalarType enumerates possible scalar types.
@@ -35,7 +35,7 @@ class  btStridingMeshInterface
 {
 	protected:
 	
-		btSimdVector3 m_scaling;
+		btVector3 m_scaling;
 
 	public:
 		btStridingMeshInterface() :m_scaling(1.f,1.f,1.f)
@@ -47,7 +47,7 @@ class  btStridingMeshInterface
 
 
 
-		void	InternalProcessAllTriangles(btInternalTriangleIndexCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+		void	InternalProcessAllTriangles(btInternalTriangleIndexCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 
 
 		/// get read and write access to a subpart of a triangle mesh
@@ -73,10 +73,10 @@ class  btStridingMeshInterface
 		virtual void	preallocateVertices(int numverts)=0;
 		virtual void	preallocateIndices(int numindices)=0;
 
-		const btSimdVector3&	getScaling() const {
+		const btVector3&	getScaling() const {
 			return m_scaling;
 		}
-		void	setScaling(const btSimdVector3& scaling)
+		void	setScaling(const btVector3& scaling)
 		{
 			m_scaling = scaling;
 		}

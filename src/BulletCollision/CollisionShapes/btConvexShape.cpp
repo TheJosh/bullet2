@@ -22,25 +22,25 @@ m_localScaling(1.f,1.f,1.f)
 }
 
 
-void	btConvexShape::setLocalScaling(const btSimdVector3& scaling)
+void	btConvexShape::setLocalScaling(const btVector3& scaling)
 {
 	m_localScaling = scaling;
 }
 
 
 
-void	btConvexShape::GetAabbSlow(const btSimdTransform& trans,btSimdVector3&minAabb,btSimdVector3&maxAabb) const
+void	btConvexShape::GetAabbSlow(const btTransform& trans,btVector3&minAabb,btVector3&maxAabb) const
 {
 
-	SimdScalar margin = GetMargin();
+	btScalar margin = GetMargin();
 	for (int i=0;i<3;i++)
 	{
-		btSimdVector3 vec(0.f,0.f,0.f);
+		btVector3 vec(0.f,0.f,0.f);
 		vec[i] = 1.f;
 
-		btSimdVector3 sv = LocalGetSupportingVertex(vec*trans.getBasis());
+		btVector3 sv = LocalGetSupportingVertex(vec*trans.getBasis());
 
-		btSimdVector3 tmp = trans(sv);
+		btVector3 tmp = trans(sv);
 		maxAabb[i] = tmp[i]+margin;
 		vec[i] = -1.f;
 		tmp = trans(LocalGetSupportingVertex(vec*trans.getBasis()));
@@ -48,13 +48,13 @@ void	btConvexShape::GetAabbSlow(const btSimdTransform& trans,btSimdVector3&minAa
 	}
 };
 
-btSimdVector3	btConvexShape::LocalGetSupportingVertex(const btSimdVector3& vec)const
+btVector3	btConvexShape::LocalGetSupportingVertex(const btVector3& vec)const
  {
-	 btSimdVector3	supVertex = LocalGetSupportingVertexWithoutMargin(vec);
+	 btVector3	supVertex = LocalGetSupportingVertexWithoutMargin(vec);
 
 	if ( GetMargin()!=0.f )
 	{
-		btSimdVector3 vecnorm = vec;
+		btVector3 vecnorm = vec;
 		if (vecnorm .length2() < (SIMD_EPSILON*SIMD_EPSILON))
 		{
 			vecnorm.setValue(-1.f,-1.f,-1.f);

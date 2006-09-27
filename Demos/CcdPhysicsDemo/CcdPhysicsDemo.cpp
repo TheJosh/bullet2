@@ -28,8 +28,8 @@ subject to the following restrictions:
 
 #include "ParallelIslandDispatcher.h"
 
-#include "LinearMath/GenQuickprof.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btQuickprof.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
 
@@ -77,8 +77,8 @@ CcdPhysicsEnvironment* m_physicsEnvironmentPtr = 0;
 #define CUBE_HALF_EXTENTS 1
 
 #define EXTRA_HEIGHT -20.f
-//GL_LineSegmentShape shapeE(SimdPoint3(-50,0,0),
-//						   SimdPoint3(50,0,0));
+//GL_LineSegmentShape shapeE(btPoint3(-50,0,0),
+//						   btPoint3(50,0,0));
 static const int numShapes = 4;
 
 btCollisionShape* shapePtr[numShapes] = 
@@ -88,20 +88,20 @@ btCollisionShape* shapePtr[numShapes] =
 
 //#define USE_GROUND_PLANE 1
 #ifdef USE_GROUND_PLANE
-	new btStaticPlaneShape(btSimdVector3(0,1,0),10),
+	new btStaticPlaneShape(btVector3(0,1,0),10),
 #else
-	new btBoxShape (btSimdVector3(50,10,50)),
+	new btBoxShape (btVector3(50,10,50)),
 #endif
 		
-		new btBoxShape (btSimdVector3(CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS)),
+		new btBoxShape (btVector3(CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS,CUBE_HALF_EXTENTS)),
 		new btSphereShape (CUBE_HALF_EXTENTS- 0.05f),
 
 		//new btConeShape(CUBE_HALF_EXTENTS,2.f*CUBE_HALF_EXTENTS),
-		//new btBU_Simplex1to4(SimdPoint3(-1,-1,-1),SimdPoint3(1,-1,-1),SimdPoint3(-1,1,-1),SimdPoint3(0,0,1)),
+		//new btBU_Simplex1to4(btPoint3(-1,-1,-1),btPoint3(1,-1,-1),btPoint3(-1,1,-1),btPoint3(0,0,1)),
 
 		//new btEmptyShape(),
 
-		new btBoxShape (btSimdVector3(0.4,1,0.8))
+		new btBoxShape (btVector3(0.4,1,0.8))
 
 };
 
@@ -251,8 +251,8 @@ void	CcdPhysicsDemo::initPhysics()
 
 	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher();
 
-	btSimdVector3 worldAabbMin(-10000,-10000,-10000);
-	btSimdVector3 worldAabbMax(10000,10000,10000);
+	btVector3 worldAabbMin(-10000,-10000,-10000);
+	btVector3 worldAabbMax(10000,10000,10000);
 
 	btOverlappingPairCache* broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax,maxProxies);
 //	btOverlappingPairCache* broadphase = new btSimpleBroadphase;
@@ -285,7 +285,7 @@ void	CcdPhysicsDemo::initPhysics()
 
 	int i;
 
-	btSimdTransform tr;
+	btTransform tr;
 	tr.setIdentity();
 
 	
@@ -305,11 +305,11 @@ void	CcdPhysicsDemo::initPhysics()
 		btCollisionShape* oldShape = shapePtr[1];
 		shapePtr[1] = compoundShape;
 
-		btSimdTransform ident;
+		btTransform ident;
 		ident.setIdentity();
-		ident.setOrigin(btSimdVector3(0,0,0));	
+		ident.setOrigin(btVector3(0,0,0));	
 		compoundShape->AddChildShape(ident,oldShape);//
-		ident.setOrigin(btSimdVector3(0,0,2));	
+		ident.setOrigin(btVector3(0,0,2));	
 		compoundShape->AddChildShape(ident,new btSphereShape(0.9));//
 	}
 
@@ -320,7 +320,7 @@ void	CcdPhysicsDemo::initPhysics()
 
 		bool isDyna = i>0;
 
-		btSimdTransform trans;
+		btTransform trans;
 		trans.setIdentity();
 		
 		if (i>0)
@@ -338,13 +338,13 @@ void	CcdPhysicsDemo::initPhysics()
 				row2 |=1;
 			}
 
-			btSimdVector3 pos(col*2*CUBE_HALF_EXTENTS + (row2%2)*CUBE_HALF_EXTENTS,
+			btVector3 pos(col*2*CUBE_HALF_EXTENTS + (row2%2)*CUBE_HALF_EXTENTS,
 				row*2*CUBE_HALF_EXTENTS+CUBE_HALF_EXTENTS+EXTRA_HEIGHT,0);
 
 			trans.setOrigin(pos);
 		} else
 		{
-			trans.setOrigin(btSimdVector3(0,-30,0));
+			trans.setOrigin(btVector3(0,-30,0));
 		}
 
 		float mass = 1.f;

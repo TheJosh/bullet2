@@ -49,23 +49,23 @@ void btSphereSphereCollisionAlgorithm::ProcessCollision (btBroadphaseProxy* prox
 	btSphereShape* sphere0 = (btSphereShape*)col0->m_collisionShape;
 	btSphereShape* sphere1 = (btSphereShape*)col1->m_collisionShape;
 
-	btSimdVector3 diff = col0->m_worldTransform.getOrigin()-  col1->m_worldTransform.getOrigin();
+	btVector3 diff = col0->m_worldTransform.getOrigin()-  col1->m_worldTransform.getOrigin();
 	float len = diff.length();
-	SimdScalar radius0 = sphere0->GetRadius();
-	SimdScalar radius1 = sphere1->GetRadius();
+	btScalar radius0 = sphere0->GetRadius();
+	btScalar radius1 = sphere1->GetRadius();
 
 	///iff distance positive, don't generate a new contact
 	if ( len > (radius0+radius1))
 		return;
 
 	///distance (negative means penetration)
-	SimdScalar dist = len - (radius0+radius1);
+	btScalar dist = len - (radius0+radius1);
 
-	btSimdVector3 normalOnSurfaceB = diff / len;
+	btVector3 normalOnSurfaceB = diff / len;
 	///point on A (worldspace)
-	btSimdVector3 pos0 = col0->m_worldTransform.getOrigin() - radius0 * normalOnSurfaceB;
+	btVector3 pos0 = col0->m_worldTransform.getOrigin() - radius0 * normalOnSurfaceB;
 	///point on B (worldspace)
-	btSimdVector3 pos1 = col1->m_worldTransform.getOrigin() + radius1* normalOnSurfaceB;
+	btVector3 pos1 = col1->m_worldTransform.getOrigin() + radius1* normalOnSurfaceB;
 
 	/// report a contact. internally this will be kept persistent, and contact reduction is done
 	btManifoldResult* resultOut = m_dispatcher->GetNewManifoldResult(col0,col1,m_manifoldPtr);

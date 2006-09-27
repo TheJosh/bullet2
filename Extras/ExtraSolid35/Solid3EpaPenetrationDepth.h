@@ -8,7 +8,7 @@
  * LICENSE.QPL included in the packaging of this file.
  *
  * This library may be distributed and/or modified under the terms of the
- * GNU General Public License (GPL) version 2 as published by the Free Software
+ * GNU bteral Public License (GPL) version 2 as published by the Free Software
  * Foundation and appearing in the file LICENSE.GPL included in the
  * packaging of this file.
  *
@@ -34,8 +34,8 @@ public:
 
 	virtual bool CalcPenDepth(btSimplexSolverInterface& simplexSolver,
 		btConvexShape* convexA,btConvexShape* convexB,
-		const btSimdTransform& transformA,const btSimdTransform& transformB,
-				btSimdVector3& v, SimdPoint3& pa, SimdPoint3& pb);
+		const btTransform& transformA,const btTransform& transformB,
+				btVector3& v, btPoint3& pa, btPoint3& pb);
 
 };
 

@@ -18,9 +18,9 @@ subject to the following restrictions:
 
 #include "btCollisionShape.h"
 
-#include "LinearMath/SimdVector3.h"
-#include "LinearMath/SimdTransform.h"
-#include "LinearMath/SimdMatrix3x3.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btTransform.h"
+#include "LinearMath/btMatrix3x3.h"
 #include <vector>
 #include "BulletCollision/CollisionShapes/btCollisionMargin.h"
 
@@ -36,27 +36,27 @@ class btConvexShape : public btCollisionShape
 public:
 	btConvexShape();
 
-	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec)const;
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec) const= 0;
+	virtual btVector3	LocalGetSupportingVertex(const btVector3& vec)const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec) const= 0;
 	
 	//notice that the vectors should be unit length
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const= 0;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const= 0;
 
 	// testing for hullnode code
 
 	///GetAabb's default implementation is brute force, expected derived classes to implement a fast dedicated version
-	void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const
+	void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
 	{
 		GetAabbSlow(t,aabbMin,aabbMax);
 	}
 
 
 	
-	virtual void GetAabbSlow(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
+	virtual void GetAabbSlow(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
 
 
-	virtual void	setLocalScaling(const btSimdVector3& scaling);
-	virtual const btSimdVector3& getLocalScaling() const 
+	virtual void	setLocalScaling(const btVector3& scaling);
+	virtual const btVector3& getLocalScaling() const 
 	{
 		return m_localScaling;
 	}
@@ -71,10 +71,10 @@ public:
 		return m_collisionMargin;
 	}
 private:
-	SimdScalar	m_collisionMargin;
+	btScalar	m_collisionMargin;
 	//local scaling. collisionMargin is not scaled !
 protected:
-	btSimdVector3	m_localScaling;
+	btVector3	m_localScaling;
 
 };
 

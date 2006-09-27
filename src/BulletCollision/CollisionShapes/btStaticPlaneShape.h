@@ -24,15 +24,15 @@ subject to the following restrictions:
 class btStaticPlaneShape : public ConcaveShape
 {
 protected:
-	btSimdVector3	m_localAabbMin;
-	btSimdVector3	m_localAabbMax;
+	btVector3	m_localAabbMin;
+	btVector3	m_localAabbMax;
 	
-	btSimdVector3	m_planeNormal;
-	SimdScalar      m_planeConstant;
-	btSimdVector3	m_localScaling;
+	btVector3	m_planeNormal;
+	btScalar      m_planeConstant;
+	btVector3	m_localScaling;
 
 public:
-	btStaticPlaneShape(const btSimdVector3& planeNormal,SimdScalar planeConstant);
+	btStaticPlaneShape(const btVector3& planeNormal,btScalar planeConstant);
 
 	virtual ~btStaticPlaneShape();
 
@@ -42,14 +42,14 @@ public:
 		return STATIC_PLANE_PROXYTYPE;
 	}
 
-	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
+	virtual void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
 
-	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
-	virtual void	setLocalScaling(const btSimdVector3& scaling);
-	virtual const btSimdVector3& getLocalScaling() const;
+	virtual void	setLocalScaling(const btVector3& scaling);
+	virtual const btVector3& getLocalScaling() const;
 	
 
 	//debugging

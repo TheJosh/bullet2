@@ -16,7 +16,7 @@ subject to the following restrictions:
 
 #include "btRaycastCallback.h"
 
-btTriangleRaycastCallback::btTriangleRaycastCallback(const btSimdVector3& from,const btSimdVector3& to)
+btTriangleRaycastCallback::btTriangleRaycastCallback(const btVector3& from,const btVector3& to)
 	:
 	m_from(from),
 	m_to(to),
@@ -27,18 +27,18 @@ btTriangleRaycastCallback::btTriangleRaycastCallback(const btSimdVector3& from,c
 
 
 
-void btTriangleRaycastCallback::ProcessTriangle(btSimdVector3* triangle,int partId, int triangleIndex)
+void btTriangleRaycastCallback::ProcessTriangle(btVector3* triangle,int partId, int triangleIndex)
 {
 	
 
-	const btSimdVector3 &vert0=triangle[0];
-	const btSimdVector3 &vert1=triangle[1];
-	const btSimdVector3 &vert2=triangle[2];
+	const btVector3 &vert0=triangle[0];
+	const btVector3 &vert1=triangle[1];
+	const btVector3 &vert2=triangle[2];
 
-	btSimdVector3 v10; v10 = vert1 - vert0 ;
-	btSimdVector3 v20; v20 = vert2 - vert0 ;
+	btVector3 v10; v10 = vert1 - vert0 ;
+	btVector3 v20; v20 = vert2 - vert0 ;
 
-	btSimdVector3 triangleNormal; triangleNormal = v10.cross( v20 );
+	btVector3 triangleNormal; triangleNormal = v10.cross( v20 );
 	
 	const float dist = vert0.dot(triangleNormal);
 	float dist_a = triangleNormal.dot(m_from) ;
@@ -64,22 +64,22 @@ void btTriangleRaycastCallback::ProcessTriangle(btSimdVector3* triangle,int part
 
 		float edge_tolerance =triangleNormal.length2();		
 		edge_tolerance *= -0.0001f;
-		btSimdVector3 point; point.setInterpolate3( m_from, m_to, distance);
+		btVector3 point; point.setInterpolate3( m_from, m_to, distance);
 		{
-			btSimdVector3 v0p; v0p = vert0 - point;
-			btSimdVector3 v1p; v1p = vert1 - point;
-			btSimdVector3 cp0; cp0 = v0p.cross( v1p );
+			btVector3 v0p; v0p = vert0 - point;
+			btVector3 v1p; v1p = vert1 - point;
+			btVector3 cp0; cp0 = v0p.cross( v1p );
 
 			if ( (float)(cp0.dot(triangleNormal)) >=edge_tolerance) 
 			{
 						
 
-				btSimdVector3 v2p; v2p = vert2 -  point;
-				btSimdVector3 cp1;
+				btVector3 v2p; v2p = vert2 -  point;
+				btVector3 cp1;
 				cp1 = v1p.cross( v2p);
 				if ( (float)(cp1.dot(triangleNormal)) >=edge_tolerance) 
 				{
-					btSimdVector3 cp2;
+					btVector3 cp2;
 					cp2 = v2p.cross(v0p);
 					
 					if ( (float)(cp2.dot(triangleNormal)) >=edge_tolerance) 

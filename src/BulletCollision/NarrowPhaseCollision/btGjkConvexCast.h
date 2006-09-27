@@ -20,7 +20,7 @@ subject to the following restrictions:
 
 #include <BulletCollision/CollisionShapes/btCollisionMargin.h>
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 #include "btConvexCast.h"
 class btConvexShape;
 class btMinkowskiSumShape;
@@ -39,10 +39,10 @@ public:
 
 	/// cast a convex against another convex object
 	virtual bool	calcTimeOfImpact(
-					const btSimdTransform& fromA,
-					const btSimdTransform& toA,
-					const btSimdTransform& fromB,
-					const btSimdTransform& toB,
+					const btTransform& fromA,
+					const btTransform& toA,
+					const btTransform& fromB,
+					const btTransform& toB,
 					CastResult& result);
 
 };

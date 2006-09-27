@@ -34,7 +34,7 @@ public:
 
 	virtual ~ConcaveShape();
 
-	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const = 0;
+	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const = 0;
 
 	virtual float GetMargin() const {
 		return m_collisionMargin;

@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #include "btOptimizedBvh.h"
 #include "btStridingMeshInterface.h"
-#include "LinearMath/GenAabbUtil2.h"
+#include "LinearMath/btAabbUtil2.h"
 
 
 
@@ -37,12 +37,12 @@ void btOptimizedBvh::Build(btStridingMeshInterface* triangles)
 
 		}
 
-		virtual void InternalProcessTriangleIndex(btSimdVector3* triangle,int partId,int  triangleIndex)
+		virtual void InternalProcessTriangleIndex(btVector3* triangle,int partId,int  triangleIndex)
 		{
 
 			btOptimizedBvhNode node;
-			node.m_aabbMin = btSimdVector3(1e30f,1e30f,1e30f); 
-			node.m_aabbMax = btSimdVector3(-1e30f,-1e30f,-1e30f); 
+			node.m_aabbMin = btVector3(1e30f,1e30f,1e30f); 
+			node.m_aabbMax = btVector3(-1e30f,-1e30f,-1e30f); 
 			node.m_aabbMin.setMin(triangle[0]);
 			node.m_aabbMax.setMax(triangle[0]);
 			node.m_aabbMin.setMin(triangle[1]);
@@ -68,8 +68,8 @@ void btOptimizedBvh::Build(btStridingMeshInterface* triangles)
 
 	NodeTriangleCallback	callback(m_leafNodes);
 
-	btSimdVector3 aabbMin(-1e30f,-1e30f,-1e30f);
-	btSimdVector3 aabbMax(1e30f,1e30f,1e30f);
+	btVector3 aabbMin(-1e30f,-1e30f,-1e30f);
+	btVector3 aabbMax(1e30f,1e30f,1e30f);
 
 	triangles->InternalProcessAllTriangles(&callback,aabbMin,aabbMax);
 
@@ -139,10 +139,10 @@ int	btOptimizedBvh::SortAndCalcSplittingIndex(NodeArray&	leafNodes,int startInde
 	int numIndices = endIndex - startIndex;
 	float splitValue;
 
-	btSimdVector3 means(0.f,0.f,0.f);
+	btVector3 means(0.f,0.f,0.f);
 	for (i=startIndex;i<endIndex;i++)
 	{
-		btSimdVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
+		btVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
 		means+=center;
 	}
 	means *= (1.f/(float)numIndices);
@@ -152,7 +152,7 @@ int	btOptimizedBvh::SortAndCalcSplittingIndex(NodeArray&	leafNodes,int startInde
 	//sort leafNodes so all values larger then splitValue comes first, and smaller values start from 'splitIndex'.
 	for (i=startIndex;i<endIndex;i++)
 	{
-		btSimdVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
+		btVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
 		if (center[splitAxis] > splitValue)
 		{
 			//swap
@@ -174,21 +174,21 @@ int	btOptimizedBvh::CalcSplittingAxis(NodeArray&	leafNodes,int startIndex,int en
 {
 	int i;
 
-	btSimdVector3 means(0.f,0.f,0.f);
-	btSimdVector3 variance(0.f,0.f,0.f);
+	btVector3 means(0.f,0.f,0.f);
+	btVector3 variance(0.f,0.f,0.f);
 	int numIndices = endIndex-startIndex;
 
 	for (i=startIndex;i<endIndex;i++)
 	{
-		btSimdVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
+		btVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
 		means+=center;
 	}
 	means *= (1.f/(float)numIndices);
 		
 	for (i=startIndex;i<endIndex;i++)
 	{
-		btSimdVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
-		btSimdVector3 diff2 = center-means;
+		btVector3 center = 0.5f*(leafNodes[i].m_aabbMax+leafNodes[i].m_aabbMin);
+		btVector3 diff2 = center-means;
 		diff2 = diff2 * diff2;
 		variance += diff2;
 	}
@@ -199,7 +199,7 @@ int	btOptimizedBvh::CalcSplittingAxis(NodeArray&	leafNodes,int startIndex,int en
 
 
 
-void	btOptimizedBvh::ReportAabbOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const
+void	btOptimizedBvh::ReportAabbOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const
 {
 	//either choose recursive traversal (WalkTree) or stackless (WalkStacklessTree)
 
@@ -208,7 +208,7 @@ void	btOptimizedBvh::ReportAabbOverlappingNodex(btNodeOverlapCallback* nodeCallb
 	WalkStacklessTree(m_rootNode1,nodeCallback,aabbMin,aabbMax);
 }
 
-void	btOptimizedBvh::WalkTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const
+void	btOptimizedBvh::WalkTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const
 {
 	bool isLeafNode, aabbOverlap = TestAabbAgainstAabb2(aabbMin,aabbMax,rootNode->m_aabbMin,rootNode->m_aabbMax);
 	if (aabbOverlap)
@@ -228,7 +228,7 @@ void	btOptimizedBvh::WalkTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback
 
 int maxIterations = 0;
 
-void	btOptimizedBvh::WalkStacklessTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const
+void	btOptimizedBvh::WalkStacklessTree(btOptimizedBvhNode* rootNode,btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const
 {
 	int escapeIndex, curIndex = 0;
 	int walkIterations = 0;
@@ -267,7 +267,7 @@ void	btOptimizedBvh::WalkStacklessTree(btOptimizedBvhNode* rootNode,btNodeOverla
 }
 
 
-void	btOptimizedBvh::ReportSphereOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const
+void	btOptimizedBvh::ReportSphereOverlappingNodex(btNodeOverlapCallback* nodeCallback,const btVector3& aabbMin,const btVector3& aabbMax) const
 {
 
 }

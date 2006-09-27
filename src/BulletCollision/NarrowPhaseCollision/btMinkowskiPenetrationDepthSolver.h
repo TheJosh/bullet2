@@ -26,8 +26,8 @@ public:
 
 	virtual bool CalcPenDepth( btSimplexSolverInterface& simplexSolver,
 	btConvexShape* convexA,btConvexShape* convexB,
-				const btSimdTransform& transA,const btSimdTransform& transB,
-			btSimdVector3& v, SimdPoint3& pa, SimdPoint3& pb,
+				const btTransform& transA,const btTransform& transB,
+			btVector3& v, btPoint3& pa, btPoint3& pb,
 			class btIDebugDraw* debugDraw
 			);
 

@@ -23,26 +23,26 @@ btPolyhedralConvexShape::btPolyhedralConvexShape()
 
 
 
-btSimdVector3	btPolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec0)const
+btVector3	btPolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(const btVector3& vec0)const
 {
 	int i;
-	btSimdVector3 supVec(0,0,0);
+	btVector3 supVec(0,0,0);
 
-	SimdScalar maxDot(-1e30f);
+	btScalar maxDot(-1e30f);
 
-	btSimdVector3 vec = vec0;
-	SimdScalar lenSqr = vec.length2();
+	btVector3 vec = vec0;
+	btScalar lenSqr = vec.length2();
 	if (lenSqr < 0.0001f)
 	{
 		vec.setValue(1,0,0);
 	} else
 	{
-		float rlen = 1.f / SimdSqrt(lenSqr );
+		float rlen = 1.f / btSqrt(lenSqr );
 		vec *= rlen;
 	}
 
-	btSimdVector3 vtx;
-	SimdScalar newDot;
+	btVector3 vtx;
+	btScalar newDot;
 
 	for (i=0;i<GetNumVertices();i++)
 	{
@@ -59,12 +59,12 @@ btSimdVector3	btPolyhedralConvexShape::LocalGetSupportingVertexWithoutMargin(con
 
 }
 
-void	btPolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const
+void	btPolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 {
 	int i;
 
-	btSimdVector3 vtx;
-	SimdScalar newDot;
+	btVector3 vtx;
+	btScalar newDot;
 
 	for (int i=0;i<numVectors;i++)
 	{
@@ -74,7 +74,7 @@ void	btPolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(
 	for (int j=0;j<numVectors;j++)
 	{
 	
-		const btSimdVector3& vec = vectors[j];
+		const btVector3& vec = vectors[j];
 
 		for (i=0;i<GetNumVertices();i++)
 		{
@@ -92,27 +92,27 @@ void	btPolyhedralConvexShape::BatchedUnitVectorGetSupportingVertexWithoutMargin(
 
 
 
-void	btPolyhedralConvexShape::CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia)
+void	btPolyhedralConvexShape::CalculateLocalInertia(btScalar mass,btVector3& inertia)
 {
 	//not yet, return box inertia
 
 	float margin = GetMargin();
 
-	btSimdTransform ident;
+	btTransform ident;
 	ident.setIdentity();
-	btSimdVector3 aabbMin,aabbMax;
+	btVector3 aabbMin,aabbMax;
 	GetAabb(ident,aabbMin,aabbMax);
-	btSimdVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
+	btVector3 halfExtents = (aabbMax-aabbMin)*0.5f;
 
-	SimdScalar lx=2.f*(halfExtents.x()+margin);
-	SimdScalar ly=2.f*(halfExtents.y()+margin);
-	SimdScalar lz=2.f*(halfExtents.z()+margin);
-	const SimdScalar x2 = lx*lx;
-	const SimdScalar y2 = ly*ly;
-	const SimdScalar z2 = lz*lz;
-	const SimdScalar scaledmass = mass * 0.08333333f;
+	btScalar lx=2.f*(halfExtents.x()+margin);
+	btScalar ly=2.f*(halfExtents.y()+margin);
+	btScalar lz=2.f*(halfExtents.z()+margin);
+	const btScalar x2 = lx*lx;
+	const btScalar y2 = ly*ly;
+	const btScalar z2 = lz*lz;
+	const btScalar scaledmass = mass * 0.08333333f;
 
-	inertia = scaledmass * (btSimdVector3(y2+z2,x2+z2,x2+y2));
+	inertia = scaledmass * (btVector3(y2+z2,x2+z2,x2+y2));
 
 }
 

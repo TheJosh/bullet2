@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define DEBUG_CAST_RESULT_H
 
 #include "BulletCollision/NarrowPhaseCollision/btConvexCast.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btTransform.h"
 #include "GL_ShapeDrawer.h"
 #ifdef WIN32
 #include <windows.h>
@@ -32,13 +32,13 @@ subject to the following restrictions:
 struct btDebugCastResult : public btConvexCast::CastResult
 {
 
-	btSimdTransform	m_fromTrans;
+	btTransform	m_fromTrans;
 	const btPolyhedralConvexShape* m_shape;
-	btSimdVector3	m_linVel;
-	btSimdVector3 m_angVel;
+	btVector3	m_linVel;
+	btVector3 m_angVel;
 
-	btDebugCastResult(const btSimdTransform& fromTrans,const btPolyhedralConvexShape* shape,
-					const btSimdVector3& linVel,const btSimdVector3& angVel)
+	btDebugCastResult(const btTransform& fromTrans,const btPolyhedralConvexShape* shape,
+					const btVector3& linVel,const btVector3& angVel)
 	:m_fromTrans(fromTrans),
 	m_shape(shape),
 	m_linVel(linVel),
@@ -46,7 +46,7 @@ struct btDebugCastResult : public btConvexCast::CastResult
 	{
 	}
 
-	virtual void DrawCoordSystem(const btSimdTransform& tr)  
+	virtual void DrawCoordSystem(const btTransform& tr)  
 	{
 		float m[16];
 		tr.getOpenGLMatrix(m);
@@ -66,14 +66,14 @@ struct btDebugCastResult : public btConvexCast::CastResult
 		glPopMatrix();
 	}
 
-	virtual void	DebugDraw(SimdScalar	fraction)
+	virtual void	DebugDraw(btScalar	fraction)
 	{
 	
 		float m[16];
-		btSimdTransform hitTrans;
-		btSimdTransformUtil::IntegrateTransform(m_fromTrans,m_linVel,m_angVel,fraction,hitTrans);
+		btTransform hitTrans;
+		btTransformUtil::IntegrateTransform(m_fromTrans,m_linVel,m_angVel,fraction,hitTrans);
 		hitTrans.getOpenGLMatrix(m);
-		GL_ShapeDrawer::DrawOpenGL(m,m_shape,btSimdVector3(1,0,0),btIDebugDraw::DBG_NoDebug);
+		GL_ShapeDrawer::DrawOpenGL(m,m_shape,btVector3(1,0,0),btIDebugDraw::DBG_NoDebug);
 	
 	}
 };

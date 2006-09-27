@@ -42,14 +42,14 @@ public:
 
 
 
-	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btSimdVector3& aabbMin,const btSimdVector3& aabbMax) const;
+	virtual void	ProcessAllTriangles(btTriangleCallback* callback,const btVector3& aabbMin,const btVector3& aabbMax) const;
 
 
 	//debugging
 	virtual char*	GetName()const {return "BVHTRIANGLEMESH";}
 
 
-	virtual void	setLocalScaling(const btSimdVector3& scaling);
+	virtual void	setLocalScaling(const btVector3& scaling);
 	
 
 

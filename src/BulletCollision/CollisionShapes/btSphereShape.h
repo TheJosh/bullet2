@@ -23,25 +23,25 @@ subject to the following restrictions:
 class btSphereShape : public btConvexShape
 
 {
-	SimdScalar m_radius;
+	btScalar m_radius;
 	
 public:
-	btSphereShape (SimdScalar radius);
+	btSphereShape (btScalar radius);
 	
 	
-	virtual btSimdVector3	LocalGetSupportingVertex(const btSimdVector3& vec)const;
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
+	virtual btVector3	LocalGetSupportingVertex(const btVector3& vec)const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const;
 	//notice that the vectors should be unit length
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
 
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
-	virtual void GetAabb(const btSimdTransform& t,btSimdVector3& aabbMin,btSimdVector3& aabbMax) const;
+	virtual void GetAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const;
 
 	virtual int	GetShapeType() const { return SPHERE_SHAPE_PROXYTYPE; }
 
-	SimdScalar	GetRadius() const { return m_radius;}
+	btScalar	GetRadius() const { return m_radius;}
 
 	//debugging
 	virtual char*	GetName()const {return "SPHERE";}

@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define TYPED_CONSTRAINT_H
 
 class btRigidBody;
-#include "LinearMath/SimdScalar.h"
+#include "LinearMath/btScalar.h"
 
 //TypedConstraint is the baseclass for Bullet constraints and vehicles
 class btTypedConstraint
@@ -42,7 +42,7 @@ public:
 
 	virtual void	BuildJacobian() = 0;
 
-	virtual	void	SolveConstraint(SimdScalar	timeStep) = 0;
+	virtual	void	SolveConstraint(btScalar	timeStep) = 0;
 
 	const btRigidBody& GetRigidBodyA() const
 	{

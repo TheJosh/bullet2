@@ -63,9 +63,9 @@ float frand ( float max )
 }
 
 
-static GLSL_ShaderPair *velocityGenerator  ;
-static GLSL_ShaderPair *positionGenerator  ;
-static GLSL_ShaderPair *collisionGenerator ;
+static GLSL_ShaderPair *velocitybterator  ;
+static GLSL_ShaderPair *positionbterator  ;
+static GLSL_ShaderPair *collisionbterator ;
 static GLSL_ShaderPair *cubeShader         ;
 
 static FrameBufferObject *position    ;
@@ -264,7 +264,7 @@ void initPhysicsShaders ()
 
   if ( debugOpt == DRAW_WITHOUT_FORCES )
   {
-    velocityGenerator = NULL ;
+    velocitybterator = NULL ;
   }
   else
   {
@@ -274,8 +274,8 @@ void initPhysicsShaders ()
       velocity = old_velocity + delta_T * ( F / m ) ;
     */
 
-    velocityGenerator = new GLSL_ShaderPair (
-      "VelocityGenerator",
+    velocitybterator = new GLSL_ShaderPair (
+      "Velocitybterator",
       NULL, NULL,
       "uniform vec4      g_dt ;"
       "uniform sampler2D old_velocity ;"
@@ -288,8 +288,8 @@ void initPhysicsShaders ()
       "                  texture2D ( force       , gl_TexCoord[0].st ).xyz /"
       "                  texture2D ( massXX      , gl_TexCoord[0].st ).x),"
       "                  1.0 ) ; }",
-      "VelocityGenerator Frag Shader" ) ;
-    assert ( velocityGenerator  -> compiledOK () ) ;
+      "Velocitybterator Frag Shader" ) ;
+    assert ( velocitybterator  -> compiledOK () ) ;
   }
 
   /*
@@ -300,8 +300,8 @@ void initPhysicsShaders ()
     It's also used to update the rotational velocity.
   */
 
-  positionGenerator = new GLSL_ShaderPair (
-    "PositionGenerator",
+  positionbterator = new GLSL_ShaderPair (
+    "Positionbterator",
     NULL, NULL,
     "uniform float delta_T ;"
     "uniform sampler2D old_position ;"
@@ -312,17 +312,17 @@ void initPhysicsShaders ()
     "                  texture2D ( velocity    , gl_TexCoord[0].st ).xyz *"
     "                  delta_T,"
     "                  1.0 ) ; }",
-    "PositionGenerator Frag Shader" ) ;
-  assert ( positionGenerator  -> compiledOK () ) ;
+    "Positionbterator Frag Shader" ) ;
+  assert ( positionbterator  -> compiledOK () ) ;
 
   if ( debugOpt == DRAW_WITHOUT_COLLISIONS )
   {
-    collisionGenerator = NULL ;
+    collisionbterator = NULL ;
   }
   else
   {
-    collisionGenerator = new GLSL_ShaderPair (
-      "CollisionGenerator",
+    collisionbterator = new GLSL_ShaderPair (
+      "Collisionbterator",
       NULL, NULL,
       "uniform sampler2D position ;"
       "uniform sampler2D old_velocity ;"
@@ -331,8 +331,8 @@ void initPhysicsShaders ()
       "   vec3 vel = texture2D ( old_velocity, gl_TexCoord[0].st ).xyz ;"
       "   if ( pos [ 1 ] < 0.0 ) vel *= vec3(0.90,-0.90,0.90) ;"
       "   gl_FragColor = vec4 ( vel, 1.0 ) ; }",
-      "CollisionGenerator Frag Shader" ) ;
-    assert ( collisionGenerator -> compiledOK () ) ;
+      "Collisionbterator Frag Shader" ) ;
+    assert ( collisionbterator -> compiledOK () ) ;
    }
 }
 
@@ -578,11 +578,11 @@ void display ( void )
       old = velocity ;
       velocity = tmp ;
 
-      velocityGenerator -> use () ;
-      velocityGenerator -> applyTexture ( "old_velocity", old     , 0 ) ;
-      velocityGenerator -> applyTexture ( "force"       , force   , 1 ) ;
-      velocityGenerator -> applyTexture ( "massXX"      , massXX  , 2 ) ;
-      velocityGenerator -> setUniform4f ( "g_dt", 0.0f, -9.8f, 0.0f, 0.016f ) ;
+      velocitybterator -> use () ;
+      velocitybterator -> applyTexture ( "old_velocity", old     , 0 ) ;
+      velocitybterator -> applyTexture ( "force"       , force   , 1 ) ;
+      velocitybterator -> applyTexture ( "massXX"      , massXX  , 2 ) ;
+      velocitybterator -> setUniform4f ( "g_dt", 0.0f, -9.8f, 0.0f, 0.016f ) ;
       velocity -> paint ()  ;
     }
 
@@ -591,10 +591,10 @@ void display ( void )
     old = position ;
     position = tmp ;
 
-    positionGenerator -> use () ;
-    positionGenerator -> applyTexture ( "old_position", old     , 0 ) ;
-    positionGenerator -> applyTexture ( "velocity"    , velocity, 1 ) ;
-    positionGenerator -> setUniform1f ( "delta_T", 0.016f ) ;
+    positionbterator -> use () ;
+    positionbterator -> applyTexture ( "old_position", old     , 0 ) ;
+    positionbterator -> applyTexture ( "velocity"    , velocity, 1 ) ;
+    positionbterator -> setUniform1f ( "delta_T", 0.016f ) ;
     position -> paint ()  ;
 
     if ( debugOpt != DRAW_WITHOUT_COLLISIONS )
@@ -604,9 +604,9 @@ void display ( void )
       old = velocity ;
       velocity = tmp ;
 
-      collisionGenerator -> use () ;
-      collisionGenerator -> applyTexture ( "position"    , position, 0 ) ;
-      collisionGenerator -> applyTexture ( "old_velocity", old     , 1 ) ;
+      collisionbterator -> use () ;
+      collisionbterator -> applyTexture ( "position"    , position, 0 ) ;
+      collisionbterator -> applyTexture ( "old_velocity", old     , 1 ) ;
       velocity -> paint ()  ;
     }
 
@@ -615,10 +615,10 @@ void display ( void )
     old = rotation ;
     rotation = tmp ;
 
-    positionGenerator -> use () ;
-    positionGenerator -> applyTexture ( "old_position", old        , 0 ) ;
-    positionGenerator -> applyTexture ( "velocity"    , rotvelocity, 1 ) ;
-    positionGenerator -> setUniform1f ( "delta_T", 0.016f  ) ;
+    positionbterator -> use () ;
+    positionbterator -> applyTexture ( "old_position", old        , 0 ) ;
+    positionbterator -> applyTexture ( "velocity"    , rotvelocity, 1 ) ;
+    positionbterator -> setUniform1f ( "delta_T", 0.016f  ) ;
     rotation -> paint ()  ;
 
     /* Now render the scene using the results */

@@ -24,7 +24,7 @@ subject to the following restrictions:
 
 #include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
-#include "LinearMath/GenAabbUtil2.h"
+#include "LinearMath/btAabbUtil2.h"
 
 #include <algorithm>
 
@@ -66,10 +66,10 @@ void	btCollisionWorld::AddCollisionObject(btCollisionObject* collisionObject,sho
 		m_collisionObjects.push_back(collisionObject);
 
 		//calculate new AABB
-		btSimdTransform trans = collisionObject->m_worldTransform;
+		btTransform trans = collisionObject->m_worldTransform;
 
-		btSimdVector3	minAabb;
-		btSimdVector3	maxAabb;
+		btVector3	minAabb;
+		btVector3	maxAabb;
 		collisionObject->m_collisionShape->GetAabb(trans,minAabb,maxAabb);
 
 		int type = collisionObject->m_collisionShape->GetShapeType();
@@ -95,7 +95,7 @@ void	btCollisionWorld::PerformDiscreteCollisionDetection()
 
 	//update aabb (of all moved objects)
 
-	btSimdVector3 aabbMin,aabbMax;
+	btVector3 aabbMin,aabbMax;
 	for (size_t i=0;i<m_collisionObjects.size();i++)
 	{
 		m_collisionObjects[i]->m_cachedInvertedWorldTransform = m_collisionObjects[i]->m_worldTransform.inverse();
@@ -142,10 +142,10 @@ void	btCollisionWorld::RemoveCollisionObject(btCollisionObject* collisionObject)
 		}
 }
 
-void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const btSimdTransform& rayToTrans,
+void	btCollisionWorld::RayTestSingle(const btTransform& rayFromTrans,const btTransform& rayToTrans,
 					  btCollisionObject* collisionObject,
 					  const btCollisionShape* collisionShape,
-					  const btSimdTransform& colObjWorldTransform,
+					  const btTransform& colObjWorldTransform,
 					  RayResultCallback& resultCallback)
 {
 	
@@ -194,10 +194,10 @@ void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const b
 
 						btTriangleMeshShape* triangleMesh = (btTriangleMeshShape*)collisionShape;
 						
-						btSimdTransform worldTocollisionObject = colObjWorldTransform.inverse();
+						btTransform worldTocollisionObject = colObjWorldTransform.inverse();
 
-						btSimdVector3 rayFromLocal = worldTocollisionObject * rayFromTrans.getOrigin();
-						btSimdVector3 rayToLocal = worldTocollisionObject * rayToTrans.getOrigin();
+						btVector3 rayFromLocal = worldTocollisionObject * rayFromTrans.getOrigin();
+						btVector3 rayToLocal = worldTocollisionObject * rayToTrans.getOrigin();
 
 						//ConvexCast::CastResult
 
@@ -207,7 +207,7 @@ void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const b
 							btCollisionObject*	m_collisionObject;
 							btTriangleMeshShape*	m_triangleMesh;
 
-							BridgeTriangleRaycastCallback( const btSimdVector3& from,const btSimdVector3& to,
+							BridgeTriangleRaycastCallback( const btVector3& from,const btVector3& to,
 								btCollisionWorld::RayResultCallback* resultCallback, btCollisionObject* collisionObject,btTriangleMeshShape*	triangleMesh):
 								btTriangleRaycastCallback(from,to),
 									m_resultCallback(resultCallback),
@@ -217,7 +217,7 @@ void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const b
 								}
 
 
-							virtual float ReportHit(const btSimdVector3& hitNormalLocal, float hitFraction, int partId, int triangleIndex )
+							virtual float ReportHit(const btVector3& hitNormalLocal, float hitFraction, int partId, int triangleIndex )
 							{
 								btCollisionWorld::LocalShapeInfo	shapeInfo;
 								shapeInfo.m_shapePart = partId;
@@ -240,9 +240,9 @@ void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const b
 						BridgeTriangleRaycastCallback	rcb(rayFromLocal,rayToLocal,&resultCallback,collisionObject,triangleMesh);
 						rcb.m_hitFraction = resultCallback.m_closestHitFraction;
 
-						btSimdVector3 rayAabbMinLocal = rayFromLocal;
+						btVector3 rayAabbMinLocal = rayFromLocal;
 						rayAabbMinLocal.setMin(rayToLocal);
-						btSimdVector3 rayAabbMaxLocal = rayFromLocal;
+						btVector3 rayAabbMaxLocal = rayFromLocal;
 						rayAabbMaxLocal.setMax(rayToLocal);
 
 						triangleMesh->ProcessAllTriangles(&rcb,rayAabbMinLocal,rayAabbMaxLocal);
@@ -256,9 +256,9 @@ void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const b
 							int i=0;
 							for (i=0;i<compoundShape->GetNumChildShapes();i++)
 							{
-								btSimdTransform childTrans = compoundShape->GetChildTransform(i);
+								btTransform childTrans = compoundShape->GetChildTransform(i);
 								const btCollisionShape* childCollisionShape = compoundShape->GetChildShape(i);
-								btSimdTransform childWorldTrans = colObjWorldTransform * childTrans;
+								btTransform childWorldTrans = colObjWorldTransform * childTrans;
 								RayTestSingle(rayFromTrans,rayToTrans,
 									collisionObject,
 									childCollisionShape,
@@ -273,11 +273,11 @@ void	btCollisionWorld::RayTestSingle(const btSimdTransform& rayFromTrans,const b
 			}
 }
 
-void	btCollisionWorld::RayTest(const btSimdVector3& rayFromWorld, const btSimdVector3& rayToWorld, RayResultCallback& resultCallback)
+void	btCollisionWorld::RayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld, RayResultCallback& resultCallback)
 {
 
 	
-	btSimdTransform	rayFromTrans,rayToTrans;
+	btTransform	rayFromTrans,rayToTrans;
 	rayFromTrans.setIdentity();
 	rayFromTrans.setOrigin(rayFromWorld);
 	rayToTrans.setIdentity();
@@ -285,8 +285,8 @@ void	btCollisionWorld::RayTest(const btSimdVector3& rayFromWorld, const btSimdVe
 	rayToTrans.setOrigin(rayToWorld);
 
 	//do culling based on aabb (rayFrom/rayTo)
-	btSimdVector3 rayAabbMin = rayFromWorld;
-	btSimdVector3 rayAabbMax = rayFromWorld;
+	btVector3 rayAabbMin = rayFromWorld;
+	btVector3 rayAabbMax = rayFromWorld;
 	rayAabbMin.setMin(rayToWorld);
 	rayAabbMax.setMax(rayToWorld);
 
@@ -303,7 +303,7 @@ void	btCollisionWorld::RayTest(const btSimdVector3& rayFromWorld, const btSimdVe
 		btCollisionObject*	collisionObject= (*iter);
 
 		//RigidcollisionObject* collisionObject = ctrl->GetRigidcollisionObject();
-		btSimdVector3 collisionObjectAabbMin,collisionObjectAabbMax;
+		btVector3 collisionObjectAabbMin,collisionObjectAabbMax;
 		collisionObject->m_collisionShape->GetAabb(collisionObject->m_worldTransform,collisionObjectAabbMin,collisionObjectAabbMax);
 
 		//check aabb overlap

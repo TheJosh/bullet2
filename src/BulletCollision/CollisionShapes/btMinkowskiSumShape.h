@@ -23,8 +23,8 @@ subject to the following restrictions:
 class btMinkowskiSumShape : public btConvexShape
 {
 
-	btSimdTransform	m_transA;
-	btSimdTransform	m_transB;
+	btTransform	m_transA;
+	btTransform	m_transB;
 	btConvexShape*	m_shapeA;
 	btConvexShape*	m_shapeB;
 
@@ -32,18 +32,18 @@ public:
 
 	btMinkowskiSumShape(btConvexShape* shapeA,btConvexShape* shapeB);
 
-	virtual btSimdVector3	LocalGetSupportingVertexWithoutMargin(const btSimdVector3& vec)const;
+	virtual btVector3	LocalGetSupportingVertexWithoutMargin(const btVector3& vec)const;
 
-	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btSimdVector3* vectors,btSimdVector3* supportVerticesOut,int numVectors) const;
+	virtual void	BatchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const;
 
 
-	virtual void	CalculateLocalInertia(SimdScalar mass,btSimdVector3& inertia);
+	virtual void	CalculateLocalInertia(btScalar mass,btVector3& inertia);
 
-	void	SetTransformA(const btSimdTransform&	transA) { m_transA = transA;}
-	void	SetTransformB(const btSimdTransform&	transB) { m_transB = transB;}
+	void	SetTransformA(const btTransform&	transA) { m_transA = transA;}
+	void	SetTransformB(const btTransform&	transB) { m_transB = transB;}
 
-	const btSimdTransform& GetTransformA()const  { return m_transA;}
-	const btSimdTransform& GetTransformB()const  { return m_transB;}
+	const btTransform& GetTransformA()const  { return m_transA;}
+	const btTransform& GetTransformB()const  { return m_transB;}
 
 
 	virtual int	GetShapeType() const { return MINKOWSKI_SUM_SHAPE_PROXYTYPE; }

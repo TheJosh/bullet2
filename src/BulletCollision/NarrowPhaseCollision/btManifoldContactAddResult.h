@@ -23,14 +23,14 @@ class btPersistentManifold;
 class btManifoldContactAddResult : public btDiscreteCollisionDetectorInterface::Result
 {
 	btPersistentManifold* m_manifoldPtr;
-	btSimdTransform	m_transAInv;
-	btSimdTransform	m_transBInv;
+	btTransform	m_transAInv;
+	btTransform	m_transBInv;
 
 public:
 
-	btManifoldContactAddResult(btSimdTransform transA,btSimdTransform transB,btPersistentManifold* manifoldPtr);
+	btManifoldContactAddResult(btTransform transA,btTransform transB,btPersistentManifold* manifoldPtr);
 
-	virtual void AddContactPoint(const btSimdVector3& normalOnBInWorld,const btSimdVector3& pointInWorld,float depth);
+	virtual void AddContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,float depth);
 
 };
 

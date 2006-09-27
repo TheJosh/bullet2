@@ -20,7 +20,7 @@ subject to the following restrictions:
 #include "CcdPhysicsController.h"
 
 #include <algorithm>
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btTransform.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
 #include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
@@ -39,10 +39,10 @@ subject to the following restrictions:
 
 
 //profiling/timings
-#include "LinearMath/GenQuickprof.h"
+#include "LinearMath/btQuickprof.h"
 
 
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.h"
@@ -70,7 +70,7 @@ bool useIslands = true;
 btRaycastVehicle::btVehicleTuning	gTuning;
 
 #endif //NEW_BULLET_VEHICLE_SUPPORT
-#include "LinearMath/GenAabbUtil2.h"
+#include "LinearMath/btAabbUtil2.h"
 
 #include "BulletDynamics/ConstraintSolver/btConstraintSolver.h"
 #include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
@@ -127,9 +127,9 @@ public:
 		bool hasSteering
 		)
 	{
-		btSimdVector3 connectionPointCS0(connectionPoint[0],connectionPoint[1],connectionPoint[2]);
-		btSimdVector3 wheelDirectionCS0(downDirection[0],downDirection[1],downDirection[2]);
-		btSimdVector3 wheelAxle(axleDirection[0],axleDirection[1],axleDirection[2]);
+		btVector3 connectionPointCS0(connectionPoint[0],connectionPoint[1],connectionPoint[2]);
+		btVector3 wheelDirectionCS0(downDirection[0],downDirection[1],downDirection[2]);
+		btVector3 wheelAxle(axleDirection[0],axleDirection[1],axleDirection[2]);
 
 
 		btWheelInfo& info = m_vehicle->AddWheel(connectionPointCS0,wheelDirectionCS0,wheelAxle,
@@ -147,9 +147,9 @@ public:
 			btWheelInfo& info = m_vehicle->GetWheelInfo(i);
 			PHY_IMotionState* motionState = (PHY_IMotionState*)info.m_clientInfo ;
 			m_vehicle->UpdateWheelTransform(i);
-			btSimdTransform trans = m_vehicle->GetWheelTransformWS(i);
-			btSimdQuaternion orn = trans.getRotation();
-			const btSimdVector3& pos = trans.getOrigin();
+			btTransform trans = m_vehicle->GetWheelTransformWS(i);
+			btQuaternion orn = trans.getRotation();
+			const btVector3& pos = trans.getOrigin();
 			motionState->setWorldOrientation(orn.x(),orn.y(),orn.z(),orn[3]);
 			motionState->setWorldPosition(pos.x(),pos.y(),pos.z());
 
@@ -163,16 +163,16 @@ public:
 
 	virtual void	GetWheelPosition(int wheelIndex,float& posX,float& posY,float& posZ) const
 	{
-		btSimdTransform	trans = m_vehicle->GetWheelTransformWS(wheelIndex);
+		btTransform	trans = m_vehicle->GetWheelTransformWS(wheelIndex);
 		posX = trans.getOrigin().x();
 		posY = trans.getOrigin().y();
 		posZ = trans.getOrigin().z();
 	}
 	virtual void	GetWheelOrientationQuaternion(int wheelIndex,float& quatX,float& quatY,float& quatZ,float& quatW) const
 	{
-		btSimdTransform	trans = m_vehicle->GetWheelTransformWS(wheelIndex);
-		btSimdQuaternion quat = trans.getRotation();
-		btSimdMatrix3x3 orn2(quat);
+		btTransform	trans = m_vehicle->GetWheelTransformWS(wheelIndex);
+		btQuaternion quat = trans.getRotation();
+		btMatrix3x3 orn2(quat);
 
 		quatX = trans.getRotation().x();
 		quatY = trans.getRotation().y();
@@ -290,30 +290,30 @@ public:
 
 
 
-static void DrawAabb(btIDebugDraw* debugDrawer,const btSimdVector3& from,const btSimdVector3& to,const btSimdVector3& color)
+static void DrawAabb(btIDebugDraw* debugDrawer,const btVector3& from,const btVector3& to,const btVector3& color)
 {
-	btSimdVector3 halfExtents = (to-from)* 0.5f;
-	btSimdVector3 center = (to+from) *0.5f;
+	btVector3 halfExtents = (to-from)* 0.5f;
+	btVector3 center = (to+from) *0.5f;
 	int i,j;
 
-	btSimdVector3 edgecoord(1.f,1.f,1.f),pa,pb;
+	btVector3 edgecoord(1.f,1.f,1.f),pa,pb;
 	for (i=0;i<4;i++)
 	{
 		for (j=0;j<3;j++)
 		{
-			pa = btSimdVector3(edgecoord[0]*halfExtents[0], edgecoord[1]*halfExtents[1],		
+			pa = btVector3(edgecoord[0]*halfExtents[0], edgecoord[1]*halfExtents[1],		
 				edgecoord[2]*halfExtents[2]);
 			pa+=center;
 
 			int othercoord = j%3;
 			edgecoord[othercoord]*=-1.f;
-			pb = btSimdVector3(edgecoord[0]*halfExtents[0], edgecoord[1]*halfExtents[1],	
+			pb = btVector3(edgecoord[0]*halfExtents[0], edgecoord[1]*halfExtents[1],	
 				edgecoord[2]*halfExtents[2]);
 			pb+=center;
 
 			debugDrawer->DrawLine(pa,pb,color);
 		}
-		edgecoord = btSimdVector3(-1.f,-1.f,-1.f);
+		edgecoord = btVector3(-1.f,-1.f,-1.f);
 		if (i<3)
 			edgecoord[i]*=-1.f;
 	}
@@ -348,8 +348,8 @@ m_scalingPropagated(false)
 	{
 
 		//todo: calculate/let user specify this world sizes
-		btSimdVector3 worldMin(-10000,-10000,-10000);
-		btSimdVector3 worldMax(10000,10000,10000);
+		btVector3 worldMin(-10000,-10000,-10000);
+		btVector3 worldMax(10000,10000,10000);
 
 		pairCache = new btAxisSweep3(worldMin,worldMax);
 
@@ -362,7 +362,7 @@ m_scalingPropagated(false)
 	m_collisionWorld = new btCollisionWorld(dispatcher,pairCache);
 
 	m_debugDrawer = 0;
-	m_gravity = btSimdVector3(0.f,-10.f,0.f);
+	m_gravity = btVector3(0.f,-10.f,0.f);
 
 	m_islandManager = new btSimulationIslandManager();
 
@@ -387,11 +387,11 @@ void	CcdPhysicsEnvironment::addCcdPhysicsController(CcdPhysicsController* ctrl)
 
 	assert(shapeinterface);
 
-	const btSimdTransform& t = ctrl->GetRigidBody()->getCenterOfMassTransform();
+	const btTransform& t = ctrl->GetRigidBody()->getCenterOfMassTransform();
 	
 	body->m_cachedInvertedWorldTransform = body->m_worldTransform.inverse();
 
-	SimdPoint3 minAabb,maxAabb;
+	btPoint3 minAabb,maxAabb;
 
 	shapeinterface->GetAabb(t,minAabb,maxAabb);
 
@@ -400,7 +400,7 @@ void	CcdPhysicsEnvironment::addCcdPhysicsController(CcdPhysicsController* ctrl)
 
 	//extent it with the motion
 
-	btSimdVector3 linMotion = body->getLinearVelocity()*timeStep;
+	btVector3 linMotion = body->getLinearVelocity()*timeStep;
 
 	float maxAabbx = maxAabb.getX();
 	float maxAabby = maxAabb.getY();
@@ -423,8 +423,8 @@ void	CcdPhysicsEnvironment::addCcdPhysicsController(CcdPhysicsController* ctrl)
 		minAabbz += linMotion.z();
 
 
-	minAabb = btSimdVector3(minAabbx,minAabby,minAabbz);
-	maxAabb = btSimdVector3(maxAabbx,maxAabby,maxAabbz);
+	minAabb = btVector3(minAabbx,minAabby,minAabbz);
+	maxAabb = btVector3(maxAabbx,maxAabby,maxAabbz);
 
 
 
@@ -541,7 +541,7 @@ bool	CcdPhysicsEnvironment::proceedDeltaTime(double curTime,float timeStep)
 
 
 
-	if (!SimdFuzzyZero(timeStep))
+	if (!btFuzzyZero(timeStep))
 	{
 		
 		{
@@ -553,7 +553,7 @@ bool	CcdPhysicsEnvironment::proceedDeltaTime(double curTime,float timeStep)
 
 						CcdPhysicsController* ctrl = *i;
 
-						btSimdTransform predictedTrans;
+						btTransform predictedTrans;
 						btRigidBody* body = ctrl->GetRigidBody();
 						if (body->GetActivationState() != ISLAND_SLEEPING)
 						{
@@ -602,7 +602,7 @@ bool	CcdPhysicsEnvironment::proceedDeltaTimeOneStep(float timeStep)
 
 	//printf("CcdPhysicsEnvironment::proceedDeltaTime\n");
 
-	if (SimdFuzzyZero(timeStep))
+	if (btFuzzyZero(timeStep))
 		return true;
 
 	if (m_debugDrawer)
@@ -639,7 +639,7 @@ bool	CcdPhysicsEnvironment::proceedDeltaTimeOneStep(float timeStep)
 		for (k=0;k<GetNumControllers();k++)
 		{
 			CcdPhysicsController* ctrl = m_controllers[k];
-			//		btSimdTransform predictedTrans;
+			//		btTransform predictedTrans;
 			btRigidBody* body = ctrl->GetRigidBody();
 			
 			body->m_cachedInvertedWorldTransform = body->m_worldTransform.inverse();
@@ -872,7 +872,7 @@ bool	CcdPhysicsEnvironment::proceedDeltaTimeOneStep(float timeStep)
 
 					CcdPhysicsController* ctrl = *i;
 
-					btSimdTransform predictedTrans;
+					btTransform predictedTrans;
 					btRigidBody* body = ctrl->GetRigidBody();
 					
 					if (body->IsActive())
@@ -1090,7 +1090,7 @@ void	CcdPhysicsEnvironment::SyncMotionStates(float timeStep)
 }
 void		CcdPhysicsEnvironment::setGravity(float x,float y,float z)
 {
-	m_gravity = btSimdVector3(x,y,z);
+	m_gravity = btVector3(x,y,z);
 
 	std::vector<CcdPhysicsController*>::iterator i;
 
@@ -1126,12 +1126,12 @@ public:
 	  /*	struct btVehicleRaycasterResult
 	  {
 	  btVehicleRaycasterResult() :m_distFraction(-1.f){};
-	  btSimdVector3	m_hitPointInWorld;
-	  btSimdVector3	m_hitNormalInWorld;
-	  SimdScalar	m_distFraction;
+	  btVector3	m_hitPointInWorld;
+	  btVector3	m_hitNormalInWorld;
+	  btScalar	m_distFraction;
 	  };
 	  */
-	  virtual void* CastRay(const btSimdVector3& from,const btSimdVector3& to, btVehicleRaycasterResult& result)
+	  virtual void* CastRay(const btVector3& from,const btVector3& to, btVehicleRaycasterResult& result)
 	  {
 
 
@@ -1195,10 +1195,10 @@ int			CcdPhysicsEnvironment::createConstraint(class PHY_IPhysicsController* ctrl
 
 	ASSERT(rb0);
 
-	btSimdVector3 pivotInA(pivotX,pivotY,pivotZ);
-	btSimdVector3 pivotInB = rb1 ? rb1->getCenterOfMassTransform().inverse()(rb0->getCenterOfMassTransform()(pivotInA)) : pivotInA;
-	btSimdVector3 axisInA(axisX,axisY,axisZ);
-	btSimdVector3 axisInB = rb1 ? 
+	btVector3 pivotInA(pivotX,pivotY,pivotZ);
+	btVector3 pivotInB = rb1 ? rb1->getCenterOfMassTransform().inverse()(rb0->getCenterOfMassTransform()(pivotInA)) : pivotInA;
+	btVector3 axisInA(axisX,axisY,axisZ);
+	btVector3 axisInB = rb1 ? 
 		(rb1->getCenterOfMassTransform().getBasis().inverse()*(rb0->getCenterOfMassTransform().getBasis() * axisInA)) : 
 	rb0->getCenterOfMassTransform().getBasis() * axisInA;
 
@@ -1236,18 +1236,18 @@ int			CcdPhysicsEnvironment::createConstraint(class PHY_IPhysicsController* ctrl
 
 			if (rb1)
 			{
-				btSimdTransform frameInA;
-				btSimdTransform frameInB;
+				btTransform frameInA;
+				btTransform frameInB;
 				
-				btSimdVector3 axis1, axis2;
-				SimdPlaneSpace1( axisInA, axis1, axis2 );
+				btVector3 axis1, axis2;
+				btPlaneSpace1( axisInA, axis1, axis2 );
 
 				frameInA.getBasis().setValue( axisInA.x(), axis1.x(), axis2.x(),
 					                          axisInA.y(), axis1.y(), axis2.y(),
 											  axisInA.z(), axis1.z(), axis2.z() );
 
 	
-				SimdPlaneSpace1( axisInB, axis1, axis2 );
+				btPlaneSpace1( axisInB, axis1, axis2 );
 				frameInB.getBasis().setValue( axisInB.x(), axis1.x(), axis2.x(),
 					                          axisInB.y(), axis1.y(), axis2.y(),
 											  axisInB.z(), axis1.z(), axis2.z() );
@@ -1328,7 +1328,7 @@ int			CcdPhysicsEnvironment::createConstraint(class PHY_IPhysicsController* ctrl
 		}
 	};
 
-	//RigidBody& rbA,btRigidBody& rbB, const btSimdVector3& pivotInA,const btSimdVector3& pivotInB
+	//RigidBody& rbA,btRigidBody& rbB, const btVector3& pivotInA,const btVector3& pivotInB
 
 	return 0;
 
@@ -1340,12 +1340,12 @@ int			CcdPhysicsEnvironment::createConstraint(class PHY_IPhysicsController* ctrl
 //Following the COLLADA physics specification for constraints
 int			CcdPhysicsEnvironment::createUniversalD6Constraint(
 						class PHY_IPhysicsController* ctrlRef,class PHY_IPhysicsController* ctrlOther,
-						btSimdTransform& frameInA,
-						btSimdTransform& frameInB,
-						const btSimdVector3& linearMinLimits,
-						const btSimdVector3& linearMaxLimits,
-						const btSimdVector3& angularMinLimits,
-						const btSimdVector3& angularMaxLimits
+						btTransform& frameInA,
+						btTransform& frameInB,
+						const btVector3& linearMinLimits,
+						const btVector3& linearMaxLimits,
+						const btVector3& angularMinLimits,
+						const btVector3& angularMaxLimits
 )
 {
 
@@ -1413,7 +1413,7 @@ void		CcdPhysicsEnvironment::removeConstraint(int	constraintId)
 	{
 		PHY_IPhysicsController*	m_ignoreClient;
 
-		FilterClosestRayResultCallback (PHY_IPhysicsController* ignoreClient,const btSimdVector3& rayFrom,const btSimdVector3& rayTo)
+		FilterClosestRayResultCallback (PHY_IPhysicsController* ignoreClient,const btVector3& rayFrom,const btVector3& rayTo)
 			: btCollisionWorld::ClosestRayResultCallback(rayFrom,rayTo),
 			m_ignoreClient(ignoreClient)
 		{
@@ -1441,10 +1441,10 @@ void		CcdPhysicsEnvironment::removeConstraint(int	constraintId)
 PHY_IPhysicsController* CcdPhysicsEnvironment::rayTest(PHY_IPhysicsController* ignoreClient, float fromX,float fromY,float fromZ, float toX,float toY,float toZ, 
 													   float& hitX,float& hitY,float& hitZ,float& normalX,float& normalY,float& normalZ)
 {
-	btSimdVector3 rayFrom(fromX,fromY,fromZ);
-	btSimdVector3 rayTo(toX,toY,toZ);
+	btVector3 rayFrom(fromX,fromY,fromZ);
+	btVector3 rayTo(toX,toY,toZ);
 
-	btSimdVector3	hitPointWorld,normalWorld;
+	btVector3	hitPointWorld,normalWorld;
 
 	//Either Ray Cast with or without filtering
 
@@ -1635,7 +1635,7 @@ void	CcdPhysicsEnvironment::CallbackTriggers()
 				{
 					for (int j=0;j<numContacts;j++)
 					{
-						btSimdVector3 color(1,0,0);
+						btVector3 color(1,0,0);
 						const btManifoldPoint& cp = manifold->GetContactPoint(j);
 						if (m_debugDrawer)
 							m_debugDrawer->DrawContactPoint(cp.m_positionWorldOnB,cp.m_normalWorldOnB,cp.GetDistance(),cp.GetLifeTime(),color);
@@ -1719,7 +1719,7 @@ void	CcdPhysicsEnvironment::UpdateAabbs(float	timeStep)
 				btRigidBody* body = ctrl->GetRigidBody();
 
 
-				SimdPoint3 minAabb,maxAabb;
+				btPoint3 minAabb,maxAabb;
 				btCollisionShape* shapeinterface = ctrl->GetCollisionShape();
 
 
@@ -1727,11 +1727,11 @@ void	CcdPhysicsEnvironment::UpdateAabbs(float	timeStep)
 				shapeinterface->CalculateTemporalAabb(body->getCenterOfMassTransform(),
 					body->getLinearVelocity(),
 					//body->getAngularVelocity(),
-					btSimdVector3(0.f,0.f,0.f),//no angular effect for now //body->getAngularVelocity(),
+					btVector3(0.f,0.f,0.f),//no angular effect for now //body->getAngularVelocity(),
 					timeStep,minAabb,maxAabb);
 
 
-				btSimdVector3 manifoldExtraExtents(gContactBreakingTreshold,gContactBreakingTreshold,gContactBreakingTreshold);
+				btVector3 manifoldExtraExtents(gContactBreakingTreshold,gContactBreakingTreshold,gContactBreakingTreshold);
 				minAabb -= manifoldExtraExtents;
 				maxAabb += manifoldExtraExtents;
 
@@ -1739,7 +1739,7 @@ void	CcdPhysicsEnvironment::UpdateAabbs(float	timeStep)
 				if (bp)
 				{
 
-					btSimdVector3 color (1,1,0);
+					btVector3 color (1,1,0);
 
 					if (m_debugDrawer)
 					{	
@@ -1810,7 +1810,7 @@ PHY_IPhysicsController*	CcdPhysicsEnvironment::CreateSphereController(float radi
 	DefaultMotionState* motionState = new DefaultMotionState();
 	cinfo.m_MotionState = motionState;
 	motionState->m_worldTransform.setIdentity();
-	motionState->m_worldTransform.setOrigin(btSimdVector3(position[0],position[1],position[2]));
+	motionState->m_worldTransform.setOrigin(btVector3(position[0],position[1],position[2]));
 
 	CcdPhysicsController* sphereController = new CcdPhysicsController(cinfo);
 	
@@ -1828,7 +1828,7 @@ PHY_IPhysicsController* CcdPhysicsEnvironment::CreateConeController(float conera
 	DefaultMotionState* motionState = new DefaultMotionState();
 	cinfo.m_MotionState = motionState;
 	motionState->m_worldTransform.setIdentity();
-//	motionState->m_worldTransform.setOrigin(btSimdVector3(position[0],position[1],position[2]));
+//	motionState->m_worldTransform.setOrigin(btVector3(position[0],position[1],position[2]));
 
 	CcdPhysicsController* sphereController = new CcdPhysicsController(cinfo);
 

@@ -12,7 +12,7 @@
 #include "BulletDynamics/Dynamics/btRigidBody.h" // for pointvelocity
 
 
-SimdScalar btWheelInfo::GetSuspensionRestLength() const
+btScalar btWheelInfo::GetSuspensionRestLength() const
 {
 
 	return m_suspensionRestLength1;
@@ -26,11 +26,11 @@ void	btWheelInfo::UpdateWheel(const btRigidBody& chassis,RaycastInfo& raycastInf
 	if (m_raycastInfo.m_isInContact)
 
 	{
-		SimdScalar	project= m_raycastInfo.m_contactNormalWS.dot( m_raycastInfo.m_wheelDirectionWS );
-		btSimdVector3	 chassis_velocity_at_contactPoint;
-		btSimdVector3 relpos = m_raycastInfo.m_contactPointWS - chassis.getCenterOfMassPosition();
+		btScalar	project= m_raycastInfo.m_contactNormalWS.dot( m_raycastInfo.m_wheelDirectionWS );
+		btVector3	 chassis_velocity_at_contactPoint;
+		btVector3 relpos = m_raycastInfo.m_contactPointWS - chassis.getCenterOfMassPosition();
 		chassis_velocity_at_contactPoint = chassis.getVelocityInLocalPoint( relpos );
-		SimdScalar projVel = m_raycastInfo.m_contactNormalWS.dot( chassis_velocity_at_contactPoint );
+		btScalar projVel = m_raycastInfo.m_contactNormalWS.dot( chassis_velocity_at_contactPoint );
 		if ( project >= -0.1f)
 		{
 			m_suspensionRelativeVelocity = 0.0f;
@@ -38,7 +38,7 @@ void	btWheelInfo::UpdateWheel(const btRigidBody& chassis,RaycastInfo& raycastInf
 		}
 		else
 		{
-			SimdScalar inv = -1.f / project;
+			btScalar inv = -1.f / project;
 			m_suspensionRelativeVelocity = projVel * inv;
 			m_clippedInvContactDotSuspension = inv;
 		}

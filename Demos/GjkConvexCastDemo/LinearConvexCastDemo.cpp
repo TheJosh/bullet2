@@ -21,8 +21,8 @@
 
 
 ///Low level demo, doesn't include btBulletCollisionCommon.h
-#include "LinearMath/SimdQuaternion.h"
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btQuaternion.h"
+#include "LinearMath/btTransform.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "BulletCollision/CollisionShapes/btMinkowskiSumShape.h"
@@ -51,7 +51,7 @@ const int numObjects = 2;
 
 btPolyhedralConvexShape*	shapePtr[maxNumObjects];
 
-btSimdTransform tr[numObjects];
+btTransform tr[numObjects];
 int screenWidth = 640;
 int screenHeight = 480;
 void DrawRasterizerLine(float const* , float const*, int)
@@ -73,15 +73,15 @@ int main(int argc,char** argv)
 void LinearConvexCastDemo::initPhysics()
 {
 	setCameraDistance(30.f);
-	tr[0].setOrigin(btSimdVector3(0,0,0));
-	tr[1].setOrigin(btSimdVector3(0,10,0));
+	tr[0].setOrigin(btVector3(0,0,0));
+	tr[1].setOrigin(btVector3(0,10,0));
 
-	btSimdMatrix3x3 basisA;
+	btMatrix3x3 basisA;
 	basisA.setValue(0.99999958f,0.00022980258f,0.00090992288f,
 		-0.00029313788f,0.99753088f,0.070228584f,
 		-0.00089153741f,-0.070228823f,0.99753052f);
 
-	btSimdMatrix3x3 basisB;
+	btMatrix3x3 basisB;
 	basisB.setValue(1.0000000f,4.4865553e-018f,-4.4410586e-017f,
 		4.4865495e-018f,0.97979438f,0.20000751f,
 		4.4410586e-017f,-0.20000751f,0.97979438f);
@@ -91,15 +91,15 @@ void LinearConvexCastDemo::initPhysics()
 
 
 
-	btSimdVector3 boxHalfExtentsA(0.2,4,4);
-	btSimdVector3 boxHalfExtentsB(6,6,6);
+	btVector3 boxHalfExtentsA(0.2,4,4);
+	btVector3 boxHalfExtentsB(6,6,6);
 
 	btBoxShape*	boxA = new btBoxShape(boxHalfExtentsA);
 /*	btBU_Simplex1to4	boxB;
-	boxB.AddVertex(SimdPoint3(-5,0,-5));
-	boxB.AddVertex(SimdPoint3(5,0,-5));
-	boxB.AddVertex(SimdPoint3(0,0,5));
-	boxB.AddVertex(SimdPoint3(0,5,0));
+	boxB.AddVertex(btPoint3(-5,0,-5));
+	boxB.AddVertex(btPoint3(5,0,-5));
+	boxB.AddVertex(btPoint3(0,0,5));
+	boxB.AddVertex(btPoint3(0,5,0));
 */
 
 	btBoxShape*	boxB = new btBoxShape(boxHalfExtentsB);
@@ -109,7 +109,7 @@ void LinearConvexCastDemo::initPhysics()
 	shapePtr[0]->SetMargin(0.01f);
 	shapePtr[1]->SetMargin(0.01f);
 
-	btSimdTransform tr;
+	btTransform tr;
 	tr.setIdentity();
 }
 
@@ -145,13 +145,13 @@ void LinearConvexCastDemo::displayCallback(void)
 	for (i=0;i<numObjects;i++)
 	{
 		tr[i].getOpenGLMatrix( m );
-		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btSimdVector3(1,1,1),getDebugMode());
+		GL_ShapeDrawer::DrawOpenGL(m,shapePtr[i],btVector3(1,1,1),getDebugMode());
 	}
 
 	
 	int shapeIndex = 1;
 
-	btSimdQuaternion orn;
+	btQuaternion orn;
 	orn.setEuler(yaw,pitch,roll);
 	tr[shapeIndex].setRotation(orn);
 	
@@ -163,14 +163,14 @@ void LinearConvexCastDemo::displayCallback(void)
 		yaw += 0.01f;
 	}
 
-	btSimdVector3 fromA(-25,11,0);
-	btSimdVector3 toA(15,11,0);
+	btVector3 fromA(-25,11,0);
+	btVector3 toA(15,11,0);
 
-	btSimdQuaternion ornFromA(0.f,0.f,0.f,1.f);
-	btSimdQuaternion ornToA(0.f,0.f,0.f,1.f);
+	btQuaternion ornFromA(0.f,0.f,0.f,1.f);
+	btQuaternion ornToA(0.f,0.f,0.f,1.f);
 
-	btSimdTransform	rayFromWorld(ornFromA,fromA);
-	btSimdTransform	rayToWorld(ornToA,toA);
+	btTransform	rayFromWorld(ornFromA,fromA);
+	btTransform	rayToWorld(ornToA,toA);
 
 	tr[0] = rayFromWorld;
 
@@ -208,7 +208,7 @@ void LinearConvexCastDemo::displayCallback(void)
 		{
 
 			glDisable(GL_DEPTH_TEST);
-			btSimdVector3 hitPoint;
+			btVector3 hitPoint;
 			hitPoint.setInterpolate3(rayFromWorld.getOrigin(),rayToWorld.getOrigin(),rayResult.m_fraction);
 			
 			//draw the raycast result
@@ -219,12 +219,12 @@ void LinearConvexCastDemo::displayCallback(void)
 			glEnd();
 			glEnable(GL_DEPTH_TEST);
 
-			btSimdTransform	toTransWorld;
+			btTransform	toTransWorld;
 			toTransWorld = tr[0];
 			toTransWorld.setOrigin(hitPoint);
 
 			toTransWorld.getOpenGLMatrix( m );
-			GL_ShapeDrawer::DrawOpenGL(m,shapePtr[0],btSimdVector3(0,1,1),getDebugMode());
+			GL_ShapeDrawer::DrawOpenGL(m,shapePtr[0],btVector3(0,1,1),getDebugMode());
 
 
 		}

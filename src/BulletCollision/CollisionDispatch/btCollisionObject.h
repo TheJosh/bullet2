@@ -16,7 +16,7 @@ subject to the following restrictions:
 #ifndef COLLISION_OBJECT_H
 #define COLLISION_OBJECT_H
 
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btTransform.h"
 
 //island management, m_activationState1
 #define ACTIVE_TAG 1
@@ -33,13 +33,13 @@ class	btCollisionShape;
 /// They can be added to the btCollisionWorld.
 struct	btCollisionObject
 {
-	btSimdTransform	m_worldTransform;
+	btTransform	m_worldTransform;
 	
 	//m_interpolationWorldTransform is used for CCD and interpolation
 	//it can be either previous or future (predicted) transform
-	btSimdTransform	m_interpolationWorldTransform;
+	btTransform	m_interpolationWorldTransform;
 
-	btSimdTransform	m_cachedInvertedWorldTransform;
+	btTransform	m_cachedInvertedWorldTransform;
 
 	enum CollisionFlags
 	{
@@ -54,8 +54,8 @@ struct	btCollisionObject
 	int				m_activationState1;
 	float			m_deactivationTime;
 
-	SimdScalar		m_friction;
-	SimdScalar		m_restitution;
+	btScalar		m_friction;
+	btScalar		m_restitution;
 
 	btBroadphaseProxy*	m_broadphaseHandle;
 	btCollisionShape*		m_collisionShape;

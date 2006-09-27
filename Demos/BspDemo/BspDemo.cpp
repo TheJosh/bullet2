@@ -18,8 +18,8 @@ subject to the following restrictions:
 
 #include "btBulletDynamicsCommon.h"
 
-#include "LinearMath/GenQuickprof.h"
-#include "LinearMath/GenIDebugDraw.h"
+#include "LinearMath/btQuickprof.h"
+#include "LinearMath/btIDebugDraw.h"
 
 #include "GLDebugDrawer.h"
 
@@ -60,7 +60,7 @@ public:
 	{
 	}
 
-		virtual void	AddConvexVerticesCollider(std::vector<btSimdVector3>& vertices, bool isEntity, const btSimdVector3& entityTargetLocation)
+		virtual void	AddConvexVerticesCollider(std::vector<btVector3>& vertices, bool isEntity, const btVector3& entityTargetLocation)
 		{
 			///perhaps we can do something special with entities (isEntity)
 			///like adding a collision Triggering (as example)
@@ -69,10 +69,10 @@ public:
 			{
 				bool isDynamic = false;
 				float mass = 0.f;
-				btSimdTransform startTransform;
+				btTransform startTransform;
 				//can use a shift
 				startTransform.setIdentity();
-				startTransform.setOrigin(btSimdVector3(0,0,-10.f));
+				startTransform.setOrigin(btVector3(0,0,-10.f));
 				//this create an internal copy of the vertices
 				btCollisionShape* shape = new btConvexHullShape(&vertices[0],vertices.size());
 
@@ -128,13 +128,13 @@ void	BspDemo::initPhysics(char* bspfilename)
 {
 	
 
-	m_cameraUp = btSimdVector3(0,0,1);
+	m_cameraUp = btVector3(0,0,1);
 	m_forwardAxis = 1;
 
 	///Setup a Physics Simulation Environment
 	btCollisionDispatcher* dispatcher = new	btCollisionDispatcher();
-	btSimdVector3 worldAabbMin(-10000,-10000,-10000);
-	btSimdVector3 worldAabbMax(10000,10000,10000);
+	btVector3 worldAabbMin(-10000,-10000,-10000);
+	btVector3 worldAabbMax(10000,10000,10000);
 	btOverlappingPairCache* broadphase = new btAxisSweep3(worldAabbMin,worldAabbMax);
 	//BroadphaseInterface* broadphase = new btSimpleBroadphase();
 	m_physicsEnvironmentPtr = new CcdPhysicsEnvironment(dispatcher,broadphase);

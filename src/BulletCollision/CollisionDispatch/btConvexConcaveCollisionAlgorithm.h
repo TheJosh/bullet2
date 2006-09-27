@@ -31,8 +31,8 @@ class btConvexTriangleCallback : public btTriangleCallback
 	btBroadphaseProxy* m_convexProxy;
 	btBroadphaseProxy m_triangleProxy;
 
-	btSimdVector3	m_aabbMin;
-	btSimdVector3	m_aabbMax ;
+	btVector3	m_aabbMin;
+	btVector3	m_aabbMax ;
 
 	btDispatcher*	m_dispatcher;
 	const btDispatcherInfo* m_dispatchInfoPtr;
@@ -49,15 +49,15 @@ int	m_triangleCount;
 
 	virtual ~btConvexTriangleCallback();
 
-	virtual void ProcessTriangle(btSimdVector3* triangle, int partId, int triangleIndex);
+	virtual void ProcessTriangle(btVector3* triangle, int partId, int triangleIndex);
 	
 	void ClearCache();
 
-	inline const btSimdVector3& GetAabbMin() const
+	inline const btVector3& GetAabbMin() const
 	{
 		return m_aabbMin;
 	}
-	inline const btSimdVector3& GetAabbMax() const
+	inline const btVector3& GetAabbMax() const
 	{
 		return m_aabbMax;
 	}
