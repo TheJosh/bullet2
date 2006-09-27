@@ -14,11 +14,11 @@ subject to the following restrictions:
 
 
 
-#ifndef SimdPoint3_H
-#define SimdPoint3_H
+#ifndef btPoint3_H
+#define btPoint3_H
 
-#include "LinearMath/SimdVector3.h"
+#include "LinearMath/btVector3.h"
 
-typedef btSimdVector3 SimdPoint3;
+typedef btVector3 btPoint3;
 
 #endif

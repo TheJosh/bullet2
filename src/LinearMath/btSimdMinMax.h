@@ -18,22 +18,22 @@ subject to the following restrictions:
 #define SIMD_MINMAX_H
 
 template <class T>
-SIMD_FORCE_INLINE const T& SimdMin(const T& a, const T& b) {
+SIMD_FORCE_INLINE const T& btMin(const T& a, const T& b) {
   return b < a ? b : a;
 }
 
 template <class T>
-SIMD_FORCE_INLINE const T& SimdMax(const T& a, const T& b) {
+SIMD_FORCE_INLINE const T& btMax(const T& a, const T& b) {
   return  a < b ? b : a;
 }
 
 template <class T>
-SIMD_FORCE_INLINE void SimdSetMin(T& a, const T& b) {
+SIMD_FORCE_INLINE void btSetMin(T& a, const T& b) {
     if (a > b) a = b;
 }
 
 template <class T>
-SIMD_FORCE_INLINE void SimdSetMax(T& a, const T& b) {
+SIMD_FORCE_INLINE void btSetMax(T& a, const T& b) {
     if (a < b) a = b;
 }
 

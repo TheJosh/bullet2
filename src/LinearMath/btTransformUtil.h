@@ -16,29 +16,29 @@ subject to the following restrictions:
 #ifndef SIMD_TRANSFORM_UTIL_H
 #define SIMD_TRANSFORM_UTIL_H
 
-#include "LinearMath/SimdTransform.h"
+#include "LinearMath/btTransform.h"
 #define ANGULAR_MOTION_TRESHOLD 0.5f*SIMD_HALF_PI
 
 
 
-#define SIMDSQRT12 SimdScalar(0.7071067811865475244008443621048490)
+#define SIMDSQRT12 btScalar(0.7071067811865475244008443621048490)
 
-#define SimdRecipSqrt(x) ((float)(1.0f/SimdSqrt(float(x))))		/* reciprocal square root */
+#define btRecipSqrt(x) ((float)(1.0f/btSqrt(float(x))))		/* reciprocal square root */
 
-inline btSimdVector3 SimdAabbSupport(const btSimdVector3& halfExtents,const btSimdVector3& supportDir)
+inline btVector3 btAabbSupport(const btVector3& halfExtents,const btVector3& supportDir)
 {
-	return btSimdVector3(supportDir.x() < SimdScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
-      supportDir.y() < SimdScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
-      supportDir.z() < SimdScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
+	return btVector3(supportDir.x() < btScalar(0.0f) ? -halfExtents.x() : halfExtents.x(),
+      supportDir.y() < btScalar(0.0f) ? -halfExtents.y() : halfExtents.y(),
+      supportDir.z() < btScalar(0.0f) ? -halfExtents.z() : halfExtents.z()); 
 }
 
 
-inline void SimdPlaneSpace1 (const btSimdVector3& n, btSimdVector3& p, btSimdVector3& q)
+inline void btPlaneSpace1 (const btVector3& n, btVector3& p, btVector3& q)
 {
-  if (SimdFabs(n[2]) > SIMDSQRT12) {
+  if (btFabs(n[2]) > SIMDSQRT12) {
     // choose p in y-z plane
-    SimdScalar a = n[1]*n[1] + n[2]*n[2];
-    SimdScalar k = SimdRecipSqrt (a);
+    btScalar a = n[1]*n[1] + n[2]*n[2];
+    btScalar k = btRecipSqrt (a);
     p[0] = 0;
     p[1] = -n[2]*k;
     p[2] = n[1]*k;
@@ -49,8 +49,8 @@ inline void SimdPlaneSpace1 (const btSimdVector3& n, btSimdVector3& p, btSimdVec
   }
   else {
     // choose p in x-y plane
-    SimdScalar a = n[0]*n[0] + n[1]*n[1];
-    SimdScalar k = SimdRecipSqrt (a);
+    btScalar a = n[0]*n[0] + n[1]*n[1];
+    btScalar k = btRecipSqrt (a);
     p[0] = -n[1]*k;
     p[1] = n[0]*k;
     p[2] = 0;
@@ -64,23 +64,23 @@ inline void SimdPlaneSpace1 (const btSimdVector3& n, btSimdVector3& p, btSimdVec
 
 
 /// Utils related to temporal transforms
-class btSimdTransformUtil
+class btTransformUtil
 {
 
 public:
 
-	static void IntegrateTransform(const btSimdTransform& curTrans,const btSimdVector3& linvel,const btSimdVector3& angvel,SimdScalar timeStep,btSimdTransform& predictedTransform)
+	static void IntegrateTransform(const btTransform& curTrans,const btVector3& linvel,const btVector3& angvel,btScalar timeStep,btTransform& predictedTransform)
 	{
 		predictedTransform.setOrigin(curTrans.getOrigin() + linvel * timeStep);
 //	#define QUATERNION_DERIVATIVE
 	#ifdef QUATERNION_DERIVATIVE
-		btSimdQuaternion orn = curTrans.getRotation();
+		btQuaternion orn = curTrans.getRotation();
 		orn += (angvel * orn) * (timeStep * 0.5f);
 		orn.normalize();
 	#else
 		//exponential map
-		btSimdVector3 axis;
-		SimdScalar	fAngle = angvel.length(); 
+		btVector3 axis;
+		btScalar	fAngle = angvel.length(); 
 		//limit the angular motion
 		if (fAngle*timeStep > ANGULAR_MOTION_TRESHOLD)
 		{
@@ -95,41 +95,41 @@ public:
 		else
 		{
 			// sync(fAngle) = sin(c*fAngle)/t
-			axis   = angvel*( SimdSin(0.5f*fAngle*timeStep)/fAngle );
+			axis   = angvel*( btSin(0.5f*fAngle*timeStep)/fAngle );
 		}
-		btSimdQuaternion dorn (axis.x(),axis.y(),axis.z(),SimdCos( fAngle*timeStep*0.5f ));
-		btSimdQuaternion orn0 = curTrans.getRotation();
+		btQuaternion dorn (axis.x(),axis.y(),axis.z(),btCos( fAngle*timeStep*0.5f ));
+		btQuaternion orn0 = curTrans.getRotation();
 
-		btSimdQuaternion predictedOrn = dorn * orn0;
+		btQuaternion predictedOrn = dorn * orn0;
 	#endif
 		predictedTransform.setRotation(predictedOrn);
 	}
 
-	static void	CalculateVelocity(const btSimdTransform& transform0,const btSimdTransform& transform1,SimdScalar timeStep,btSimdVector3& linVel,btSimdVector3& angVel)
+	static void	CalculateVelocity(const btTransform& transform0,const btTransform& transform1,btScalar timeStep,btVector3& linVel,btVector3& angVel)
 	{
 		linVel = (transform1.getOrigin() - transform0.getOrigin()) / timeStep;
 #ifdef USE_QUATERNION_DIFF
-		btSimdQuaternion orn0 = transform0.getRotation();
-		btSimdQuaternion orn1a = transform1.getRotation();
-		btSimdQuaternion orn1 = orn0.farthest(orn1a);
-		btSimdQuaternion dorn = orn1 * orn0.inverse();
+		btQuaternion orn0 = transform0.getRotation();
+		btQuaternion orn1a = transform1.getRotation();
+		btQuaternion orn1 = orn0.farthest(orn1a);
+		btQuaternion dorn = orn1 * orn0.inverse();
 #else
-		btSimdMatrix3x3 dmat = transform1.getBasis() * transform0.getBasis().inverse();
-		btSimdQuaternion dorn;
+		btMatrix3x3 dmat = transform1.getBasis() * transform0.getBasis().inverse();
+		btQuaternion dorn;
 		dmat.getRotation(dorn);
 #endif//USE_QUATERNION_DIFF
 
-		btSimdVector3 axis;
-		SimdScalar  angle;
+		btVector3 axis;
+		btScalar  angle;
 		angle = dorn.getAngle();
-		axis = btSimdVector3(dorn.x(),dorn.y(),dorn.z());
+		axis = btVector3(dorn.x(),dorn.y(),dorn.z());
 		axis[3] = 0.f;
 		//check for axis length
-		SimdScalar len = axis.length2();
+		btScalar len = axis.length2();
 		if (len < SIMD_EPSILON*SIMD_EPSILON)
-			axis = btSimdVector3(1.f,0.f,0.f);
+			axis = btVector3(1.f,0.f,0.f);
 		else
-			axis /= SimdSqrt(len);
+			axis /= btSqrt(len);
 
 		
 		angVel = axis * angle / timeStep;
