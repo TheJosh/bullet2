@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-
+#include <assert.h>
 
 void printDevInfo(cl_device_id device)
 {
@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     // set Global and Local work size dimensions
     szGlobalWorkSize[0] = iTestN >> 3;  // do 8 computations per work item
-    szLocalWorkSize[0]= iTestN>>3;
+    szLocalWorkSize[0]= 16;
 
 
     // Allocate and initialize host arrays
@@ -83,8 +83,9 @@ int main(int argc, char **argv)
 	}
 
     // Create OpenCL context & context
-    cxGPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErr1); //could also be CL_DEVICE_TYPE_GPU
-	
+    //cxGPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErr1); //could also be CL_DEVICE_TYPE_GPU
+	cxGPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErr1); //could also be CL_DEVICE_TYPE_GPU
+	assert(cxGPUContext);
     // Query all devices available to the context
     ciErr1 |= clGetContextInfo(cxGPUContext, CL_CONTEXT_DEVICES, 0, NULL, &szParmDataBytes);
     cdDevices = (cl_device_id*)malloc(szParmDataBytes);
@@ -117,10 +118,44 @@ int main(int argc, char **argv)
 		lengths[i] = 0;
 	}
 
+
+#define KERNEL_FROM_BINARY 1
+#if KERNEL_FROM_BINARY
 	cpProgram = clCreateProgramWithBinary(cxGPUContext, numDevices,cdDevices,lengths, images, 0, &err);
+#else
+
+	// Program Setup
+	size_t program_length;
+	char* sourceMemoryBuffer = 0;
+
+	char* kernelfilename = "../../Demos/SpheresGrid/SpheresGrid.cl";
+	FILE* file = fopen(kernelfilename,"rb");
+	int size=0;
+	if (fseek(file, 0, SEEK_END) || (size = ftell(file)) == EOF || fseek(file, 0, SEEK_SET)) {        
+		/* File operations denied? ok, just close and return failure */
+		printf("Error: cannot get filesize from %s\n", kernelfilename);
+	} else
+	{
+		//how to detect file size?
+		sourceMemoryBuffer = (char*)malloc(size+1);
+		fread(sourceMemoryBuffer,1,size,file);
+		fclose(file);
+	}
+
+	program_length = size;
+	assert (sourceMemoryBuffer);
+
+	// create the program
+	cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char**)&sourceMemoryBuffer, &program_length, &err);
+	assert( err ==  CL_SUCCESS);
+	free(sourceMemoryBuffer);
+#endif
+
+
 
 	// Build the executable program from a binary
 	ciErr1 |= clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
+	assert(ciErr1 == CL_SUCCESS);
 
     // Create the kernel
     ckKernel = clCreateKernel(cpProgram, "VectorAdd", &ciErr1);
@@ -132,10 +167,12 @@ int main(int argc, char **argv)
 
     // Copy input data from host to GPU and launch kernel 
     ciErr1 |= clEnqueueNDRangeKernel(cqCommandQue, ckKernel, 1, NULL, szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
+	assert(ciErr1 == CL_SUCCESS);
 
     // Read back results and check accumulated errors
     ciErr1 |= clEnqueueReadBuffer(cqCommandQue, cmMemObjs[2], CL_TRUE, 0, sizeof(cl_float8) * szGlobalWorkSize[0], dst, 0, NULL, NULL);
-
+	assert(ciErr1==CL_SUCCESS);
+		
     // Release kernel, program, and memory objects
 	// NOTE:  Most properly this should be done at any of the exit points above, but it is omitted elsewhere for clarity.
     free(cdDevices);

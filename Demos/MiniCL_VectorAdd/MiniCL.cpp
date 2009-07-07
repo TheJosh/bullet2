@@ -266,6 +266,7 @@ CL_API_ENTRY cl_mem CL_API_CALL clCreateBuffer(cl_context   /* context */,
 	{
 		memcpy(buf,host_ptr,size);
 	}
+	*errcode_ret = 0;
 	return buf;
 }
 
@@ -273,8 +274,9 @@ CL_API_ENTRY cl_mem CL_API_CALL clCreateBuffer(cl_context   /* context */,
 CL_API_ENTRY cl_command_queue CL_API_CALL clCreateCommandQueue(cl_context                      context , 
                      cl_device_id                   /* device */, 
                      cl_command_queue_properties    /* properties */,
-                     cl_int *                       /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0
+                     cl_int *                        errcode_ret ) CL_API_SUFFIX__VERSION_1_0
 {
+	*errcode_ret = 0;
 	return (cl_command_queue) context;
 }
 
@@ -311,8 +313,9 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
                         cl_device_type          /* device_type */,
                         void (*pfn_notify)(const char *, const void *, size_t, void *) /* pfn_notify */,
                         void *                  /* user_data */,
-                        cl_int *                /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0
+                        cl_int *                 errcode_ret ) CL_API_SUFFIX__VERSION_1_0
 {
+	
 	int maxNumOutstandingTasks = 4;
 
 #ifdef WIN32
@@ -330,6 +333,7 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
 	
 	MiniCLTaskScheduler* scheduler = new MiniCLTaskScheduler(threadSupport,maxNumOutstandingTasks);
 
+	*errcode_ret = 0;
 	return (cl_context)scheduler;
 }
 
