@@ -32,8 +32,8 @@ GLDebugDrawer	gDebugDrawer;
 int main(int argc,char** argv)
 {
     // start logs
-    oclSetLogFileName ("appSpheresGrid.txt");
-    oclLog(LOGBOTH, 0.0, "appSpheresGrid.exe Starting...\n\n"); 
+//    oclSetLogFileName ("appSpheresGrid.txt");
+//    oclLog(LOGBOTH, 0.0, "appSpheresGrid.exe Starting...\n\n"); 
 	
 	
 	SpheresGridDemo ccdDemo(argc, argv);

@@ -13,13 +13,16 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+#if !defined(GUID_ARG)
+	#define GUID_ARG 
+#endif
 
 __kernel void kPredictUnconstrainedMotion(	__global float4* pLinVel, 
 											__global float4* pAngVel, 
 											__global float4* pParams, 
 											__global float4* pInvInertiaMass, 
 											int numObjects,
-											float timeStep)
+											float timeStep GUID_ARG)
 {
     unsigned int index = get_global_id(0);
 	float4 mass0 =	pInvInertiaMass[index * 3 + 0];
@@ -77,7 +80,7 @@ __kernel void kSetSpheres(	__global float4* pPos,
 							__global int2* pShapeIds,
 							__global int2* pPosHash,
 							__global float4* pParams, 
-							unsigned int numObjs)
+							unsigned int numObjs GUID_ARG)
 {
     unsigned int index = get_global_id(0);
     int objId = getObjectId(pShapeIds, numObjs, index);
@@ -104,7 +107,7 @@ __kernel void kSetSpheres(	__global float4* pPos,
 							__global int* pBodyIds,
 							__global int2* pPosHash,
 							__global float4* pParams, 
-							unsigned int numObjs)
+							unsigned int numObjs GUID_ARG)
 {
     unsigned int index = get_global_id(0);
     int objId = pBodyIds[index];
@@ -254,7 +257,7 @@ __kernel void kIntegrateTransforms(	__global float4* pLinVel,
 									__global float4* pTrans,
 									__global float4* pInvInertiaMass, 
 									int numObjects,
-									float timeStep)
+									float timeStep GUID_ARG)
 {
     unsigned int index = get_global_id(0);
 	float4 mass0 =	pInvInertiaMass[index * 3 + 0];
@@ -301,8 +304,8 @@ void findPairsInCell(	int4 gridPos,
 						__global int*   pCellStart,
 						__global float4* pShapeBuff, 
 						__global int* pBodyIds,
-						__global uint*   pPairBuff,
-						__global uint2*	pPairBuffStartCurr,
+						__global int*   pPairBuff,
+						__global int2*	pPairBuffStartCurr,
 						__global float4* pParams)
 {
 	int4 pGridDim = *((int4*)(pParams + 3));
@@ -366,7 +369,7 @@ __kernel void kBroadphaseCD(__global float4* pPos,
 							__global int* pCellStart,
 							__global int* pPairBuff,
 							__global int2* pPairBuffStartCurr,
-							__global float4* pParams)
+							__global float4* pParams GUID_ARG)
 {
     unsigned int index = get_global_id(0);
     int2 sortedData = pHash[index];

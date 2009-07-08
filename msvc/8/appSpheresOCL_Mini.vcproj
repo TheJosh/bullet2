@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="appSpheresGrid"
-	ProjectGUID="{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}"
-	RootNamespace="appSpheresGrid"
+	Name="appSpheresOCL_Mini"
+	ProjectGUID="{381F6312-944A-4E9F-BE52-FEF21225EB81}"
+	RootNamespace="appSpheresOCL_Mini\Shared"
 	>
 	<Platforms>
 		<Platform
@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\out\release8\build\appSpheresGrid\"
-			IntermediateDirectory="..\..\out\release8\build\appSpheresGrid\"
+			OutputDirectory="..\..\out\release8\build\appSpheresOCL_Mini\Shared\"
+			IntermediateDirectory="..\..\out\release8\build\appSpheresOCL_Mini\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -42,7 +42,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release8\build\appSpheresGrid\appSpheresGrid.tlb"
+				TypeLibraryName="..\..\out\release8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -61,10 +61,10 @@
 				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release8\build\appSpheresGrid\appSpheresGrid.pch"
-				AssemblerListingLocation="..\..\out\release8\build\appSpheresGrid\"
-				ObjectFile="..\..\out\release8\build\appSpheresGrid\"
-				ProgramDataBaseFileName="..\..\out\release8\build\appSpheresGrid\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\release8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.pch"
+				AssemblerListingLocation="..\..\out\release8\build\appSpheresOCL_Mini\Shared\"
+				ObjectFile="..\..\out\release8\build\appSpheresOCL_Mini\Shared\"
+				ProgramDataBaseFileName="..\..\out\release8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -95,7 +95,7 @@
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\release8\build\appSpheresGrid\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\release8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -128,8 +128,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseDll|Win32"
-			OutputDirectory="..\..\out\release_dll8\build\appSpheresGrid\"
-			IntermediateDirectory="..\..\out\release_dll8\build\appSpheresGrid\"
+			OutputDirectory="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\"
+			IntermediateDirectory="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -153,7 +153,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dll8\build\appSpheresGrid\appSpheresGrid.tlb"
+				TypeLibraryName="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -167,10 +167,10 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dll8\build\appSpheresGrid\appSpheresGrid.pch"
-				AssemblerListingLocation="..\..\out\release_dll8\build\appSpheresGrid\"
-				ObjectFile="..\..\out\release_dll8\build\appSpheresGrid\"
-				ProgramDataBaseFileName="..\..\out\release_dll8\build\appSpheresGrid\Spheres2dBasicDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.pch"
+				AssemblerListingLocation="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\"
+				ObjectFile="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\"
+				ProgramDataBaseFileName="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\Spheres2dBasicDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -198,7 +198,7 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dll8\build\appSpheresGrid\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\release_dll8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -229,8 +229,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseDoublePrecision|Win32"
-			OutputDirectory="..\..\out\release_dbl8\build\appSpheresGrid\"
-			IntermediateDirectory="..\..\out\release_dbl8\build\appSpheresGrid\"
+			OutputDirectory="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\"
+			IntermediateDirectory="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -254,7 +254,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dbl8\build\appSpheresGrid\appSpheresGrid.tlb"
+				TypeLibraryName="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -263,10 +263,10 @@
 				PreprocessorDefinitions="NDEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				ExceptionHandling="0"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appSpheresGrid\appSpheresGrid.pch"
-				AssemblerListingLocation="..\..\out\release_dbl8\build\appSpheresGrid\"
-				ObjectFile="..\..\out\release_dbl8\build\appSpheresGrid\"
-				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appSpheresGrid\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.pch"
+				AssemblerListingLocation="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\"
+				ObjectFile="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\"
+				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -293,7 +293,7 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dbl8\build\appSpheresGrid\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\release_dbl8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -324,8 +324,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\out\debug8\build\appSpheresGrid\"
-			IntermediateDirectory="..\..\out\debug8\build\appSpheresGrid\"
+			OutputDirectory="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\"
+			IntermediateDirectory="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -336,7 +336,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				AdditionalDependencies="..\..\out\debug8\build\appSpheresGrid\btGpuDemo2dCudaFunc_cu.obj"
+				AdditionalDependencies="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\btGpuDemo2dCudaFunc_cu.obj"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -350,23 +350,23 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug8\build\appSpheresGrid\appSpheresGrid.tlb"
+				TypeLibraryName="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull;&quot;$(CUDA_INC_PATH)&quot;;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\src\MiniCL"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug8\build\appSpheresGrid\appSpheresGrid.pch"
-				AssemblerListingLocation="..\..\out\debug8\build\appSpheresGrid\"
-				ObjectFile="..\..\out\debug8\build\appSpheresGrid\"
-				ProgramDataBaseFileName="..\..\out\debug8\build\appSpheresGrid\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\"
+				ObjectFile="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -390,15 +390,15 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies="glut32.lib glew32.lib oclUtils32D.lib cutil32D.lib"
-				OutputFile="..\..\DebugSpheresGrid.exe"
+				AdditionalDependencies="glut32.lib glew32.lib"
+				OutputFile="..\..\DebugSpheresOCL_Mini.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)&quot;"
+				AdditionalLibraryDirectories="..\..\Glut;"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\debug8\build\appSpheresGrid\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -429,8 +429,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDll|Win32"
-			OutputDirectory="..\..\out\debug_dll8\build\appSpheresGrid\"
-			IntermediateDirectory="..\..\out\debug_dll8\build\appSpheresGrid\"
+			OutputDirectory="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\"
+			IntermediateDirectory="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -454,7 +454,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dll8\build\appSpheresGrid\appSpheresGrid.tlb"
+				TypeLibraryName="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -467,10 +467,10 @@
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appSpheresGrid\appSpheresGrid.pch"
-				AssemblerListingLocation="..\..\out\debug_dll8\build\appSpheresGrid\"
-				ObjectFile="..\..\out\debug_dll8\build\appSpheresGrid\"
-				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appSpheresGrid\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\"
+				ObjectFile="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -498,7 +498,7 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\debug_dll8\build\appSpheresGrid\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dll8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -529,8 +529,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDoublePrecision|Win32"
-			OutputDirectory="..\..\out\debug_dbl8\build\appSpheresGrid\"
-			IntermediateDirectory="..\..\out\debug_dbl8\build\appSpheresGrid\"
+			OutputDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\"
+			IntermediateDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -554,7 +554,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dbl8\build\appSpheresGrid\appSpheresGrid.tlb"
+				TypeLibraryName="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -567,10 +567,10 @@
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appSpheresGrid\appSpheresGrid.pch"
-				AssemblerListingLocation="..\..\out\debug_dbl8\build\appSpheresGrid\"
-				ObjectFile="..\..\out\debug_dbl8\build\appSpheresGrid\"
-				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appSpheresGrid\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\appSpheresOCL_Mini\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\"
+				ObjectFile="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -598,7 +598,7 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appSpheresGrid\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appSpheresOCL_Mini\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -635,23 +635,39 @@
 			Name="Source Files"
 			>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\btSpheresGridDemoDynamicsWorld.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btOclUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\main.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoDynamicsWorld.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\oecakeLoader.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\shaders.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCL.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\SpheresGrid.cl"
+				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTask.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTaskScheduler.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\oecakeLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\shaders.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGrid.cl"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -663,7 +679,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\SpheresGridDemo.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGridDemo.cpp"
 				>
 			</File>
 		</Filter>
@@ -671,27 +687,39 @@
 			Name="Header Files"
 			>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\btSpheresGridDemoDynamicsWorld.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btOclUtils.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\btSpheresGridDemoSharedDefs.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoDynamicsWorld.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\btSpheresGridDemoSharedTypes.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoSharedDefs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\oecakeLoader.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoSharedTypes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\shaders.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTask.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresGrid\SpheresGridDemo.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTaskScheduler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\oecakeLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\shaders.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGridDemo.h"
 				>
 			</File>
 		</Filter>

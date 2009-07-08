@@ -522,10 +522,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\BulletMultiThreaded\MiniCLTaskScheduler.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\BulletMultiThreaded\PosixThreadSupport.cpp"
 				>
 			</File>
@@ -655,14 +651,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\BulletMultiThreaded\btThreadSupportInterface.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\BulletMultiThreaded\MiniCLTask\MiniCLTask.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\BulletMultiThreaded\MiniCLTaskScheduler.h"
 				>
 			</File>
 			<File

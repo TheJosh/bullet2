@@ -331,8 +331,8 @@ void findPairsInCell(	int4 gridPos,
 						__global int*   pCellStart,
 						__global float4* pShapeBuff, 
 						__global int* pBodyIds,
-						__global uint*   pPairBuff,
-						__global uint2*	pPairBuffStartCurr,
+						__global int*   pPairBuff,
+						__global int2*	pPairBuffStartCurr,
 						__global float4* pParams)
 {
 	int4 pGridDim = *((int4*)(pParams + 3));

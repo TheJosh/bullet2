@@ -18,7 +18,8 @@ subject to the following restrictions:
 #define BT_SPHERES_GRID_DEMO_DYNAMICS_WORLD_H
 
 // standard utility and system includes
-#include <oclUtils.h>
+#include <CL/cl.h>
+//#include <oclUtils.h>
 // Extra CL/GL include
 #include <CL/cl_gl.h>
 

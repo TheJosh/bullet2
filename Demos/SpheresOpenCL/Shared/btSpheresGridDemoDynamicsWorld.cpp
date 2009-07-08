@@ -16,6 +16,7 @@ subject to the following restrictions:
 #include <stdio.h>
 #include <GL/glew.h>
 
+#include "btOclUtils.h"
 
 #include "btBulletDynamicsCommon.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
@@ -354,26 +355,31 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
   
     // Get and log the device info
-    if(cutCheckCmdLineFlag(argc, (const char**)argv, "device"))
+//    if(cutCheckCmdLineFlag(argc, (const char**)argv, "device"))
+//	{
+//		int device_nr = 0;
+//		cutGetCmdLineArgumenti(argc, (const char**)argv, "device", &device_nr);
+//		m_cdDevice = oclGetDev(m_cxMainContext, device_nr);
+//		m_cdDevice = btOclGetDev(m_cxMainContext, device_nr);
+//	}
+//	else
 	{
-		int device_nr = 0;
-		cutGetCmdLineArgumenti(argc, (const char**)argv, "device", &device_nr);
-		m_cdDevice = oclGetDev(m_cxMainContext, device_nr);
+//		m_cdDevice = oclGetMaxFlopsDev(m_cxMainContext);
+		m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
 	}
-	else
-	{
-		m_cdDevice = oclGetMaxFlopsDev(m_cxMainContext);
-	}
-	oclPrintDevInfo(LOGBOTH, m_cdDevice);
+//	oclPrintDevInfo(LOGBOTH, m_cdDevice);
 
 	// create a command-queue
 	m_cqCommandQue = clCreateCommandQueue(m_cxMainContext, m_cdDevice, 0, &ciErrNum);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	// Program Setup
+#if defined CL_PLATFORM_NVIDIA
 	size_t program_length;
-	char *source = oclLoadProgSource(".//Demos//SpheresGrid//SpheresGrid.cl", "", &program_length);
-	oclCHECKERROR (source == NULL, oclFALSE);   
+//	char *source = oclLoadProgSource(".//Demos//SpheresGrid//SpheresGrid.cl", "", &program_length);
+	char *source = btOclLoadProgSource(".//Demos//SpheresOpenCL//Shared//SpheresGrid.cl", "", &program_length);
+//	oclCHECKERROR (source == NULL, oclFALSE);   
+	btAssert(source != NULL);
 
 	// create the program
 	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, (const char**)&source, &program_length, &ciErrNum);
@@ -385,17 +391,32 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	if(ciErrNum != CL_SUCCESS)
 	{
 		// write out standard error
-		oclLog(LOGBOTH | ERRORMSG, (double)ciErrNum, STDERROR);
+//		oclLog(LOGBOTH | ERRORMSG, (double)ciErrNum, STDERROR);
 		// write out the build log and ptx, then exit
 		char cBuildLog[10240];
-		char* cPtx;
-		size_t szPtxLength;
-		clGetProgramBuildInfo(m_cpProgram, oclGetFirstDev(m_cxMainContext), CL_PROGRAM_BUILD_LOG, 
+//		char* cPtx;
+//		size_t szPtxLength;
+		clGetProgramBuildInfo(m_cpProgram, btOclGetFirstDev(m_cxMainContext), CL_PROGRAM_BUILD_LOG, 
 							  sizeof(cBuildLog), cBuildLog, NULL );
-		oclGetProgBinary(m_cpProgram, oclGetFirstDev(m_cxMainContext), &cPtx, &szPtxLength);
-		oclLog(LOGBOTH | CLOSELOG, 0.0, "\n\nLog:\n%s\n\n\n\n\nPtx:\n%s\n\n\n", cBuildLog, cPtx);
+//		oclGetProgBinary(m_cpProgram, oclGetFirstDev(m_cxMainContext), &cPtx, &szPtxLength);
+//		oclLog(LOGBOTH | CLOSELOG, 0.0, "\n\nLog:\n%s\n\n\n\n\nPtx:\n%s\n\n\n", cBuildLog, cPtx);
+		printf("\n\n%s\n\n\n", cBuildLog);
 		exit(-1); 
 	}
+#elif defined(CL_PLATFORM_MINI_CL)
+///create kernels from binary
+	int numDevices = 1;
+	::size_t* lengths = (::size_t*) malloc(numDevices * sizeof(::size_t));
+	const unsigned char** images = (const unsigned char**) malloc(numDevices * sizeof(const void*));
+	for(int i = 0; i < numDevices; ++i) {
+		images[i] = 0;
+		lengths[i] = 0;
+	}
+	cl_device_id cdDevices[2];
+	cdDevices[0] = m_cdDevice;
+	m_cpProgram = clCreateProgramWithBinary(m_cxMainContext, 1, cdDevices,lengths, images, 0, &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+#endif
 
 	// create the kernels
 	m_ckSetSpheresKernel = clCreateKernel(m_cpProgram, "kSetSpheres", &ciErrNum);
@@ -470,10 +491,11 @@ void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
     // map the buffer object into client's memory
     void* ptr = glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY_ARB);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
-    if (ciErrNum != CL_SUCCESS)
-    {
-        oclLog(LOGBOTH, 0.0, "Error: Failed to copy data:%d\n", ciErrNum);
-    }
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+//    if (ciErrNum != CL_SUCCESS)
+//    {
+//        oclLog(LOGBOTH, 0.0, "Error: Failed to copy data:%d\n", ciErrNum);
+//    }
     glUnmapBufferARB(GL_ARRAY_BUFFER); 
 }
 

@@ -126,7 +126,7 @@ struct MiniCLTask_LocalStoreMemory
 
 #define GUID_ARG ,int __guid_arg
 
-#include "VectorAddKernels.cl"
+#include "../Shared/SpheresGrid.cl"
 
 
 
@@ -145,6 +145,7 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 	
 	switch (taskDesc.m_kernelProgramId)
 	{
+/*
 	case CMD_MINICL_ADDVECTOR:
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
@@ -153,11 +154,77 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			}
 			break;
 		}
+*/
+/*
+	"kPredictUnconstrainedMotion",
+	"kSetSpheres",
+	"kIntegrateTransforms",
+	"kBroadphaseCD"
+*/
+	case CMD_MINICL_PREDICT_MOTION :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kPredictUnconstrainedMotion(*(float4**)&taskDesc.m_argData[0][0],
+											*(float4**)&taskDesc.m_argData[1][0],
+											*(float4**)&taskDesc.m_argData[2][0],
+											*(float4**)&taskDesc.m_argData[3][0],
+											*(int*)    &taskDesc.m_argData[4][0],
+											*(float*)  &taskDesc.m_argData[5][0],
+											i);
+			}
+			break;
+		}
+	case CMD_MINICL_SET_SPHERES :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kSetSpheres(*(float4**)&taskDesc.m_argData[0][0],
+							*(float4**)&taskDesc.m_argData[1][0],
+							*(float4**)&taskDesc.m_argData[2][0],
+							*(int**)   &taskDesc.m_argData[3][0],
+							*(int2**)  &taskDesc.m_argData[4][0],
+							*(float4**)&taskDesc.m_argData[5][0],
+							*(uint*)   &taskDesc.m_argData[6][0],
+							i);
+			}
+			break;
+		}
+	case CMD_MINICL_INTEGRATE_TRANSFORMS :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kIntegrateTransforms(	*(float4**)&taskDesc.m_argData[0][0],
+										*(float4**)&taskDesc.m_argData[1][0],
+										*(float4**)&taskDesc.m_argData[2][0],
+										*(float4**)&taskDesc.m_argData[3][0],
+										*(float4**)&taskDesc.m_argData[4][0],
+										*(int*)    &taskDesc.m_argData[5][0],
+										*(float*)  &taskDesc.m_argData[6][0],
+										i);
+			}
+			break;
+		}
+	case CMD_MINICL_BROADPHASE_CD :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kBroadphaseCD(	*(float4**)&taskDesc.m_argData[0][0],
+								*(float4**)&taskDesc.m_argData[1][0],
+								*(int**)   &taskDesc.m_argData[2][0],
+								*(int2**)  &taskDesc.m_argData[3][0],
+								*(int**)   &taskDesc.m_argData[4][0],
+								*(int**)   &taskDesc.m_argData[5][0],
+								*(int2**)  &taskDesc.m_argData[6][0],
+								*(float4**)&taskDesc.m_argData[7][0],
+								i);
 
+			}
+			break;
+		}
 	default:
 		{
 			printf("error in processMiniCLTask: unknown command id: %d\n",taskDesc.m_kernelProgramId);
-
 		}
 	};
 

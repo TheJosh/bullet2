@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="appMiniCL_VectorAdd"
-	ProjectGUID="{6D766893-676D-4222-6547-A75378F2CB60}"
-	RootNamespace="appMiniCL_VectorAdd"
+	Name="appSpheresOCL_Nv"
+	ProjectGUID="{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}"
+	RootNamespace="appSpheresOCL_Nv\Shared"
 	>
 	<Platforms>
 		<Platform
@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\out\release8\build\appMiniCL_VectorAdd\"
-			IntermediateDirectory="..\..\out\release8\build\appMiniCL_VectorAdd\"
+			OutputDirectory="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
+			IntermediateDirectory="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -42,31 +42,33 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.tlb"
+				TypeLibraryName="..\..\out\release8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				EnableFiberSafeOptimizations="true"
+				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull;&quot;$(CUDA_INC_PATH)&quot;"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
-				EnableEnhancedInstructionSet="1"
+				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.pch"
-				AssemblerListingLocation="..\..\out\release8\build\appMiniCL_VectorAdd\"
-				ObjectFile="..\..\out\release8\build\appMiniCL_VectorAdd\"
-				ProgramDataBaseFileName="..\..\out\release8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				PrecompiledHeaderFile="..\..\out\release8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
+				AssemblerListingLocation="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
+				ObjectFile="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
+				ProgramDataBaseFileName="..\..\out\release8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="1"
+				DebugInformationFormat="3"
 				CompileAs="0"
 			/>
 			<Tool
@@ -76,7 +78,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -85,15 +87,15 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies=""
-				OutputFile="..\..\ReleaseMiniCL_VectorAdd.exe"
+				AdditionalDependencies="glut32.lib cudart.lib"
+				OutputFile="..\..\ReleaseSpheresGrid.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="..\..\Glut;$(CUDA_LIB_PATH)"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
-				GenerateDebugInformation="false"
-				ProgramDatabaseFile="..\..\out\release8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				GenerateDebugInformation="true"
+				ProgramDatabaseFile="..\..\out\release8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -126,8 +128,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseDll|Win32"
-			OutputDirectory="..\..\out\release_dll8\build\appMiniCL_VectorAdd\"
-			IntermediateDirectory="..\..\out\release_dll8\build\appMiniCL_VectorAdd\"
+			OutputDirectory="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
+			IntermediateDirectory="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -151,13 +153,13 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dll8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.tlb"
+				TypeLibraryName="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="2"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -165,10 +167,10 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dll8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.pch"
-				AssemblerListingLocation="..\..\out\release_dll8\build\appMiniCL_VectorAdd\"
-				ObjectFile="..\..\out\release_dll8\build\appMiniCL_VectorAdd\"
-				ProgramDataBaseFileName="..\..\out\release_dll8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
+				AssemblerListingLocation="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
+				ObjectFile="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
+				ProgramDataBaseFileName="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\Spheres2dBasicDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -182,7 +184,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -191,12 +193,12 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies=""
-				OutputFile="..\..\ReleaseDllMiniCL_VectorAdd.exe"
+				AdditionalDependencies="glut32.lib"
+				OutputFile="..\..\ReleaseDllSpheresGrid.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dll8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				ProgramDatabaseFile="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -227,8 +229,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseDoublePrecision|Win32"
-			OutputDirectory="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\"
-			IntermediateDirectory="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\"
+			OutputDirectory="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
+			IntermediateDirectory="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -252,19 +254,19 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.tlb"
+				TypeLibraryName="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 				PreprocessorDefinitions="NDEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				ExceptionHandling="0"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.pch"
-				AssemblerListingLocation="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\"
-				ObjectFile="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\"
-				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
+				AssemblerListingLocation="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
+				ObjectFile="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
+				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -277,7 +279,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -286,12 +288,12 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies=""
-				OutputFile="..\..\ReleaseDblMiniCL_VectorAdd.exe"
+				AdditionalDependencies="glut32.lib"
+				OutputFile="..\..\ReleaseDblSpheresGrid.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dbl8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				ProgramDatabaseFile="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -322,8 +324,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\out\debug8\build\appMiniCL_VectorAdd\"
-			IntermediateDirectory="..\..\out\debug8\build\appMiniCL_VectorAdd\"
+			OutputDirectory="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
+			IntermediateDirectory="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -334,6 +336,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+				AdditionalDependencies="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\btGpuDemo2dCudaFunc_cu.obj"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -347,27 +350,28 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.tlb"
+				TypeLibraryName="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.pch"
-				AssemblerListingLocation="..\..\out\debug8\build\appMiniCL_VectorAdd\"
-				ObjectFile="..\..\out\debug8\build\appMiniCL_VectorAdd\"
-				ProgramDataBaseFileName="..\..\out\debug8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				PrecompiledHeaderFile="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
+				ObjectFile="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				CompileAs="0"
 			/>
 			<Tool
@@ -377,7 +381,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -386,14 +390,15 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				OutputFile="..\..\DebugMiniCL_VectorAdd.exe"
+				AdditionalDependencies="glut32.lib glew32.lib libOpenCL32.lib"
+				OutputFile="..\..\DebugSpheresOCL_Nv.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)"
+				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)&quot;"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\debug8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				ProgramDatabaseFile="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -424,8 +429,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDll|Win32"
-			OutputDirectory="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\"
-			IntermediateDirectory="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\"
+			OutputDirectory="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
+			IntermediateDirectory="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -449,27 +454,27 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.tlb"
+				TypeLibraryName="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.pch"
-				AssemblerListingLocation="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\"
-				ObjectFile="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\"
-				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
+				ObjectFile="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				CompileAs="0"
 			/>
 			<Tool
@@ -479,7 +484,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -488,12 +493,12 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies=""
-				OutputFile="..\..\DebugDllMiniCL_VectorAdd.exe"
+				AdditionalDependencies="glut32.lib"
+				OutputFile="..\..\DebugDllSpheresGrid.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\debug_dll8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -524,8 +529,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDoublePrecision|Win32"
-			OutputDirectory="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\"
-			IntermediateDirectory="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\"
+			OutputDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
+			IntermediateDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -549,27 +554,27 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.tlb"
+				TypeLibraryName="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 				PreprocessorDefinitions="_DEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\appMiniCL_VectorAdd.pch"
-				AssemblerListingLocation="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\"
-				ObjectFile="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\"
-				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
+				ObjectFile="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="4"
 				CompileAs="0"
 			/>
 			<Tool
@@ -579,7 +584,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -588,12 +593,12 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies=""
-				OutputFile="..\..\DebugDblMiniCL_VectorAdd.exe"
+				AdditionalDependencies="glut32.lib"
+				OutputFile="..\..\DebugDblSpheresGrid.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories=""
+				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appMiniCL_VectorAdd\MiniCL_VectorAdd.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				TargetMachine="1"
 			/>
@@ -630,35 +635,71 @@
 			Name="Source Files"
 			>
 			<File
-				RelativePath="..\..\Demos\MiniCL_VectorAdd\MiniCL.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btOclUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\MiniCL_VectorAdd\MiniCL_VectorAdd.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoDynamicsWorld.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\MiniCL_VectorAdd\MiniCLTask.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\main.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\MiniCL_VectorAdd\MiniCLTask.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\oecakeLoader.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\MiniCL_VectorAdd\MiniCLTaskScheduler.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\shaders.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\MiniCL_VectorAdd\MiniCLTaskScheduler.h"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGrid.cl"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGridDemo.cpp"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Resource Files"
+			Name="Header Files"
 			>
 			<File
-				RelativePath="..\..\msvc\appMiniCL_VectorAdd.rc"
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btOclUtils.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoDynamicsWorld.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoSharedDefs.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoSharedTypes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\oecakeLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\shaders.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGridDemo.h"
 				>
 			</File>
 		</Filter>

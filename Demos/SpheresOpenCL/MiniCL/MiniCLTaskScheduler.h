@@ -21,19 +21,18 @@ subject to the following restrictions:
 #include <assert.h>
 
 
-#include "PlatformDefinitions.h"
+#include "BulletMultiThreaded/PlatformDefinitions.h"
 
 #include <stdlib.h>
 
 #include "LinearMath/btAlignedObjectArray.h"
 
 
-#include "MiniCLTask/MiniCLTask.h"
+#include "MiniCLTask.h"
 
 
 //just add your commands here, try to keep them globally unique for debugging purposes
 #define CMD_SAMPLE_TASK_COMMAND 10
-
 
 
 /// MiniCLTaskScheduler handles SPU processing of collision pairs.
@@ -78,10 +77,7 @@ public:
 		return m_threadInterface;
 	}
 
-	int	findProgramCommandIdByName(const char* programName) const
-	{
-		return CMD_MINICL_ADDVECTOR;//hardcoded temp value, todo: implement multi-program support
-	}
+	int	findProgramCommandIdByName(const char* programName) const;
 
 	int getMaxNumOutstandingTasks() const
 	{
