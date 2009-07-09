@@ -19,9 +19,15 @@ subject to the following restrictions:
 
 // standard utility and system includes
 #include <CL/cl.h>
-//#include <oclUtils.h>
 // Extra CL/GL include
 #include <CL/cl_gl.h>
+
+// check OpenCL version
+#if (defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_NVIDIA))
+	// OK
+#else
+	#error ERROR : Sorry, this version of OpenCL is not supported yet
+#endif
 
 
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
@@ -143,6 +149,8 @@ protected:
 	cl_kernel			m_ckPredictUnconstrainedMotionKernel;
 	cl_kernel			m_ckIntegrateTransformsKernel;
 	cl_kernel			m_ckBroadphaseCDKernel;
+	cl_kernel			m_ckSetupContactsKernel;
+	cl_kernel			m_ckSolveConstraintsKernel;
 
 	btVector3			m_worldMin;
 	btVector3			m_worldMax;
@@ -157,6 +165,7 @@ public:
 	unsigned int	m_colVbo;
 	btSimParams		m_simParams;
 	float			m_timeStep;
+	int				m_pairOffset;
 
 	int getNumSpheres() { return m_hShapeBuf.size(); }
 	float* getPosBuffer() { return (float*)&(m_hPos[0]); }

@@ -415,3 +415,141 @@ __kernel void kBroadphaseCD(__global float4* pPos,
     }
 }
 
+
+/*
+struct btPairId
+{
+	int m_objA;	//x
+	int m_objB;	//y
+	int m_sphA;	//z
+	int m_sphB;	//w
+	int m_batch;//x
+	int m_pair;	//y
+	int m_pad[2];
+};
+struct btSpheresContPair
+{
+	btVector3 m_contact; // + penetration in w
+	btVector3 m_normal;  // + impulse accumulator in w
+};
+*/
+
+__kernel void kSetupContacts(	__global int4* pPairIds, 
+								__global float4* pPos,
+								__global float4* pShapeBuf,
+								__global float4* pContacts,
+								__global float4* pParams GUID_ARG)
+{
+    unsigned int index = get_global_id(0);
+
+	int sphIdA = pPairIds[index * 2].z;
+	int sphIdB = pPairIds[index * 2].w;
+	float4 posA = pPos[sphIdA];
+	float4 posB = pPos[sphIdB];
+	float radA = pShapeBuf[sphIdA].w;
+	float radB = pShapeBuf[sphIdB].w;
+	float4 del = posB - posA;
+	float dist = dot(del, del);
+	dist = native_sqrt(dist);
+	float maxD = radA + radB;
+	if(dist > maxD)
+	{ // should never happen
+		return;
+	}
+	float penetration = maxD - dist;
+	float4 normal;
+	if(dist > 0.f) 
+	{
+		float fact = -1.0f / dist;
+		normal = del * fact; 
+	}
+	else
+	{	
+		normal.x = 1.f; normal.y = normal.z = 0.f;
+	}
+	float4 tmp = normal * radA;
+	float4 contact = posA - tmp;
+	contact.w = penetration;
+	normal.w = 0.f;
+	pContacts[index * 2 + 0] = contact;
+	pContacts[index * 2 + 1] = normal;
+}
+
+
+float computeImpulse(float4 relVel, float penetration, float4 normal, float timeStep)
+{
+	float collisionConstant	=	0.1f;
+	float baumgarteConstant	=	0.1f;
+	float penetrationError	=	0.02f;
+
+	float lambdaDt = 0.f;
+
+	if(penetration >= 0.f)
+	{
+		return lambdaDt;
+	}
+
+	penetration = min(0.0f, penetration + penetrationError);
+	lambdaDt	= - dot(normal,relVel) * collisionConstant;
+	lambdaDt	-=	(baumgarteConstant/timeStep * penetration);
+	return lambdaDt;
+}
+
+
+__kernel void kSolveConstraints(__global float4* pPair,
+								int pairOffset,
+								__global float4* pTrans,
+								__global int4* pPairIds, 
+								__global float4* pLinVel,
+								__global float4* pAngVel,
+								__global float4* pInvInertiaMass,
+								__global float4* pParams,
+								float timeStep GUID_ARG)
+{
+    unsigned int index = get_global_id(0);
+	int objIdA = pPairIds[(pairOffset + index) * 2].x;
+	int objIdB = pPairIds[pairOffset * 2 + index * 2].y;
+	float4 posA = pTrans[objIdA * 4 + 3];
+	float4 posB = pTrans[objIdB * 4 + 3];
+	float4 linVelA = pLinVel[objIdA];
+	float4 linVelB = pLinVel[objIdB];
+	float4 angVelA = pAngVel[objIdA];
+	float4 angVelB = pAngVel[objIdB];
+	float4 contPointA = pPair[(pairOffset + index) * 2 + 0] - posA;
+	float4 contPointB = pPair[(pairOffset + index) * 2 + 0] - posB;
+	float penetration = pPair[(pairOffset + index) * 2 + 0].w;
+	if(penetration > 0.f)
+	{
+		float4 contNormal = pPair[(pairOffset + index) * 2 + 1];
+		float4 velA = linVelA + cross(angVelA,contPointA);
+		float4 velB = linVelB + cross(angVelB,contPointB);
+		float4 relVel = velA - velB;
+		float lambdaDt = computeImpulse(relVel, -penetration, contNormal, timeStep);
+		float rLambdaDt = contNormal.w;
+		float pLambdaDt = rLambdaDt;
+		rLambdaDt = max(rLambdaDt + lambdaDt, 0.f);
+		lambdaDt = rLambdaDt - pLambdaDt;
+		pPair[(pairOffset + index) * 2 + 1].w = rLambdaDt;
+		float4 impulse = contNormal * lambdaDt * 0.5f;
+		float invMassA = pInvInertiaMass[objIdA * 3 + 0].w;
+		float invMassB = pInvInertiaMass[objIdB * 3 + 0].w;
+		if(invMassA > 0.f)
+		{
+			linVelA += impulse;
+			angVelA += cross(contPointA,impulse);
+			linVelA.z = linVelA.w = 0.f;
+			angVelA.x = angVelA.y = angVelA.w = 0.f;
+			pLinVel[objIdA] = linVelA;
+			pAngVel[objIdA] = angVelA;
+		}
+		if(invMassB > 0.f)
+		{
+			linVelB -= impulse;
+			angVelB -= cross(contPointB,impulse);
+			linVelB.z = linVelB.w = 0.f;
+			angVelB.x = angVelB.y = angVelB.w = 0.f;
+			pLinVel[objIdB] = linVelB;
+			pAngVel[objIdB] = angVelB;
+		}
+	}
+}

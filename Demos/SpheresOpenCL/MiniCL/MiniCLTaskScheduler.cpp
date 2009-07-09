@@ -61,7 +61,9 @@ const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] =
 	"kPredictUnconstrainedMotion",
 	"kSetSpheres",
 	"kIntegrateTransforms",
-	"kBroadphaseCD"
+	"kBroadphaseCD",
+	"kSetupContacts",
+	"kSolveConstraints"
 };
 
 

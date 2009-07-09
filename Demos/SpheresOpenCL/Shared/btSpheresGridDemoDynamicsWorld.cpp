@@ -401,6 +401,8 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 //		oclGetProgBinary(m_cpProgram, oclGetFirstDev(m_cxMainContext), &cPtx, &szPtxLength);
 //		oclLog(LOGBOTH | CLOSELOG, 0.0, "\n\nLog:\n%s\n\n\n\n\nPtx:\n%s\n\n\n", cBuildLog, cPtx);
 		printf("\n\n%s\n\n\n", cBuildLog);
+		printf("Press ENTER key to terminate the program\n");
+		getchar();
 		exit(-1); 
 	}
 #elif defined(CL_PLATFORM_MINI_CL)
@@ -425,7 +427,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	postInitDeviceData();
 
 	// set the args values 
-	ciErrNum  = clSetKernelArg(m_ckSetSpheresKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 1, sizeof(cl_mem), (void*) &m_dTrans);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 2, sizeof(cl_mem), (void*) &m_dShapeBuf);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 3, sizeof(cl_mem), (void*) &m_dBodyIds);
@@ -435,7 +437,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckPredictUnconstrainedMotionKernel = clCreateKernel(m_cpProgram, "kPredictUnconstrainedMotion", &ciErrNum);
-	ciErrNum  = clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 0, sizeof(cl_mem), (void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 0, sizeof(cl_mem), (void *) &m_dLinVel);
 	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 1, sizeof(cl_mem), (void *) &m_dAngVel);
 	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
 	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 3, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
@@ -444,7 +446,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 
 
 	m_ckIntegrateTransformsKernel = clCreateKernel(m_cpProgram, "kIntegrateTransforms", &ciErrNum);
-	ciErrNum  = clSetKernelArg(m_ckIntegrateTransformsKernel, 0, sizeof(cl_mem), (void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 0, sizeof(cl_mem), (void *) &m_dLinVel);
 	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 1, sizeof(cl_mem), (void *) &m_dAngVel);
 	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
 	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 3, sizeof(cl_mem), (void*) &m_dTrans);
@@ -454,7 +456,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 
 
 	m_ckBroadphaseCDKernel = clCreateKernel(m_cpProgram, "kBroadphaseCD", &ciErrNum);
-	ciErrNum  = clSetKernelArg(m_ckBroadphaseCDKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 1, sizeof(cl_mem), (void *) &m_dShapeBuf);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 2, sizeof(cl_mem), (void *) &m_dBodyIds);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 3, sizeof(cl_mem), (void *) &m_dPosHashDst);
@@ -462,6 +464,25 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 5, sizeof(cl_mem), (void *) &m_dPairBuff);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 6, sizeof(cl_mem), (void *) &m_dPairBuffStartCurr);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 7, sizeof(cl_mem), (void *) &m_dSimParams);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+	m_ckSetupContactsKernel = clCreateKernel(m_cpProgram, "kSetupContacts", &ciErrNum);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 0, sizeof(cl_mem), (void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 1, sizeof(cl_mem), (void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 3, sizeof(cl_mem), (void *) &m_dContacts);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 4, sizeof(cl_mem), (void *) &m_dSimParams);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+	m_ckSolveConstraintsKernel = clCreateKernel(m_cpProgram, "kSolveConstraints", &ciErrNum);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(cl_mem), (void *) &m_dContacts);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &m_pairOffset);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 2, sizeof(cl_mem), (void *) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 3, sizeof(cl_mem), (void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 4, sizeof(cl_mem), (void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 5, sizeof(cl_mem), (void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 6, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 7, sizeof(cl_mem), (void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 }
@@ -893,11 +914,10 @@ void btSpheresGridDemoDynamicsWorld::runSortBatchesKernel()
 #endif
 }
 
-
 void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
 {
     cl_int ciErrNum;
-#if 1
+#if 0
 	// CPU version
 	// get pair IDs ...
 	int memSize = m_numPairs * sizeof(btPairId);
@@ -948,13 +968,22 @@ void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
+    size_t szGlobalWorkSize[2];
+    // Set work size and execute the kernel
+    szGlobalWorkSize[0] = m_numPairs;
+    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSetupContactsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	// read results from GPU
+	int memSize = m_numPairs * sizeof(btSpheresContPair);
+    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
 
 void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 {
     cl_int ciErrNum;
-#if 1
+#if 0
 	// CPU version
 	int memSize = m_numPairs * sizeof(btSpheresContPair);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
@@ -989,9 +1018,33 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
+	ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(float), &m_timeStep);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	for(int nIter = 0; nIter < 10; nIter++)
+	{
+		int totalPairs = 0;
+		for(int nBatch = 0; nBatch < m_numBatches; nBatch++)
+		{
+			int numPairs = m_hNumPairsInBatch[nBatch];
+			m_pairOffset = totalPairs;
+			size_t szGlobalWorkSize[2];
+			// Set work size and execute the kernel
+			szGlobalWorkSize[0] = numPairs;
+			ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &m_pairOffset);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSolveConstraintsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			totalPairs += numPairs;
+		}
+	}
+	// read results to CPU
+	int memSize = sizeof(btVector3) * m_numObjects;
+    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
-
 
 float computeImpulse(btVector3& relVel, float penetration, btVector3& normal, float timeStep)
 {
@@ -1000,7 +1053,7 @@ float computeImpulse(btVector3& relVel, float penetration, btVector3& normal, fl
 	const float penetrationError	=	0.02f;
 
 	float lambdaDt = 0.f;
-	btVector3 impulse(0.f, 0.f, 0.f);
+//	btVector3 impulse(0.f, 0.f, 0.f);
 
 	if(penetration >= 0.f)
 	{

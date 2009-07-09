@@ -65,6 +65,15 @@ struct float4
 		return *this;
 	}
 
+	float4& operator-=(const float4& other)
+	{
+		x -= other.x;
+		y -= other.y;
+		z -= other.z;
+		w -= other.w;
+		return *this;
+	}
+
 	float4& operator *=(float scalar)
 	{
 		x *= scalar;
@@ -75,6 +84,16 @@ struct float4
 	}
 	
 };
+
+float4 operator+(const float4& a,const float4& b)
+{
+	float4 tmp;
+	tmp.x = a.x + b.x;
+	tmp.y = a.y + b.y;
+	tmp.z = a.z + b.z;
+	tmp.w = a.w + b.w;
+	return tmp;
+}
 
 float4 operator-(const float4& a,const float4& b)
 {
@@ -95,6 +114,27 @@ float dot(const float4&a ,const float4& b)
 	tmp.w = a.w*b.w;
 	return tmp.x+tmp.y+tmp.z+tmp.w;
 }
+
+float4 cross(const float4&a ,const float4& b)
+{
+	float4 tmp;
+	tmp.x =  a.y*b.z - a.z*b.y;
+	tmp.y = -a.x*b.z + a.z*b.x;
+	tmp.z =  a.x*b.y - a.y*b.x;
+	tmp.w = 0.f;
+	return tmp;
+}
+
+float max(float a, float b) 
+{
+	return (a >= b) ? a : b;
+}
+
+float min(float a, float b) 
+{
+	return (a <= b) ? a : b;
+}
+
 
 struct int2
 {
@@ -218,6 +258,38 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 								*(int2**)  &taskDesc.m_argData[6][0],
 								*(float4**)&taskDesc.m_argData[7][0],
 								i);
+
+			}
+			break;
+		}
+	case CMD_MINICL_SETUP_CONTACTS :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kSetupContacts(	*(int4**)  &taskDesc.m_argData[0][0],
+								*(float4**)&taskDesc.m_argData[1][0],
+								*(float4**)&taskDesc.m_argData[2][0],
+								*(float4**)&taskDesc.m_argData[3][0],
+								*(float4**)&taskDesc.m_argData[4][0],
+								i);
+
+			}
+			break;
+		}
+	case CMD_MINICL_SOLVE_CONSTRAINTS :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kSolveConstraints(	*(float4**)	&taskDesc.m_argData[0][0],
+									*(int*)		&taskDesc.m_argData[1][0],
+									*(float4**)	&taskDesc.m_argData[2][0],
+									*(int4**)	&taskDesc.m_argData[3][0],
+									*(float4**)	&taskDesc.m_argData[4][0],
+									*(float4**)	&taskDesc.m_argData[5][0],
+									*(float4**)	&taskDesc.m_argData[6][0],
+									*(float4**)	&taskDesc.m_argData[7][0],
+									*(float*)	&taskDesc.m_argData[8][0],
+									i);
 
 			}
 			break;
