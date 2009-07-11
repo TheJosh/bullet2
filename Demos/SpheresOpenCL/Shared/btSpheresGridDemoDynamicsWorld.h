@@ -116,7 +116,7 @@ protected:
 	btAlignedObjectArray<int>		m_hPairScan;
 	btAlignedObjectArray<btPairId>	m_hPairIds;
 	btAlignedObjectArray<int>		m_hObjUsed;
-	btAlignedObjectArray<int>		m_hNumPairsInBatch;
+	//btAlignedObjectArray<int>		m_hNumPairsInBatch;
 	btAlignedObjectArray<btSpheresContPair> m_hContacts;
 	// GPU side data
 	cl_mem		m_dShapeBuf;
@@ -149,6 +149,8 @@ protected:
 	cl_kernel			m_ckPredictUnconstrainedMotionKernel;
 	cl_kernel			m_ckIntegrateTransformsKernel;
 	cl_kernel			m_ckBroadphaseCDKernel;
+	cl_kernel			m_ckInitObjUsageTabKernel;
+	cl_kernel			m_ckSetupBatchesKernel;
 	cl_kernel			m_ckSetupContactsKernel;
 	cl_kernel			m_ckSolveConstraintsKernel;
 

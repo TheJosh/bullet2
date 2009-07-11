@@ -62,6 +62,8 @@ const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] =
 	"kSetSpheres",
 	"kIntegrateTransforms",
 	"kBroadphaseCD",
+	"kInitObjUsageTab",
+	"kSetupBatches",
 	"kSetupContacts",
 	"kSolveConstraints"
 };

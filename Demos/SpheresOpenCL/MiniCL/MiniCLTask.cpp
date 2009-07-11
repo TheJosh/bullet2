@@ -31,6 +31,13 @@ subject to the following restrictions:
 #define __global
 #define get_global_id(a) __guid_arg
 
+#define CLK_LOCAL_MEM_FENCE		0x01
+#define CLK_GLOBAL_MEM_FENCE	0x02
+
+void barrier(unsigned int a)
+{
+}
+
 struct float4
 {
 	float x,y,z,w;
@@ -257,6 +264,35 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 								*(int**)   &taskDesc.m_argData[5][0],
 								*(int2**)  &taskDesc.m_argData[6][0],
 								*(float4**)&taskDesc.m_argData[7][0],
+								i);
+
+			}
+			break;
+		}
+	case CMD_MINICL_INIT_OBJ_USAGE_TAB : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kInitObjUsageTab(	*(int**)	&taskDesc.m_argData[0][0],
+									*(float4**)	&taskDesc.m_argData[1][0],
+									*(float4**)	&taskDesc.m_argData[2][0],
+									*(int*)		&taskDesc.m_argData[3][0],
+									i);
+
+			}
+			break;
+		}
+	case CMD_MINICL_SETUP_BATCHES :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kSetupBatches(	*(int4**)	&taskDesc.m_argData[0][0],
+								*(int**)	&taskDesc.m_argData[1][0],
+								*(float4**)	&taskDesc.m_argData[2][0],
+								*(int*)		&taskDesc.m_argData[3][0],
+								*(int*)		&taskDesc.m_argData[4][0],
+								*(int*)		&taskDesc.m_argData[5][0],
+								*(int*)		&taskDesc.m_argData[6][0],
 								i);
 
 			}

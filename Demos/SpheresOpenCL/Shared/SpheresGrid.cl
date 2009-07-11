@@ -58,49 +58,6 @@ unsigned int getPosHash(int4 gridPos, __global float4* pParams)
 } 
 
 
-#if 0
-int getObjectId(__global int2* pShapeIds, unsigned int numObjects, int sphereId)
-{
-	int found = -1;
-	for(int i = 0; i < numObjects; i++)
-	{
-		int currId = pShapeIds[i].x;
-		if(currId > sphereId)
-		{
-			break;
-		}
-		found++;
-	}
-	return found;
-}
-
-__kernel void kSetSpheres(	__global float4* pPos, 
-							__global float4* pTrans,
-							__global float4* pShapeBuf,
-							__global int2* pShapeIds,
-							__global int2* pPosHash,
-							__global float4* pParams, 
-							unsigned int numObjs GUID_ARG)
-{
-    unsigned int index = get_global_id(0);
-    int objId = getObjectId(pShapeIds, numObjs, index);
-
-	float4 ai =	pTrans[objId * 4 + 0];
-	float4 aj =	pTrans[objId * 4 + 1];
-	float4 ak =	pTrans[objId * 4 + 2];
-	float4 pos = pTrans[objId * 4 + 3];
-	float4 shape = pShapeBuf[index];
-	pos += ai * shape.x;
-	pos += aj * shape.y;
-	pos += ak * shape.z;
-	pos.w = 1.0f;
-	pPos[index] = pos;
-	int4 gridPos = getGridPos(pos, pParams);
-	unsigned int hash = getPosHash(gridPos, pParams);
-	pPosHash[index].x = hash;
-	pPosHash[index].y = index;
-}
-#else
 __kernel void kSetSpheres(	__global float4* pPos, 
 							__global float4* pTrans,
 							__global float4* pShapeBuf,
@@ -127,9 +84,7 @@ __kernel void kSetSpheres(	__global float4* pPos,
 	pPosHash[index].x = hash;
 	pPosHash[index].y = index;
 }
-#endif
 
-#if 1
 float4 getRotation(__global float4* trans)
 {
 	float trace = trans[0].x + trans[1].y + trans[2].z;
@@ -166,42 +121,6 @@ float4 getRotation(__global float4* trans)
 	q.w = temp[3];
 	return q;
 }
-#else
-float4 getRotation(__global float* trans)
-{
-	float trace = trans[0*4+0] + trans[1*4+1] + trans[2*4+2];
-	float temp[4];
-	if(trace > 0.0f)
-	{
-		float s = native_sqrt(trace + 1.0f);
-		temp[3] = s * 0.5f;
-		s = 0.5f / s;
-		temp[0] = (trans[1*4+2] - trans[2*4+1]) * s;
-		temp[1] = (trans[2*4+0] - trans[0*4+2]) * s;
-		temp[2] = (trans[0*4+1] - trans[1*4+0]) * s;
-	}
-	else
-	{
-		int i = trans[0*4+0] < trans[1*4+1] ? 
-			(trans[1*4+1] < trans[2*4+2] ? 2 : 1) :
-			(trans[0*4+0] < trans[2*4+2] ? 2 : 0); 
-		int j = (i + 1) % 3;  
-		int k = (i + 2) % 3;
-		float s = native_sqrt(trans[i*4+i] - trans[j*4+j] - trans[k*4+k] + 1.0f);
-		temp[i] = s * 0.5f;
-		s = 0.5f / s;
-		temp[3] = (trans[j*4+k] - trans[k*4+j]) * s;
-		temp[j] = (trans[i*4+j] + trans[j*4+i]) * s;
-		temp[k] = (trans[i*4+k] + trans[k*4+i]) * s;
-	}
-	float4 q;
-	q.x = temp[0];
-	q.y = temp[1];
-	q.z = temp[2];
-	q.w = temp[3];
-	return q;
-}
-#endif
 
 float4 quatMult(float4 q1, float4 q2)
 {
@@ -553,3 +472,63 @@ __kernel void kSolveConstraints(__global float4* pPair,
 		}
 	}
 }
+
+__kernel void kInitObjUsageTab(	__global int* pObjUsed, 
+								__global float4* pInvInertiaMass,
+								__global float4* pParams,
+								int numObjects GUID_ARG)
+{
+    unsigned int index = get_global_id(0);
+	int offset = index * (numObjects + 1);
+    for(int i = 0; i < numObjects; i++)
+    {
+		float invMass = pInvInertiaMass[i * 3 + 0].w;
+		if(invMass > 0.f)
+		{
+			pObjUsed[offset + i] = 0;
+		}
+		else
+		{
+			pObjUsed[offset + i] = -1;
+		}
+    }
+    pObjUsed[offset + numObjects] = 0; // pair counter
+}
+
+
+__kernel void kSetupBatches(__global int4* pPairIds, 
+							__global int* pObjUsed, 
+							__global float4* pParams,
+							int numObjects,
+							int maxBatches,
+							int numPairs,
+							int currPairOffset GUID_ARG)
+{
+    unsigned int index = get_global_id(0);
+	int offset = index * (numObjects + 1);
+	bool lastBatch = (index == (maxBatches - 1));
+	int currPair = currPairOffset - index;
+	if((currPair >= 0) && (currPair < numPairs))
+	{
+		int objIdA = pPairIds[currPair * 2].x;
+		int objIdB = pPairIds[currPair * 2].y;
+		int batchId = pPairIds[currPair * 2 + 1].x;
+		if((batchId < 0)
+		 &&(pObjUsed[offset + objIdA] <= 0)
+		 &&(pObjUsed[offset + objIdB] <= 0))
+		{
+			pPairIds[currPair * 2 + 1].x = index;
+			pPairIds[currPair * 2 + 1].y++;
+			if(!pObjUsed[offset + objIdA] && !lastBatch) 
+			{
+				pObjUsed[offset + objIdA] = 1;
+			}
+			if(!pObjUsed[offset + objIdB] && !lastBatch) 
+			{
+				pObjUsed[offset + objIdB] = 1;
+			}
+			pObjUsed[offset + numObjects]++;
+		}
+	}
+}
+
