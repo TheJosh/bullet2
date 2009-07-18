@@ -77,10 +77,6 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 		runSetupBatchesKernel();
 	}
 	{
-		BT_PROFILE("SortBatches");
-		runSortBatchesKernel();
-	}
-	{
 		BT_PROFILE("SetupContacts");
 		runSetupContactsKernel();
 	}
@@ -243,13 +239,11 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
 	memSize = m_maxPairs * sizeof(btPairId);
 	m_dPairIds = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-//	m_maxBatches = 20;
-	m_maxBatches = 40;
-	m_hObjUsed.resize((m_numObjects + 1) * m_maxBatches); // last elem used as pair-per-batch counter
-	memSize = (m_numObjects + 1) * m_maxBatches * sizeof(int);
+	m_maxBatches = SPHERES_GRID_MAX_BATCHES;
+	m_hObjUsed.resize(m_numObjects);
+	memSize = m_numObjects * sizeof(int);
 	m_dObjUsed = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-//	m_hNumPairsInBatch.resize(m_maxBatches);
 	// contact constraints
 	m_hContacts.resize(m_maxPairs);
 	memSize = m_maxPairs * sizeof(btSpheresContPair);
@@ -517,8 +511,13 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 0, sizeof(cl_mem), (void *) &m_dPairIds);
 	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 1, sizeof(cl_mem), (void *) &m_dObjUsed);
 	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 3, sizeof(int), &m_numObjects);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 4, sizeof(int), &m_maxBatches);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+	m_ckCheckBatchesKernel = clCreateKernel(m_cpProgram, "kCheckBatches", &ciErrNum);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 0, sizeof(cl_mem), (void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 1, sizeof(cl_mem), (void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 3, sizeof(int), &m_maxBatches);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckSetupContactsKernel = clCreateKernel(m_cpProgram, "kSetupContacts", &ciErrNum);
@@ -531,13 +530,18 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 
 	m_ckSolveConstraintsKernel = clCreateKernel(m_cpProgram, "kSolveConstraints", &ciErrNum);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(cl_mem), (void *) &m_dContacts);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &m_pairOffset);
+	// parameter 1 will be set later (batchNum)
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 2, sizeof(cl_mem), (void *) &m_dTrans);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 3, sizeof(cl_mem), (void *) &m_dPairIds);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 4, sizeof(cl_mem), (void *) &m_dLinVel);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 5, sizeof(cl_mem), (void *) &m_dAngVel);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 6, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 7, sizeof(cl_mem), (void *) &m_dSimParams);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+	m_ckBitonicSortHashKernel = clCreateKernel(m_cpProgram, "kBitonicSortHash", &ciErrNum);
+    ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 0,      sizeof(cl_mem), (void *)&m_dPosHashDst);
+    ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 1,      sizeof(cl_mem), (void *)&m_dPosHashSrc);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 }
@@ -568,10 +572,6 @@ void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
     void* ptr = glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY_ARB);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-//    if (ciErrNum != CL_SUCCESS)
-//    {
-//        oclLog(LOGBOTH, 0.0, "Error: Failed to copy data:%d\n", ciErrNum);
-//    }
     glUnmapBufferARB(GL_ARRAY_BUFFER); 
 }
 
@@ -641,20 +641,20 @@ void btSpheresGridDemoDynamicsWorld::runIntegrateTransformsKernel()
 void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
     cl_int ciErrNum;
+	int memSize = m_numSpheres * sizeof(btInt2);
 #if 1
 	// CPU version
 	// get hash from GPU
-	int memSize = m_numSpheres * sizeof(btInt2);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHashSrc, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// sort
 	class btHashPosKey
 	{
 	public:
-	   unsigned int hash;
-	   unsigned int index;
-	   void quickSort(btHashPosKey* pData, int lo, int hi)
-	   {
+		unsigned int hash;
+		unsigned int index;
+		void quickSort(btHashPosKey* pData, int lo, int hi)
+		{
 			int i=lo, j=hi;
 			btHashPosKey x = pData[(lo+hi)/2];
 			do
@@ -671,22 +671,89 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 			} while(i <= j);
 			if(lo < j) pData->quickSort(pData, lo, j);
 			if(i < hi) pData->quickSort(pData, i, hi);
-	   }
+		}
+		void bitonicSort(btHashPosKey* pData, int lo, int n, bool dir)
+		{
+			if(n > 1)
+			{
+				int m = n / 2;
+				bitonicSort(pData, lo, m, !dir);
+				bitonicSort(pData, lo + m, n - m, dir);
+				bitonicMerge(pData, lo, n, dir);
+			}
+		}
+		void bitonicMerge(btHashPosKey* pData, int lo, int n, bool dir)
+		{
+			if(n > 1)
+			{
+				int m = greatestPowerOfTwoLessThan(n);
+				for(int i = lo; i < (lo + n - m); i++)
+				{
+					compare(pData, i, i + m, dir);
+				}
+				bitonicMerge(pData, lo, m, dir);
+				bitonicMerge(pData, lo + m, n - m, dir);
+			}
+		}
+		void compare(btHashPosKey* pData, int i, int j, bool dir)
+		{
+			if(dir == (pData[i].hash > pData[j].hash))
+			{
+				btHashPosKey t = pData[i];
+				pData[i] = pData[j];
+				pData[j] = t;
+			}
+		}
+		int greatestPowerOfTwoLessThan(int n)
+		{
+			int k = 1;
+			while(k < n)
+			{
+				k = k << 1;
+			}
+			return k>>1;
+		}
 	};
 	btHashPosKey* pHash = (btHashPosKey*)(&m_hPosHash[0]);
-	pHash->quickSort(pHash, 0, m_numSpheres - 1);
-	// check
-	for(int i = 1; i < m_numSpheres; i++)
+//	pHash->quickSort(pHash, 0, m_numSpheres - 1);
+	pHash->bitonicSort(pHash, 0, m_hashSize, true);
+	// write back to GPU
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHashDst, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+#else
+	{
+		// this one sorts up to 1024 elements for now :-(
+		size_t localWorkSize[2], globalWorkSize[2];
+		int dir = 1;
+
+		ciErrNum  = clSetKernelArg(m_ckBitonicSortHashKernel, 2, 2 * m_workGroupSize * sizeof(btInt2), NULL);
+		ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 3,     sizeof(int),   (void *)&dir);
+		oclCHECKERROR (ciErrNum, CL_SUCCESS);
+		
+		int workGroupSize  = (m_hashSize < m_workGroupSize) ? m_hashSize : m_workGroupSize;
+		int numBatch = m_hashSize / (workGroupSize * 2);
+
+		localWorkSize[0]  = workGroupSize;
+		globalWorkSize[0] = localWorkSize[0] * numBatch;
+		localWorkSize[1] = 1;
+		globalWorkSize[1] = 1;
+
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortHashKernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+		oclCHECKERROR (ciErrNum, CL_SUCCESS);
+		// read results from GPU
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHashDst, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
+#endif
+#if 0
+	// check order
+	for(int i = 1; i < m_hashSize; i++)
 	{
 		if(m_hPosHash[i-1].x > m_hPosHash[i].x)
 		{
 			printf("Hash sort error at %d\n", i);
 		}
 	}
-	// write back to GPU
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHashDst, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
 #endif
 }
 
@@ -842,6 +909,11 @@ void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 #endif
 }
 
+
+
+#define BT_PROFILE_SETUP_BATCHES(__arg__) BT_PROFILE(__arg__)
+//#define BT_PROFILE_SETUP_BATCHES(__arg__) 
+
 void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 {
     cl_int ciErrNum;
@@ -854,41 +926,36 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 	for(int n_batch = 0; n_batch < m_maxBatches; n_batch++)
 	{
 		bool lastBatch = (n_batch == (m_maxBatches - 1));
-		//m_hNumPairsInBatch[n_batch] = 0;
-		int offset = n_batch * (m_numObjects + 1);
 		for(int i = 0; i < m_numObjects; i++)
 		{
 			btVector3 mass0 =	m_hInvInertiaMass[i * 3 + 0];
 			if(mass0[3] > 0.f)
 			{
-				m_hObjUsed[offset + i] = 0;
+				m_hObjUsed[i] = -1;
 			}
 			else
 			{
-				m_hObjUsed[offset + i] = -1;
+				m_hObjUsed[i] = -2;
 			}
 		}
-		m_hObjUsed[offset + m_numObjects] = 0;
 		for(int i = 0; i < m_numPairs; i++)
 		{
 			btPairId pairId = m_hPairIds[i];
 
 			if((pairId.m_batch < 0)
-			 &&(m_hObjUsed[offset + pairId.m_objA] <= 0)
-			 &&(m_hObjUsed[offset + pairId.m_objB] <= 0))
+			 &&(m_hObjUsed[pairId.m_objA] < 0)
+			 &&(m_hObjUsed[pairId.m_objB] < 0))
 			{
 				m_hPairIds[i].m_batch = n_batch;
 				m_numBatches = n_batch + 1;
-				//m_hNumPairsInBatch[n_batch]++;
-				if(!m_hObjUsed[offset + pairId.m_objA] && !lastBatch) 
+				if((m_hObjUsed[pairId.m_objA] == -1) && !lastBatch) 
 				{
-					m_hObjUsed[offset + pairId.m_objA] = 1;
+					m_hObjUsed[pairId.m_objA] = i;
 				}
-				if(!m_hObjUsed[offset + pairId.m_objB] && !lastBatch) 
+				if((m_hObjUsed[pairId.m_objB] == -1) && !lastBatch) 
 				{
-					m_hObjUsed[offset + pairId.m_objB] = 1;
+					m_hObjUsed[pairId.m_objB] = i;
 				}
-				m_hObjUsed[offset + m_numObjects]++;
 			}
 		}
 	}
@@ -897,115 +964,156 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
     size_t szGlobalWorkSize[2];
-    // Set work size and execute the kernel
-	if(m_numPairs)
+//  debug breakpoint
+//	if(m_numPairs)
+//	{
+//		ciErrNum = 0;
+//	}
+	for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
 	{
-		//printf("Pairs : %d\n", m_numPairs);
-		m_pairOffset = m_numPairs;
-	}
-    szGlobalWorkSize[0] = m_maxBatches;
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckInitObjUsageTabKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	int numIter = m_numPairs + m_maxBatches - 1;
-	for(int i = 0; i < numIter; i++)
-	{
-		m_pairOffset = i;
-		ciErrNum = clSetKernelArg(m_ckSetupBatchesKernel, 5, sizeof(int), &m_numPairs);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		ciErrNum = clSetKernelArg(m_ckSetupBatchesKernel, 6, sizeof(int), &m_pairOffset);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSetupBatchesKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	}
-	// read results from GPU
-	int memSize = m_numPairs * sizeof(btPairId);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	memSize = (m_numObjects + 1) * m_maxBatches * sizeof(int);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dObjUsed, CL_TRUE, 0, memSize, &(m_hObjUsed[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	int totalPairs = 0;
-	for(int i = 0; i < m_maxBatches; i++)
-	{
-		int numPairs = m_hObjUsed[(m_numObjects + 1) * i + m_numObjects];
-		totalPairs += numPairs;
-		if(numPairs)
 		{
-			m_numBatches++;
+			BT_PROFILE_SETUP_BATCHES("Init");
+			szGlobalWorkSize[0] = m_numObjects;
+			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckInitObjUsageTabKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
+		{
+			BT_PROFILE_SETUP_BATCHES("Setup");
+			szGlobalWorkSize[0] = m_numPairs;
+			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSetupBatchesKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		}
+		{
+			BT_PROFILE_SETUP_BATCHES("Check");
+			ciErrNum = clSetKernelArg(m_ckCheckBatchesKernel, 4, sizeof(int), &nBatch);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckCheckBatchesKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		}
+	}
+	{
+		BT_PROFILE_SETUP_BATCHES("Read");
+		// read results from GPU
+		int memSize = m_numPairs * sizeof(btPairId);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 #endif
-	// print res
-	int numLeft = 0;
-
-    glBindBufferARB(GL_ARRAY_BUFFER, m_colVbo);
-    float *data = (float*)glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-    float *ptr = data;
-	for(int i = 0; i < m_numSpheres; i++)
-	{
-		int bodyId = m_hBodyIds[i];
-		btScalar invMass = m_hInvInertiaMass[bodyId * 3 + 0][3];
-		if(invMass > 0.f)
-		{
-			ptr[0] = 0.f;
-			ptr[1] = 1.f;
-			ptr[2] = 0.f;
-		}
-		else
-		{
-			ptr[0] = 0.f;
-			ptr[1] = 0.f;
-			ptr[2] = 1.f;
-		}
-		ptr+=3;
-		*ptr++ = 1.0f;
-	}
-	for(int i = 0; i < m_numPairs; i++)
-	{
-		if(m_hPairIds[i].m_batch < 0) 
-		{ // assign to the last batch (TODO : move to the main loop)
-			m_hPairIds[i].m_batch = m_numBatches - 1;
-			numLeft++;
-		}
-		float* ptr = data + m_hPairIds[i].m_sphA * 4;
-		ptr[0] = 1.f;
-		ptr[1] = 0.f;
-		ptr[2] = 0.f;
-		ptr = data + m_hPairIds[i].m_sphB * 4;
-		ptr[0] = 1.f;
-		ptr[1] = 0.f;
-		ptr[2] = 0.f;
-
-	}
-    glUnmapBufferARB(GL_ARRAY_BUFFER);
-//	printf("pairs : %4d, batches : %d, left : %d\n", m_numPairs, m_numBatches, numLeft);
-}
-
-
-void btSpheresGridDemoDynamicsWorld::runSortBatchesKernel()
-{
-    cl_int ciErrNum;
 #if 1
-	// CPU version
-	int memSize = m_numPairs * sizeof(btPairId);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	btPairId* pPairId = &(m_hPairIds[0]);
-	pPairId->quickSort(pPairId, 0, m_numPairs - 1);
-	// check
-	for(int i = 1; i < m_numPairs; i++)
 	{
-		if(m_hPairIds[i-1].m_batch > m_hPairIds[i].m_batch)
+		BT_PROFILE_SETUP_BATCHES("Validate");
+		// full check
+		int numShared = 0;
+		for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
 		{
-			printf("Batch sort error at %d\n", i);
+			bool err = false;
+			// clean objUsage table
+			for(int i = 0; i < m_numObjects; i++)
+			{
+				btScalar invMass = m_hInvInertiaMass[i * 3 + 0][3];
+				if(invMass > 0.f)
+				{
+					m_hObjUsed[i] = 0;
+				}
+				else
+				{
+					m_hObjUsed[i] = -2;
+				}
+			}
+			// now count object usage for current batch
+			for(int i = 0; i < m_numPairs; i++)
+			{
+				int ojbIdA = m_hPairIds[i].m_objA;
+				int ojbIdB = m_hPairIds[i].m_objB;
+				int batchId = m_hPairIds[i].m_batch;
+				if((batchId < 0) && (!nBatch)) // print only once
+				{
+					printf("ERROR : pair %d is not dispatched\n", i);
+					continue;
+				}
+				if(batchId != nBatch)
+				{
+					continue;
+				}
+				if(m_hObjUsed[ojbIdA] >= 0)
+				{
+					m_hObjUsed[ojbIdA]++;
+				}
+				if(m_hObjUsed[ojbIdB] >= 0)
+				{
+					m_hObjUsed[ojbIdB]++;
+				}
+			}
+			// now see how many pairs use share objects
+			for(int i = 0; i < m_numObjects; i++)
+			{
+				if(m_hObjUsed[i] > 1)
+				{
+					if(nBatch == (m_maxBatches - 1))
+					{
+						numShared++;
+					}
+					else
+					{
+						printf("ERROR : object %d is dispatched %d times for batch %d\n", i, m_hObjUsed[i], nBatch);
+					}
+				}
+			}
+		}
+		if(numShared)
+		{
+			//printf("Shared in last batch : %d\n", numShared); // annoying output
 		}
 	}
-	// write back to GPU
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
 #endif
+	{
+		// paint contactions spheres in red
+		BT_PROFILE_SETUP_BATCHES("Color contacts");
+		int numLeft = 0;
+		glBindBufferARB(GL_ARRAY_BUFFER, m_colVbo);
+		float *data = (float*)glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		float *ptr = data;
+		for(int i = 0; i < m_numSpheres; i++)
+		{
+			int bodyId = m_hBodyIds[i];
+			btScalar invMass = m_hInvInertiaMass[bodyId * 3 + 0][3];
+			if(invMass > 0.f)
+			{
+				ptr[0] = 0.f;
+				ptr[1] = 1.f;
+				ptr[2] = 0.f;
+			}
+			else
+			{
+				ptr[0] = 0.f;
+				ptr[1] = 0.f;
+				ptr[2] = 1.f;
+			}
+			ptr+=3;
+			*ptr++ = 1.0f;
+		}
+		for(int i = 0; i < m_numPairs; i++)
+		{
+			//if(m_hPairIds[i].m_batch < 0) 
+			//{
+			//	m_hPairIds[i].m_batch = m_numBatches - 1;
+			//	numLeft++;
+			//}
+			float* ptr = data + m_hPairIds[i].m_sphA * 4;
+			ptr[0] = 1.f;
+			ptr[1] = 0.f;
+			ptr[2] = 0.f;
+			ptr = data + m_hPairIds[i].m_sphB * 4;
+			ptr[0] = 1.f;
+			ptr[1] = 0.f;
+			ptr[2] = 0.f;
+
+		}
+		glUnmapBufferARB(GL_ARRAY_BUFFER);
+		// printf("pairs : %4d, batches : %d, left : %d\n", m_numPairs, m_numBatches, numLeft);
+	}
 }
+
 
 void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
 {
@@ -1090,19 +1198,15 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 	memSize = sizeof(btVector3) * 4 * m_numObjects;
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dTrans, CL_TRUE, 0, memSize, &(m_hTrans[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	for(int nIter = 0; nIter < 10; nIter++)
+	for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
 	{
-		int totalPairs = 0;
 		for(int nBatch = 0; nBatch < m_numBatches; nBatch++)
 		{
-//			int numPairs = m_hNumPairsInBatch[nBatch];
-			int numPairs = m_hObjUsed[(m_numObjects + 1) * nBatch + m_numObjects];
-			btSpheresContPair* pPairs = &(m_hContacts[totalPairs]);
-			for(int nPair = 0; nPair < numPairs; nPair++)
+			btSpheresContPair* pPairs = &(m_hContacts[0]);
+			for(int nPair = 0; nPair < m_numPairs; nPair++)
 			{
-				solvePairCPU(pPairs + nPair, totalPairs + nPair);
+				solvePairCPU(pPairs + nPair, nPair, nBatch);
 			}
-			totalPairs += numPairs;
 		}
 	}
 	// write back to GPU
@@ -1114,22 +1218,17 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 #else
 	ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	for(int nIter = 0; nIter < 4; nIter++)
+	for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
 	{
-		int totalPairs = 0;
-		for(int nBatch = 0; nBatch < m_numBatches; nBatch++)
+		for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
 		{
-//			int numPairs = m_hNumPairsInBatch[nBatch];
-			int numPairs = m_hObjUsed[(m_numObjects + 1) * nBatch + m_numObjects];
-			m_pairOffset = totalPairs;
 			size_t szGlobalWorkSize[2];
 			// Set work size and execute the kernel
-			szGlobalWorkSize[0] = numPairs;
-			ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &m_pairOffset);
+			szGlobalWorkSize[0] = m_numPairs;
+			ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &nBatch);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSolveConstraintsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-			totalPairs += numPairs;
 		}
 	}
 	// read results to CPU
@@ -1162,8 +1261,13 @@ float computeImpulse(btVector3& relVel, float penetration, btVector3& normal, fl
 }
 
 
-void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int pairIdx)
+void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum)
 {
+	int batchId = m_hPairIds[pairIdx].m_batch;
+	if(batchId != batchNum)
+	{
+		return;
+	}
 	int objIdA = m_hPairIds[pairIdx].m_objA;
 	int objIdB = m_hPairIds[pairIdx].m_objB;
 	btVector3 posA = m_hTrans[objIdA * 4 + 3];
@@ -1210,4 +1314,5 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 		}
 	}
 }	
+
 

@@ -42,7 +42,9 @@ subject to the following restrictions:
 
 #define SPHERES_GRID_MAX_OBJS (65536)
 #define SPHERES_GRID_MAX_NEIGHBORS (32)
+#define SPHERES_GRID_MAX_BATCHES (20)
 
+#define SPHERES_GRID_MAX_WORKGROUP_SIZE  (512) // TODO : get from device
 
 struct btInt2
 {
@@ -100,6 +102,8 @@ protected:
 	int			m_maxPairs;
 	int			m_numBatches;
 	int			m_maxBatches;
+	int			m_workGroupSize;
+	int			m_numSolverIterations;
 	// CPU side data
 	btAlignedObjectArray<btVector3>	m_hShapeBuf;
 	btAlignedObjectArray<btInt2>	m_hShapeIds; // per each body : (start index, num_spheres)
@@ -151,8 +155,10 @@ protected:
 	cl_kernel			m_ckBroadphaseCDKernel;
 	cl_kernel			m_ckInitObjUsageTabKernel;
 	cl_kernel			m_ckSetupBatchesKernel;
+	cl_kernel			m_ckCheckBatchesKernel;
 	cl_kernel			m_ckSetupContactsKernel;
 	cl_kernel			m_ckSolveConstraintsKernel;
+	cl_kernel			m_ckBitonicSortHashKernel;
 
 	btVector3			m_worldMin;
 	btVector3			m_worldMax;
@@ -183,6 +189,8 @@ public:
 		m_simParams.m_gravity[1] = -10.f;
 		m_simParams.m_gravity[2] = 0.f;
 		m_simParams.m_gravity[3] = 0.f;
+		m_workGroupSize = SPHERES_GRID_MAX_WORKGROUP_SIZE;
+		m_numSolverIterations = 4;
 	}
 	virtual ~btSpheresGridDemoDynamicsWorld();
 	virtual int	stepSimulation( btScalar timeStep,int maxSubSteps=1, btScalar fixedTimeStep=btScalar(1.)/btScalar(60.));
@@ -205,10 +213,9 @@ public:
 	void runScanPairsKernel();
 	void runCompactPairsKernel();
 	void runSetupBatchesKernel();
-	void runSortBatchesKernel();
 	void runSetupContactsKernel();
 	void runSolveConstraintsKernel();
-	void solvePairCPU(btSpheresContPair* pPair, int pairIdx);
+	void solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum);
 };
 
 

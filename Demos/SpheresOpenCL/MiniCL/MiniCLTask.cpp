@@ -29,13 +29,18 @@ subject to the following restrictions:
 
 #define __kernel
 #define __global
-#define get_global_id(a) __guid_arg
+#define __local
+#define get_global_id(a)	__guid_arg
+#define get_local_id(a)		__guid_arg
+#define get_local_size(a)	(4) // TODO : get from scheduler
+#define get_group_id(a)		(0) // TODO : get from scheduler
 
 #define CLK_LOCAL_MEM_FENCE		0x01
 #define CLK_GLOBAL_MEM_FENCE	0x02
 
 void barrier(unsigned int a)
 {
+	// TODO : implement
 }
 
 struct float4
@@ -289,10 +294,20 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 				kSetupBatches(	*(int4**)	&taskDesc.m_argData[0][0],
 								*(int**)	&taskDesc.m_argData[1][0],
 								*(float4**)	&taskDesc.m_argData[2][0],
+								i);
+
+			}
+			break;
+		}
+	case CMD_MINICL_CHECK_BATCHES :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kCheckBatches(	*(int4**)	&taskDesc.m_argData[0][0],
+								*(int**)	&taskDesc.m_argData[1][0],
+								*(float4**)	&taskDesc.m_argData[2][0],
 								*(int*)		&taskDesc.m_argData[3][0],
 								*(int*)		&taskDesc.m_argData[4][0],
-								*(int*)		&taskDesc.m_argData[5][0],
-								*(int*)		&taskDesc.m_argData[6][0],
 								i);
 
 			}

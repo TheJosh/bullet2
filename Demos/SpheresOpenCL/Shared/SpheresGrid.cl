@@ -414,9 +414,8 @@ float computeImpulse(float4 relVel, float penetration, float4 normal, float time
 	return lambdaDt;
 }
 
-
 __kernel void kSolveConstraints(__global float4* pPair,
-								int pairOffset,
+								int batchNum,
 								__global float4* pTrans,
 								__global int4* pPairIds, 
 								__global float4* pLinVel,
@@ -426,20 +425,25 @@ __kernel void kSolveConstraints(__global float4* pPair,
 								float timeStep GUID_ARG)
 {
     unsigned int index = get_global_id(0);
-	int objIdA = pPairIds[(pairOffset + index) * 2].x;
-	int objIdB = pPairIds[pairOffset * 2 + index * 2].y;
+    int batchId = pPairIds[index * 2 + 1].x;
+    if(batchId != batchNum)
+	{
+		return;
+	}
+	int objIdA = pPairIds[index * 2].x;
+	int objIdB = pPairIds[index * 2].y;
 	float4 posA = pTrans[objIdA * 4 + 3];
 	float4 posB = pTrans[objIdB * 4 + 3];
 	float4 linVelA = pLinVel[objIdA];
 	float4 linVelB = pLinVel[objIdB];
 	float4 angVelA = pAngVel[objIdA];
 	float4 angVelB = pAngVel[objIdB];
-	float4 contPointA = pPair[(pairOffset + index) * 2 + 0] - posA;
-	float4 contPointB = pPair[(pairOffset + index) * 2 + 0] - posB;
-	float penetration = pPair[(pairOffset + index) * 2 + 0].w;
+	float4 contPointA = pPair[index * 2 + 0] - posA;
+	float4 contPointB = pPair[index * 2 + 0] - posB;
+	float penetration = pPair[index * 2 + 0].w;
 	if(penetration > 0.f)
 	{
-		float4 contNormal = pPair[(pairOffset + index) * 2 + 1];
+		float4 contNormal = pPair[index * 2 + 1];
 		float4 velA = linVelA + cross(angVelA,contPointA);
 		float4 velB = linVelB + cross(angVelB,contPointB);
 		float4 relVel = velA - velB;
@@ -448,7 +452,7 @@ __kernel void kSolveConstraints(__global float4* pPair,
 		float pLambdaDt = rLambdaDt;
 		rLambdaDt = max(rLambdaDt + lambdaDt, 0.f);
 		lambdaDt = rLambdaDt - pLambdaDt;
-		pPair[(pairOffset + index) * 2 + 1].w = rLambdaDt;
+		pPair[index * 2 + 1].w = rLambdaDt;
 		float4 impulse = contNormal * lambdaDt * 0.5f;
 		float invMassA = pInvInertiaMass[objIdA * 3 + 0].w;
 		float invMassB = pInvInertiaMass[objIdB * 3 + 0].w;
@@ -479,56 +483,200 @@ __kernel void kInitObjUsageTab(	__global int* pObjUsed,
 								int numObjects GUID_ARG)
 {
     unsigned int index = get_global_id(0);
-	int offset = index * (numObjects + 1);
-    for(int i = 0; i < numObjects; i++)
-    {
-		float invMass = pInvInertiaMass[i * 3 + 0].w;
-		if(invMass > 0.f)
-		{
-			pObjUsed[offset + i] = 0;
-		}
-		else
-		{
-			pObjUsed[offset + i] = -1;
-		}
-    }
-    pObjUsed[offset + numObjects] = 0; // pair counter
+#if 1
+	// allow share static objects in one batch
+	float invMass = pInvInertiaMass[index * 3 + 0].w;
+	if(invMass > 0.f)
+	{
+		pObjUsed[index] = -1;
+	}
+	else
+	{
+		pObjUsed[index] = -2;
+	}
+#else
+	// do not share static objects in one batch
+		pObjUsed[index] = -1;
+#endif	
 }
-
 
 __kernel void kSetupBatches(__global int4* pPairIds, 
 							__global int* pObjUsed, 
-							__global float4* pParams,
-							int numObjects,
-							int maxBatches,
-							int numPairs,
-							int currPairOffset GUID_ARG)
+							__global float4* pParams GUID_ARG)
 {
     unsigned int index = get_global_id(0);
-	int offset = index * (numObjects + 1);
-	bool lastBatch = (index == (maxBatches - 1));
-	int currPair = currPairOffset - index;
-	if((currPair >= 0) && (currPair < numPairs))
+    int currPair = index;
+	int objIdA = pPairIds[currPair * 2].x;
+	int objIdB = pPairIds[currPair * 2].y;
+	int batchId = pPairIds[currPair * 2 + 1].x;
+	int localWorkSz = get_local_size(0);
+	int localIdx = get_local_id(0);
+	for(int i = 0; i < localWorkSz; i++)
 	{
-		int objIdA = pPairIds[currPair * 2].x;
-		int objIdB = pPairIds[currPair * 2].y;
-		int batchId = pPairIds[currPair * 2 + 1].x;
-		if((batchId < 0)
-		 &&(pObjUsed[offset + objIdA] <= 0)
-		 &&(pObjUsed[offset + objIdB] <= 0))
+		if((i == localIdx) // so work item with lower local ID has priority to write
+		&&(batchId < 0)
+		&&(pObjUsed[objIdA] < 0)
+		&&(pObjUsed[objIdB] < 0))
 		{
-			pPairIds[currPair * 2 + 1].x = index;
-			pPairIds[currPair * 2 + 1].y++;
-			if(!pObjUsed[offset + objIdA] && !lastBatch) 
+			if(pObjUsed[objIdA] == -1) 
 			{
-				pObjUsed[offset + objIdA] = 1;
+				pObjUsed[objIdA] = index;
 			}
-			if(!pObjUsed[offset + objIdB] && !lastBatch) 
+			if(pObjUsed[objIdB] == -1) 
 			{
-				pObjUsed[offset + objIdB] = 1;
+				pObjUsed[objIdB] = index;
 			}
-			pObjUsed[offset + numObjects]++;
 		}
+		barrier(CLK_GLOBAL_MEM_FENCE);
 	}
 }
 
+__kernel void kCheckBatches(__global int4* pPairIds, 
+							__global int* pObjUsed, 
+							__global float4* pParams,
+							int numBatches,
+							int batchNum GUID_ARG)
+{
+    unsigned int index = get_global_id(0);
+    int currPair = index;
+	int objIdA = pPairIds[currPair * 2].x;
+	int objIdB = pPairIds[currPair * 2].y;
+	int batchId = pPairIds[currPair * 2 + 1].x;
+    if(batchId < 0)
+    {
+		int objA_OK = 0;
+		if(pObjUsed[objIdA] == -2) 
+		{
+			objA_OK = 1;
+		}
+		else
+		{
+			if(pObjUsed[objIdA] == currPair) 
+			{
+				objA_OK = 1;
+			}
+			else
+			{
+				objA_OK = 0;
+			}
+		}
+		int objB_OK = 0;
+		if(pObjUsed[objIdB] == -2) 
+		{
+			objB_OK = 1;
+		}
+		else
+		{
+			if(pObjUsed[objIdB] == currPair) 
+			{
+				objB_OK = 1;
+			}
+			else
+			{
+				objB_OK = 0;
+			}
+		}
+		if((objA_OK && objB_OK) || (batchNum == (numBatches - 1)))
+		{
+			pPairIds[currPair * 2 + 1].x = batchNum;
+		}
+    }
+}
+
+//==============================
+// work in progress
+// experiments with bitonic sort
+
+#if 0
+void arrow(__local int2* a, __local int2* b, unsigned int dir)
+{
+	if((a[0].x > b[0].x) == dir)
+	{
+		int2 tmp = *a;
+		*a = *b;
+		*b = tmp;
+	}
+//    if( (*a > *b) == dir )
+//    {
+//        *a ^= *b;
+//        *b ^= *a;
+//        *a ^= *b;
+//    }
+}
+
+__kernel void kBitonicSortHash(
+    __global int2* d_Dst,
+    __global int2* d_Src,
+    __local int2* l_Data,
+    unsigned int dir GUID_ARG
+){
+    unsigned int gi = 2 * get_global_id(0) - (get_global_id(0) & (get_local_size(0) - 1));
+
+    l_Data[get_local_id(0) +                 0] = d_Src[gi +                 0];
+    l_Data[get_local_id(0) + get_local_size(0)] = d_Src[gi + get_local_size(0)];
+
+    for(unsigned int size = 2; size <= 2 * get_local_size(0); size *= 2)
+        for(unsigned int stride = size / 2; stride > 0; stride >>= 1){
+            unsigned int   pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+            unsigned int    dd = dir ^ ((pos & size) != 0);
+
+            barrier(CLK_LOCAL_MEM_FENCE);
+            arrow(&l_Data[pos], &l_Data[pos + stride], dd);
+        }
+
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+    d_Dst[gi +                 0] = l_Data[get_local_id(0) +                 0];
+    d_Dst[gi + get_local_size(0)] = l_Data[get_local_id(0) + get_local_size(0)];
+}
+
+#else
+
+void arrow(__global int2* a, __global int2* b, unsigned int dir)
+{
+	if((a[0].x > b[0].x) == dir)
+	{
+		int2 tmp = *a;
+		*a = *b;
+		*b = tmp;
+	}
+//    if( (*a > *b) == dir )
+//    {
+//        *a ^= *b;
+//        *b ^= *a;
+//        *a ^= *b;
+//    }
+}
+
+__kernel void kBitonicSortHash(
+    __global int2* d_Dst,
+    __global int2* d_Src,
+    __local int2* l_Data,
+    unsigned int dir GUID_ARG
+){
+    unsigned int gi = 2 * get_global_id(0) - (get_global_id(0) & (get_local_size(0) - 1));
+
+//    l_Data[get_local_id(0) +                 0] = d_Src[gi +                 0];
+//    l_Data[get_local_id(0) + get_local_size(0)] = d_Src[gi + get_local_size(0)];
+	
+    d_Dst[gi +                 0] = d_Src[gi +                 0];
+    d_Dst[gi + get_local_size(0)] = d_Src[gi + get_local_size(0)];
+    
+    int offset = get_group_id(0) * get_local_size(0) * 2;
+
+    for(unsigned int size = 2; size <= 2 * get_local_size(0); size *= 2)
+        for(unsigned int stride = size / 2; stride > 0; stride >>= 1){
+            unsigned int   pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+            unsigned int    dd = dir ^ ((pos & size) != 0);
+
+            barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+            arrow(&d_Dst[offset + pos], &d_Dst[offset + pos + stride], dd);
+        }
+
+
+    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+//    d_Dst[gi +                 0] = l_Data[get_local_id(0) +                 0];
+//    d_Dst[gi + get_local_size(0)] = l_Data[get_local_id(0) + get_local_size(0)];
+}
+
+#endif
