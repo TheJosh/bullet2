@@ -257,6 +257,17 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			}
 			break;
 		}
+	case CMD_MINICL_BITONIC_SORT_HASH : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kBitonicSortHash(	*(int2**)		&taskDesc.m_argData[0][0],
+									*(unsigned int*)&taskDesc.m_argData[1][0],
+									*(unsigned int*)&taskDesc.m_argData[2][0],
+									i);
+			}
+			break;
+		}
 	case CMD_MINICL_BROADPHASE_CD :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)

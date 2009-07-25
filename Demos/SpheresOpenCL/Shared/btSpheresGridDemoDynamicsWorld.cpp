@@ -208,9 +208,7 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
     m_dInvInertiaMass = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	memSize = m_hashSize * sizeof(btInt2);
-	m_dPosHashSrc = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_dPosHashDst = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
+	m_dPosHash = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// pair buffer
 	m_maxNeighbors = 12; // enough for 2D case
@@ -342,8 +340,8 @@ void btSpheresGridDemoDynamicsWorld::grabSimulationData()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dSimParams, CL_TRUE, 0, memSize, &m_simParams, 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	memSize = m_hashSize * sizeof(btInt2);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHashSrc, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
 
@@ -464,7 +462,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 1, sizeof(cl_mem), (void*) &m_dTrans);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 2, sizeof(cl_mem), (void*) &m_dShapeBuf);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 3, sizeof(cl_mem), (void*) &m_dBodyIds);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 4, sizeof(cl_mem), (void*) &m_dPosHashSrc);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 4, sizeof(cl_mem), (void*) &m_dPosHash);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 5, sizeof(cl_mem), (void*) &m_dSimParams);
 	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 6, sizeof(int), &m_numObjects);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -492,7 +490,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 1, sizeof(cl_mem), (void *) &m_dShapeBuf);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 2, sizeof(cl_mem), (void *) &m_dBodyIds);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 3, sizeof(cl_mem), (void *) &m_dPosHashDst);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 3, sizeof(cl_mem), (void *) &m_dPosHash);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 4, sizeof(cl_mem), (void *) &m_dCellStart);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 5, sizeof(cl_mem), (void *) &m_dPairBuff);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 6, sizeof(cl_mem), (void *) &m_dPairBuffStartCurr);
@@ -540,8 +538,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckBitonicSortHashKernel = clCreateKernel(m_cpProgram, "kBitonicSortHash", &ciErrNum);
-    ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 0,      sizeof(cl_mem), (void *)&m_dPosHashDst);
-    ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 1,      sizeof(cl_mem), (void *)&m_dPosHashSrc);
+    ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 0,      sizeof(cl_mem), (void *)&m_dPosHash);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 }
@@ -557,7 +554,7 @@ void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
 
 // check
 	int memSize = sizeof(btInt2) * m_hashSize;
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHashSrc, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	memSize = sizeof(float) * 4 * m_numSpheres;
@@ -642,10 +639,11 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
     cl_int ciErrNum;
 	int memSize = m_numSpheres * sizeof(btInt2);
-#if 1
+#if defined(CL_PLATFORM_MINI_CL)
+	// bitonic sort on MiniCL does not work because barrier() finction is not implemented yet
 	// CPU version
 	// get hash from GPU
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHashSrc, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// sort
 	class btHashPosKey
@@ -718,7 +716,7 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 //	pHash->quickSort(pHash, 0, m_numSpheres - 1);
 	pHash->bitonicSort(pHash, 0, m_hashSize, true);
 	// write back to GPU
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHashDst, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
 	{
@@ -726,22 +724,24 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 		size_t localWorkSize[2], globalWorkSize[2];
 		int dir = 1;
 
-		ciErrNum  = clSetKernelArg(m_ckBitonicSortHashKernel, 2, 2 * m_workGroupSize * sizeof(btInt2), NULL);
-		ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 3,     sizeof(int),   (void *)&dir);
-		oclCHECKERROR (ciErrNum, CL_SUCCESS);
-		
-		int workGroupSize  = (m_hashSize < m_workGroupSize) ? m_hashSize : m_workGroupSize;
-		int numBatch = m_hashSize / (workGroupSize * 2);
+		int numWorkItems = m_hashSize / 2;
+
+		int workGroupSize  = (numWorkItems < m_workGroupSize) ? numWorkItems : m_workGroupSize;
+		int numBatches = numWorkItems / workGroupSize;
 
 		localWorkSize[0]  = workGroupSize;
-		globalWorkSize[0] = localWorkSize[0] * numBatch;
+		globalWorkSize[0] = workGroupSize;
 		localWorkSize[1] = 1;
 		globalWorkSize[1] = 1;
 
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortHashKernel, 2, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+		ciErrNum  = clSetKernelArg(m_ckBitonicSortHashKernel, 1, sizeof(int), (void *)&numBatches);
+		ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 2, sizeof(int), (void *)&dir);
+		oclCHECKERROR (ciErrNum, CL_SUCCESS);
+
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortHashKernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
 		oclCHECKERROR (ciErrNum, CL_SUCCESS);
 		// read results from GPU
-		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHashDst, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 #endif
@@ -765,7 +765,7 @@ void btSpheresGridDemoDynamicsWorld::runFindCellStartKernel()
 	// CPU version
 	// get hash from GPU
 	int memSize = m_numSpheres * sizeof(btInt2);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHashDst, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// clear cells
 	for(int i = 0; i < m_numGridCells; i++)

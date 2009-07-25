@@ -583,55 +583,6 @@ __kernel void kCheckBatches(__global int4* pPairIds,
     }
 }
 
-//==============================
-// work in progress
-// experiments with bitonic sort
-
-#if 0
-void arrow(__local int2* a, __local int2* b, unsigned int dir)
-{
-	if((a[0].x > b[0].x) == dir)
-	{
-		int2 tmp = *a;
-		*a = *b;
-		*b = tmp;
-	}
-//    if( (*a > *b) == dir )
-//    {
-//        *a ^= *b;
-//        *b ^= *a;
-//        *a ^= *b;
-//    }
-}
-
-__kernel void kBitonicSortHash(
-    __global int2* d_Dst,
-    __global int2* d_Src,
-    __local int2* l_Data,
-    unsigned int dir GUID_ARG
-){
-    unsigned int gi = 2 * get_global_id(0) - (get_global_id(0) & (get_local_size(0) - 1));
-
-    l_Data[get_local_id(0) +                 0] = d_Src[gi +                 0];
-    l_Data[get_local_id(0) + get_local_size(0)] = d_Src[gi + get_local_size(0)];
-
-    for(unsigned int size = 2; size <= 2 * get_local_size(0); size *= 2)
-        for(unsigned int stride = size / 2; stride > 0; stride >>= 1){
-            unsigned int   pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-            unsigned int    dd = dir ^ ((pos & size) != 0);
-
-            barrier(CLK_LOCAL_MEM_FENCE);
-            arrow(&l_Data[pos], &l_Data[pos + stride], dd);
-        }
-
-
-    barrier(CLK_LOCAL_MEM_FENCE);
-    d_Dst[gi +                 0] = l_Data[get_local_id(0) +                 0];
-    d_Dst[gi + get_local_size(0)] = l_Data[get_local_id(0) + get_local_size(0)];
-}
-
-#else
-
 void arrow(__global int2* a, __global int2* b, unsigned int dir)
 {
 	if((a[0].x > b[0].x) == dir)
@@ -640,43 +591,28 @@ void arrow(__global int2* a, __global int2* b, unsigned int dir)
 		*a = *b;
 		*b = tmp;
 	}
-//    if( (*a > *b) == dir )
-//    {
-//        *a ^= *b;
-//        *b ^= *a;
-//        *a ^= *b;
-//    }
 }
 
-__kernel void kBitonicSortHash(
-    __global int2* d_Dst,
-    __global int2* d_Src,
-    __local int2* l_Data,
-    unsigned int dir GUID_ARG
-){
-    unsigned int gi = 2 * get_global_id(0) - (get_global_id(0) & (get_local_size(0) - 1));
+__kernel void kBitonicSortHash(	__global int2* pHash,
+								unsigned int numBatches,
+								unsigned int dir GUID_ARG)
+{
+	unsigned int globSize = numBatches * get_local_size(0);
 
-//    l_Data[get_local_id(0) +                 0] = d_Src[gi +                 0];
-//    l_Data[get_local_id(0) + get_local_size(0)] = d_Src[gi + get_local_size(0)];
-	
-    d_Dst[gi +                 0] = d_Src[gi +                 0];
-    d_Dst[gi + get_local_size(0)] = d_Src[gi + get_local_size(0)];
-    
-    int offset = get_group_id(0) * get_local_size(0) * 2;
-
-    for(unsigned int size = 2; size <= 2 * get_local_size(0); size *= 2)
-        for(unsigned int stride = size / 2; stride > 0; stride >>= 1){
-            unsigned int   pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-            unsigned int    dd = dir ^ ((pos & size) != 0);
-
+    for(unsigned int size = 2; size <= 2 * globSize; size *= 2)
+    {
+        for(unsigned int stride = size / 2; stride > 0; stride >>= 1)
+        {
+			for(unsigned int batch = 0; batch < numBatches; batch++)
+			{
+				unsigned int globId = get_local_id(0) + batch * get_local_size(0);
+				unsigned int   pos = 2 * globId - (globId & (stride - 1));
+				unsigned int    dd = dir ^ ((pos & size) != 0);
+				arrow(&pHash[pos], &pHash[pos + stride], dd);
+			}
             barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-            arrow(&d_Dst[offset + pos], &d_Dst[offset + pos + stride], dd);
         }
-
-
+    }
     barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
-//    d_Dst[gi +                 0] = l_Data[get_local_id(0) +                 0];
-//    d_Dst[gi + get_local_size(0)] = l_Data[get_local_id(0) + get_local_size(0)];
 }
 
-#endif

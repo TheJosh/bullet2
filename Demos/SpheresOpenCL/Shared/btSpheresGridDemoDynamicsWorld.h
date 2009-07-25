@@ -44,7 +44,13 @@ subject to the following restrictions:
 #define SPHERES_GRID_MAX_NEIGHBORS (32)
 #define SPHERES_GRID_MAX_BATCHES (20)
 
+// REAL number of threads executing in parallel
+#if defined(CL_PLATFORM_MINI_CL)
+#define SPHERES_GRID_MAX_WORKGROUP_SIZE  (4) // TODO : get from device
+#else
+// CUDA 1.0
 #define SPHERES_GRID_MAX_WORKGROUP_SIZE  (512) // TODO : get from device
+#endif
 
 struct btInt2
 {
@@ -131,8 +137,7 @@ protected:
 	cl_mem		m_dLinVel;
 	cl_mem		m_dAngVel;
 	cl_mem		m_dInvInertiaMass;
-	cl_mem		m_dPosHashSrc;
-	cl_mem		m_dPosHashDst;
+	cl_mem		m_dPosHash;
 	cl_mem		m_dCellStart;
 	cl_mem		m_dPairBuff;
 	cl_mem		m_dPairBuffStartCurr;
