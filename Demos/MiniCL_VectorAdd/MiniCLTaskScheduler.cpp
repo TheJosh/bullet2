@@ -58,16 +58,7 @@ const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] =
 {
 	"EMPTY_SLOT_0",
 	"EMPTY_SLOT_1",
-	"kPredictUnconstrainedMotion",
-	"kSetSpheres",
-	"kIntegrateTransforms",
-	"kBitonicSortHash",
-	"kBroadphaseCD",
-	"kInitObjUsageTab",
-	"kSetupBatches",
-	"kCheckBatches",
-	"kSetupContacts",
-	"kSolveConstraints"
+	"VectorAdd"
 };
 
 

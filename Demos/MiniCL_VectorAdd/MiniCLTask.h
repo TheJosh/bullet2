@@ -25,7 +25,8 @@ subject to the following restrictions:
 enum
 {
 	CMD_MINICL_1= 1,
-	CMD_MINICL_ADDVECTOR
+	CMD_MINICL_ADDVECTOR,
+	CMD_MINICL_TOTAL_COMMANDS
 };
 
 

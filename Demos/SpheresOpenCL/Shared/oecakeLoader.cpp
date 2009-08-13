@@ -205,8 +205,14 @@ bool BasicOECakeReader::processFile(char * fileName)
 	FILE * fp = fopen(fileName, "rb");
 	if (fp == NULL)
 	{
-		printf("ERROR: file(%s) not found", fileName);
-		return false;
+		char newFileName[512];
+		sprintf(newFileName,"../../%s",fileName);
+		fp = fopen(newFileName, "rb");
+		if (fp == NULL)
+		{
+			printf("ERROR: file(%s) not found", fileName);
+			return false;
+		}
 	}
 
 	int size;

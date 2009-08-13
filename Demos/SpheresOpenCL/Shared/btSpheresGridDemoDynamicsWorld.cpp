@@ -407,8 +407,20 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	// Program Setup
 #if defined CL_PLATFORM_NVIDIA
 	size_t program_length;
+	char* fileName = "SpheresGrid.cl";
+	FILE * fp = fopen(fileName, "rb");
+	char newFileName[512];
+	
+	if (fp == NULL)
+	{
+		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
+		fileName = newFileName;
+	}
+
 //	char *source = oclLoadProgSource(".//Demos//SpheresGrid//SpheresGrid.cl", "", &program_length);
-	char *source = btOclLoadProgSource(".//Demos//SpheresOpenCL//Shared//SpheresGrid.cl", "", &program_length);
+	//char *source = btOclLoadProgSource(".//Demos//SpheresOpenCL//Shared//SpheresGrid.cl", "", &program_length);
+
+	char *source = btOclLoadProgSource(fileName, "", &program_length);
 //	oclCHECKERROR (source == NULL, oclFALSE);   
 	btAssert(source != NULL);
 
@@ -918,7 +930,7 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 {
     cl_int ciErrNum;
 	m_numBatches = 0;
-#if 0
+#if 1
 	// CPU version
 	int memSize = m_numPairs * sizeof(btPairId);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
@@ -999,7 +1011,7 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 #endif
-#if 1
+#if 0
 	{
 		BT_PROFILE_SETUP_BATCHES("Validate");
 		// full check
@@ -1066,6 +1078,7 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 		}
 	}
 #endif
+#if 1
 	{
 		// paint contactions spheres in red
 		BT_PROFILE_SETUP_BATCHES("Color contacts");
@@ -1112,6 +1125,8 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 		glUnmapBufferARB(GL_ARRAY_BUFFER);
 		// printf("pairs : %4d, batches : %d, left : %d\n", m_numPairs, m_numBatches, numLeft);
 	}
+#endif
+
 }
 
 
