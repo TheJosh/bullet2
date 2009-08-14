@@ -366,7 +366,7 @@ GL_ShapeDrawer::ShapeCache*		GL_ShapeDrawer::cache(btConvexShape* shape)
 		for(int i=0;i<ni;i+=3)
 		{
 			const unsigned int* ti=pi+i;
-			const btVector3		nrm=cross(pv[ti[1]]-pv[ti[0]],pv[ti[2]]-pv[ti[0]]).normalized();
+			const btVector3		nrm=btCross(pv[ti[1]]-pv[ti[0]],pv[ti[2]]-pv[ti[0]]).normalized();
 			for(int j=2,k=0;k<3;j=k++)
 			{
 				const unsigned int	a=ti[j];
@@ -682,7 +682,7 @@ void GL_ShapeDrawer::drawOpenGL(btScalar* m, const btCollisionShape* shape, cons
 					break;
 
 				}
-
+#if 0
 			case CYLINDER_SHAPE_PROXYTYPE:
 				{
 					const btCylinderShape* cylinder = static_cast<const btCylinderShape*>(shape);
@@ -696,7 +696,7 @@ void GL_ShapeDrawer::drawOpenGL(btScalar* m, const btCollisionShape* shape, cons
 
 					break;
 				}
-
+#endif
 			case MULTI_SPHERE_SHAPE_PROXYTYPE:
 			{
 				const btMultiSphereShape* multiSphereShape = static_cast<const btMultiSphereShape*>(shape);
@@ -938,8 +938,8 @@ void		GL_ShapeDrawer::drawShadow(btScalar* m,const btVector3& extrusion,const bt
 			glBegin(GL_QUADS);
 			for(int i=0;i<sc->m_edges.size();++i)
 			{			
-				const btScalar		d=dot(sc->m_edges[i].n[0],extrusion);
-				if((d*dot(sc->m_edges[i].n[1],extrusion))<0)
+				const btScalar		d=btDot(sc->m_edges[i].n[0],extrusion);
+				if((d*btDot(sc->m_edges[i].n[1],extrusion))<0)
 				{
 					const int			q=	d<0?1:0;
 					const btVector3&	a=	hull->getVertexPointer()[sc->m_edges[i].v[q]];

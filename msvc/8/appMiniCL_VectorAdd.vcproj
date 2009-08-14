@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="appMiniCL_VectorAdd"
+	Name="appMiniCL_VectorAdd_Mini"
 	ProjectGUID="{6D766893-676D-4222-6547-A75378F2CB60}"
 	RootNamespace="appMiniCL_VectorAdd"
 	>

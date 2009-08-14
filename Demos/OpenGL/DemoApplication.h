@@ -61,9 +61,10 @@ class DemoApplication
 	
 	float m_ele;
 	float m_azi;
+public:
 	btVector3 m_cameraPosition;
 	btVector3 m_cameraTargetPosition;//look at
-
+protected:
 	int	m_mouseOldX;
 	int	m_mouseOldY;
 	int	m_mouseButtons;

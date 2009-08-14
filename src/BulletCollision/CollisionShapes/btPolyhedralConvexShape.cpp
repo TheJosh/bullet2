@@ -23,9 +23,11 @@ btPolyhedralConvexShape::btPolyhedralConvexShape() :btConvexInternalShape()
 
 btVector3	btPolyhedralConvexShape::localGetSupportingVertexWithoutMargin(const btVector3& vec0)const
 {
-	int i;
-	btVector3 supVec(0,0,0);
 
+
+	btVector3 supVec(0,0,0);
+#ifndef __SPU__
+	int i;
 	btScalar maxDot(btScalar(-BT_LARGE_FLOAT));
 
 	btVector3 vec = vec0;
@@ -53,12 +55,16 @@ btVector3	btPolyhedralConvexShape::localGetSupportingVertexWithoutMargin(const b
 		}
 	}
 
+	
+#endif //__SPU__
 	return supVec;
-
 }
+
+
 
 void	btPolyhedralConvexShape::batchedUnitVectorGetSupportingVertexWithoutMargin(const btVector3* vectors,btVector3* supportVerticesOut,int numVectors) const
 {
+#ifndef __SPU__
 	int i;
 
 	btVector3 vtx;
@@ -86,12 +92,14 @@ void	btPolyhedralConvexShape::batchedUnitVectorGetSupportingVertexWithoutMargin(
 			}
 		}
 	}
+#endif //__SPU__
 }
 
 
 
 void	btPolyhedralConvexShape::calculateLocalInertia(btScalar mass,btVector3& inertia) const
 {
+#ifndef __SPU__
 	//not yet, return box inertia
 
 	btScalar margin = getMargin();
@@ -111,7 +119,7 @@ void	btPolyhedralConvexShape::calculateLocalInertia(btScalar mass,btVector3& ine
 	const btScalar scaledmass = mass * btScalar(0.08333333);
 
 	inertia = scaledmass * (btVector3(y2+z2,x2+z2,x2+y2));
-
+#endif //__SPU__
 }
 
 

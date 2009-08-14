@@ -38,20 +38,48 @@ int gNumDeepPenetrationChecks = 0;
 int gNumGjkChecks = 0;
 
 
-
 btGjkPairDetector::btGjkPairDetector(const btConvexShape* objectA,const btConvexShape* objectB,btSimplexSolverInterface* simplexSolver,btConvexPenetrationDepthSolver*	penetrationDepthSolver)
+:m_penetrationDepthSolver(penetrationDepthSolver),
+m_simplexSolver(simplexSolver),
+m_minkowskiA(objectA),
+m_minkowskiB(objectB),
+m_shapeTypeA(objectA->getShapeType()),
+m_shapeTypeB(objectB->getShapeType()),
+m_marginA(objectA->getMargin()),
+m_marginB(objectB->getMargin()),
+m_ignoreMargin(false),
+m_lastUsedMethod(-1),
+m_catchDegeneracies(1)
+{
+}
+btGjkPairDetector::btGjkPairDetector(const btConvexShape* objectA,const btConvexShape* objectB,int shapeTypeA,int shapeTypeB,btScalar marginA, btScalar marginB, btSimplexSolverInterface* simplexSolver,btConvexPenetrationDepthSolver*	penetrationDepthSolver)
 :m_cachedSeparatingAxis(btScalar(0.),btScalar(0.),btScalar(1.)),
 m_penetrationDepthSolver(penetrationDepthSolver),
 m_simplexSolver(simplexSolver),
 m_minkowskiA(objectA),
 m_minkowskiB(objectB),
+m_shapeTypeA(shapeTypeA),
+m_shapeTypeB(shapeTypeB),
+m_marginA(marginA),
+m_marginB(marginB),
 m_ignoreMargin(false),
 m_lastUsedMethod(-1),
 m_catchDegeneracies(1)
 {
 }
 
-void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw,bool swapResults)
+void	btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw,bool swapResults)
+{
+	(void)swapResults;
+
+	getClosestPointsNonVirtual(input,output,debugDraw);
+}
+
+#ifdef __SPU__
+void btGjkPairDetector::getClosestPointsNonVirtual(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw)
+#else
+void btGjkPairDetector::getClosestPointsNonVirtual(const ClosestPointInput& input,Result& output,class btIDebugDraw* debugDraw)
+#endif
 {
 	m_cachedSeparatingDistance = 0.f;
 
@@ -64,21 +92,9 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 	localTransA.getOrigin() -= positionOffset;
 	localTransB.getOrigin() -= positionOffset;
 
-#ifdef __SPU__
-	btScalar marginA = m_minkowskiA->getMarginNonVirtual();
-	btScalar marginB = m_minkowskiB->getMarginNonVirtual();
-#else
-	btScalar marginA = m_minkowskiA->getMargin();
-	btScalar marginB = m_minkowskiB->getMargin();
-#ifdef TEST_NON_VIRTUAL
-	btScalar marginAv = m_minkowskiA->getMarginNonVirtual();
-	btScalar marginBv = m_minkowskiB->getMarginNonVirtual();
-	btAssert(marginA == marginAv);
-	btAssert(marginB == marginBv);
-#endif //TEST_NON_VIRTUAL
-#endif
-	
 
+	btScalar marginA = m_marginA;
+	btScalar marginB = m_marginB;
 
 	gNumGjkChecks++;
 
@@ -123,6 +139,15 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 			btVector3 seperatingAxisInA = (-m_cachedSeparatingAxis)* input.m_transformA.getBasis();
 			btVector3 seperatingAxisInB = m_cachedSeparatingAxis* input.m_transformB.getBasis();
 
+#if 1
+
+			btVector3 pInA = m_minkowskiA->localGetSupportVertexWithoutMarginNonVirtual(seperatingAxisInA);
+			btVector3 qInB = m_minkowskiB->localGetSupportVertexWithoutMarginNonVirtual(seperatingAxisInB);
+
+//			btVector3 pInA  = localGetSupportingVertexWithoutMargin(m_shapeTypeA, m_minkowskiA, seperatingAxisInA,input.m_convexVertexData[0]);//, &featureIndexA);
+//			btVector3 qInB  = localGetSupportingVertexWithoutMargin(m_shapeTypeB, m_minkowskiB, seperatingAxisInB,input.m_convexVertexData[1]);//, &featureIndexB);
+
+#else
 #ifdef __SPU__
 			btVector3 pInA = m_minkowskiA->localGetSupportVertexWithoutMarginNonVirtual(seperatingAxisInA);
 			btVector3 qInB = m_minkowskiB->localGetSupportVertexWithoutMarginNonVirtual(seperatingAxisInB);
@@ -136,6 +161,8 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 			btAssert((qInBv-qInB).length() < 0.0001);
 #endif //
 #endif //__SPU__
+#endif
+
 
 			btVector3  pWorld = localTransA(pInA);	
 			btVector3  qWorld = localTransB(qInB);
@@ -184,24 +211,36 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 #ifdef DEBUG_SPU_COLLISION_DETECTION
 		spu_printf("addVertex 2\n");
 #endif
+			btVector3 newCachedSeparatingAxis;
+
 			//calculate the closest point to the origin (update vector v)
-			if (!m_simplexSolver->closest(m_cachedSeparatingAxis))
+			if (!m_simplexSolver->closest(newCachedSeparatingAxis))
 			{
 				m_degenerateSimplex = 3;
 				checkSimplex = true;
 				break;
 			}
 
-			if(m_cachedSeparatingAxis.length2()<REL_ERROR2)
+			if(newCachedSeparatingAxis.length2()<REL_ERROR2)
             {
+				m_cachedSeparatingAxis = newCachedSeparatingAxis;
                 m_degenerateSimplex = 6;
                 checkSimplex = true;
                 break;
             }
 
 			btScalar previousSquaredDistance = squaredDistance;
-			squaredDistance = m_cachedSeparatingAxis.length2();
+			squaredDistance = newCachedSeparatingAxis.length2();
+			if (squaredDistance>previousSquaredDistance)
+			{
+				m_degenerateSimplex = 7;
+				squaredDistance = previousSquaredDistance;
+                checkSimplex = false;
+                break;
+			}
 			
+			m_cachedSeparatingAxis = newCachedSeparatingAxis;
+
 			//redundant m_simplexSolver->compute_points(pointOnA, pointOnB);
 
 			//are we getting any closer ?
@@ -279,7 +318,7 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 		if (checkPenetration && (!isValid || catchDegeneratePenetrationCase ))
 		{
 			//penetration case
-		
+
 			//if there is no way to handle penetrations, bail out
 			if (m_penetrationDepthSolver)
 			{
@@ -287,6 +326,7 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 				btVector3 tmpPointOnA,tmpPointOnB;
 				
 				gNumDeepPenetrationChecks++;
+				m_cachedSeparatingAxis.setZero();
 
 				bool isValid2 = m_penetrationDepthSolver->calcPenDepth( 
 					*m_simplexSolver, 
@@ -296,10 +336,17 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 					debugDraw,input.m_stackAlloc
 					);
 
+
 				if (isValid2)
 				{
 					btVector3 tmpNormalInB = tmpPointOnB-tmpPointOnA;
 					btScalar lenSqr = tmpNormalInB.length2();
+					if (lenSqr <= (SIMD_EPSILON*SIMD_EPSILON))
+					{
+						tmpNormalInB = m_cachedSeparatingAxis;
+						lenSqr = m_cachedSeparatingAxis.length2();
+					}
+
 					if (lenSqr > (SIMD_EPSILON*SIMD_EPSILON))
 					{
 						tmpNormalInB /= btSqrt(lenSqr);
@@ -315,19 +362,45 @@ void btGjkPairDetector::getClosestPoints(const ClosestPointInput& input,Result& 
 							m_lastUsedMethod = 3;
 						} else
 						{
-							
+							m_lastUsedMethod = 8;
 						}
 					} else
 					{
-						//isValid = false;
-						m_lastUsedMethod = 4;
+						m_lastUsedMethod = 9;
 					}
 				} else
+
 				{
-					m_lastUsedMethod = 5;
+					///this is another degenerate case, where the initial GJK calculation reports a degenerate case
+					///EPA reports no penetration, and the second GJK (using the supporting vector without margin)
+					///reports a valid positive distance. Use the results of the second GJK instead of failing.
+					///thanks to Jacob.Langford for the reproduction case
+					///http://code.google.com/p/bullet/issues/detail?id=250
+
+				
+					if (m_cachedSeparatingAxis.length2() > btScalar(0.))
+					{
+						btScalar distance2 = (tmpPointOnA-tmpPointOnB).length()-margin;
+						//only replace valid distances when the distance is less
+						if (!isValid || (distance2 < distance))
+						{
+							distance = distance2;
+							pointOnA = tmpPointOnA;
+							pointOnB = tmpPointOnB;
+							pointOnA -= m_cachedSeparatingAxis * marginA ;
+							pointOnB += m_cachedSeparatingAxis * marginB ;
+							normalInB = m_cachedSeparatingAxis;
+							isValid = true;
+							m_lastUsedMethod = 6;
+						} else
+						{
+							m_lastUsedMethod = 5;
+						}
+					}
 				}
 				
 			}
+
 		}
 	}
 

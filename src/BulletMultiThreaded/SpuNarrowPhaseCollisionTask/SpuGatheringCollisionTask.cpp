@@ -28,6 +28,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btOptimizedBvh.h"
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
+#include "BulletCollision/CollisionShapes/btConvexPointCloudShape.h"
 
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
 
@@ -37,13 +38,16 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 
 #include "SpuMinkowskiPenetrationDepthSolver.h"
-#include "SpuEpaPenetrationDepthSolver.h"
-#include "SpuGjkPairDetector.h"
-#include "SpuVoronoiSimplexSolver.h"
+//#include "SpuEpaPenetrationDepthSolver.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkPairDetector.h"
+
+
 #include "boxBoxDistance.h"
 #include "BulletMultiThreaded/vectormath2bullet.h"
 #include "SpuCollisionShapes.h" //definition of SpuConvexPolyhedronVertexData
 #include "BulletCollision/CollisionDispatch/btBoxBoxDetector.h"
+#include "BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.h"
+#include "BulletCollision/CollisionShapes/btTriangleShape.h"
 
 #ifdef __SPU__
 ///Software caching from the IBM Cell SDK, it reduces 25% SPU time for our test cases
@@ -51,6 +55,9 @@ subject to the following restrictions:
 #define USE_SOFTWARE_CACHE 1
 #endif
 #endif //__SPU__
+
+int gSkippedCol = 0;
+int gProcessedCol = 0;
 
 ////////////////////////////////////////////////
 /// software caching
@@ -348,14 +355,15 @@ public:
 
 
 
-		//btTriangleShape	tmpTriangleShape(spuTriangleVertices[0],spuTriangleVertices[1],spuTriangleVertices[2]);
+		ATTRIBUTE_ALIGNED16(btTriangleShape)	tmpTriangleShape(spuTriangleVertices[0],spuTriangleVertices[1],spuTriangleVertices[2]);
 
 
 		SpuCollisionPairInput triangleConcaveInput(*m_wuInput);
-		triangleConcaveInput.m_spuCollisionShapes[1] = &spuTriangleVertices[0];
+//		triangleConcaveInput.m_spuCollisionShapes[1] = &spuTriangleVertices[0];
+		triangleConcaveInput.m_spuCollisionShapes[1] = &tmpTriangleShape;
 		triangleConcaveInput.m_shapeType1 = TRIANGLE_SHAPE_PROXYTYPE;
 
-		m_spuContacts.setShapeIdentifiers(-1,-1,subPart,triangleIndex);
+		m_spuContacts.setShapeIdentifiersB(subPart,triangleIndex);
 
 		//		m_spuContacts.flush();
 
@@ -493,9 +501,17 @@ void	ProcessSpuConvexConvexCollision(SpuCollisionPairInput* wuInput, CollisionTa
 	{
 		//try generic GJK
 
+		
+		
+		//SpuConvexPenetrationDepthSolver* penetrationSolver=0;
+		btVoronoiSimplexSolver simplexSolver;
+		btGjkEpaPenetrationDepthSolver	epaPenetrationSolver2;
+		
+		btConvexPenetrationDepthSolver* penetrationSolver = (btConvexPenetrationDepthSolver*)&epaPenetrationSolver2;
+
+#if 0
 		SpuVoronoiSimplexSolver vsSolver;
 		SpuMinkowskiPenetrationDepthSolver	minkowskiPenetrationSolver;
-		SpuConvexPenetrationDepthSolver* penetrationSolver;
 #ifdef ENABLE_EPA
 		SpuEpaPenetrationDepthSolver epaPenetrationSolver;
 		if (gUseEpa)
@@ -506,6 +522,7 @@ void	ProcessSpuConvexConvexCollision(SpuCollisionPairInput* wuInput, CollisionTa
 		{
 			penetrationSolver = &minkowskiPenetrationSolver;
 		}
+#endif 
 
 		///DMA in the vertices for convex shapes
 		ATTRIBUTE_ALIGNED16(char convexHullShape0[sizeof(btConvexHullShape)]);
@@ -546,21 +563,33 @@ void	ProcessSpuConvexConvexCollision(SpuCollisionPairInput* wuInput, CollisionTa
 			lsMemPtr->convexVertexData[1].gSpuConvexShapePtr = wuInput->m_spuCollisionShapes[1];
 		}
 
+		
+		btConvexPointCloudShape cpc0,cpc1;
+
 		if ( btLikely( wuInput->m_shapeType0 == CONVEX_HULL_SHAPE_PROXYTYPE ) )
-		{		
+		{
 			cellDmaWaitTagStatusAll(DMA_MASK(2));
 			lsMemPtr->convexVertexData[0].gConvexPoints = &lsMemPtr->convexVertexData[0].g_convexPointBuffer[0];
+			btConvexHullShape* ch = (btConvexHullShape*)wuInput->m_spuCollisionShapes[0];
+			const btVector3& localScaling = ch->getLocalScalingNV();
+			cpc0.setPoints(lsMemPtr->convexVertexData[0].gConvexPoints,lsMemPtr->convexVertexData[0].gNumConvexPoints,false,localScaling);
+			wuInput->m_spuCollisionShapes[0] = &cpc0;
 		}
 
 		if ( btLikely( wuInput->m_shapeType1 == CONVEX_HULL_SHAPE_PROXYTYPE ) )
 		{
 			cellDmaWaitTagStatusAll(DMA_MASK(2));		
 			lsMemPtr->convexVertexData[1].gConvexPoints = &lsMemPtr->convexVertexData[1].g_convexPointBuffer[0];
+			btConvexHullShape* ch = (btConvexHullShape*)wuInput->m_spuCollisionShapes[1];
+			const btVector3& localScaling = ch->getLocalScalingNV();
+			cpc1.setPoints(lsMemPtr->convexVertexData[1].gConvexPoints,lsMemPtr->convexVertexData[1].gNumConvexPoints,false,localScaling);
+			wuInput->m_spuCollisionShapes[1] = &cpc1;
+
 		}
 
 
-		void* shape0Ptr = wuInput->m_spuCollisionShapes[0];
-		void* shape1Ptr = wuInput->m_spuCollisionShapes[1];
+		const btConvexShape* shape0Ptr = (const btConvexShape*)wuInput->m_spuCollisionShapes[0];
+		const btConvexShape* shape1Ptr = (const btConvexShape*)wuInput->m_spuCollisionShapes[1];
 		int shapeType0 = wuInput->m_shapeType0;
 		int shapeType1 = wuInput->m_shapeType1;
 		float marginA = wuInput->m_collisionMargin0;
@@ -585,8 +614,8 @@ void	ProcessSpuConvexConvexCollision(SpuCollisionPairInput* wuInput, CollisionTa
 			wuInput->m_isSwapped);
 
 		{
-			SpuGjkPairDetector gjk(shape0Ptr,shape1Ptr,shapeType0,shapeType1,marginA,marginB,&vsSolver,penetrationSolver);
-			gjk.getClosestPoints(cpInput,spuContacts);//,debugDraw);
+			btGjkPairDetector gjk(shape0Ptr,shape1Ptr,shapeType0,shapeType1,marginA,marginB,&simplexSolver,penetrationSolver);//&vsSolver,penetrationSolver);
+			gjk.getClosestPoints(cpInput,spuContacts,0);//,debugDraw);
 #ifdef USE_SEPDISTANCE_UTIL			
 			btScalar sepDist = gjk.getCachedSeparatingDistance()+spuManifold->getContactBreakingThreshold();
 			lsMemPtr->getlocalCollisionAlgorithm()->m_sepDistance.initSeparatingDistance(gjk.getCachedSeparatingAxis(),sepDist,wuInput->m_worldTransform0,wuInput->m_worldTransform1);
@@ -624,8 +653,11 @@ SIMD_FORCE_INLINE void	dmaAndSetupCollisionObjects(SpuCollisionPairInput& collis
 	
 	cellDmaWaitTagStatusAll(DMA_MASK(1) | DMA_MASK(2));
 
-	collisionPairInput.m_worldTransform0 = lsMem.getColObj0()->getWorldTransform();
-	collisionPairInput.m_worldTransform1 = lsMem.getColObj1()->getWorldTransform();
+	btCollisionObject* ob0 = lsMem.getColObj0();
+	btCollisionObject* ob1 = lsMem.getColObj1();
+
+	collisionPairInput.m_worldTransform0 = ob0->getWorldTransform();
+	collisionPairInput.m_worldTransform1 = ob1->getWorldTransform();
 }
 
 
@@ -981,8 +1013,9 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 #ifdef USE_SEPDISTANCE_UTIL
 									lsMem.getlocalCollisionAlgorithm()->m_sepDistance.updateSeparatingDistance(collisionPairInput.m_worldTransform0,collisionPairInput.m_worldTransform1);
 #endif //USE_SEPDISTANCE_UTIL
-																		
-
+							
+#define USE_DEDICATED_BOX_BOX 1
+#ifdef USE_DEDICATED_BOX_BOX
 									bool boxbox = ((lsMem.getlocalCollisionAlgorithm()->getShapeType0()==BOX_SHAPE_PROXYTYPE)&&
 										(lsMem.getlocalCollisionAlgorithm()->getShapeType1()==BOX_SHAPE_PROXYTYPE));
 									if (boxbox)
@@ -998,6 +1031,11 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 											lsMem.getColObj0()->getFriction(),lsMem.getColObj1()->getFriction(),
 											collisionPairInput.m_isSwapped);
 
+						
+									float distance=0.f;
+									btVector3 normalInB;
+
+
 
 									if (//!gUseEpa &&
 #ifdef USE_SEPDISTANCE_UTIL
@@ -1007,7 +1045,7 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 #endif											
 										)
 										{
-//#define USE_PE_BOX_BOX 1
+#define USE_PE_BOX_BOX 1
 #ifdef USE_PE_BOX_BOX
 											{
 
@@ -1029,12 +1067,16 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 												BoxPoint resultClosestBoxPointA;
 												BoxPoint resultClosestBoxPointB;
 												Vector3 resultNormal;
-												float distanceThreshold = FLT_MAX;//0.0f;//FLT_MAX;//use epsilon?	
+#ifdef USE_SEPDISTANCE_UTIL
+												float distanceThreshold = FLT_MAX
+#else
+												float distanceThreshold = 0.f;
+#endif
 
 
-												float distance = boxBoxDistance(resultNormal,resultClosestBoxPointA,resultClosestBoxPointB,  boxA, transformA, boxB,transformB,distanceThreshold);
+												distance = boxBoxDistance(resultNormal,resultClosestBoxPointA,resultClosestBoxPointB,  boxA, transformA, boxB,transformB,distanceThreshold);
 												
-												btVector3 normalInB = -getBtVector3(resultNormal);
+												normalInB = -getBtVector3(resultNormal);
 
 												if(distance < spuManifold->getContactBreakingThreshold())
 												{
@@ -1062,9 +1104,13 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 												{
 													SpuContactResult&	m_spuContacts;
 
-													virtual void setShapeIdentifiers(int partId0,int index0,	int partId1,int index1)
+													virtual void setShapeIdentifiersA(int partId0,int index0)
 													{
-														m_spuContacts.setShapeIdentifiers(partId0,index0,partId1,index1);
+														m_spuContacts.setShapeIdentifiersA(partId0,index0);
+													}
+													virtual void setShapeIdentifiersB(int partId1,int index1)
+													{
+														m_spuContacts.setShapeIdentifiersB(partId1,index1);
 													}
 													virtual void addContactPoint(const btVector3& normalOnBInWorld,const btVector3& pointInWorld,btScalar depth)
 													{
@@ -1094,15 +1140,20 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 											
 											lsMem.needsDmaPutContactManifoldAlgo = true;
 #ifdef USE_SEPDISTANCE_UTIL
-											btScalar sepDist = distance+spuManifold->getContactBreakingThreshold();
-											lsMem.getlocalCollisionAlgorithm()->m_sepDistance.initSeparatingDistance(normalInB,sepDist,collisionPairInput.m_worldTransform0,collisionPairInput.m_worldTransform1);
+											btScalar sepDist2 = distance+spuManifold->getContactBreakingThreshold();
+											lsMem.getlocalCollisionAlgorithm()->m_sepDistance.initSeparatingDistance(normalInB,sepDist2,collisionPairInput.m_worldTransform0,collisionPairInput.m_worldTransform1);
 #endif //USE_SEPDISTANCE_UTIL
+											gProcessedCol++;
+										} else
+										{
+											gSkippedCol++;
 										}
 
 										spuContacts.flush();
 											
 
 									} else
+#endif //USE_DEDICATED_BOX_BOX
 									{
 										if (
 #ifdef USE_SEPDISTANCE_UTIL
@@ -1138,13 +1189,15 @@ void	processCollisionTask(void* userPtr, void* lsMemPtr)
 						}
 
 #ifdef USE_SEPDISTANCE_UTIL
+#if defined (__SPU__) || defined (USE_LIBSPE2)
 						if (lsMem.needsDmaPutContactManifoldAlgo)
 						{
 							dmaSize = sizeof(SpuContactManifoldCollisionAlgorithm);
 							dmaPpuAddress2 = (ppu_address_t)pair.m_algorithm;
-							cellDmaLargePut(&lsMem.gSpuContactManifoldAlgo, dmaPpuAddress2  , dmaSize, DMA_TAG(1), 0, 0);
+							cellDmaLargePut(&lsMem.gSpuContactManifoldAlgoBuffer, dmaPpuAddress2  , dmaSize, DMA_TAG(1), 0, 0);
 							cellDmaWaitTagStatusAll(DMA_MASK(1));
 						}
+#endif
 #endif //#ifdef USE_SEPDISTANCE_UTIL
 
 					}

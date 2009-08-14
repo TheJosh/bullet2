@@ -62,7 +62,7 @@ void	GLDebugDrawer::drawTriangle(const btVector3& a,const btVector3& b,const btV
 {
 //	if (m_debugMode > 0)
 	{
-		const btVector3	n=cross(b-a,c-a).normalized();
+		const btVector3	n=btCross(b-a,c-a).normalized();
 		glBegin(GL_TRIANGLES);		
 		glColor4f(color.getX(), color.getY(), color.getZ(),alpha);
 		glNormal3d(n.getX(),n.getY(),n.getZ());

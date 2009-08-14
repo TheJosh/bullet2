@@ -24,8 +24,8 @@ subject to the following restrictions:
 #include "LinearMath/btQuickprof.h"
 #include "LinearMath/btIDebugDraw.h"
 
-#include "../GimpactTestDemo/BunnyMesh.h"
-#include "../GimpactTestDemo/TorusMesh.h"
+#include "BunnyMesh.h"
+#include "TorusMesh.h"
 #include <stdio.h> //printf debugging
 #include "LinearMath/btConvexHull.h"
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
@@ -98,6 +98,41 @@ void SoftDemo::createStack( btCollisionShape* boxShape, float halfCubeSize, int 
 extern int gNumManifold;
 extern int gOverlappingPairs;
 
+///for mouse picking
+void pickingPreTickCallback (btDynamicsWorld *world, btScalar timeStep)
+{
+	SoftDemo* softDemo = (SoftDemo*)world->getWorldUserInfo();
+
+	if(softDemo->m_drag)
+	{
+		const int				x=softDemo->m_lastmousepos[0];
+		const int				y=softDemo->m_lastmousepos[1];
+		const btVector3			rayFrom=softDemo->m_cameraPosition;
+		const btVector3			rayTo=softDemo->getRayTo(x,y);
+		const btVector3			rayDir=(rayTo-rayFrom).normalized();
+		const btVector3			N=(softDemo->m_cameraTargetPosition-softDemo->m_cameraPosition).normalized();
+		const btScalar			O=btDot(softDemo->m_impact,N);
+		const btScalar			den=btDot(N,rayDir);
+		if((den*den)>0)
+		{
+			const btScalar			num=O-btDot(N,rayFrom);
+			const btScalar			hit=num/den;
+			if((hit>0)&&(hit<1500))
+			{				
+				softDemo->m_goal=rayFrom+rayDir*hit;
+			}				
+		}		
+		btVector3				delta=softDemo->m_goal-softDemo->m_node->m_x;
+		static const btScalar	maxdrag=10;
+		if(delta.length2()>(maxdrag*maxdrag))
+		{
+			delta=delta.normalized()*maxdrag;
+		}
+		softDemo->m_node->m_v+=delta/timeStep;
+	}
+
+}
+
 
 void SoftDemo::clientMoveAndDisplay()
 {
@@ -106,39 +141,17 @@ void SoftDemo::clientMoveAndDisplay()
 
 
 
-	float dt = 1.0/60.;	
+	float ms = getDeltaTimeMicroseconds();
+	float dt = ms / 1000000.f;//1.0/60.;	
+
+
 
 	if (m_dynamicsWorld)
 	{
-		if(m_drag)
-		{
-			const int				x=m_lastmousepos[0];
-			const int				y=m_lastmousepos[1];
-			const btVector3			rayFrom=m_cameraPosition;
-			const btVector3			rayTo=getRayTo(x,y);
-			const btVector3			rayDir=(rayTo-rayFrom).normalized();
-			const btVector3			N=(m_cameraTargetPosition-m_cameraPosition).normalized();
-			const btScalar			O=dot(m_impact,N);
-			const btScalar			den=dot(N,rayDir);
-			if((den*den)>0)
-			{
-				const btScalar			num=O-dot(N,rayFrom);
-				const btScalar			hit=num/den;
-				if((hit>0)&&(hit<1500))
-				{				
-					m_goal=rayFrom+rayDir*hit;
-				}				
-			}		
-			btVector3				delta=m_goal-m_node->m_x;
-			static const btScalar	maxdrag=10;
-			if(delta.length2()>(maxdrag*maxdrag))
-			{
-				delta=delta.normalized()*maxdrag;
-			}
-			m_node->m_v+=delta/dt;
-		}
+		
+		
 
-#define FIXED_STEP
+//#define FIXED_STEP
 #ifdef FIXED_STEP
 		m_dynamicsWorld->stepSimulation(dt=1.0f/60.f,0);
 
@@ -994,30 +1007,35 @@ static void	Init_ClusterDeform(SoftDemo* pdemo)
 	psb->m_cfg.kDF=1;
 }
 
+#define NUM_PATCHES 5
+#define CLOTH_HEIGHT 3
 //
 static void	Init_ClusterCollide1(SoftDemo* pdemo)
 {
-	const btScalar	s=8;
-	btSoftBody*		psb=btSoftBodyHelpers::CreatePatch(	pdemo->m_softBodyWorldInfo,btVector3(-s,0,-s),
-		btVector3(+s,0,-s),
-		btVector3(-s,0,+s),
-		btVector3(+s,0,+s),
-		31,31,
-		1+2+4+8,true);
-	btSoftBody::Material* pm=psb->appendMaterial();
-	pm->m_kLST		=	0.4;
-	pm->m_flags		-=	btSoftBody::fMaterial::DebugDraw;
-	psb->m_cfg.kDF	=	1;
-	psb->m_cfg.kSRHR_CL		=	1;
-	psb->m_cfg.kSR_SPLT_CL	=	0;
-	psb->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS+
-		btSoftBody::fCollision::CL_RS;
-	psb->generateBendingConstraints(2,pm);
-	psb->setTotalMass(50);
-	psb->generateClusters(64);
-	pdemo->getSoftDynamicsWorld()->addSoftBody(psb);
+	for (int i=0;i<NUM_PATCHES;i++)
+	{
+		const btScalar	s=10;
+		btSoftBody*		psb=btSoftBodyHelpers::CreatePatch(	pdemo->m_softBodyWorldInfo,btVector3(-s,CLOTH_HEIGHT,-s+i*20),
+			btVector3(+s,CLOTH_HEIGHT,-s+i*20),
+			btVector3(-s,CLOTH_HEIGHT,+s+i*20),
+			btVector3(+s,CLOTH_HEIGHT,+s+i*20),
+			63,63,
+			1+2+4+8,true);
+		btSoftBody::Material* pm=psb->appendMaterial();
+		pm->m_kLST		=	.8;
+		pm->m_flags		-=	btSoftBody::fMaterial::DebugDraw;
+		psb->m_cfg.kDF	=	1;
+		psb->m_cfg.kSRHR_CL		=	1;
+		psb->m_cfg.kSR_SPLT_CL	=	0;
+		psb->m_cfg.collisions	=	btSoftBody::fCollision::CL_SS+
+			btSoftBody::fCollision::CL_RS;
+		psb->generateBendingConstraints(2,pm);
+		psb->setTotalMass(50);
+		//psb->generateClusters(64);
+		pdemo->getSoftDynamicsWorld()->addSoftBody(psb);
+	}
 
-	Ctor_RbUpStack(pdemo,10);
+	//Ctor_RbUpStack(pdemo,10);
 }
 
 //
@@ -1246,7 +1264,7 @@ static void	Init_ClusterStackMixed(SoftDemo* pdemo)
 	}
 }
 
-unsigned	current_demo=18;
+unsigned	current_demo=19;
 
 void	SoftDemo::clientResetScene()
 {
@@ -1272,7 +1290,11 @@ void	SoftDemo::clientResetScene()
 			getSoftDynamicsWorld()->removeSoftBody(softBody);
 		} else
 		{
-			m_dynamicsWorld->removeCollisionObject(obj);
+			btRigidBody* body = btRigidBody::upcast(obj);
+			if (body)
+				m_dynamicsWorld->removeRigidBody(body);
+			else
+				m_dynamicsWorld->removeCollisionObject(obj);
 		}
 		delete obj;
 	}
@@ -1349,8 +1371,6 @@ void	SoftDemo::renderme()
 	ps/=nps;
 	if(m_autocam)
 		m_cameraTargetPosition+=(ps-m_cameraTargetPosition)*0.05;
-	else
-		m_cameraTargetPosition=btVector3(0,0,0);
 	/* Anm			*/ 
 	if(!isIdle())
 		m_animtime=m_clock.getTimeMilliseconds()/1000.f;
@@ -1440,8 +1460,8 @@ void	SoftDemo::renderme()
 		const btScalar	a=	(btScalar)0.5;
 		const btVector3	n=	m_softBodyWorldInfo.water_normal;
 		const btVector3	o=	-n*m_softBodyWorldInfo.water_offset;
-		const btVector3	x=	cross(n,axis[n.minAxis()]).normalized();
-		const btVector3	y=	cross(x,n).normalized();
+		const btVector3	x=	btCross(n,axis[n.minAxis()]).normalized();
+		const btVector3	y=	btCross(x,n).normalized();
 		const btScalar	s=	25;
 		idraw->drawTriangle(o-x*s-y*s,o+x*s-y*s,o+x*s+y*s,c,a);
 		idraw->drawTriangle(o-x*s-y*s,o+x*s+y*s,o-x*s+y*s,c,a);
@@ -1709,6 +1729,7 @@ void	SoftDemo::initPhysics()
 
 	btDiscreteDynamicsWorld* world = new btSoftRigidDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
 	m_dynamicsWorld = world;
+	m_dynamicsWorld->setInternalTickCallback(pickingPreTickCallback,this,true);
 
 
 	m_dynamicsWorld->getDispatchInfo().m_enableSPU = true;

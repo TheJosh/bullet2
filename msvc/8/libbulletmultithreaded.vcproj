@@ -570,14 +570,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\BulletMultiThreaded\SpuNarrowPhaseCollisionTask\SpuGjkEpa2.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\BulletMultiThreaded\SpuNarrowPhaseCollisionTask\SpuGjkPairDetector.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\BulletMultiThreaded\SpuLibspe2Support.cpp"
 				>
 			</File>
@@ -599,10 +591,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\BulletMultiThreaded\SpuSampleTaskProcess.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\BulletMultiThreaded\SpuNarrowPhaseCollisionTask\SpuVoronoiSimplexSolver.cpp"
 				>
 			</File>
 			<File
