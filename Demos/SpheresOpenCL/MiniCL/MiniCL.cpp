@@ -368,3 +368,8 @@ CL_API_ENTRY cl_int CL_API_CALL clReleaseContext(cl_context  context ) CL_API_SU
 	
 	return 0;
 }
+extern CL_API_ENTRY cl_int CL_API_CALL
+clFinish(cl_command_queue /* command_queue */) CL_API_SUFFIX__VERSION_1_0
+{
+	return CL_SUCCESS;
+}

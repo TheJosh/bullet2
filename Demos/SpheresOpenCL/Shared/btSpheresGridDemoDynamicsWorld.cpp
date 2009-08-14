@@ -280,8 +280,14 @@ void btSpheresGridDemoDynamicsWorld::adjustGrid()
 	m_minSphereRad = minRad;
 	m_maxSphereRad = maxRad;
 	m_cellSize[0] = m_cellSize[1] = m_cellSize[2] = maxRad * btScalar(2.f);
-	*((btVector3*)m_simParams.m_worldMin) = m_worldMin;
-	*((btVector3*)m_simParams.m_cellSize) = m_cellSize;
+	m_simParams.m_worldMin[0] = m_worldMin[0];
+	m_simParams.m_worldMin[1] = m_worldMin[1];
+	m_simParams.m_worldMin[2] = m_worldMin[2];
+
+	m_simParams.m_cellSize[0] = m_cellSize[0];
+	m_simParams.m_cellSize[1] = m_cellSize[1];
+	m_simParams.m_cellSize[2] = m_cellSize[2];
+
 	btVector3 wsize = m_worldMax - m_worldMin;
 	m_simParams.m_gridSize[0] = (int)(wsize[0] / m_cellSize[0]);
 	m_simParams.m_gridSize[1] = (int)(wsize[1] / m_cellSize[1]);
@@ -297,8 +303,12 @@ void btSpheresGridDemoDynamicsWorld::adjustGrid()
 
 void btSpheresGridDemoDynamicsWorld::grabSimulationData()
 {
-	btVector3 gravity = getGravity();
-	*((btVector3*)m_simParams.m_gravity) = gravity;
+	const btVector3& gravity = getGravity();
+	m_simParams.m_gravity[0] = gravity[0];
+	m_simParams.m_gravity[1] = gravity[1];
+	m_simParams.m_gravity[2] = gravity[2];
+	
+	
 	btCollisionObjectArray& collisionObjects = getCollisionObjectArray();
 	for(int i = 0; i < m_numObjects; i++)
 	{
@@ -604,7 +614,7 @@ void btSpheresGridDemoDynamicsWorld::runPredictUnconstrainedMotionKernel()
 		if(mass0[3] > 0.f)
 		{
 			btVector3 linVel = m_hLinVel[index];
-			btVector3 gravity = *((btVector3*)&m_simParams);
+			btVector3 gravity(m_simParams[0],m_simParams[1],m_simParams[2]);
 			linVel += gravity * m_timeStep;
 			m_hLinVel[index] = linVel;
 		}
@@ -622,6 +632,7 @@ void btSpheresGridDemoDynamicsWorld::runPredictUnconstrainedMotionKernel()
 	ciErrNum = clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 5, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckPredictUnconstrainedMotionKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+//	clFinish(m_cqCommandQue);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
@@ -635,6 +646,7 @@ void btSpheresGridDemoDynamicsWorld::runIntegrateTransformsKernel()
 	ciErrNum = clSetKernelArg(m_ckIntegrateTransformsKernel, 6, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckIntegrateTransformsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+//	clFinish(m_cqCommandQue);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 /*
 	// read back for checking	
@@ -1233,25 +1245,34 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 #else
 	ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
 	{
-		for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
+		BT_PROFILE("enqueue");
+		for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
 		{
-			size_t szGlobalWorkSize[2];
-			// Set work size and execute the kernel
-			szGlobalWorkSize[0] = m_numPairs;
-			ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &nBatch);
-			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSolveConstraintsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
+			{
+				size_t szGlobalWorkSize[2];
+				// Set work size and execute the kernel
+				szGlobalWorkSize[0] = m_numPairs;
+				ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &nBatch);
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+				ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSolveConstraintsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+				
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			}
 		}
+		clFinish(m_cqCommandQue);
 	}
-	// read results to CPU
-	int memSize = sizeof(btVector3) * m_numObjects;
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	{
+		BT_PROFILE("read from GPU");
+		// read results to CPU
+		int memSize = sizeof(btVector3) * m_numObjects;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+//		clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
 #endif
 }
 

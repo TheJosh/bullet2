@@ -192,7 +192,7 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 	MiniCLTaskDesc* taskDescPtr = (MiniCLTaskDesc*)userPtr;
 	MiniCLTaskDesc& taskDesc = *taskDescPtr;
 
-	printf("Compute Unit[%d] executed kernel %d work items [%d..%d)\n",taskDesc.m_taskId,taskDesc.m_kernelProgramId,taskDesc.m_firstWorkUnit,taskDesc.m_lastWorkUnit);
+//	printf("Compute Unit[%d] executed kernel %d work items [%d..%d)\n",taskDesc.m_taskId,taskDesc.m_kernelProgramId,taskDesc.m_firstWorkUnit,taskDesc.m_lastWorkUnit);
 	
 	
 	switch (taskDesc.m_kernelProgramId)
