@@ -23,7 +23,7 @@ subject to the following restrictions:
 #include <CL/cl_gl.h>
 
 // check OpenCL version
-#if (defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_NVIDIA))
+#if (defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_NVIDIA) || defined(CL_PLATFORM_AMD))
 	// OK
 #else
 	#error ERROR : Sorry, this version of OpenCL is not supported yet

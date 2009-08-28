@@ -17,6 +17,22 @@ subject to the following restrictions:
 	#define GUID_ARG 
 #endif
 
+int waste_time(int num)
+{
+	int i;
+	int res = 0;
+	for(i = 0; i < 10000; i++)
+	{
+		res += num;
+	}
+	for(i = 0; i < 9999; i++)
+	{
+		res -= num;
+	}
+	return res;
+}
+
+
 __kernel void kIntegrateMotion(	__global float4* pPos, 
 								__global float4* pLinVel, 
 								int numObjects,
@@ -24,6 +40,7 @@ __kernel void kIntegrateMotion(	__global float4* pPos,
 								float timeStep GUID_ARG)
 {
     unsigned int index = get_global_id(0);
+//    index = waste_time(index);
     if(index >= numObjects)
     {
 		return;

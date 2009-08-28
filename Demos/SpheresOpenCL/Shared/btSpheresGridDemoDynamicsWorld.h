@@ -23,7 +23,7 @@ subject to the following restrictions:
 #include <CL/cl_gl.h>
 
 // check OpenCL version
-#if (defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_NVIDIA))
+#if (defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_NVIDIA) || defined(CL_PLATFORM_AMD))
 	// OK
 #else
 	#error ERROR : Sorry, this version of OpenCL is not supported yet
@@ -98,8 +98,11 @@ struct btSpheresContPair
 
 class btSpheresGridDemoDynamicsWorld : public btDiscreteDynamicsWorld
 {
-protected:
+public:
 	int			m_numSpheres;
+	int			m_usedDevice;
+	btScalar	m_sphereRad;
+protected:
 	int			m_numObjects;
 	int			m_hashSize; // power of 2 >= m_numSpheres;
 	int			m_numGridCells; 
@@ -114,9 +117,11 @@ protected:
 	btAlignedObjectArray<btVector3>	m_hShapeBuf;
 	btAlignedObjectArray<btInt2>	m_hShapeIds; // per each body : (start index, num_spheres)
 	btAlignedObjectArray<int>		m_hBodyIds;  // per each sphere : parent body index
+public:
 	btAlignedObjectArray<btVector3>	m_hPos;
-	btAlignedObjectArray<btVector3>	m_hTrans;
 	btAlignedObjectArray<btVector3>	m_hLinVel;
+protected:
+	btAlignedObjectArray<btVector3>	m_hTrans;
 	btAlignedObjectArray<btVector3>	m_hAngVel;
 	btAlignedObjectArray<btVector3>	m_hInvInertiaMass;
 	btAlignedObjectArray<btInt2>	m_hPosHash;
@@ -147,7 +152,6 @@ protected:
 	cl_mem		m_dContacts;
 	cl_mem		m_dSimParams; // copy of m_simParams : global simulation paramerers such as gravity, etc. 
 
-	bool			m_useCPU;
 
 	// OpenCL 
 	cl_context			m_cxMainContext;
@@ -188,8 +192,9 @@ public:
 			int maxObjs = SPHERES_GRID_MAX_OBJS, int maxNeighbors = SPHERES_GRID_MAX_NEIGHBORS)
 		: btDiscreteDynamicsWorld(dispatcher, pairCache, constraintSolver, collisionConfiguration)
 	{ 
-		m_useCPU = true;
+		m_usedDevice = 1;
 //		m_useCPU = false;
+		m_sphereRad = btScalar(0.5f);
 		m_simParams.m_gravity[0] = 0.f;
 		m_simParams.m_gravity[1] = -10.f;
 		m_simParams.m_gravity[2] = 0.f;

@@ -344,7 +344,8 @@ void SpheresGridDemo::clientResetScene()
 {
 	static bool bFirstCall = true;
 	DemoApplication::clientResetScene();
-	#if !USE_BULLET_BODIES
+
+	#if (USE_INTERGATION_DEMO) && (!USE_BULLET_BODIES)
 		init_scene_directly();
 	#endif
 	if(bFirstCall)
@@ -485,6 +486,19 @@ void SpheresGridDemo::renderme()
 		int  xOffset = 10.f;
 		int  yStart = 20.f;
 		int  yIncr = 20.f;
+		switch(m_pWorld->m_usedDevice)
+		{
+			case 0:
+				GLDebugDrawString(xOffset,yStart,"CPU");
+				break;
+			case 1:
+				GLDebugDrawString(xOffset,yStart,"OpenCL");
+				break;
+			case 2:
+				GLDebugDrawString(xOffset,yStart,"CUDA");
+				break;
+		}
+		yStart += 30.f;
 		showProfileInfo(xOffset, yStart, yIncr);
 		outputDebugInfo(xOffset, yStart, yIncr);
 		resetPerspectiveProjection();

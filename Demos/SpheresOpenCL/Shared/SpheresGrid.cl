@@ -46,7 +46,7 @@ int4 getGridPos(float4 worldPos, __global float4* pParams)
 
 unsigned int getPosHash(int4 gridPos, __global float4* pParams)
 {
-	int4 pGridDim = *((int4*)(pParams + 3));
+	int4 pGridDim = *((__global int4*)(pParams + 3));
 	if(gridPos.x < 0) gridPos.x = 0;
 	if(gridPos.x >= pGridDim.x) gridPos.x = pGridDim.x - 1;
 	if(gridPos.y < 0) gridPos.y = 0;
@@ -227,7 +227,7 @@ void findPairsInCell(	int4 gridPos,
 						__global int2*	pPairBuffStartCurr,
 						__global float4* pParams)
 {
-	int4 pGridDim = *((int4*)(pParams + 3));
+	int4 pGridDim = *((__global int4*)(pParams + 3));
     if (	(gridPos.x < 0) || (gridPos.x > pGridDim.x - 1)
 		||	(gridPos.y < 0) || (gridPos.y > pGridDim.y - 1)
 		||  (gridPos.z < 0) || (gridPos.z > pGridDim.z - 1)) 
@@ -248,7 +248,7 @@ void findPairsInCell(	int4 gridPos,
 	int2 start_curr = pPairBuffStartCurr[unsorted_indx];
 	int start = start_curr.x;
 	int curr = start_curr.y;
-	int2 start_curr_next = pPairBuffStartCurr[unsorted_indx+1];
+//	int2 start_curr_next = pPairBuffStartCurr[unsorted_indx+1];
 	int bucketEnd = bucketStart + 8;
 	for(int index2 = bucketStart; index2 < bucketEnd; index2++) 
 	{
@@ -308,7 +308,7 @@ __kernel void kBroadphaseCD(__global float4* pPos,
 	float4 pos = pPos[unsorted_indx];
     int4 gridPosA = getGridPos(pos, pParams);
 
-	int4 pGridDim = *((int4*)(pParams + 3));
+	int4 pGridDim = *((__global int4*)(pParams + 3));
     if (	(gridPosA.x < 0) || (gridPosA.x > pGridDim.x - 1)
 		||	(gridPosA.y < 0) || (gridPosA.y > pGridDim.y - 1)
 		||  (gridPosA.z < 0) || (gridPosA.z > pGridDim.z - 1)) 

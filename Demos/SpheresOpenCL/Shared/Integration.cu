@@ -87,6 +87,21 @@ void computeGridSize(uint n, uint blockSize, uint &numBlocks, uint &numThreads)
     numBlocks = iDivUp(n, numThreads);
 }
 
+__device__ int waste_time(int num)
+{
+	int i;
+	int res = 0;
+	for(i = 0; i < 10000; i++)
+	{
+		res += num;
+	}
+	for(i = 0; i < 9999; i++)
+	{
+		res -= num;
+	}
+	return res;
+}
+
 
 __global__ void kIntegrateMotion(	float4* pPos,
 									float4* pLinVel,
@@ -95,6 +110,7 @@ __global__ void kIntegrateMotion(	float4* pPos,
 									float timeStep)
 {
     uint index = __umul24(blockIdx.x,blockDim.x) + threadIdx.x;
+//    index = waste_time(index);
     if (index >= numObjects) return;
 	float4 pos = pPos[index];
 	float4 linVel = pLinVel[index];

@@ -259,8 +259,12 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 {
     cl_int ciErrNum;
 
-	// create the OpenCL context 
+	// create the OpenCL context
+#if defined(CL_PLATFORM_AMD)
+    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
+#else
     m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
+#endif
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
   
     // Get and log the device info
@@ -283,7 +287,7 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	// Program Setup
-#if defined CL_PLATFORM_NVIDIA
+#if (defined CL_PLATFORM_NVIDIA) || (defined CL_PLATFORM_AMD)
 	size_t program_length;
 	char* fileName = "Integration.cl";
 	FILE * fp = fopen(fileName, "rb");
@@ -396,12 +400,14 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 		workgroup_size = 4;
 #else
 		clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(workgroup_size), &workgroup_size, NULL);
+	#if defined(CL_PLATFORM_NVIDIA)
 		// this gives 512 for my 8800 GT, which gives error CL_OUT_OF_RESOURCES on call of clEnqueueNDRangeKernel
 		// so override it (256 max)
 //		workgroup_size = 256;
 		workgroup_size = 128; // this gives the best result for 800 000
 //		workgroup_size = 64;
 //		workgroup_size = 32;
+	#endif // CL_PLATFORM_NVIDIA
 #endif
 		workgroup_size = btMin(workgroup_size, m_numSpheres);
 		int num_t = m_numSpheres / workgroup_size;

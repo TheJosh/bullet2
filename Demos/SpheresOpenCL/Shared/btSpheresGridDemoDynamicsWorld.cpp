@@ -392,7 +392,11 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
     cl_int ciErrNum;
 
 	// create the OpenCL context 
+#if defined(CL_PLATFORM_AMD)
+    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
+#else
     m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
+#endif
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
   
     // Get and log the device info
@@ -415,7 +419,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	// Program Setup
-#if defined CL_PLATFORM_NVIDIA
+#if (defined CL_PLATFORM_NVIDIA) || (defined CL_PLATFORM_AMD)
 	size_t program_length;
 	char* fileName = "SpheresGrid.cl";
 	FILE * fp = fopen(fileName, "rb");
@@ -664,7 +668,7 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
     cl_int ciErrNum;
 	int memSize = m_numSpheres * sizeof(btInt2);
-#if defined(CL_PLATFORM_MINI_CL)
+#if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
 	// bitonic sort on MiniCL does not work because barrier() finction is not implemented yet
 	// CPU version
 	// get hash from GPU
