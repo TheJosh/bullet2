@@ -54,15 +54,25 @@ extern "C" {
 	extern char SPU_SAMPLE_ELF_SYMBOL[];
 }
 
-
+const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] = 
+{
+	"EMPTY_SLOT_0",
+	"EMPTY_SLOT_1",
+	"VectorAdd"
+};
 
 
 int	MiniCLTaskScheduler::findProgramCommandIdByName(const char* programName) const
 {
-	return CMD_MINICL_ADDVECTOR;//hardcoded temp value, todo: implement multi-program support
+	for(int i = 0; i < CMD_MINICL_TOTAL_COMMANDS; i++)
+	{
+		if(!strcmp(programName, cMiniCLKernels[i]))
+		{
+			return i;
+		}
+	}
+	return -1;
 }
-
-
 
 
 
