@@ -36,7 +36,7 @@ btSpheresGridDemoDynamicsWorld::~btSpheresGridDemoDynamicsWorld()
 {
 }
 
-int gStepNum = 0;
+static int gStepNum = 0;
 
 int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSubSteps, btScalar fixedTimeStep)
 {
@@ -423,7 +423,8 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	
 	if (fp == NULL)
 	{
-		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
+//		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
+		sprintf(newFileName,"Demos//SpheresOpenCL//Shared//%s",fileName);
 		fileName = newFileName;
 	}
 

@@ -179,6 +179,7 @@ struct MiniCLTask_LocalStoreMemory
 #define GUID_ARG ,int __guid_arg
 
 #include "../Shared/SpheresGrid.cl"
+#include "../Shared/Integration.cl"
 
 
 
@@ -353,6 +354,19 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 									*(float*)	&taskDesc.m_argData[8][0],
 									i);
 
+			}
+			break;
+		}
+	case CMD_MINICL_INTEGRATE_MOTION :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kIntegrateMotion(	*(float4**)&taskDesc.m_argData[0][0],
+									*(float4**)&taskDesc.m_argData[1][0],
+									*(int*)    &taskDesc.m_argData[2][0],
+									*(float4**)&taskDesc.m_argData[3][0],
+									*(float*)  &taskDesc.m_argData[4][0],
+									i);
 			}
 			break;
 		}

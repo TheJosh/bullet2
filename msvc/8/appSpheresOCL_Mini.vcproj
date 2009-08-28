@@ -87,7 +87,7 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies="glut32.lib glew32.lib"
+				AdditionalDependencies="glut32.lib glew32.lib cudart.lib"
 				OutputFile="..\..\ReleaseSpheresGridMini.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -390,11 +390,11 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies="glut32.lib glew32.lib"
+				AdditionalDependencies="glut32.lib glew32.lib cudart.lib"
 				OutputFile="..\..\DebugSpheresOCL_Mini.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\Glut;"
+				AdditionalLibraryDirectories="..\..\Glut;$(CUDA_LIB_PATH)"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
@@ -635,12 +635,52 @@
 			Name="Source Files"
 			>
 			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btIntegrationDemoDynamicsWorld.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btOclUtils.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btSpheresGridDemoDynamicsWorld.cpp"
 				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\Integration.cl"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\Integration.cu"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA compiling"
+						CommandLine="&quot;$(CUDA_BIN_PATH)\nvcc.exe&quot;  -arch=sm_10 -use_fast_math -ccbin &quot;$(VCInstallDir)\bin&quot; -c -I &quot;$(CUDA_INC_PATH)&quot;; -I./ -I../../Glut  -o ..\..\out\release8\build\appSpheresOCL_Mini\Shared\Integration_cu.obj $(InputDir)\Integration.cu"
+						Outputs="..\..\out\release8\build\appSpheresOCL_Mini\Shared\Integration_cu.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA compiling"
+						CommandLine="&quot;$(CUDA_BIN_PATH)\nvcc.exe&quot; -arch=sm_10 -ccbin &quot;$(VCInstallDir)\bin&quot;  -D_DEBUG -DWIN32 -D_CONSOLE -D_MBCS -Xcompiler /EHsc,/W3,/nologo,/Wp64,/Od,/Zi,/RTC1,/MTd -c -I &quot;$(CUDA_INC_PATH)&quot;; -I./ -I../../Glut -o ..\..\out\debug8\build\appSpheresOCL_Mini\Shared\Integration_cu.obj $(InputDir)\Integration.cu"
+						Outputs="..\..\out\debug8\build\appSpheresOCL_Mini\Shared\Integration_cu.obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\main.cpp"
@@ -670,6 +710,14 @@
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGrid.cl"
 				>
 				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -686,6 +734,10 @@
 		<Filter
 			Name="Header Files"
 			>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btIntegrationDemoDynamicsWorld.h"
+				>
+			</File>
 			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\btOclUtils.h"
 				>

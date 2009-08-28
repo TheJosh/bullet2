@@ -67,7 +67,8 @@ const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] =
 	"kSetupBatches",
 	"kCheckBatches",
 	"kSetupContacts",
-	"kSolveConstraints"
+	"kSolveConstraints",
+	"kIntegrateMotion"
 };
 
 

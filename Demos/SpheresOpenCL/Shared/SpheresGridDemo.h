@@ -16,10 +16,18 @@ subject to the following restrictions:
 #ifndef SPHERES_GRID_DEMO_H
 #define SPHERES_GRID_DEMO_H
 
+#define USE_INTEGRATION_DEMO 1
+#define USE_BULLET_BODIES 0
+
 #include "DemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
-#include "btSpheresGridDemoDynamicsWorld.h"
+
+#if USE_INTEGRATION_DEMO
+	#include "btIntegrationDemoDynamicsWorld.h"
+#else
+	#include "btSpheresGridDemoDynamicsWorld.h"
+#endif
 
 class btBroadphaseInterface;
 class btCollisionShape;
@@ -56,7 +64,11 @@ class SpheresGridDemo : public GlutDemoApplication
 
 	public:
 
+#if USE_INTEGRATION_DEMO
+	btIntegrationDemoDynamicsWorld* m_pWorld;
+#else
 	btSpheresGridDemoDynamicsWorld* m_pWorld;
+#endif
 	// shader
 	GLuint				m_shaderProgram;
 
@@ -97,6 +109,9 @@ class SpheresGridDemo : public GlutDemoApplication
 	void outputDebugInfo(int & xOffset,int & yStart, int  yIncr);
 	virtual void renderme();
 	virtual void myinit();
+	void init_scene_directly();
+	void print_used_device();
+
 
 };
 

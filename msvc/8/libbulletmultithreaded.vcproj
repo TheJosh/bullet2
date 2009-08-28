@@ -554,10 +554,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\BulletMultiThreaded\SpuNarrowPhaseCollisionTask\SpuEpaPenetrationDepthSolver.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\BulletMultiThreaded\SpuFakeDma.cpp"
 				>
 			</File>
@@ -687,10 +683,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\BulletMultiThreaded\SpuDoubleBuffer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\BulletMultiThreaded\SpuNarrowPhaseCollisionTask\SpuEpaPenetrationDepthSolver.h"
 				>
 			</File>
 			<File

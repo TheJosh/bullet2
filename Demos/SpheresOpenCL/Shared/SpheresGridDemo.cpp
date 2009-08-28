@@ -33,6 +33,16 @@ subject to the following restrictions:
 
 #include "SpheresGridDemo.h"
 
+
+#define START_POS_X btScalar(0.f)
+#define START_POS_Y btScalar(140.f)
+#define START_POS_Z btScalar(0.f)
+#define ARRAY_SIZE_X 20
+#define ARRAY_SIZE_Y 500
+#define ARRAY_SIZE_Z 80
+#define DIST btScalar(2.f)
+
+
 btScalar gTimeStep = btScalar(1./60.);
 
 #define SCALING btScalar(1.f)
@@ -154,6 +164,54 @@ void SpheresGridDemo::displayCallback(void) {
 	glutSwapBuffers();
 }
 
+class btNullBroadphase : public btBroadphaseInterface
+{
+public:
+	btNullBroadphase()
+	{
+	}
+	virtual ~btNullBroadphase() 
+	{
+	}
+	virtual btBroadphaseProxy*	createProxy(  const btVector3& aabbMin,  const btVector3& aabbMax,int shapeType,void* userPtr, short int collisionFilterGroup,short int collisionFilterMask, btDispatcher* dispatcher,void* multiSapProxy)
+	{
+		return NULL;
+	}
+	virtual void	destroyProxy(btBroadphaseProxy* proxy,btDispatcher* dispatcher)
+	{
+	}
+	virtual void	setAabb(btBroadphaseProxy* proxy,const btVector3& aabbMin,const btVector3& aabbMax, btDispatcher* dispatcher)
+	{
+	}
+	virtual void	getAabb(btBroadphaseProxy* proxy,btVector3& aabbMin, btVector3& aabbMax ) const
+	{
+	}
+	virtual void	rayTest(const btVector3& rayFrom,const btVector3& rayTo, btBroadphaseRayCallback& rayCallback, const btVector3& aabbMin=btVector3(0,0,0), const btVector3& aabbMax = btVector3(0,0,0))
+	{
+	}
+	virtual void	calculateOverlappingPairs(btDispatcher* dispatcher)
+	{
+	}
+	virtual	btOverlappingPairCache*	getOverlappingPairCache()
+	{
+		return NULL;
+	}
+	virtual	const btOverlappingPairCache*	getOverlappingPairCache() const
+	{
+		return NULL;
+	}
+	virtual void getBroadphaseAabb(btVector3& aabbMin,btVector3& aabbMax) const
+	{
+	}
+	virtual void resetPool(btDispatcher* dispatcher)
+	{
+	}
+	virtual void	printStats()
+	{
+	}
+};
+
+
 
 void	SpheresGridDemo::initPhysics()
 {
@@ -179,30 +237,116 @@ void	SpheresGridDemo::initPhysics()
 	m_pairCache = new (btAlignedAlloc(sizeof(btHashedOverlappingPairCache),16))btHashedOverlappingPairCache(); 
 
 
-	m_broadphase = new btDbvtBroadphase(m_pairCache);
+//	m_broadphase = new btDbvtBroadphase(m_pairCache);
+	m_broadphase = new btNullBroadphase();
 
 	///the default constraint solver
 	m_solver = new btSequentialImpulseConstraintSolver();
 
+#if USE_INTEGRATION_DEMO
+	m_pWorld = new btIntegrationDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, 65536);
+#else
 	m_pWorld = new btSpheresGridDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, 65536);
+#endif
+
 	m_dynamicsWorld = m_pWorld;
 	m_pWorld->getSimulationIslandManager()->setSplitIslands(true);
 
 	m_pWorld->setGravity(btVector3(0,-10.,0));
 	m_pWorld->getSolverInfo().m_numIterations = 4;
 
+#if USE_INTEGRATION_DEMO
+	{
+		btCollisionShape* colShape = new btSphereShape(btScalar(1.0f));
+		m_collisionShapes.push_back(colShape);
+		btTransform startTransform;
+		startTransform.setIdentity();
+		btScalar	mass(1.f);
+		btVector3 localInertia(0,0,0);
+		colShape->calculateLocalInertia(mass,localInertia);
+		float start_x = START_POS_X - ARRAY_SIZE_X * DIST * btScalar(0.5f);
+		float start_y = START_POS_Y - ARRAY_SIZE_Y * DIST * btScalar(0.5f);
+		float start_z = START_POS_Z - ARRAY_SIZE_Z * DIST * btScalar(0.5f);
+	#if USE_BULLET_BODIES
+		// may be very slow for > 10K bodies
+		printf("\nGenerating bodies ...\n");
+		int total = ARRAY_SIZE_X * ARRAY_SIZE_Y * ARRAY_SIZE_Z;
+		int done = 0;
+		for (int k=0;k<ARRAY_SIZE_Y;k++)
+		{
+			for (int i=0;i<ARRAY_SIZE_X;i++)
+			{
+				for(int j = 0;j<ARRAY_SIZE_Z;j++)
+				{
+					startTransform.setOrigin(btVector3(
+										DIST*i + start_x,
+										DIST*k + start_y,
+										DIST*j + start_z));
+					btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,0,colShape,localInertia);
+					rbInfo.m_startWorldTransform = startTransform;
+					btRigidBody* body = new btRigidBody(rbInfo);
+					m_dynamicsWorld->addRigidBody(body);
+					done++;
+				}
+			}
+			printf("%6d of %6d\r", done, total);
+			fflush(stdout);
+		}
+		printf("\n... Done!\n");
+	#else
+		// add just one sphere
+		startTransform.setOrigin(btVector3(start_x, start_y, start_z));
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,0,colShape,localInertia);
+		rbInfo.m_startWorldTransform = startTransform;
+		btRigidBody* body = new btRigidBody(rbInfo);
+		m_dynamicsWorld->addRigidBody(body);
+		// now fill m_hPos and m_hLinVel directly
+		init_scene_directly();
+	#endif
+	}
+#else
 	SpheresGridDemoOecakeLoader	loader(this);
 	loader.processFile("test1.oec");
+#endif
 
 	clientResetScene();
 
 	m_pWorld->initDeviceData();
+	print_used_device();
 }
+
+void SpheresGridDemo::init_scene_directly()
+{
+	float start_x = START_POS_X - ARRAY_SIZE_X * DIST * btScalar(0.5f);
+	float start_y = START_POS_Y - ARRAY_SIZE_Y * DIST * btScalar(0.5f);
+	float start_z = START_POS_Z - ARRAY_SIZE_Z * DIST * btScalar(0.5f);
+	int total = ARRAY_SIZE_X * ARRAY_SIZE_Y * ARRAY_SIZE_Z;
+	m_pWorld->m_hPos.resize(total);
+	m_pWorld->m_hLinVel.resize(total);
+	total = 0;
+	for (int k=0;k<ARRAY_SIZE_Y;k++)
+	{
+		for (int i=0;i<ARRAY_SIZE_X;i++)
+		{
+			for(int j = 0;j<ARRAY_SIZE_Z;j++)
+			{
+				m_pWorld->m_hLinVel[total] = btVector3(0., 0., 0.); 
+				m_pWorld->m_hPos[total] = btVector3(DIST*i + start_x, DIST*k + start_y, DIST*j + start_z);
+				total++;
+			}
+		}
+	}
+	m_pWorld->m_numSpheres = total;
+}
+
 
 void SpheresGridDemo::clientResetScene()
 {
 	static bool bFirstCall = true;
 	DemoApplication::clientResetScene();
+	#if !USE_BULLET_BODIES
+		init_scene_directly();
+	#endif
 	if(bFirstCall)
 	{
 		bFirstCall = false;
@@ -252,6 +396,24 @@ void	SpheresGridDemo::exitPhysics()
 	delete m_collisionConfiguration;
 }
 
+void SpheresGridDemo::print_used_device()
+{
+	switch(m_pWorld->m_usedDevice)
+	{
+		case 0 : 
+			printf("\nUsing CPU\n");
+			break;
+		case 1 : 
+			printf("\nUsing OpenCL GPU\n");
+			break;
+		case 2 : 
+			printf("\nUsing CUDA GPU\n");
+			break;
+		default : 
+			printf("\nUsing unknown device\n");
+			break;
+	}
+}
 
 
 void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
@@ -263,6 +425,11 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 		case 'q' : 
 			exitPhysics();
 			exit(0);
+			break;
+		case '\t' : 
+			m_pWorld->m_usedDevice++;
+			m_pWorld->m_usedDevice %= 3;
+			print_used_device();
 			break;
 		default : 
 			{
@@ -291,7 +458,8 @@ void SpheresGridDemo::renderme()
 
 	btScalar dist = (m_glutScreenWidth > m_glutScreenHeight) ? m_glutScreenHeight : m_glutScreenWidth;
 	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointScale"), dist  );
-	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointRadius"), 0.5f );
+//	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointRadius"), 0.5f );
+	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointRadius"), m_pWorld->m_sphereRad );
 	glColor3f(1, 1, 1);
 
 	// render from the vbo
@@ -365,7 +533,7 @@ void SpheresGridDemo::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 	GLDebugDrawString(xOffset,yStart,buf);
 	yStart += yIncr;
 
-	sprintf(buf,"u to toggle between CPU  and CUDA solvers");
+	sprintf(buf,"TAB to toggle between CPU  and GPU solvers");
 	GLDebugDrawString(xOffset,yStart,buf);
 	yStart += yIncr;
 
