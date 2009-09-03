@@ -309,6 +309,28 @@ void	SpheresGridDemo::initPhysics()
 	loader.processFile("test1.oec");
 #endif
 
+	btCompoundShape* compound = new btCompoundShape();
+	btSphereShape* sphere = new btSphereShape(1.f);
+	btTransform localTrans;
+	localTrans.setIdentity();
+	localTrans.setOrigin(btVector3(1,0,0));
+	compound->addChildShape(localTrans,sphere);
+	localTrans.setOrigin(btVector3(-1,0,0));
+	compound->addChildShape(localTrans,sphere);
+
+	btTransform trans;
+	trans.setIdentity();
+
+#ifndef USE_INTEGRATION_DEMO
+	for (int j=0;j<800;j++)
+	for (int i=0;i<100;i++)
+	{
+		trans.setOrigin(btVector3(25+j*6,30+i*3,0));
+		loader.createBodyForCompoundShape(compound,false,trans,1.);
+	}
+#endif//USE_INTEGRATION_DEMO
+
+
 	clientResetScene();
 
 	m_pWorld->initDeviceData();

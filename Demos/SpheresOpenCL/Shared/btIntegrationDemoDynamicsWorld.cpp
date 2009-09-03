@@ -295,9 +295,22 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	
 	if (fp == NULL)
 	{
-//		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
 		sprintf(newFileName,"Demos//SpheresOpenCL//Shared//%s",fileName);
-		fileName = newFileName;
+		fp = fopen(newFileName, "rb");
+		if (fp)
+			fileName = newFileName;
+	}
+	if (fp == NULL)
+	{
+		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
+		fp = fopen(newFileName, "rb");
+		if (fp)
+			fileName = newFileName;
+		else
+		{
+			printf("cannot find %s\n",newFileName);
+			exit(0);
+		}
 	}
 
 //	char *source = oclLoadProgSource(".//Demos//SpheresGrid//SpheresGrid.cl", "", &program_length);
