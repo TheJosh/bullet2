@@ -16,18 +16,14 @@ subject to the following restrictions:
 #ifndef SPHERES_GRID_DEMO_H
 #define SPHERES_GRID_DEMO_H
 
-#define USE_INTEGRATION_DEMO 1
 #define USE_BULLET_BODIES 0
 
 #include "DemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
 
-#if USE_INTEGRATION_DEMO
 	#include "btIntegrationDemoDynamicsWorld.h"
-#else
 	#include "btSpheresGridDemoDynamicsWorld.h"
-#endif
 
 class btBroadphaseInterface;
 class btCollisionShape;
@@ -38,6 +34,14 @@ struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
 #include "GlutDemoApplication.h"
 
+
+enum 
+{
+	DEMO_INTEGRATION = 0,
+	DEMO_OE_CAKE_2D,
+	DEMO_OE_CAKE_3D,
+	DEMO_TOTAL_NUM
+};
 ///BasicDemo is good starting point for learning the code base and porting.
 class SpheresGridDemo : public GlutDemoApplication
 {
@@ -64,11 +68,10 @@ class SpheresGridDemo : public GlutDemoApplication
 
 	public:
 
-#if USE_INTEGRATION_DEMO
-	btIntegrationDemoDynamicsWorld* m_pWorld;
-#else
-	btSpheresGridDemoDynamicsWorld* m_pWorld;
-#endif
+		int m_demoType;
+
+	btIntegrationDemoDynamicsWorld* m_pWorldI;
+	btSpheresGridDemoDynamicsWorld* m_pWorldS;
 	// shader
 	GLuint				m_shaderProgram;
 
@@ -76,12 +79,15 @@ class SpheresGridDemo : public GlutDemoApplication
 	{
 		m_argc = argc;
 		m_argv = argv;
+		m_demoType = DEMO_INTEGRATION;
 	}
 	virtual ~SpheresGridDemo()
 	{
 		exitPhysics();
 	}
 	void	initPhysics();
+
+	void	setRandomZCoordinate(btScalar range);
 
 	void	exitPhysics();
 

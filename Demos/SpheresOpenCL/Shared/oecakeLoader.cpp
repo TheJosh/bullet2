@@ -86,6 +86,7 @@ void BasicOECakeReader::addParticle(int materialType, int pIndex, int pColor, fl
 	m_materialType = materialType;
 	m_particleObjectIndex = pIndex;
 	m_particleColor = pColor;
+
 	m_particlePositions.push_back(btVector3(pPosX,pPosY,0.));
 	m_particleRadii.push_back(radius);
 

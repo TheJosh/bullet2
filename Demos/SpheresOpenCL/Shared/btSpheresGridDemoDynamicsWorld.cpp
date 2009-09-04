@@ -156,7 +156,7 @@ void btSpheresGridDemoDynamicsWorld::getShapeData()
 		}
 	}
 	int totalSpheres = m_hShapeBuf.size();
-	printf("total number of spheres : %d\n", totalSpheres);
+	printf("3D Grid : total number of spheres : %d\n", totalSpheres);
 }
 
 void btSpheresGridDemoDynamicsWorld::allocateBuffers()
@@ -391,6 +391,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 {
     cl_int ciErrNum;
 
+#if (defined CL_PLATFORM_NVIDIA) || (defined CL_PLATFORM_AMD)
 	// create the OpenCL context 
 #if defined(CL_PLATFORM_AMD)
     m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
@@ -419,7 +420,6 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	// Program Setup
-#if (defined CL_PLATFORM_NVIDIA) || (defined CL_PLATFORM_AMD)
 	size_t program_length;
 	char* fileName = "SpheresGrid.cl";
 	FILE * fp = fopen(fileName, "rb");
@@ -427,19 +427,37 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	
 	if (fp == NULL)
 	{
-//		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
 		sprintf(newFileName,"Demos//SpheresOpenCL//Shared//%s",fileName);
-		fileName = newFileName;
+		fp = fopen(newFileName, "rb");
+		if (fp)
+			fileName = newFileName;
+	}
+	if (fp == NULL)
+	{
+		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
+		fp = fopen(newFileName, "rb");
+		if (fp)
+			fileName = newFileName;
+		else
+		{
+			printf("cannot find %s\n",newFileName);
+			exit(0);
+		}
 	}
 
 //	char *source = oclLoadProgSource(".//Demos//SpheresGrid//SpheresGrid.cl", "", &program_length);
 	//char *source = btOclLoadProgSource(".//Demos//SpheresOpenCL//Shared//SpheresGrid.cl", "", &program_length);
 
 	char *source = btOclLoadProgSource(fileName, "", &program_length);
+	if(source == NULL)
+	{
+		printf("ERROR : OpenCL can't load file %s\n", fileName);
+	}
 //	oclCHECKERROR (source == NULL, oclFALSE);   
 	btAssert(source != NULL);
 
 	// create the program
+	printf("OpenCL compiles %s ...", fileName);
 	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, (const char**)&source, &program_length, &ciErrNum);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	free(source);
@@ -463,19 +481,22 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 		getchar();
 		exit(-1); 
 	}
+	printf("OK\n");
 #elif defined(CL_PLATFORM_MINI_CL)
-///create kernels from binary
-	int numDevices = 1;
-	::size_t* lengths = (::size_t*) malloc(numDevices * sizeof(::size_t));
-	const unsigned char** images = (const unsigned char**) malloc(numDevices * sizeof(const void*));
-	for(int i = 0; i < numDevices; ++i) {
-		images[i] = 0;
-		lengths[i] = 0;
-	}
-	cl_device_id cdDevices[2];
-	cdDevices[0] = m_cdDevice;
-	m_cpProgram = clCreateProgramWithBinary(m_cxMainContext, 1, cdDevices,lengths, images, 0, &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	#if 0
+	///create kernels from binary
+		int numDevices = 1;
+		::size_t* lengths = (::size_t*) malloc(numDevices * sizeof(::size_t));
+		const unsigned char** images = (const unsigned char**) malloc(numDevices * sizeof(const void*));
+		for(int i = 0; i < numDevices; ++i) {
+			images[i] = 0;
+			lengths[i] = 0;
+		}
+		cl_device_id cdDevices[2];
+		cdDevices[0] = m_cdDevice;
+		m_cpProgram = clCreateProgramWithBinary(m_cxMainContext, 1, cdDevices,lengths, images, 0, &ciErrNum);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	#endif
 #endif
 
 	// create the kernels
@@ -1216,7 +1237,7 @@ void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
 void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 {
     cl_int ciErrNum;
-#if 0
+#if 1
 	// CPU version
 	int memSize = m_numPairs * sizeof(btSpheresContPair);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
@@ -1339,8 +1360,10 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 		{
 			linVelA += impulse;
 			angVelA += contPointA.cross(impulse);
-			linVelA[2] = linVelA[3] = 0.f;
-			angVelA[0] = angVelA[1] = angVelA[3] = 0.f;
+//			linVelA[2] = linVelA[3] = 0.f;
+//			angVelA[0] = angVelA[1] = angVelA[3] = 0.f;
+			linVelA[3] = 0.f;
+			angVelA[3] = 0.f;
 			m_hLinVel[objIdA] = linVelA;
 			m_hAngVel[objIdA] = angVelA;
 		}
@@ -1348,8 +1371,10 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 		{
 			linVelB -= impulse;
 			angVelB -= contPointB.cross(impulse);
-			linVelB[2] = linVelB[3] = 0.f;
-			angVelB[0] = angVelB[1] = angVelB[3] = 0.f;
+//			linVelB[2] = linVelB[3] = 0.f;
+//			angVelB[0] = angVelB[1] = angVelB[3] = 0.f;
+			linVelB[3] = 0.f;
+			angVelB[3] = 0.f;
 			m_hLinVel[objIdB] = linVelB;
 			m_hAngVel[objIdB] = angVelB;
 		}

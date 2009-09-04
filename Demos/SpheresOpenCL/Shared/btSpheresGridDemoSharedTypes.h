@@ -12,6 +12,8 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
+#ifndef BT_SPHERES_GRID_DEMO_SHARED_TYPES
+#define BT_SPHERES_GRID_DEMO_SHARED_TYPES
 
 struct btSimParams
 {
@@ -20,4 +22,12 @@ struct btSimParams
 	float m_cellSize[4];
 	int   m_gridSize[4];
 };
+
+struct btInt2
+{
+	int x;
+	int y;
+};
+
+#endif
 

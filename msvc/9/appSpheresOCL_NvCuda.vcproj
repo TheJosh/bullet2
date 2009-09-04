@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
-	Name="appSpheresOCL_Nv"
-	ProjectGUID="{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}"
-	RootNamespace="appSpheresOCL_Nv\Shared"
+	Version="9.00"
+	Name="appSpheresOCL_NvCuda"
+	ProjectGUID="{41BC3212-EF53-4426-AB4C-8E499CB2BD35}"
+	RootNamespace="appSpheresOCL_NvCuda\Shared"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -16,8 +17,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
-			IntermediateDirectory="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
+			OutputDirectory="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\"
+			IntermediateDirectory="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -42,7 +43,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
+				TypeLibraryName="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -52,7 +53,7 @@
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
-				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
+				PreprocessorDefinitions="BT_USE_CUDA=1;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -61,10 +62,10 @@
 				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
-				AssemblerListingLocation="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
-				ObjectFile="..\..\out\release8\build\appSpheresOCL_Nv\Shared\"
-				ProgramDataBaseFileName="..\..\out\release8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.pch"
+				AssemblerListingLocation="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\"
+				ObjectFile="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\"
+				ProgramDataBaseFileName="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -87,18 +88,20 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies="glut32.lib glew32.lib libOpenCL32.lib"
+				AdditionalDependencies="glut32.lib glew32.lib libOpenCL32.lib cudart.lib"
 				OutputFile="..\..\ReleaseSpheresGridNv.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)&quot;"
+				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)&quot;;&quot;$(CUDA_LIB_PATH)&quot;"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\release8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\release8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -120,16 +123,13 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="ReleaseDll|Win32"
-			OutputDirectory="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
-			IntermediateDirectory="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
+			OutputDirectory="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\"
+			IntermediateDirectory="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -153,7 +153,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
+				TypeLibraryName="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -167,10 +167,10 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
-				AssemblerListingLocation="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
-				ObjectFile="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\"
-				ProgramDataBaseFileName="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\Spheres2dBasicDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.pch"
+				AssemblerListingLocation="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\"
+				ObjectFile="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\"
+				ProgramDataBaseFileName="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\Spheres2dBasicDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -198,8 +198,10 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dll8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\release_dll8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -221,16 +223,13 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="ReleaseDoublePrecision|Win32"
-			OutputDirectory="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
-			IntermediateDirectory="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
+			OutputDirectory="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\"
+			IntermediateDirectory="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -254,7 +253,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
+				TypeLibraryName="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -263,10 +262,10 @@
 				PreprocessorDefinitions="NDEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				ExceptionHandling="0"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
-				AssemblerListingLocation="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
-				ObjectFile="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\"
-				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.pch"
+				AssemblerListingLocation="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\"
+				ObjectFile="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\"
+				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -293,8 +292,10 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\release_dbl8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -316,16 +317,13 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
-			IntermediateDirectory="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
+			OutputDirectory="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\"
+			IntermediateDirectory="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -336,7 +334,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				AdditionalDependencies="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\btGpuDemo2dCudaFunc_cu.obj"
+				AdditionalDependencies="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\btGpuDemo2dCudaFunc_cu.obj"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -350,23 +348,23 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
+				TypeLibraryName="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
 				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
-				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
+				PreprocessorDefinitions="BT_USE_CUDA=1;USE_INTEGRATION_DEMO=1;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
-				AssemblerListingLocation="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
-				ObjectFile="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\"
-				ProgramDataBaseFileName="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\"
+				ObjectFile="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
@@ -390,16 +388,18 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies="glut32.lib glew32.lib libOpenCL32.lib"
-				OutputFile="..\..\DebugSpheresOCL_Nv.exe"
+				AdditionalDependencies="glut32.lib glew32.lib libOpenCL32.lib cudart.lib"
+				OutputFile="..\..\DebugSpheresOCL_NvCuda.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)&quot;"
+				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/$(NVCOMPUTE_PLATFORM)&quot;;&quot;$(CUDA_LIB_PATH)&quot;"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\debug8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\debug8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -421,16 +421,13 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="DebugDll|Win32"
-			OutputDirectory="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
-			IntermediateDirectory="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
+			OutputDirectory="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\"
+			IntermediateDirectory="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -454,7 +451,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
+				TypeLibraryName="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -467,10 +464,10 @@
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
-				AssemblerListingLocation="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
-				ObjectFile="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\"
-				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\"
+				ObjectFile="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -498,8 +495,10 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\debug_dll8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dll8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -521,16 +520,13 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="DebugDoublePrecision|Win32"
-			OutputDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
-			IntermediateDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
+			OutputDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\"
+			IntermediateDirectory="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -554,7 +550,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.tlb"
+				TypeLibraryName="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -567,10 +563,10 @@
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\appSpheresOCL_Nv\Shared.pch"
-				AssemblerListingLocation="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
-				ObjectFile="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\"
-				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\appSpheresOCL_NvCuda\Shared.pch"
+				AssemblerListingLocation="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\"
+				ObjectFile="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\"
+				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -598,8 +594,10 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appSpheresOCL_Nv\Shared\SpheresGrid.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appSpheresOCL_NvCuda\Shared\SpheresGrid.pdb"
 				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -619,9 +617,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -655,6 +650,30 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\Demos\SpheresOpenCL\Shared\Integration.cu"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA compiling"
+						CommandLine="&quot;$(CUDA_BIN_PATH)\nvcc.exe&quot;  -arch=sm_10 -use_fast_math -ccbin &quot;$(VCInstallDir)\bin&quot; -c -I &quot;$(CUDA_INC_PATH)&quot;; -I./ -I../../Glut  -o ..\..\out\release9\build\appSpheresOCL_NvCuda\Shared\Integration_cu.obj $(InputDir)\Integration.cu&#x0D;&#x0A;"
+						Outputs="..\..\out\release9\build\appSpheresOCL_NvCuda\Shared\Integration_cu.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="CUDA compiling"
+						CommandLine="&quot;$(CUDA_BIN_PATH)\nvcc.exe&quot; -arch=sm_10 -ccbin &quot;$(VCInstallDir)\bin&quot;  -D_DEBUG -DWIN32 -D_CONSOLE -D_MBCS -Xcompiler /EHsc,/W3,/nologo,/Wp64,/Od,/Zi,/RTC1,/MTd -c -I &quot;$(CUDA_INC_PATH)&quot;; -I./ -I../../Glut -o ..\..\out\debug9\build\appSpheresOCL_NvCuda\Shared\Integration_cu.obj $(InputDir)\Integration.cu&#x0D;&#x0A;"
+						Outputs="..\..\out\debug9\build\appSpheresOCL_NvCuda\Shared\Integration_cu.obj"
 					/>
 				</FileConfiguration>
 			</File>

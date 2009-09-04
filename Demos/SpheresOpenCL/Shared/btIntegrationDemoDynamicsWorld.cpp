@@ -32,15 +32,17 @@ subject to the following restrictions:
 
 #include "btIntegrationDemoDynamicsWorld.h"
 
-extern "C" 
-{
-	void btCuda_allocateArray(void** devPtr, unsigned int size);
-	void btCuda_copyArrayToDevice(void* device, const void* host, unsigned int size);
-	void btCuda_registerGLBufferObject(unsigned int vbo);
-	void* btCuda_mapGLBufferObject(unsigned int vbo);
-	void btCuda_unmapGLBufferObject(unsigned int vbo);
-	void btCuda_integrateMotion(void* pPos, void* pLinVel, int numObjects, void* pParams, float timeStep);
-}
+#if BT_USE_CUDA
+	extern "C" 
+	{
+		void btCuda_allocateArray(void** devPtr, unsigned int size);
+		void btCuda_copyArrayToDevice(void* device, const void* host, unsigned int size);
+		void btCuda_registerGLBufferObject(unsigned int vbo);
+		void* btCuda_mapGLBufferObject(unsigned int vbo);
+		void btCuda_unmapGLBufferObject(unsigned int vbo);
+		void btCuda_integrateMotion(void* pPos, void* pLinVel, int numObjects, void* pParams, float timeStep);
+	}
+#endif
 
 
 
@@ -121,7 +123,7 @@ void btIntegrationDemoDynamicsWorld::getShapeData()
 	#if !USE_BULLET_BODIES
 		totalSpheres = m_numSpheres;
 	#endif
-	printf("total number of spheres : %d\n", totalSpheres);
+		printf("Integration : total number of spheres : %d\n", totalSpheres);
 }
 
 void btIntegrationDemoDynamicsWorld::allocateBuffers()
@@ -138,13 +140,17 @@ void btIntegrationDemoDynamicsWorld::allocateBuffers()
     m_dLinVel = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// CUDA
-	btCuda_allocateArray(&m_dCudaLinVel, memSize);
+	#if BT_USE_CUDA
+		btCuda_allocateArray(&m_dCudaLinVel, memSize);
+	#endif
 	// global simulation parameters
 	memSize = sizeof(btSimParams);
 	m_dSimParams = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// CUDA
-	btCuda_allocateArray(&m_dCudaSimParams, memSize);
+	#if BT_USE_CUDA
+		btCuda_allocateArray(&m_dCudaSimParams, memSize);
+	#endif
 
 }
 
@@ -206,13 +212,17 @@ void btIntegrationDemoDynamicsWorld::grabSimulationData()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// CUDA
-	btCuda_copyArrayToDevice(m_dCudaLinVel, &(m_hLinVel[0]), memSize);
+	#if BT_USE_CUDA
+		btCuda_copyArrayToDevice(m_dCudaLinVel, &(m_hLinVel[0]), memSize);
+	#endif
 	// params
 	memSize = sizeof(btSimParams);
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dSimParams, CL_TRUE, 0, memSize, &m_simParams, 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// CUDA
-	btCuda_copyArrayToDevice(m_dCudaSimParams, &m_simParams, memSize);
+	#if BT_USE_CUDA
+		btCuda_copyArrayToDevice(m_dCudaSimParams, &m_simParams, memSize);
+	#endif
 	// VBO
 	glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);    
 	void* ptr = glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY_ARB);
@@ -230,7 +240,9 @@ void btIntegrationDemoDynamicsWorld::createVBO()
     unsigned int memSize = sizeof(btVector3) *  m_numSpheres;
     glBufferData(GL_ARRAY_BUFFER, memSize, 0, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-	btCuda_registerGLBufferObject(m_vbo);
+	#if BT_USE_CUDA
+		btCuda_registerGLBufferObject(m_vbo);
+	#endif
 	// colors
 	GLuint vbo;
     glGenBuffers(1, &vbo);
@@ -318,9 +330,14 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 
 	char *source = btOclLoadProgSource(fileName, "", &program_length);
 //	oclCHECKERROR (source == NULL, oclFALSE);   
+	if(source == NULL)
+	{
+		printf("ERROR : OpenCL can't load file %s\n", fileName);
+	}
 	btAssert(source != NULL);
 
 	// create the program
+	printf("OpenCL compiles %s ...", fileName);
 	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, (const char**)&source, &program_length, &ciErrNum);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	free(source);
@@ -344,6 +361,7 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 		getchar();
 		exit(-1); 
 	}
+	printf("OK\n");
 #elif defined(CL_PLATFORM_MINI_CL)
 ///create kernels from binary
 	int numDevices = 1;
@@ -452,11 +470,13 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 			}
 			break;
 		case 2: 
+			#if BT_USE_CUDA
 			{
 				void* dPos = btCuda_mapGLBufferObject(m_vbo);
 				btCuda_integrateMotion(dPos, m_dCudaLinVel, m_numSpheres, m_dCudaSimParams, m_timeStep);
 				btCuda_unmapGLBufferObject(m_vbo);
 			}
+			#endif
 			break;
 		}
 	}

@@ -460,8 +460,10 @@ __kernel void kSolveConstraints(__global float4* pPair,
 		{
 			linVelA += impulse;
 			angVelA += cross(contPointA,impulse);
-			linVelA.z = linVelA.w = 0.f;
-			angVelA.x = angVelA.y = angVelA.w = 0.f;
+//			linVelA.z = linVelA.w = 0.f;
+//			angVelA.x = angVelA.y = angVelA.w = 0.f;
+			linVelA.w = 0.f;
+			angVelA.w = 0.f;
 			pLinVel[objIdA] = linVelA;
 			pAngVel[objIdA] = angVelA;
 		}
@@ -469,8 +471,10 @@ __kernel void kSolveConstraints(__global float4* pPair,
 		{
 			linVelB -= impulse;
 			angVelB -= cross(contPointB,impulse);
-			linVelB.z = linVelB.w = 0.f;
-			angVelB.x = angVelB.y = angVelB.w = 0.f;
+//			linVelB.z = linVelB.w = 0.f;
+//			angVelB.x = angVelB.y = angVelB.w = 0.f;
+			linVelB.w = 0.f;
+			angVelB.w = 0.f;
 			pLinVel[objIdB] = linVelB;
 			pAngVel[objIdB] = angVelB;
 		}

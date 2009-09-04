@@ -50,12 +50,6 @@ subject to the following restrictions:
 #define SPHERES_GRID_MAX_WORKGROUP_SIZE  (512) // TODO : get from device
 #endif
 
-struct btInt2
-{
-	int x;
-	int y;
-};
-
 
 class btIntegrationDemoDynamicsWorld : public btDiscreteDynamicsWorld
 {
@@ -77,10 +71,12 @@ protected:
 	void*		m_dCudaLinVel;
 
 	// OpenCL 
+public:
 	cl_context			m_cxMainContext;
 	cl_device_id		m_cdDevice;
 	cl_command_queue	m_cqCommandQue;
 	cl_program			m_cpProgram;
+protected:
 	cl_kernel			m_ckIntegrateMotionKernel;
 
 	btVector3			m_worldMin;
