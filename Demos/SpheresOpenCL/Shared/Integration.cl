@@ -32,9 +32,11 @@ int waste_time(int num)
 	return res;
 }
 
-
-__kernel void kIntegrateMotion(	__global float4* pPos, 
-								__global float4* pLinVel, 
+#if 1
+__kernel void kIntegrateMotion(	__global float4* pPosInp, 
+								__global float4* pLinVelInp, 
+								__global float4* pPosOut, 
+								__global float4* pLinVelOut, 
 								int numObjects,
 								__global float4* pParams, 
 								float timeStep GUID_ARG)
@@ -45,12 +47,48 @@ __kernel void kIntegrateMotion(	__global float4* pPos,
     {
 		return;
     }
-	float4 pos = pPos[index];
-	float4 linVel = pLinVel[index];
+	float4 pos = pPosInp[index];
+	float4 linVel = pLinVelInp[index];
 	float4 gravity = pParams[0];
 	linVel += gravity * timeStep;
 	pos += linVel * timeStep;
-	pPos[index] = pos;
-	pLinVel[index] = linVel;
+	pPosOut[index] = pos;
+	pLinVelOut[index] = linVel;
+}
+#else
+
+#define LIM_VAL 1.f
+
+__kernel void kIntegrateMotion(	__read_only image2d_t pPosInp, 
+								__read_only image2d_t pLinVelInp, 
+								__write_only image2d_t pPosOut, 
+								__write_only image2d_t pLinVelOut, 
+								int numObjects,
+								__global float4* pParams, 
+								float timeStep GUID_ARG)
+{
+    unsigned int index = get_global_id(0);
+    if(index >= numObjects)
+    {
+		return;
+    }
+	int2 coord = (int2)(index, 0);
+	float4 pos = read_imagef(pPosInp, CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST, coord );
+	float4 linVel = read_imagef(pLinVelInp, CLK_NORMALIZED_COORDS_FALSE | CLK_ADDRESS_NONE | CLK_FILTER_NEAREST, coord );
+	float4 gravity = pParams[0];
+//	linVel += gravity * timeStep;
+//	linVel.x = linVel.y = linVel.z = linVel.w = 0.f;
+	linVel.w = 0.f;
+//	pos += linVel * timeStep;
+//	pos = linVel * timeStep;
+//	pos.x = (float)(index * 4);
+//	pos.y = (float)(index * 4);
+//	pos.z = timeStep;
+//	pos.w = 0.f;
+//    barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+	float4 newPos = pos;
+	write_imagef(pPosOut, coord, newPos);
+//	write_imagef(pLinVelOut, coord, linVel);
 }
 
+#endif

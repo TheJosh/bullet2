@@ -280,7 +280,8 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 								*(int**)   &taskDesc.m_argData[4][0],
 								*(int**)   &taskDesc.m_argData[5][0],
 								*(int2**)  &taskDesc.m_argData[6][0],
-								*(float4**)&taskDesc.m_argData[7][0],
+								*(int*)    &taskDesc.m_argData[7][0],
+								*(float4**)&taskDesc.m_argData[8][0],
 								i);
 
 			}
@@ -363,9 +364,11 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			{
 				kIntegrateMotion(	*(float4**)&taskDesc.m_argData[0][0],
 									*(float4**)&taskDesc.m_argData[1][0],
-									*(int*)    &taskDesc.m_argData[2][0],
+									*(float4**)&taskDesc.m_argData[2][0],
 									*(float4**)&taskDesc.m_argData[3][0],
-									*(float*)  &taskDesc.m_argData[4][0],
+									*(int*)    &taskDesc.m_argData[4][0],
+									*(float4**)&taskDesc.m_argData[5][0],
+									*(float*)  &taskDesc.m_argData[6][0],
 									i);
 			}
 			break;

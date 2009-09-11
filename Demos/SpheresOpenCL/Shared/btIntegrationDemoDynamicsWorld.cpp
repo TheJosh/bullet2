@@ -56,6 +56,12 @@ int	btIntegrationDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 {
 	startProfiling(timeStep);
 	m_timeStep = timeStep;
+	m_dPosInp = m_dPosDB[m_currDB];
+	m_dLinVelInp = m_dLinVelDB[m_currDB];
+	m_currDB++;
+	m_currDB &= 0x01;
+	m_dPosOut = m_dPosDB[m_currDB];
+	m_dLinVelOut = m_dLinVelDB[m_currDB];
 	BT_PROFILE("stepSimulation");
 //	printf("Step : %d\n", gStepNum);
 	{
@@ -131,16 +137,63 @@ void btIntegrationDemoDynamicsWorld::allocateBuffers()
     cl_int ciErrNum;
 	// positions of spheres
 	m_hPos.resize(m_numSpheres);
-    unsigned int memSize = sizeof(btVector3) *  m_numSpheres;
-    m_dPos = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// per object : transform, linear and angular velocity
 	m_hLinVel.resize(m_numSpheres);
-	memSize = m_numSpheres * sizeof(btVector3);
-    m_dLinVel = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    unsigned int memSize;
+#if INTEGR_DEMO_USE_IMAGES
+	{
+		cl_image_format suppForm[256];
+		cl_uint numForm = 0;
+		ciErrNum = clGetSupportedImageFormats(	m_cxMainContext,	// cl_context context,
+												CL_MEM_READ_WRITE,	// cl_mem_flags flags,
+												CL_MEM_OBJECT_IMAGE2D,	// cl_mem_object_type image_type,
+												256,	// cl_uint num_entries,
+												suppForm,	// cl_image_format *image_formats,
+												&numForm);	// cl_uint *num_image_formats
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+		cl_image_format imgFormat;
+		imgFormat.image_channel_order = CL_RGBA;
+		imgFormat.image_channel_data_type = CL_FLOAT;
+		m_dPosDB[0] = clCreateImage2D(	m_cxMainContext,	//cl_context context,
+										CL_MEM_READ_WRITE,	// cl_mem_flags flags,
+										&imgFormat,			// const cl_image_format *image_format,
+										m_numSpheres,		// size_t image_width,
+										1,					// size_t image_height,
+										0,					// size_t image_row_pitch,
+										NULL,				// void *host_ptr,
+										&ciErrNum);			// cl_int *errcode_ret)
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		m_dPosInp = m_dPosDB[0];
+		m_dPosDB[1] = clCreateImage2D(m_cxMainContext, CL_MEM_READ_WRITE, &imgFormat, m_numSpheres, 1, 0, NULL, &ciErrNum);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		m_dPosOut = m_dPosDB[1];
+		m_dLinVelDB[0] = clCreateImage2D(m_cxMainContext, CL_MEM_READ_WRITE, &imgFormat, m_numSpheres, 1, 0, NULL, &ciErrNum);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		m_dLinVelInp = m_dLinVelDB[0];
+		m_dLinVelDB[1] = clCreateImage2D(m_cxMainContext, CL_MEM_READ_WRITE, &imgFormat, m_numSpheres, 1, 0, NULL, &ciErrNum);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		m_dLinVelOut = m_dLinVelDB[1];
+	}
+#else
+    memSize = sizeof(btVector3) *  m_numSpheres;
+    m_dPosDB[0] = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_dPosInp = m_dPosDB[0];
+    m_dPosDB[1] = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_dPosOut = m_dPosDB[1];
+	// per object : transform, linear and angular velocity
+	memSize = m_numSpheres * sizeof(btVector3);
+    m_dLinVelDB[0] = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_dLinVelInp = m_dLinVelDB[0];
+    m_dLinVelDB[1] = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_dLinVelOut = m_dLinVelDB[1];
+#endif
 	// CUDA
 	#if BT_USE_CUDA
+		memSize = sizeof(btVector3) *  m_numSpheres;
 		btCuda_allocateArray(&m_dCudaLinVel, memSize);
 	#endif
 	// global simulation parameters
@@ -207,10 +260,55 @@ void btIntegrationDemoDynamicsWorld::grabSimulationData()
 	// copy to GPU
     cl_int ciErrNum;
 	unsigned int memSize = sizeof(btVector3) * m_numSpheres;
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
+#if INTEGR_DEMO_USE_IMAGES
+	{
+		size_t imgOrg[3];
+		imgOrg[0] = imgOrg[1] = imgOrg[2] = 0;
+		size_t imgReg[3];
+		imgReg[0] = m_numSpheres;
+		imgReg[1] = imgReg[2] = 1;
+		ciErrNum = clEnqueueWriteImage(	m_cqCommandQue,						// cl_command_queue command_queue,
+										m_dPosInp,							// cl_mem image,
+										CL_TRUE,							// cl_bool blocking_read,
+										imgOrg,								// const size_t origin[3],
+										imgReg,								// const size_t region[3],
+										m_numSpheres * sizeof(float) * 4,	// size_t row_pitch,
+										0,									// size_t slice_pitch,
+										&(m_hPos[0]),						// void *ptr,
+										0,									// cl_uint num_events_in_wait_list,
+										NULL,								// const cl_event *event_wait_list,
+										NULL);								// cl_event *event
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueWriteImage(	m_cqCommandQue,						// cl_command_queue command_queue,
+										m_dPosOut,							// cl_mem image,
+										CL_TRUE,							// cl_bool blocking_read,
+										imgOrg,								// const size_t origin[3],
+										imgReg,								// const size_t region[3],
+										m_numSpheres * sizeof(float) * 4,	// size_t row_pitch,
+										0,									// size_t slice_pitch,
+										&(m_hPos[0]),						// void *ptr,
+										0,									// cl_uint num_events_in_wait_list,
+										NULL,								// const cl_event *event_wait_list,
+										NULL);								// cl_event *event
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueWriteImage(	m_cqCommandQue,						// cl_command_queue command_queue,
+										m_dLinVelInp,						// cl_mem image,
+										CL_TRUE,							// cl_bool blocking_read,
+										imgOrg,								// const size_t origin[3],
+										imgReg,								// const size_t region[3],
+										m_numSpheres * sizeof(float) * 4,	// size_t row_pitch,
+										0,									// size_t slice_pitch,
+										&(m_hLinVel[0]),					// void *ptr,
+										0,									// cl_uint num_events_in_wait_list,
+										NULL,								// const cl_event *event_wait_list,
+										NULL);								// cl_event *event
+	}
+#else
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosInp, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVelInp, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
+#endif
 	// CUDA
 	#if BT_USE_CUDA
 		btCuda_copyArrayToDevice(m_dCudaLinVel, &(m_hLinVel[0]), memSize);
@@ -384,10 +482,12 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	postInitDeviceData();
 
 	// set the args values 
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void*) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(int), &m_numSpheres);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void*) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 0, sizeof(cl_mem), (void *) &m_dPosInp);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void*) &m_dLinVelInp);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(cl_mem), (void *) &m_dPosOut);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void*) &m_dLinVelOut);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 4, sizeof(int), &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 5, sizeof(cl_mem), (void*) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
@@ -451,15 +551,39 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 		globalWorkSize[0] = num_t * workgroup_size;
 		localWorkSize[1] = 1;
 		globalWorkSize[1] = 1;
-		ciErrNum = clSetKernelArg(m_ckIntegrateMotionKernel, 4, sizeof(float), &m_timeStep);
+		ciErrNum  = clSetKernelArg(m_ckIntegrateMotionKernel, 0, sizeof(cl_mem), (void *) &m_dPosInp);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void*) &m_dLinVelInp);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(cl_mem), (void *) &m_dPosOut);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void*) &m_dLinVelOut);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 6, sizeof(float), &m_timeStep);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckIntegrateMotionKernel, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		ciErrNum = clFinish(m_cqCommandQue);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-
-				// check
+			#if INTEGR_DEMO_USE_IMAGES
+			{
+				size_t imgOrg[3];
+				imgOrg[0] = imgOrg[1] = imgOrg[2] = 0;
+				size_t imgReg[3];
+				imgReg[0] = m_numSpheres;
+				imgReg[1] = imgReg[2] = 1;
+				ciErrNum = clEnqueueReadImage(	m_cqCommandQue,						// cl_command_queue command_queue,
+												m_dPosOut,							// cl_mem image,
+												CL_TRUE,							// cl_bool blocking_read,
+												imgOrg,								// const size_t origin[3],
+												imgReg,								// const size_t region[3],
+												m_numSpheres * sizeof(float) * 4,	// size_t row_pitch,
+												0,									// size_t slice_pitch,
+												&(m_hPos[0]),						// void *ptr,
+												0,									// cl_uint num_events_in_wait_list,
+												NULL,								// const cl_event *event_wait_list,
+												NULL);								// cl_event *event
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			}
+			#else
+			{
+			// check
 		/*
 				int memSize = sizeof(btVector3) * m_numSpheres;
 				ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
@@ -467,6 +591,8 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 				ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
 				oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		*/
+			}
+			#endif
 			}
 			break;
 		case 2: 
@@ -496,7 +622,28 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 		else
 		{
 			cl_int ciErrNum;
-			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
+			#if INTEGR_DEMO_USE_IMAGES
+			{
+				size_t imgOrg[3];
+				imgOrg[0] = imgOrg[1] = imgOrg[2] = 0;
+				size_t imgReg[3];
+				imgReg[0] = m_numSpheres;
+				imgReg[1] = imgReg[2] = 1;
+				ciErrNum = clEnqueueReadImage(	m_cqCommandQue,						// cl_command_queue command_queue,
+												m_dPosOut,							// cl_mem image,
+												CL_TRUE,							// cl_bool blocking_read,
+												imgOrg,								// const size_t origin[3],
+												imgReg,								// const size_t region[3],
+												m_numSpheres * sizeof(float) * 4,	// size_t row_pitch,
+												0,									// size_t slice_pitch,
+												ptr,								// void *ptr,
+												0,									// cl_uint num_events_in_wait_list,
+												NULL,								// const cl_event *event_wait_list,
+												NULL);								// cl_event *event
+			}
+			#else
+				ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosOut, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
+			#endif
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 		glUnmapBufferARB(GL_ARRAY_BUFFER); 

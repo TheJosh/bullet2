@@ -288,9 +288,14 @@ __kernel void kBroadphaseCD(__global float4* pPos,
 							__global int* pCellStart,
 							__global int* pPairBuff,
 							__global int2* pPairBuffStartCurr,
+							int numSpheres,
 							__global float4* pParams GUID_ARG)
 {
     unsigned int index = get_global_id(0);
+    if(index >= numSpheres)
+	{
+		return;
+	}
     int2 sortedData = pHash[index];
 	int unsorted_indx = sortedData.y;
 	// clear pair buffer 

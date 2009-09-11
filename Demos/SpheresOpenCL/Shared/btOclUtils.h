@@ -1,7 +1,8 @@
 #include <CL/cl.h>
 
 
-#define oclCHECKERROR(a, b) btAssert((a) == (b))
+//#define oclCHECKERROR(a, b) btAssert((a) == (b))
+#define oclCHECKERROR(a, b) if((a)!=(b)) { printf("OCL Error : %d\n", (a)); btAssert((a) == (b)); }
 
 
 

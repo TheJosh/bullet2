@@ -38,7 +38,7 @@ subject to the following restrictions:
 #include "btSpheresGridDemoSharedTypes.h"
 
 
-
+#define INTEGR_DEMO_USE_IMAGES 0
 
 #define SPHERES_GRID_MAX_OBJS (65536)
 
@@ -62,8 +62,13 @@ public:
 	btAlignedObjectArray<btVector3>	m_hLinVel;
 protected:
 	// GPU side data
-	cl_mem		m_dPos;
-	cl_mem		m_dLinVel;
+	cl_mem		m_dPosInp;
+	cl_mem		m_dLinVelInp;
+	cl_mem		m_dPosOut;
+	cl_mem		m_dLinVelOut;
+	cl_mem		m_dPosDB[2];
+	cl_mem		m_dLinVelDB[2];
+	int			m_currDB;
 	cl_mem		m_dSimParams; // copy of m_simParams : global simulation paramerers such as gravity, etc. 
 	// CUDA
 	// CUDA will use VBO buffer for positions
@@ -107,6 +112,7 @@ public:
 		m_simParams.m_gravity[2] = 0.f;
 		m_simParams.m_gravity[3] = 0.f;
 		m_workGroupSize = SPHERES_GRID_MAX_WORKGROUP_SIZE;
+		m_currDB = 0;
 	}
 	virtual ~btIntegrationDemoDynamicsWorld();
 	virtual int	stepSimulation( btScalar timeStep,int maxSubSteps=1, btScalar fixedTimeStep=btScalar(1.)/btScalar(60.));

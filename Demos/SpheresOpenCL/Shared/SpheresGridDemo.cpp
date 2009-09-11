@@ -39,7 +39,9 @@ subject to the following restrictions:
 #define START_POS_Z btScalar(0.f)
 #define ARRAY_SIZE_X 20
 #define ARRAY_SIZE_Y 500
+//#define ARRAY_SIZE_Y 5
 #define ARRAY_SIZE_Z 80
+//#define ARRAY_SIZE_Z 1
 #define DIST btScalar(2.f)
 
 

@@ -542,7 +542,8 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 4, sizeof(cl_mem), (void *) &m_dCellStart);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 5, sizeof(cl_mem), (void *) &m_dPairBuff);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 6, sizeof(cl_mem), (void *) &m_dPairBuffStartCurr);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 7, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 7, sizeof(int),    (void *) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 8, sizeof(cl_mem), (void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 
@@ -847,14 +848,50 @@ void btSpheresGridDemoDynamicsWorld::runBroadphaseCDKernel()
 #if 0
 	// CPU version : TODO
 #else
-    size_t szGlobalWorkSize[2];
-    // Set work size and execute the kernel
-    szGlobalWorkSize[0] = m_numSpheres;
-
 //	int memSize = m_numSpheres * sizeof(btInt2);
 //	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffStartCurr, CL_TRUE, 0, memSize, &(m_hPairBuffStartCurr[0]), 0, NULL, NULL);
+	#if 0
+	{ // automatic calculation of block size
+		size_t szGlobalWorkSize[2];
+		szGlobalWorkSize[0] = m_numSpheres;
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBroadphaseCDKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+	}
+	#else
+	{ // manual calculation of block size
+		size_t localWorkSize[2], globalWorkSize[2];
+		int workgroup_size;
+#if defined(CL_PLATFORM_MINI_CL)
+		workgroup_size = 4;
+#else
+		clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(workgroup_size), &workgroup_size, NULL);
+	#if defined(CL_PLATFORM_NVIDIA)
+		// this gives 512 for my 8800 GT, which gives error CL_OUT_OF_RESOURCES on call of clEnqueueNDRangeKernel
+		// kernel code size maybe?
+		// so override it
+#ifdef _DEBUG
+		workgroup_size = 128;
+#else
+		workgroup_size = 128;
+#endif
 
-    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBroadphaseCDKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+	#endif // CL_PLATFORM_NVIDIA
+#endif
+		workgroup_size = btMin(workgroup_size, m_numSpheres);
+		int num_t = m_numSpheres / workgroup_size;
+		int num_g = num_t * workgroup_size;
+		if(num_g < m_numSpheres)
+		{
+			num_t++;
+		}
+		localWorkSize[0]  = workgroup_size;
+		globalWorkSize[0] = num_t * workgroup_size;
+		localWorkSize[1] = 1;
+		globalWorkSize[1] = 1;
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBroadphaseCDKernel, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
+	}
+	#endif
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	ciErrNum = clFinish(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 //	memSize = m_numSpheres * sizeof(btInt2);
