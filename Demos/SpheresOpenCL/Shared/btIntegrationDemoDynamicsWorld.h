@@ -127,6 +127,7 @@ public:
 	void adjustGrid();
 	void setPointers();
 	void runIntegrateMotionKernel();
+	void runKernelWithWorkgroupSize(cl_kernel kernelFunc, int globalSize, int workgroupSize);
 };
 
 

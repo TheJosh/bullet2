@@ -218,11 +218,11 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kPredictUnconstrainedMotion(*(float4**)&taskDesc.m_argData[0][0],
+				kPredictUnconstrainedMotion(*(int*)    &taskDesc.m_argData[0][0],
 											*(float4**)&taskDesc.m_argData[1][0],
 											*(float4**)&taskDesc.m_argData[2][0],
 											*(float4**)&taskDesc.m_argData[3][0],
-											*(int*)    &taskDesc.m_argData[4][0],
+											*(float4**)&taskDesc.m_argData[4][0],
 											*(float*)  &taskDesc.m_argData[5][0],
 											i);
 			}
@@ -232,13 +232,13 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kSetSpheres(*(float4**)&taskDesc.m_argData[0][0],
+				kSetSpheres(*(int*)    &taskDesc.m_argData[0][0],
 							*(float4**)&taskDesc.m_argData[1][0],
 							*(float4**)&taskDesc.m_argData[2][0],
-							*(int**)   &taskDesc.m_argData[3][0],
-							*(int2**)  &taskDesc.m_argData[4][0],
-							*(float4**)&taskDesc.m_argData[5][0],
-							*(uint*)   &taskDesc.m_argData[6][0],
+							*(float4**)&taskDesc.m_argData[3][0],
+							*(int**)   &taskDesc.m_argData[4][0],
+							*(int2**)  &taskDesc.m_argData[5][0],
+							*(float4**)&taskDesc.m_argData[6][0],
 							i);
 			}
 			break;
@@ -247,12 +247,12 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kIntegrateTransforms(	*(float4**)&taskDesc.m_argData[0][0],
+				kIntegrateTransforms(	*(int*)    &taskDesc.m_argData[0][0],
 										*(float4**)&taskDesc.m_argData[1][0],
 										*(float4**)&taskDesc.m_argData[2][0],
 										*(float4**)&taskDesc.m_argData[3][0],
 										*(float4**)&taskDesc.m_argData[4][0],
-										*(int*)    &taskDesc.m_argData[5][0],
+										*(float4**)&taskDesc.m_argData[5][0],
 										*(float*)  &taskDesc.m_argData[6][0],
 										i);
 			}
@@ -273,14 +273,14 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kBroadphaseCD(	*(float4**)&taskDesc.m_argData[0][0],
+				kBroadphaseCD(	*(int*)	&taskDesc.m_argData[0][0],
 								*(float4**)&taskDesc.m_argData[1][0],
-								*(int**)   &taskDesc.m_argData[2][0],
-								*(int2**)  &taskDesc.m_argData[3][0],
-								*(int**)   &taskDesc.m_argData[4][0],
+								*(float4**)&taskDesc.m_argData[2][0],
+								*(int**)   &taskDesc.m_argData[3][0],
+								*(int2**)  &taskDesc.m_argData[4][0],
 								*(int**)   &taskDesc.m_argData[5][0],
-								*(int2**)  &taskDesc.m_argData[6][0],
-								*(int*)    &taskDesc.m_argData[7][0],
+								*(int**)   &taskDesc.m_argData[6][0],
+								*(int2**)  &taskDesc.m_argData[7][0],
 								*(float4**)&taskDesc.m_argData[8][0],
 								i);
 
@@ -291,10 +291,10 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kInitObjUsageTab(	*(int**)	&taskDesc.m_argData[0][0],
-									*(float4**)	&taskDesc.m_argData[1][0],
+				kInitObjUsageTab(	*(int*)		&taskDesc.m_argData[0][0],
+									*(int**)	&taskDesc.m_argData[1][0],
 									*(float4**)	&taskDesc.m_argData[2][0],
-									*(int*)		&taskDesc.m_argData[3][0],
+									*(float4**)	&taskDesc.m_argData[3][0],
 									i);
 
 			}
@@ -304,9 +304,10 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kSetupBatches(	*(int4**)	&taskDesc.m_argData[0][0],
-								*(int**)	&taskDesc.m_argData[1][0],
-								*(float4**)	&taskDesc.m_argData[2][0],
+				kSetupBatches(	*(int*)		&taskDesc.m_argData[0][0],	
+								*(int4**)	&taskDesc.m_argData[1][0],
+								*(int**)	&taskDesc.m_argData[2][0],
+								*(float4**)	&taskDesc.m_argData[3][0],
 								i);
 
 			}
@@ -316,11 +317,12 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kCheckBatches(	*(int4**)	&taskDesc.m_argData[0][0],
-								*(int**)	&taskDesc.m_argData[1][0],
-								*(float4**)	&taskDesc.m_argData[2][0],
-								*(int*)		&taskDesc.m_argData[3][0],
+				kCheckBatches(	*(int*)		&taskDesc.m_argData[0][0],	
+								*(int4**)	&taskDesc.m_argData[1][0],
+								*(int**)	&taskDesc.m_argData[2][0],
+								*(float4**)	&taskDesc.m_argData[3][0],
 								*(int*)		&taskDesc.m_argData[4][0],
+								*(int*)		&taskDesc.m_argData[5][0],
 								i);
 
 			}
@@ -330,11 +332,12 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kSetupContacts(	*(int4**)  &taskDesc.m_argData[0][0],
-								*(float4**)&taskDesc.m_argData[1][0],
-								*(float4**)&taskDesc.m_argData[2][0],
-								*(float4**)&taskDesc.m_argData[3][0],
-								*(float4**)&taskDesc.m_argData[4][0],
+				kSetupContacts(	*(int*)		&taskDesc.m_argData[0][0],	
+								*(int4**)	&taskDesc.m_argData[1][0],
+								*(float4**)	&taskDesc.m_argData[2][0],
+								*(float4**)	&taskDesc.m_argData[3][0],
+								*(float4**)	&taskDesc.m_argData[4][0],
+								*(float4**)	&taskDesc.m_argData[5][0],
 								i);
 
 			}
@@ -344,15 +347,16 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kSolveConstraints(	*(float4**)	&taskDesc.m_argData[0][0],
-									*(int*)		&taskDesc.m_argData[1][0],
-									*(float4**)	&taskDesc.m_argData[2][0],
-									*(int4**)	&taskDesc.m_argData[3][0],
-									*(float4**)	&taskDesc.m_argData[4][0],
+				kSolveConstraints(	*(int*)		&taskDesc.m_argData[0][0],	
+									*(float4**)	&taskDesc.m_argData[1][0],
+									*(int*)		&taskDesc.m_argData[2][0],
+									*(float4**)	&taskDesc.m_argData[3][0],
+									*(int4**)	&taskDesc.m_argData[4][0],
 									*(float4**)	&taskDesc.m_argData[5][0],
 									*(float4**)	&taskDesc.m_argData[6][0],
 									*(float4**)	&taskDesc.m_argData[7][0],
-									*(float*)	&taskDesc.m_argData[8][0],
+									*(float4**)	&taskDesc.m_argData[8][0],
+									*(float*)	&taskDesc.m_argData[9][0],
 									i);
 
 			}
@@ -362,11 +366,11 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kIntegrateMotion(	*(float4**)&taskDesc.m_argData[0][0],
+				kIntegrateMotion(	*(int*)    &taskDesc.m_argData[0][0],
 									*(float4**)&taskDesc.m_argData[1][0],
 									*(float4**)&taskDesc.m_argData[2][0],
 									*(float4**)&taskDesc.m_argData[3][0],
-									*(int*)    &taskDesc.m_argData[4][0],
+									*(float4**)&taskDesc.m_argData[4][0],
 									*(float4**)&taskDesc.m_argData[5][0],
 									*(float*)  &taskDesc.m_argData[6][0],
 									i);

@@ -33,15 +33,15 @@ int waste_time(int num)
 }
 
 #if 1
-__kernel void kIntegrateMotion(	__global float4* pPosInp, 
+__kernel void kIntegrateMotion(	int numObjects,
+								__global float4* pPosInp, 
 								__global float4* pLinVelInp, 
 								__global float4* pPosOut, 
 								__global float4* pLinVelOut, 
-								int numObjects,
 								__global float4* pParams, 
 								float timeStep GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
 //    index = waste_time(index);
     if(index >= numObjects)
     {

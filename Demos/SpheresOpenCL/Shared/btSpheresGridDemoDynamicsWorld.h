@@ -165,6 +165,11 @@ protected:
 	cl_kernel			m_ckSetupContactsKernel;
 	cl_kernel			m_ckSolveConstraintsKernel;
 	cl_kernel			m_ckBitonicSortHashKernel;
+	cl_kernel			m_ckBitonicSortLocal;
+	cl_kernel			m_ckBitonicSortLocal1;
+	cl_kernel			m_ckBitonicMergeGlobal;
+	cl_kernel			m_ckBitonicMergeLocal;
+
 
 	btVector3			m_worldMin;
 	btVector3			m_worldMax;
@@ -223,6 +228,8 @@ public:
 	void runSetupContactsKernel();
 	void runSolveConstraintsKernel();
 	void solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum);
+	void runKernelWithWorkgroupSize(cl_kernel kernelFunc, int globalSize, int workgroupSize);
+	void bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir);
 };
 
 

@@ -17,14 +17,18 @@ subject to the following restrictions:
 	#define GUID_ARG 
 #endif
 
-__kernel void kPredictUnconstrainedMotion(	__global float4* pLinVel, 
+__kernel void kPredictUnconstrainedMotion(	int numObjects,
+											__global float4* pLinVel, 
 											__global float4* pAngVel, 
 											__global float4* pParams, 
 											__global float4* pInvInertiaMass, 
-											int numObjects,
 											float timeStep GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numObjects)
+	{
+		return;
+	}
 	float4 mass0 =	pInvInertiaMass[index * 3 + 0];
     if(mass0.w > 0.f)
 	{
@@ -58,15 +62,19 @@ unsigned int getPosHash(int4 gridPos, __global float4* pParams)
 } 
 
 
-__kernel void kSetSpheres(	__global float4* pPos, 
+__kernel void kSetSpheres(	int numSpheres, 
+							__global float4* pPos, 
 							__global float4* pTrans,
 							__global float4* pShapeBuf,
 							__global int* pBodyIds,
 							__global int2* pPosHash,
-							__global float4* pParams, 
-							unsigned int numObjs GUID_ARG)
+							__global float4* pParams GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numSpheres)
+    {
+		return;
+    }
     int objId = pBodyIds[index];
 
 	float4 ai =	pTrans[objId * 4 + 0];
@@ -170,15 +178,19 @@ void setRotation(float4 q, __global float4* trans)
 
 #define BT_GPU_ANGULAR_MOTION_THRESHOLD (0.25f * 3.1415926f)
 
-__kernel void kIntegrateTransforms(	__global float4* pLinVel, 
+__kernel void kIntegrateTransforms(	int numObjects,
+									__global float4* pLinVel, 
 									__global float4* pAngVel, 
 									__global float4* pParams, 
 									__global float4* pTrans,
 									__global float4* pInvInertiaMass, 
-									int numObjects,
 									float timeStep GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numObjects)
+    {
+		return;
+	}
 	float4 mass0 =	pInvInertiaMass[index * 3 + 0];
     if(mass0.w > 0.f)
 	{
@@ -281,17 +293,17 @@ void findPairsInCell(	int4 gridPos,
 
 
 
-__kernel void kBroadphaseCD(__global float4* pPos, 
+__kernel void kBroadphaseCD(int numSpheres,
+							__global float4* pPos, 
 							__global float4* pShapeBuf,
 							__global int* pBodyIds,
 							__global int2* pHash,
 							__global int* pCellStart,
 							__global int* pPairBuff,
 							__global int2* pPairBuffStartCurr,
-							int numSpheres,
 							__global float4* pParams GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
     if(index >= numSpheres)
 	{
 		return;
@@ -358,14 +370,18 @@ struct btSpheresContPair
 };
 */
 
-__kernel void kSetupContacts(	__global int4* pPairIds, 
+__kernel void kSetupContacts(	int numPairs,
+								__global int4* pPairIds, 
 								__global float4* pPos,
 								__global float4* pShapeBuf,
 								__global float4* pContacts,
 								__global float4* pParams GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
-
+    int index = get_global_id(0);
+    if(index >= numPairs)
+    {
+		return;
+    }
 	int sphIdA = pPairIds[index * 2].z;
 	int sphIdB = pPairIds[index * 2].w;
 	float4 posA = pPos[sphIdA];
@@ -419,7 +435,8 @@ float computeImpulse(float4 relVel, float penetration, float4 normal, float time
 	return lambdaDt;
 }
 
-__kernel void kSolveConstraints(__global float4* pPair,
+__kernel void kSolveConstraints(int numPairs,
+								__global float4* pPair,
 								int batchNum,
 								__global float4* pTrans,
 								__global int4* pPairIds, 
@@ -429,7 +446,11 @@ __kernel void kSolveConstraints(__global float4* pPair,
 								__global float4* pParams,
 								float timeStep GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numPairs)
+    {
+		return;
+    }
     int batchId = pPairIds[index * 2 + 1].x;
     if(batchId != batchNum)
 	{
@@ -486,12 +507,16 @@ __kernel void kSolveConstraints(__global float4* pPair,
 	}
 }
 
-__kernel void kInitObjUsageTab(	__global int* pObjUsed, 
+__kernel void kInitObjUsageTab(	int numObjects,
+								__global int* pObjUsed, 
 								__global float4* pInvInertiaMass,
-								__global float4* pParams,
-								int numObjects GUID_ARG)
+								__global float4* pParams GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numObjects)
+    {
+		return;
+    }
 #if 1
 	// allow share static objects in one batch
 	float invMass = pInvInertiaMass[index * 3 + 0].w;
@@ -509,11 +534,16 @@ __kernel void kInitObjUsageTab(	__global int* pObjUsed,
 #endif	
 }
 
-__kernel void kSetupBatches(__global int4* pPairIds, 
+__kernel void kSetupBatches(int numPairs,
+							__global int4* pPairIds, 
 							__global int* pObjUsed, 
 							__global float4* pParams GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numPairs)
+    {
+		return;
+    }
     int currPair = index;
 	int objIdA = pPairIds[currPair * 2].x;
 	int objIdB = pPairIds[currPair * 2].y;
@@ -540,13 +570,18 @@ __kernel void kSetupBatches(__global int4* pPairIds,
 	}
 }
 
-__kernel void kCheckBatches(__global int4* pPairIds, 
+__kernel void kCheckBatches(int numPairs,
+							__global int4* pPairIds, 
 							__global int* pObjUsed, 
 							__global float4* pParams,
 							int numBatches,
 							int batchNum GUID_ARG)
 {
-    unsigned int index = get_global_id(0);
+    int index = get_global_id(0);
+    if(index >= numPairs)
+    {
+		return;
+    }
     int currPair = index;
 	int objIdA = pPairIds[currPair * 2].x;
 	int objIdB = pPairIds[currPair * 2].y;
@@ -623,5 +658,174 @@ __kernel void kBitonicSortHash(	__global int2* pHash,
         }
     }
     barrier(CLK_LOCAL_MEM_FENCE | CLK_GLOBAL_MEM_FENCE);
+}
+
+
+
+/*
+ * Copyright 1993-2009 NVIDIA Corporation.  All rights reserved.
+ *
+ * NVIDIA Corporation and its licensors retain all intellectual property and 
+ * proprietary rights in and to this software and related documentation. 
+ * Any use, reproduction, disclosure, or distribution of this software 
+ * and related documentation without an express license agreement from
+ * NVIDIA Corporation is strictly prohibited.
+ *
+ * Please refer to the applicable NVIDIA end user license agreement (EULA) 
+ * associated with this source code for terms and conditions that govern 
+ * your use of this NVIDIA software.
+ * 
+ */
+
+#define LOCAL_SIZE_LIMIT 1024U
+
+inline void ComparatorPrivate(int2* keyA, int2* keyB, uint dir)
+{
+    if((keyA[0].x > keyB[0].x) == dir)
+    {
+		int2 tmp = *keyA;
+		*keyA = *keyB;
+		*keyB = tmp;
+    }
+}
+
+inline void ComparatorLocal(__local int2* keyA, __local int2* keyB, uint dir)
+{
+    if((keyA[0].x > keyB[0].x) == dir)
+    {
+		int2 tmp = *keyA;
+		*keyA = *keyB;
+		*keyB = tmp;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Monolithic bitonic sort kernel for short arrays fitting into local memory
+////////////////////////////////////////////////////////////////////////////////
+__kernel void bitonicSortLocal(__global int2* pKey, uint arrayLength, uint dir GUID_ARG)
+{
+    __local int2 l_key[LOCAL_SIZE_LIMIT];
+
+    //Offset to the beginning of subbatch and load data
+    pKey += get_group_id(0) * LOCAL_SIZE_LIMIT + get_local_id(0);
+    l_key[get_local_id(0) +                      0] = pKey[                     0];
+    l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)] = pKey[(LOCAL_SIZE_LIMIT / 2)];
+
+    for(uint size = 2; size < arrayLength; size <<= 1)
+    {
+        //Bitonic merge
+        uint ddd = dir ^ ( (get_local_id(0) & (size / 2)) != 0 );
+        for(uint stride = size / 2; stride > 0; stride >>= 1)
+        {
+            barrier(CLK_LOCAL_MEM_FENCE);
+            uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+            ComparatorLocal(&l_key[pos +      0], &l_key[pos + stride], ddd);
+        }
+    }
+
+    //ddd == dir for the last bitonic merge step
+    {
+        for(uint stride = arrayLength / 2; stride > 0; stride >>= 1)
+        {
+            barrier(CLK_LOCAL_MEM_FENCE);
+            uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+            ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], dir);
+        }
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+    pKey[                     0] = l_key[get_local_id(0) +                      0];
+    pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Bitonic sort kernel for large arrays (not fitting into local memory)
+////////////////////////////////////////////////////////////////////////////////
+//Bottom-level bitonic sort
+//Almost the same as bitonicSortLocal with the only exception
+//of even / odd subarrays (of LOCAL_SIZE_LIMIT points) being
+//sorted in opposite directions
+__kernel void bitonicSortLocal1(__global int2* pKey GUID_ARG)
+{
+    __local int2 l_key[LOCAL_SIZE_LIMIT];
+
+    //Offset to the beginning of subarray and load data
+    pKey += get_group_id(0) * LOCAL_SIZE_LIMIT + get_local_id(0);
+    l_key[get_local_id(0) +                      0] = pKey[                     0];
+    l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)] = pKey[(LOCAL_SIZE_LIMIT / 2)];
+
+    uint comparatorI = get_global_id(0) & ((LOCAL_SIZE_LIMIT / 2) - 1);
+
+    for(uint size = 2; size < LOCAL_SIZE_LIMIT; size <<= 1)
+    {
+        //Bitonic merge
+        uint ddd = (comparatorI & (size / 2)) != 0;
+        for(uint stride = size / 2; stride > 0; stride >>= 1)
+        {
+            barrier(CLK_LOCAL_MEM_FENCE);
+            uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+            ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], ddd);
+        }
+    }
+
+    //Odd / even arrays of LOCAL_SIZE_LIMIT elements
+    //sorted in opposite directions
+    {
+        uint ddd = (get_group_id(0) & 1);
+        for(uint stride = LOCAL_SIZE_LIMIT / 2; stride > 0; stride >>= 1)
+        {
+            barrier(CLK_LOCAL_MEM_FENCE);
+            uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+            ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], ddd);
+        }
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+    pKey[                     0] = l_key[get_local_id(0) +                      0];
+    pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
+}
+
+//Bitonic merge iteration for 'stride' >= LOCAL_SIZE_LIMIT
+__kernel void bitonicMergeGlobal(__global int2* pKey, uint arrayLength, uint size, uint stride, uint dir GUID_ARG)
+{
+    uint global_comparatorI = get_global_id(0);
+    uint        comparatorI = global_comparatorI & (arrayLength / 2 - 1);
+
+    //Bitonic merge
+    uint ddd = dir ^ ( (comparatorI & (size / 2)) != 0 );
+    uint pos = 2 * global_comparatorI - (global_comparatorI & (stride - 1));
+
+    int2 keyA = pKey[pos +      0];
+    int2 keyB = pKey[pos + stride];
+
+    ComparatorPrivate(&keyA, &keyB, ddd);
+
+    pKey[pos +      0] = keyA;
+    pKey[pos + stride] = keyB;
+}
+
+//Combined bitonic merge steps for
+//'size' > LOCAL_SIZE_LIMIT and 'stride' = [1 .. LOCAL_SIZE_LIMIT / 2]
+__kernel void bitonicMergeLocal(__global int2* pKey, uint arrayLength, uint stride, uint size, uint dir GUID_ARG)
+{
+    __local int2 l_key[LOCAL_SIZE_LIMIT];
+
+    pKey += get_group_id(0) * LOCAL_SIZE_LIMIT + get_local_id(0);
+    l_key[get_local_id(0) +                      0] = pKey[                     0];
+    l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)] = pKey[(LOCAL_SIZE_LIMIT / 2)];
+
+    //Bitonic merge
+    uint comparatorI = get_global_id(0) & ((arrayLength / 2) - 1);
+    uint         ddd = dir ^ ( (comparatorI & (size / 2)) != 0 );
+    for(; stride > 0; stride >>= 1)
+    {
+        barrier(CLK_LOCAL_MEM_FENCE);
+        uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
+        ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], ddd);
+    }
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+    pKey[                     0] = l_key[get_local_id(0) +                      0];
+    pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
 }
 

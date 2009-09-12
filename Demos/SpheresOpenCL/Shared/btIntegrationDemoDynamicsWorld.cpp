@@ -482,11 +482,11 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	postInitDeviceData();
 
 	// set the args values 
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 0, sizeof(cl_mem), (void *) &m_dPosInp);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void*) &m_dLinVelInp);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(cl_mem), (void *) &m_dPosOut);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void*) &m_dLinVelOut);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 4, sizeof(int), &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 0, sizeof(int), &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void *) &m_dPosInp);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(cl_mem), (void*) &m_dLinVelInp);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void *) &m_dPosOut);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 4, sizeof(cl_mem), (void*) &m_dLinVelOut);
 	ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 5, sizeof(cl_mem), (void*) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
@@ -514,51 +514,13 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 		case 1: 
 			{
 				cl_int ciErrNum;
-/*
-				size_t szGlobalWorkSize[2];
-				// Set work size and execute the kernel
-				szGlobalWorkSize[0] = m_numSpheres;
-				ciErrNum = clSetKernelArg(m_ckIntegrateMotionKernel, 4, sizeof(float), &m_timeStep);
-				oclCHECKERROR(ciErrNum, CL_SUCCESS);
-				ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckIntegrateMotionKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-				oclCHECKERROR(ciErrNum, CL_SUCCESS);
-*/
-		size_t localWorkSize[2], globalWorkSize[2];
-		int workgroup_size;
-
-		// get max size of workgroup
-#if defined(CL_PLATFORM_MINI_CL)
-		workgroup_size = 4;
-#else
-		clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(workgroup_size), &workgroup_size, NULL);
-	#if defined(CL_PLATFORM_NVIDIA)
-		// this gives 512 for my 8800 GT, which gives error CL_OUT_OF_RESOURCES on call of clEnqueueNDRangeKernel
-		// so override it (256 max)
-//		workgroup_size = 256;
-		workgroup_size = 128; // this gives the best result for 800 000
-//		workgroup_size = 64;
-//		workgroup_size = 32;
-	#endif // CL_PLATFORM_NVIDIA
-#endif
-		workgroup_size = btMin(workgroup_size, m_numSpheres);
-		int num_t = m_numSpheres / workgroup_size;
-		int num_g = num_t * workgroup_size;
-		if(num_g < m_numSpheres)
-		{
-			num_t++;
-		}
-		localWorkSize[0]  = workgroup_size;
-		globalWorkSize[0] = num_t * workgroup_size;
-		localWorkSize[1] = 1;
-		globalWorkSize[1] = 1;
-		ciErrNum  = clSetKernelArg(m_ckIntegrateMotionKernel, 0, sizeof(cl_mem), (void *) &m_dPosInp);
-		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void*) &m_dLinVelInp);
-		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(cl_mem), (void *) &m_dPosOut);
-		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void*) &m_dLinVelOut);
+		ciErrNum  = clSetKernelArg(m_ckIntegrateMotionKernel, 1, sizeof(cl_mem), (void *) &m_dPosInp);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 2, sizeof(cl_mem), (void*) &m_dLinVelInp);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 3, sizeof(cl_mem), (void *) &m_dPosOut);
+		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 4, sizeof(cl_mem), (void*) &m_dLinVelOut);
 		ciErrNum |= clSetKernelArg(m_ckIntegrateMotionKernel, 6, sizeof(float), &m_timeStep);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckIntegrateMotionKernel, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		runKernelWithWorkgroupSize(m_ckIntegrateMotionKernel, m_numSpheres, 128);
 		ciErrNum = clFinish(m_cqCommandQue);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 			#if INTEGR_DEMO_USE_IMAGES
@@ -650,3 +612,47 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 	}
 }
 
+void btIntegrationDemoDynamicsWorld::runKernelWithWorkgroupSize(cl_kernel kernelFunc, int globalSize, int workgroupSize)
+{
+	if(globalSize <= 0)
+	{
+		return;
+	}
+	cl_int ciErrNum = clSetKernelArg(kernelFunc, 0, sizeof(int), (void*)&globalSize);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	if(workgroupSize <= 0)
+	{ // let OpenCL library calculate workgroup size
+		size_t globalWorkSize[2];
+		globalWorkSize[0] = globalSize;
+		globalWorkSize[1] = 1;
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, NULL, 0,0,0 );
+	}
+	else
+	{
+		#if defined(CL_PLATFORM_MINI_CL)
+			workgroupSize = 4;
+		#else
+			int maxWorkgroupSize;
+			clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkgroupSize), &maxWorkgroupSize, NULL);
+			#if defined(CL_PLATFORM_NVIDIA)
+				// use given value
+			#else
+				workgroupSize = maxWorkgroupSize;
+			#endif // CL_PLATFORM_NVIDIA
+		#endif
+		size_t localWorkSize[2], globalWorkSize[2];
+		workgroupSize = btMin(workgroupSize, globalSize);
+		int num_t = globalSize / workgroupSize;
+		int num_g = num_t * workgroupSize;
+		if(num_g < globalSize)
+		{
+			num_t++;
+		}
+		localWorkSize[0]  = workgroupSize;
+		globalWorkSize[0] = num_t * workgroupSize;
+		localWorkSize[1] = 1;
+		globalWorkSize[1] = 1;
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
+	}
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}

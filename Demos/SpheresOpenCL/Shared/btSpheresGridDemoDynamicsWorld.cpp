@@ -49,7 +49,7 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 		runPredictUnconstrainedMotionKernel();
 	}
 	{
-		BT_PROFILE("SetSpheres");
+//		BT_PROFILE("SetSpheres");
 		runSetSpheresKernel();
 	}
 	{
@@ -506,102 +506,115 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	postInitDeviceData();
 
 	// set the args values 
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 1, sizeof(cl_mem), (void*) &m_dTrans);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 2, sizeof(cl_mem), (void*) &m_dShapeBuf);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 3, sizeof(cl_mem), (void*) &m_dBodyIds);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 4, sizeof(cl_mem), (void*) &m_dPosHash);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 5, sizeof(cl_mem), (void*) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 6, sizeof(int), &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 0, sizeof(int),	(void*) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 1, sizeof(cl_mem), (void*) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 2, sizeof(cl_mem), (void*) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 3, sizeof(cl_mem), (void*) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 4, sizeof(cl_mem), (void*) &m_dBodyIds);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 5, sizeof(cl_mem), (void*) &m_dPosHash);
+	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 6, sizeof(cl_mem), (void*) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckPredictUnconstrainedMotionKernel = clCreateKernel(m_cpProgram, "kPredictUnconstrainedMotion", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 0, sizeof(cl_mem), (void *) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 1, sizeof(cl_mem), (void *) &m_dAngVel);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 3, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 4, sizeof(int), &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 1, sizeof(cl_mem), (void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 2, sizeof(cl_mem), (void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 3, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 4, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 
 	m_ckIntegrateTransformsKernel = clCreateKernel(m_cpProgram, "kIntegrateTransforms", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 0, sizeof(cl_mem), (void *) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 1, sizeof(cl_mem), (void *) &m_dAngVel);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 3, sizeof(cl_mem), (void*) &m_dTrans);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 4, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 5, sizeof(int), &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 1, sizeof(cl_mem),(void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 2, sizeof(cl_mem),(void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 3, sizeof(cl_mem),(void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 4, sizeof(cl_mem),(void *) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 5, sizeof(cl_mem),(void *) &m_dInvInertiaMass);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 
 	m_ckBroadphaseCDKernel = clCreateKernel(m_cpProgram, "kBroadphaseCD", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 0, sizeof(cl_mem), (void *) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 1, sizeof(cl_mem), (void *) &m_dShapeBuf);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 2, sizeof(cl_mem), (void *) &m_dBodyIds);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 3, sizeof(cl_mem), (void *) &m_dPosHash);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 4, sizeof(cl_mem), (void *) &m_dCellStart);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 5, sizeof(cl_mem), (void *) &m_dPairBuff);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 6, sizeof(cl_mem), (void *) &m_dPairBuffStartCurr);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 7, sizeof(int),    (void *) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 0, sizeof(int),    (void *) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 1, sizeof(cl_mem), (void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 3, sizeof(cl_mem), (void *) &m_dBodyIds);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 4, sizeof(cl_mem), (void *) &m_dPosHash);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 5, sizeof(cl_mem), (void *) &m_dCellStart);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 6, sizeof(cl_mem), (void *) &m_dPairBuff);
+	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 7, sizeof(cl_mem), (void *) &m_dPairBuffStartCurr);
 	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 8, sizeof(cl_mem), (void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 
 	m_ckInitObjUsageTabKernel = clCreateKernel(m_cpProgram, "kInitObjUsageTab", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 0, sizeof(cl_mem), (void *) &m_dObjUsed);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 1, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 3, sizeof(int), &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 1, sizeof(cl_mem),(void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 2, sizeof(cl_mem),(void *) &m_dInvInertiaMass);
+	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 3, sizeof(cl_mem),(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckSetupBatchesKernel = clCreateKernel(m_cpProgram, "kSetupBatches", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 0, sizeof(cl_mem), (void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 1, sizeof(cl_mem), (void *) &m_dObjUsed);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 2, sizeof(cl_mem),	(void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 3, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckCheckBatchesKernel = clCreateKernel(m_cpProgram, "kCheckBatches", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 0, sizeof(cl_mem), (void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 1, sizeof(cl_mem), (void *) &m_dObjUsed);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 2, sizeof(cl_mem), (void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 3, sizeof(int), &m_maxBatches);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 2, sizeof(cl_mem),	(void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 3, sizeof(cl_mem),	(void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 4, sizeof(int),		(void *) &m_maxBatches);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckSetupContactsKernel = clCreateKernel(m_cpProgram, "kSetupContacts", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 0, sizeof(cl_mem), (void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 1, sizeof(cl_mem), (void *) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 3, sizeof(cl_mem), (void *) &m_dContacts);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 4, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 2, sizeof(cl_mem),	(void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 3, sizeof(cl_mem),	(void *) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 4, sizeof(cl_mem),	(void *) &m_dContacts);
+	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 5, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckSolveConstraintsKernel = clCreateKernel(m_cpProgram, "kSolveConstraints", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(cl_mem), (void *) &m_dContacts);
-	// parameter 1 will be set later (batchNum)
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 2, sizeof(cl_mem), (void *) &m_dTrans);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 3, sizeof(cl_mem), (void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 4, sizeof(cl_mem), (void *) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 5, sizeof(cl_mem), (void *) &m_dAngVel);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 6, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 7, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(cl_mem),	(void *) &m_dContacts);
+	// parameter 2 will be set later (batchNum)
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 3, sizeof(cl_mem),	(void *) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 4, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 5, sizeof(cl_mem),	(void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 6, sizeof(cl_mem),	(void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 7, sizeof(cl_mem),	(void *) &m_dInvInertiaMass);
+	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	m_ckBitonicSortHashKernel = clCreateKernel(m_cpProgram, "kBitonicSortHash", &ciErrNum);
     ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 0,      sizeof(cl_mem), (void *)&m_dPosHash);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
+	m_ckBitonicSortLocal = clCreateKernel(m_cpProgram, "bitonicSortLocal", &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_ckBitonicSortLocal1 = clCreateKernel(m_cpProgram, "bitonicSortLocal1", &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_ckBitonicMergeGlobal = clCreateKernel(m_cpProgram, "bitonicMergeGlobal", &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_ckBitonicMergeLocal = clCreateKernel(m_cpProgram, "bitonicMergeLocal", &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
 void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
 {
     cl_int ciErrNum;
-    size_t szGlobalWorkSize[2];
-    // Set work size and execute the kernel
-    szGlobalWorkSize[0] = m_numSpheres;
-    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSetSpheresKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-// check
+	{
+		BT_PROFILE("SetSpheres");
+		runKernelWithWorkgroupSize(m_ckSetSpheresKernel, m_numSpheres, 256);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
+/*
+	// check
 	int memSize = sizeof(btInt2) * m_hashSize;
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -609,16 +622,18 @@ void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
 	memSize = sizeof(float) * 4 * m_numSpheres;
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-
-    // Explicit Copy (until OpenGL interop will work)
-    // map the PBO to copy data from the CL buffer via host
-    glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);    
-    // map the buffer object into client's memory
-    void* ptr = glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY_ARB);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    glUnmapBufferARB(GL_ARRAY_BUFFER); 
+*/
+	{
+		BT_PROFILE("Copy VBO");
+		// Explicit Copy (until OpenGL interop will work)
+		// map the PBO to copy data from the CL buffer via host
+		glBindBufferARB(GL_ARRAY_BUFFER, m_vbo);    
+		// map the buffer object into client's memory
+		void* ptr = glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY_ARB);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		glUnmapBufferARB(GL_ARRAY_BUFFER); 
+	}
 }
 
 
@@ -653,13 +668,11 @@ void btSpheresGridDemoDynamicsWorld::runPredictUnconstrainedMotionKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
-    size_t szGlobalWorkSize[2];
     // Set work size and execute the kernel
-    szGlobalWorkSize[0] = m_numObjects;
 	ciErrNum = clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 5, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckPredictUnconstrainedMotionKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-//	clFinish(m_cqCommandQue);
+	runKernelWithWorkgroupSize(m_ckPredictUnconstrainedMotionKernel, m_numObjects, 512);
+	ciErrNum = clFinish(m_cqCommandQue);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
@@ -667,13 +680,10 @@ void btSpheresGridDemoDynamicsWorld::runPredictUnconstrainedMotionKernel()
 void btSpheresGridDemoDynamicsWorld::runIntegrateTransformsKernel()
 {
     cl_int ciErrNum;
-    size_t szGlobalWorkSize[2];
-    // Set work size and execute the kernel
-    szGlobalWorkSize[0] = m_numObjects;
 	ciErrNum = clSetKernelArg(m_ckIntegrateTransformsKernel, 6, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckIntegrateTransformsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-//	clFinish(m_cqCommandQue);
+	runKernelWithWorkgroupSize(m_ckIntegrateTransformsKernel, m_numObjects, 256);
+	ciErrNum = clFinish(m_cqCommandQue);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 /*
 	// read back for checking	
@@ -688,7 +698,7 @@ void btSpheresGridDemoDynamicsWorld::runIntegrateTransformsKernel()
 
 void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
-    cl_int ciErrNum;
+	cl_int ciErrNum;
 	int memSize = m_numSpheres * sizeof(btInt2);
 #if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
 	// bitonic sort on MiniCL does not work because barrier() finction is not implemented yet
@@ -770,8 +780,8 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
+	#if 0
 	{
-		// this one sorts up to 1024 elements for now :-(
 		size_t localWorkSize[2], globalWorkSize[2];
 		int dir = 1;
 
@@ -795,6 +805,12 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
+	#else
+		int dir = 1;
+		bitonicSortNv(m_dPosHash, 1, m_hashSize, dir);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	#endif
 #endif
 #if 0
 	// check order
@@ -850,47 +866,7 @@ void btSpheresGridDemoDynamicsWorld::runBroadphaseCDKernel()
 #else
 //	int memSize = m_numSpheres * sizeof(btInt2);
 //	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffStartCurr, CL_TRUE, 0, memSize, &(m_hPairBuffStartCurr[0]), 0, NULL, NULL);
-	#if 0
-	{ // automatic calculation of block size
-		size_t szGlobalWorkSize[2];
-		szGlobalWorkSize[0] = m_numSpheres;
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBroadphaseCDKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-	}
-	#else
-	{ // manual calculation of block size
-		size_t localWorkSize[2], globalWorkSize[2];
-		int workgroup_size;
-#if defined(CL_PLATFORM_MINI_CL)
-		workgroup_size = 4;
-#else
-		clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(workgroup_size), &workgroup_size, NULL);
-	#if defined(CL_PLATFORM_NVIDIA)
-		// this gives 512 for my 8800 GT, which gives error CL_OUT_OF_RESOURCES on call of clEnqueueNDRangeKernel
-		// kernel code size maybe?
-		// so override it
-#ifdef _DEBUG
-		workgroup_size = 128;
-#else
-		workgroup_size = 128;
-#endif
-
-	#endif // CL_PLATFORM_NVIDIA
-#endif
-		workgroup_size = btMin(workgroup_size, m_numSpheres);
-		int num_t = m_numSpheres / workgroup_size;
-		int num_g = num_t * workgroup_size;
-		if(num_g < m_numSpheres)
-		{
-			num_t++;
-		}
-		localWorkSize[0]  = workgroup_size;
-		globalWorkSize[0] = num_t * workgroup_size;
-		localWorkSize[1] = 1;
-		globalWorkSize[1] = 1;
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBroadphaseCDKernel, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
-	}
-	#endif
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	runKernelWithWorkgroupSize(m_ckBroadphaseCDKernel, m_numSpheres, 128);
 	ciErrNum = clFinish(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
@@ -1004,8 +980,8 @@ void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 {
     cl_int ciErrNum;
+#if defined(CL_PLATFORM_AMD)
 	m_numBatches = 0;
-#if 1
 	// CPU version
 	int memSize = m_numPairs * sizeof(btPairId);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
@@ -1050,7 +1026,7 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
-    size_t szGlobalWorkSize[2];
+	m_numBatches = m_maxBatches;
 //  debug breakpoint
 //	if(m_numPairs)
 //	{
@@ -1060,21 +1036,22 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 	{
 		{
 			BT_PROFILE_SETUP_BATCHES("Init");
-			szGlobalWorkSize[0] = m_numObjects;
-			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckInitObjUsageTabKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			runKernelWithWorkgroupSize(m_ckInitObjUsageTabKernel, m_numObjects, 512);
+			ciErrNum = clFinish(m_cqCommandQue);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 		{
 			BT_PROFILE_SETUP_BATCHES("Setup");
-			szGlobalWorkSize[0] = m_numPairs;
-			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSetupBatchesKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			runKernelWithWorkgroupSize(m_ckSetupBatchesKernel, m_numPairs, 16);
+			ciErrNum = clFinish(m_cqCommandQue);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 		{
 			BT_PROFILE_SETUP_BATCHES("Check");
-			ciErrNum = clSetKernelArg(m_ckCheckBatchesKernel, 4, sizeof(int), &nBatch);
+			ciErrNum = clSetKernelArg(m_ckCheckBatchesKernel, 5, sizeof(int), &nBatch);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckCheckBatchesKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+			runKernelWithWorkgroupSize(m_ckCheckBatchesKernel, m_numPairs, 256);
+			ciErrNum = clFinish(m_cqCommandQue);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 	}
@@ -1156,6 +1133,8 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 #if 1
 	{
 		// paint contactions spheres in red
+		// also get current number of batches
+		m_numBatches = 0;
 		BT_PROFILE_SETUP_BATCHES("Color contacts");
 		int numLeft = 0;
 		glBindBufferARB(GL_ARRAY_BUFFER, m_colVbo);
@@ -1187,6 +1166,10 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 			//	m_hPairIds[i].m_batch = m_numBatches - 1;
 			//	numLeft++;
 			//}
+			if(m_hPairIds[i].m_batch >= m_numBatches)
+			{
+				m_numBatches = m_hPairIds[i].m_batch + 1;
+			}
 			float* ptr = data + m_hPairIds[i].m_sphA * 4;
 			ptr[0] = 1.f;
 			ptr[1] = 0.f;
@@ -1259,10 +1242,8 @@ void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
-    size_t szGlobalWorkSize[2];
-    // Set work size and execute the kernel
-    szGlobalWorkSize[0] = m_numPairs;
-    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSetupContactsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
+	runKernelWithWorkgroupSize(m_ckSetupContactsKernel, m_numPairs, 256);
+	ciErrNum = clFinish(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// read results from GPU
 	int memSize = m_numPairs * sizeof(btSpheresContPair);
@@ -1274,7 +1255,7 @@ void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
 void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 {
     cl_int ciErrNum;
-#if 1
+#if 0
 	// CPU version
 	int memSize = m_numPairs * sizeof(btSpheresContPair);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
@@ -1306,22 +1287,19 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
-	ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(float), &m_timeStep);
+	ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 9, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	{
 		BT_PROFILE("enqueue");
+		ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(int), &m_numPairs);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
 		{
 			for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
 			{
-				size_t szGlobalWorkSize[2];
-				// Set work size and execute the kernel
-				szGlobalWorkSize[0] = m_numPairs;
-				ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(int), &nBatch);
+				ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 2, sizeof(int), &nBatch);
 				oclCHECKERROR(ciErrNum, CL_SUCCESS);
-				ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckSolveConstraintsKernel, 1, NULL, szGlobalWorkSize, NULL, 0,0,0 );
-				
-				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+				runKernelWithWorkgroupSize(m_ckSolveConstraintsKernel, m_numPairs, 64);
 			}
 		}
 		clFinish(m_cqCommandQue);
@@ -1333,7 +1311,6 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
-//		clFinish(m_cqCommandQue);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 #endif
@@ -1419,3 +1396,127 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 }	
 
 
+void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(cl_kernel kernelFunc, int globalSize, int workgroupSize)
+{
+	if(globalSize <= 0)
+	{
+		return;
+	}
+	cl_int ciErrNum = clSetKernelArg(kernelFunc, 0, sizeof(int), (void*)&globalSize);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	if(workgroupSize <= 0)
+	{ // let OpenCL library calculate workgroup size
+		size_t globalWorkSize[2];
+		globalWorkSize[0] = globalSize;
+		globalWorkSize[1] = 1;
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, NULL, 0,0,0 );
+	}
+	else
+	{
+		#if defined(CL_PLATFORM_MINI_CL)
+			workgroupSize = 4;
+		#else
+			int maxWorkgroupSize;
+			clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkgroupSize), &maxWorkgroupSize, NULL);
+			#if defined(CL_PLATFORM_NVIDIA)
+				// use given value
+			#else
+				workgroupSize = maxWorkgroupSize;
+			#endif // CL_PLATFORM_NVIDIA
+		#endif
+		size_t localWorkSize[2], globalWorkSize[2];
+		workgroupSize = btMin(workgroupSize, globalSize);
+		int num_t = globalSize / workgroupSize;
+		int num_g = num_t * workgroupSize;
+		if(num_g < globalSize)
+		{
+			num_t++;
+		}
+		localWorkSize[0]  = workgroupSize;
+		globalWorkSize[0] = num_t * workgroupSize;
+		localWorkSize[1] = 1;
+		globalWorkSize[1] = 1;
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
+	}
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}
+
+
+
+//Note: logically shared with BitonicSort OpenCL code!
+static const unsigned int LOCAL_SIZE_LIMIT = 1024U;
+
+void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir)
+{
+    if(arrayLength < 2)
+        return;
+    //Only power-of-two array lengths are supported so far
+    dir = (dir != 0);
+    cl_int ciErrNum;
+    size_t localWorkSize, globalWorkSize;
+    if(arrayLength <= LOCAL_SIZE_LIMIT)
+    {
+        btAssert( (batch * arrayLength) % LOCAL_SIZE_LIMIT == 0);
+        //Launch bitonicSortLocal
+        ciErrNum  = clSetKernelArg(m_ckBitonicSortLocal, 0,   sizeof(cl_mem), (void *)&pKey);
+        ciErrNum |= clSetKernelArg(m_ckBitonicSortLocal, 1,  sizeof(cl_uint), (void *)&arrayLength);
+        ciErrNum |= clSetKernelArg(m_ckBitonicSortLocal, 2,  sizeof(cl_uint), (void *)&dir);
+        oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+        localWorkSize  = LOCAL_SIZE_LIMIT / 2;
+        globalWorkSize = batch * arrayLength / 2;
+        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortLocal, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        oclCHECKERROR(ciErrNum, CL_SUCCESS);
+    }
+    else
+    {
+        //Launch bitonicSortLocal1
+        ciErrNum  = clSetKernelArg(m_ckBitonicSortLocal1, 0,  sizeof(cl_mem), (void *)&pKey);
+        oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+        localWorkSize  = LOCAL_SIZE_LIMIT / 2;
+        globalWorkSize = batch * arrayLength / 2;
+        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortLocal1, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+        for(unsigned int size = 2 * LOCAL_SIZE_LIMIT; size <= arrayLength; size <<= 1)
+        {
+            for(unsigned stride = size / 2; stride > 0; stride >>= 1)
+            {
+                if(stride >= LOCAL_SIZE_LIMIT)
+                {
+                    //Launch bitonicMergeGlobal
+                    ciErrNum  = clSetKernelArg(m_ckBitonicMergeGlobal, 0,  sizeof(cl_mem), (void *)&pKey);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 1, sizeof(cl_uint), (void *)&arrayLength);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 2, sizeof(cl_uint), (void *)&size);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 3, sizeof(cl_uint), (void *)&stride);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 4, sizeof(cl_uint), (void *)&dir);
+					oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+                    localWorkSize  = LOCAL_SIZE_LIMIT / 4;
+                    globalWorkSize = batch * arrayLength / 2;
+
+                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicMergeGlobal, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+					oclCHECKERROR(ciErrNum, CL_SUCCESS);
+                }
+                else
+                {
+                    //Launch bitonicMergeLocal
+                    ciErrNum  = clSetKernelArg(m_ckBitonicMergeLocal, 0,  sizeof(cl_mem), (void *)&pKey);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 1, sizeof(cl_uint), (void *)&arrayLength);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 2, sizeof(cl_uint), (void *)&stride);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 3, sizeof(cl_uint), (void *)&size);
+                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 4, sizeof(cl_uint), (void *)&dir);
+					oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+                    localWorkSize  = LOCAL_SIZE_LIMIT / 2;
+                    globalWorkSize = batch * arrayLength / 2;
+
+                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicMergeLocal, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+					oclCHECKERROR(ciErrNum, CL_SUCCESS);
+                    break;
+                }
+            }
+        }
+    }
+}
