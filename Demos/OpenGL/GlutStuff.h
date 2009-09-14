@@ -25,16 +25,15 @@ subject to the following restrictions:
 #include <OpenGL/glu.h>
 #include <GLUT/glut.h>
 #else
-#ifndef _WINDOWS
-#include <GL/glut.h>
-#else
+#ifdef WIN32
 #include <windows.h>
+#endif
+#include <GL/glut.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #endif
-#endif
 
-#ifdef _WINDOWS
+#ifdef _NO_GLUT
 #define BT_KEY_K 'K'
 #define BT_KEY_LEFT			VK_LEFT
 #define BT_KEY_RIGHT		VK_RIGHT

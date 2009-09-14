@@ -32,7 +32,7 @@ class btCollisionDispatcher;
 class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
-#include "GlutDemoApplication.h"
+#include "../../OpenGL/GlutDemoApplication.h"
 
 
 enum 

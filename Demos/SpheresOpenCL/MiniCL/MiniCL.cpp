@@ -239,12 +239,19 @@ CL_API_ENTRY cl_int CL_API_CALL clSetKernelArg(cl_kernel    clKernel ,
 // Kernel Object APIs
 CL_API_ENTRY cl_kernel CL_API_CALL clCreateKernel(cl_program       program ,
                const char *     kernel_name ,
-               cl_int *        /* errcode_ret */) CL_API_SUFFIX__VERSION_1_0
+               cl_int *         errcode_ret ) CL_API_SUFFIX__VERSION_1_0
 {
 	MiniCLTaskScheduler* scheduler = (MiniCLTaskScheduler*) program;
 	MiniCLKernel* kernel = new MiniCLKernel();
 
 	kernel->m_kernelProgramCommandId = scheduler->findProgramCommandIdByName(kernel_name);
+	if (kernel->m_kernelProgramCommandId>=0)
+	{
+		*errcode_ret = CL_SUCCESS;
+	} else
+	{
+		*errcode_ret = CL_INVALID_KERNEL_NAME;
+	}
 	kernel->m_scheduler = scheduler;
 
 	return (cl_kernel)kernel;

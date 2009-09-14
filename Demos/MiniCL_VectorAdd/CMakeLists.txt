@@ -11,6 +11,10 @@ LINK_LIBRARIES(
 
 ADD_EXECUTABLE(AppMiniCLVectorAdd
 MiniCL_VectorAdd.cpp
+MiniCLTaskScheduler.cpp
+MiniCLTaskScheduler.h
+MiniCLTask.cpp
+MiniCLTask.h
 MiniCL.cpp
 )
 

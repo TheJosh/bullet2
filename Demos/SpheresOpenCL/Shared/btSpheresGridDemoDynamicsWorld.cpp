@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #include <stdio.h>
 #include <GL/glew.h>
-
+#include "CL/cl_platform.h" //for CL_PLATFORM_MINI_CL definition
 #include "btOclUtils.h"
 
 #include "btBulletDynamicsCommon.h"
@@ -589,7 +589,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 7, sizeof(cl_mem),	(void *) &m_dInvInertiaMass);
 	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
+#ifndef CL_PLATFORM_MINI_CL
 	m_ckBitonicSortHashKernel = clCreateKernel(m_cpProgram, "kBitonicSortHash", &ciErrNum);
     ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 0,      sizeof(cl_mem), (void *)&m_dPosHash);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -602,6 +602,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	m_ckBitonicMergeLocal = clCreateKernel(m_cpProgram, "bitonicMergeLocal", &ciErrNum);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+#endif //CL_PLATFORM_MINI_CL
 }
 
 void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
@@ -1299,6 +1300,7 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 			{
 				ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 2, sizeof(int), &nBatch);
 				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+				//runKernelWithWorkgroupSize(m_ckSolveConstraintsKernel, m_numPairs, 64);
 				runKernelWithWorkgroupSize(m_ckSolveConstraintsKernel, m_numPairs, 64);
 			}
 		}

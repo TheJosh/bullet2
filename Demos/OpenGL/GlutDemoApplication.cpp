@@ -1,5 +1,5 @@
 
-#ifndef _WINDOWS
+#ifndef _NO_GLUT
 #include "GlutDemoApplication.h"
 
 #include "GlutStuff.h"
@@ -81,4 +81,4 @@ void GlutDemoApplication::swapBuffers()
 
 }
 
-#endif //_WINDOWS
+#endif //_NO_GLUT
