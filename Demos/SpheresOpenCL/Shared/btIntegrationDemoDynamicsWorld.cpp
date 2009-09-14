@@ -14,7 +14,10 @@ subject to the following restrictions:
 */
 
 #include <stdio.h>
+#ifndef __APPLE__
 #include <GL/glew.h>
+#include <CL/cl_platform.h>
+#endif //__APPLE__
 
 #include "btOclUtils.h"
 
@@ -370,11 +373,8 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
     cl_int ciErrNum;
 
 	// create the OpenCL context
-#if defined(CL_PLATFORM_AMD)
-    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
-#else
-    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
-#endif
+    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+//    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
   
     // Get and log the device info
@@ -397,7 +397,8 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	// Program Setup
-#if (defined CL_PLATFORM_NVIDIA) || (defined CL_PLATFORM_AMD)
+#ifndef CL_PLATFORM_MINI_CL
+	
 	size_t program_length;
 	char* fileName = "Integration.cl";
 	FILE * fp = fopen(fileName, "rb");
@@ -460,7 +461,7 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 		exit(-1); 
 	}
 	printf("OK\n");
-#elif defined(CL_PLATFORM_MINI_CL)
+#else // defined(CL_PLATFORM_MINI_CL)
 ///create kernels from binary
 	int numDevices = 1;
 	::size_t* lengths = (::size_t*) malloc(numDevices * sizeof(::size_t));

@@ -1,26 +1,32 @@
-# This is basically the overall name of the project in Visual Studio this is the name of the Solution File
+# AppMiniCLSpheres is a testbed to run OpenCL kernels on CPU platforms lacking OpenCL implementation.
+# MiniCL is a rudimentary subset of the OpenCL implementation
 
-
-# For every executable you have with a main method you should have an add_executable line below.
-# For every add executable line you should list every .cpp and .h file you have associated with that executable.  
-
-
-# This is the variable for Windows.  I use this to define the root of my directory structure.
-SET(GLUT_ROOT ${BULLET_PHYSICS_SOURCE_DIR}/Glut)
-
-# You shouldn't have to modify anything below this line 
-########################################################
 
 INCLUDE_DIRECTORIES(
-${BULLET_PHYSICS_SOURCE_DIR}/src ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL }
+${BULLET_PHYSICS_SOURCE_DIR}/src ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL ${OPENCL_INCLUDE}
 )
 
 LINK_LIBRARIES(
-OpenGLSupport  BulletDynamics  BulletCollision LinearMath    ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+OpenGLSupport  BulletMultiThreaded  BulletDynamics  BulletCollision LinearMath ${OPENCL_LIBRARY} ${GLEW_glew_LIBRARY} ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
 )
 
-ADD_EXECUTABLE(AppBasicDemo
-	main.cpp
-	BasicDemo.cpp 
+ADD_EXECUTABLE(AppSpheresOpenCL
+../Shared/SpheresGridDemo.cpp
+../Shared/SpheresGridDemo.h
+../Shared/oecakeLoader.cpp
+../Shared/oecakeLoader.h
+../Shared/main.cpp
+../Shared/btSpheresGridDemoDynamicsWorld.cpp
+../Shared/btSpheresGridDemoDynamicsWorld.h
+../Shared/btSpheresGridDemoSharedDefs.h
+../Shared/btIntegrationDemoDynamicsWorld.cpp
+../Shared/btIntegrationDemoDynamicsWorld.h
+../Shared/btOclUtils.cpp
+../Shared/btOclUtils.h
+../Shared/btSpheresGridDemoSharedTypes.h
+../Shared/cutil_gl_error.h
+../Shared/cutil_math.h
+../Shared/shaders.cpp
+../Shared/shaders.h
 )
 

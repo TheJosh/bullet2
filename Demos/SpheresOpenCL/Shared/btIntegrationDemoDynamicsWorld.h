@@ -17,16 +17,13 @@ subject to the following restrictions:
 #ifndef BT_INTEGRATION_DEMO_DYNAMICS_WORLD_H
 #define BT_INTEGRATION_DEMO_DYNAMICS_WORLD_H
 
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#else
 // standard utility and system includes
 #include <CL/cl.h>
 // Extra CL/GL include
 #include <CL/cl_gl.h>
-
-// check OpenCL version
-#if (defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_NVIDIA) || defined(CL_PLATFORM_AMD))
-	// OK
-#else
-	#error ERROR : Sorry, this version of OpenCL is not supported yet
 #endif
 
 

@@ -1,1 +1,1 @@
-SUBDIRS( MiniCL  )
+SUBDIRS( Shared MiniCL  )

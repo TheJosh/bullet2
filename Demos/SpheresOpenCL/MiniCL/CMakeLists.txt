@@ -2,6 +2,9 @@
 # MiniCL is a rudimentary subset of the OpenCL implementation
 
 
+ADD_DEFINITIONS(-DCL_PLATFORM_MINI_CL=123)
+
+
 INCLUDE_DIRECTORIES(
 ${BULLET_PHYSICS_SOURCE_DIR}/src ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL ${BULLET_PHYSICS_SOURCE_DIR}/src/MiniCL }
 )

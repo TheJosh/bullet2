@@ -17,8 +17,9 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/btGpuDefines.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
-
+#ifndef __APPLE__
 #include <GL/glew.h>
+#endif
 
 
 #include "BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h"
@@ -543,7 +544,10 @@ void SpheresGridDemo::renderme()
 	glPointSize(5.0f);
 	glEnable(GL_POINT_SPRITE_ARB);
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
+#ifndef __APPLE__
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+#endif //__APPLE__
+	
 	glDepthMask(GL_TRUE);
 	glEnable(GL_DEPTH_TEST);
 
@@ -695,11 +699,14 @@ GLuint _compileProgram(const char *vsource, const char *fsource)
 void SpheresGridDemo::myinit()
 {
 	DemoApplication::myinit();
+#ifndef __APPLE__
     glewInit();
     if (!glewIsSupported("GL_VERSION_2_0 GL_VERSION_1_5 GL_ARB_multitexture GL_ARB_vertex_buffer_object")) {
         fprintf(stderr, "Required OpenGL extensions missing.");
         exit(-1);
     }
+#endif //__APPLE__
+	
 	m_shaderProgram = _compileProgram(vertexShader, spherePixelShader);
 	m_pWorldI->initCLKernels(m_argc, m_argv);
 	m_pWorldS->m_cxMainContext = m_pWorldI->m_cxMainContext;

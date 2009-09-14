@@ -3,7 +3,6 @@
 #include <string.h>
 
 
-#include <CL/cl.h>
 
 
 #include "btOclUtils.h"

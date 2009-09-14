@@ -704,7 +704,10 @@ void			btSoftBody::clusterDCImpulse(Cluster* cluster,const btVector3& impulse)
 	cluster->m_ndimpulses++;
 }
 
-
+struct NodeLinks
+{
+	btAlignedObjectArray<int> m_links;
+};
 
 
 //
@@ -748,10 +751,7 @@ int				btSoftBody::generateBendingConstraints(int distance,Material* mat)
 		if (distance == 2)
 		{
 
-			struct NodeLinks
-			{
-				btAlignedObjectArray<int> m_links;
-			};
+			
 
 			btAlignedObjectArray<NodeLinks> nodeLinks;
 

@@ -13,7 +13,12 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 IF(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)
 ENDIF(COMMAND cmake_policy)
-   
+  
+IF (APPLE)
+  FIND_LIBRARY(OPENCL_LIBRARY OpenCL DOC "OpenCL lib for OSX")
+  FIND_PATH(OPENCL_INCLUDE_DIR OpenCL/cl.h DOC "Include for OpenCL on OSX")
+ENDIF (APPLE)
+ 
 
 # This is the shortcut to finding GLU, GLUT and OpenGL if they are properly installed on your system
 # This should be the case.
@@ -52,12 +57,8 @@ ENDIF (GLUT_FOUND)
 IF (WIN32)
 SET(GLEW_glew_LIBRARY ${BULLET_PHYSICS_SOURCE_DIR}/Glut/glew32.lib)
 ELSE (WIN32)
-FIND_PACKAGE(GLEW)
-IF (GLEW_FOUND)
-MESSAGE("GLEW FOUND")
-ELSE (GLEW_FOUND)
+#FIND_PACKAGE(GLEW)
 MESSAGE("GLEW NOT FOUND")
-ENDIF (GLEW_FOUND)
 ENDIF (WIN32)
 
 IF (WIN32)
