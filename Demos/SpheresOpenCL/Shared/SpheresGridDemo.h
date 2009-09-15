@@ -79,7 +79,7 @@ class SpheresGridDemo : public GlutDemoApplication
 	{
 		m_argc = argc;
 		m_argv = argv;
-		m_demoType = DEMO_INTEGRATION;
+		m_demoType = DEMO_OE_CAKE_2D;//DEMO_INTEGRATION;
 	}
 	virtual ~SpheresGridDemo()
 	{

@@ -434,6 +434,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 		if (fp)
 			fileName = newFileName;
 	}
+
 	if (fp == NULL)
 	{
 		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);

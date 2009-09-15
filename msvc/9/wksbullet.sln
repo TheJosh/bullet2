@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual C++ Express 2008
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appMiniCL_VectorAdd_Mini", "appMiniCL_VectorAdd.vcproj", "{6D766893-676D-4222-6547-A75378F2CB60}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A} = {7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A}
@@ -17,8 +17,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbulletopenglsupport", "libbulletopenglsupport.vcproj", "{7C428E76-9271-6284-20F0-9B38ED6931E3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbulletsoftbody", "libbulletsoftbody.vcproj", "{C04EA8AC-D96C-0E1F-0823-094C1010F087}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libconvexdecomposition", "libconvexdecomposition.vcproj", "{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appSpheresOCL_Nv", "appSpheresOCL_Nv.vcproj", "{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -156,18 +154,6 @@ Global
 		{C04EA8AC-D96C-0E1F-0823-094C1010F087}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
 		{C04EA8AC-D96C-0E1F-0823-094C1010F087}.ReleaseDoublePrecision|Win32.ActiveCfg = ReleaseDoublePrecision|Win32
 		{C04EA8AC-D96C-0E1F-0823-094C1010F087}.ReleaseDoublePrecision|Win32.Build.0 = ReleaseDoublePrecision|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.Debug|Win32.ActiveCfg = Debug|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.Debug|Win32.Build.0 = Debug|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.DebugDll|Win32.Build.0 = DebugDll|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.DebugDoublePrecision|Win32.ActiveCfg = DebugDoublePrecision|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.DebugDoublePrecision|Win32.Build.0 = DebugDoublePrecision|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.Release|Win32.ActiveCfg = Release|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.Release|Win32.Build.0 = Release|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.ReleaseDoublePrecision|Win32.ActiveCfg = ReleaseDoublePrecision|Win32
-		{8050F819-5B5B-1504-BC6D-7F2B4C6C85F3}.ReleaseDoublePrecision|Win32.Build.0 = ReleaseDoublePrecision|Win32
 		{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}.Debug|Win32.Build.0 = Debug|Win32
 		{4C2FFB50-DB83-4FFE-8D66-AAF03E4A7029}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
