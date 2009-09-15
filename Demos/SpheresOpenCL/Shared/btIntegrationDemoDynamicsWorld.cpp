@@ -403,6 +403,15 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	char* fileName = "Integration.cl";
 	FILE * fp = fopen(fileName, "rb");
 	char newFileName[512];
+
+	if (fp == NULL)
+	{
+		sprintf(newFileName,"..//%s",fileName);
+		fp = fopen(newFileName, "rb");
+		if (fp)
+			fileName = newFileName;
+		
+	}
 	
 	if (fp == NULL)
 	{
