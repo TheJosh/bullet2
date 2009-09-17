@@ -103,6 +103,20 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 	return 1;
 }
 
+static unsigned int getMaxPowOf2(unsigned int num)
+{
+	unsigned int maxPowOf2 = 1;
+	for(int bit = 1; bit < 32; bit++)
+	{
+		if(maxPowOf2 >= num)
+		{
+			break;
+		}
+		maxPowOf2 <<= 1;
+	}
+	return maxPowOf2;
+}
+
 
 void btSpheresGridDemoDynamicsWorld::initDeviceData()
 {
@@ -115,15 +129,7 @@ void btSpheresGridDemoDynamicsWorld::postInitDeviceData()
 {
 	m_numSpheres = m_hShapeBuf.size();
 	m_numObjects = getNumCollisionObjects();
-	m_hashSize = 1;
-	for(int bit = 0; bit < 32; bit++)
-	{
-		if(m_hashSize >= m_numSpheres)
-		{
-			break;
-		}
-		m_hashSize <<= 1;
-	}
+	m_hashSize = getMaxPowOf2(m_numSpheres);
 	createVBO();
 	allocateBuffers();
 	adjustGrid();
@@ -217,24 +223,35 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
 	m_dPosHash = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// pair buffer
-	m_maxNeighbors = 12; // enough for 2D case
+//	m_maxNeighbors = 12; // enough for 2D case
+	m_maxNeighbors = 24; // enough for 2D case
 	m_hPairBuff.resize(m_numSpheres * m_maxNeighbors);
-	m_hPairBuffStartCurr.resize(m_numSpheres + 1);
+	m_hPairBuffStart.resize(m_numSpheres + 1);
+	m_scanSize = getMaxPowOf2(m_numSpheres + 1);
+	m_hPairBuffCurr.resize(m_scanSize);
 	for(int i = 0; i < m_numSpheres + 1; i++)
 	{
-		m_hPairBuffStartCurr[i].x = i * m_maxNeighbors;
-		m_hPairBuffStartCurr[i].y = 0;
+		m_hPairBuffStart[i] = i * m_maxNeighbors;
+	}
+	for(int i = 0; i < m_scanSize; i++)
+	{
+		m_hPairBuffCurr[i] = 0;
 	}
 	memSize = m_numSpheres * m_maxNeighbors * sizeof(int);
 	m_dPairBuff = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	memSize = (m_numSpheres + 1) * sizeof(btInt2);
-	m_dPairBuffStartCurr = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+	memSize = (m_numSpheres + 1) * sizeof(int);
+	m_dPairBuffStart = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairBuffStartCurr, CL_TRUE, 0, memSize, &(m_hPairBuffStartCurr[0]), 0, NULL, NULL);
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairBuffStart, CL_TRUE, 0, memSize, &(m_hPairBuffStart[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_hPairScan.resize(m_numSpheres);
-	memSize = m_numSpheres * sizeof(int);
+	memSize = m_scanSize * sizeof(int);
+	m_dPairBuffCurr = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	m_hPairScan.resize(m_scanSize);
+	memSize = m_scanSize * sizeof(int);
 	m_dPairScan = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// collision pairs
@@ -257,6 +274,9 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
 	memSize = sizeof(btSimParams);
 	m_dSimParams = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
+//
+	memSize = sizeof(int) * 65536;
+	m_dScanTmpBuffer = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
 }
 
 void btSpheresGridDemoDynamicsWorld::adjustGrid()
@@ -275,6 +295,12 @@ void btSpheresGridDemoDynamicsWorld::adjustGrid()
 	}
 	m_worldMin = wmin;
 	m_worldMax = wmax;
+
+	btVector3 wsize = m_worldMax - m_worldMin;
+	m_worldMin -= wsize * 0.1f;
+	m_worldMax += wsize * 0.1f;
+	wsize = m_worldMax - m_worldMin;
+
 	btScalar maxRad = -BT_LARGE_FLOAT;
 	btScalar minRad =  BT_LARGE_FLOAT;
 	for(int i = 0; i < m_numSpheres; i++)
@@ -286,6 +312,7 @@ void btSpheresGridDemoDynamicsWorld::adjustGrid()
 	m_minSphereRad = minRad;
 	m_maxSphereRad = maxRad;
 	m_cellSize[0] = m_cellSize[1] = m_cellSize[2] = maxRad * btScalar(2.f);
+
 	m_simParams.m_worldMin[0] = m_worldMin[0];
 	m_simParams.m_worldMin[1] = m_worldMin[1];
 	m_simParams.m_worldMin[2] = m_worldMin[2];
@@ -294,7 +321,6 @@ void btSpheresGridDemoDynamicsWorld::adjustGrid()
 	m_simParams.m_cellSize[1] = m_cellSize[1];
 	m_simParams.m_cellSize[2] = m_cellSize[2];
 
-	btVector3 wsize = m_worldMax - m_worldMin;
 	m_simParams.m_gridSize[0] = (int)(wsize[0] / m_cellSize[0]);
 	m_simParams.m_gridSize[1] = (int)(wsize[1] / m_cellSize[1]);
 	m_simParams.m_gridSize[2] = (int)(wsize[2] / m_cellSize[2]);
@@ -512,108 +538,146 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 #endif
 
 	// create the kernels
-	m_ckSetSpheresKernel = clCreateKernel(m_cpProgram, "kSetSpheres", &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	//m_ckSetSpheresKernel = clCreateKernel(m_cpProgram, "kSetSpheres", &ciErrNum);
+	//oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	postInitDeviceData();
 
-	// set the args values 
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 0, sizeof(int),	(void*) &m_numSpheres);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 1, sizeof(cl_mem), (void*) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 2, sizeof(cl_mem), (void*) &m_dTrans);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 3, sizeof(cl_mem), (void*) &m_dShapeBuf);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 4, sizeof(cl_mem), (void*) &m_dBodyIds);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 5, sizeof(cl_mem), (void*) &m_dPosHash);
-	ciErrNum |= clSetKernelArg(m_ckSetSpheresKernel, 6, sizeof(cl_mem), (void*) &m_dSimParams);
+	initKernel(GPUDEMO_KERNEL_COMPUTE_CELL_ID, "kSetSpheres");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 0, sizeof(int),	(void*) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 1, sizeof(cl_mem), (void*) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 2, sizeof(cl_mem), (void*) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 3, sizeof(cl_mem), (void*) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 4, sizeof(cl_mem), (void*) &m_dBodyIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 5, sizeof(cl_mem), (void*) &m_dPosHash);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CELL_ID].m_kernel, 6, sizeof(cl_mem), (void*) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-	m_ckPredictUnconstrainedMotionKernel = clCreateKernel(m_cpProgram, "kPredictUnconstrainedMotion", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 0, sizeof(int),	(void *) &m_numObjects);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 1, sizeof(cl_mem), (void *) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 2, sizeof(cl_mem), (void *) &m_dAngVel);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 3, sizeof(cl_mem), (void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 4, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
+//	m_ckPredictUnconstrainedMotionKernel = clCreateKernel(m_cpProgram, "kPredictUnconstrainedMotion", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_APPLY_GRAVITY, "kPredictUnconstrainedMotion");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 1, sizeof(cl_mem), (void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 2, sizeof(cl_mem), (void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 3, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 4, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-
-	m_ckIntegrateTransformsKernel = clCreateKernel(m_cpProgram, "kIntegrateTransforms", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 0, sizeof(int),	(void *) &m_numObjects);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 1, sizeof(cl_mem),(void *) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 2, sizeof(cl_mem),(void *) &m_dAngVel);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 3, sizeof(cl_mem),(void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 4, sizeof(cl_mem),(void *) &m_dTrans);
-	ciErrNum |= clSetKernelArg(m_ckIntegrateTransformsKernel, 5, sizeof(cl_mem),(void *) &m_dInvInertiaMass);
+	initKernel(GPUDEMO_KERNEL_FIND_CELL_START, "kFindCellStart");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_CELL_START].m_kernel, 0, sizeof(int),		(void *) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_CELL_START].m_kernel, 1, sizeof(cl_mem),	(void*) &m_dPosHash);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_CELL_START].m_kernel, 2, sizeof(cl_mem),	(void*) &m_dCellStart);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-
-	m_ckBroadphaseCDKernel = clCreateKernel(m_cpProgram, "kBroadphaseCD", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 0, sizeof(int),    (void *) &m_numSpheres);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 1, sizeof(cl_mem), (void *) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 3, sizeof(cl_mem), (void *) &m_dBodyIds);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 4, sizeof(cl_mem), (void *) &m_dPosHash);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 5, sizeof(cl_mem), (void *) &m_dCellStart);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 6, sizeof(cl_mem), (void *) &m_dPairBuff);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 7, sizeof(cl_mem), (void *) &m_dPairBuffStartCurr);
-	ciErrNum |= clSetKernelArg(m_ckBroadphaseCDKernel, 8, sizeof(cl_mem), (void *) &m_dSimParams);
+//	m_ckIntegrateTransformsKernel = clCreateKernel(m_cpProgram, "kIntegrateTransforms", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS, "kIntegrateTransforms");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 1, sizeof(cl_mem),(void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 2, sizeof(cl_mem),(void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 3, sizeof(cl_mem),(void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 4, sizeof(cl_mem),(void *) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 5, sizeof(cl_mem),(void *) &m_dInvInertiaMass);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 
-	m_ckInitObjUsageTabKernel = clCreateKernel(m_cpProgram, "kInitObjUsageTab", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 0, sizeof(int),	(void *) &m_numObjects);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 1, sizeof(cl_mem),(void *) &m_dObjUsed);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 2, sizeof(cl_mem),(void *) &m_dInvInertiaMass);
-	ciErrNum |= clSetKernelArg(m_ckInitObjUsageTabKernel, 3, sizeof(cl_mem),(void *) &m_dSimParams);
+//	m_ckBroadphaseCDKernel = clCreateKernel(m_cpProgram, "kBroadphaseCD", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_FIND_PAIRS, "kBroadphaseCD");
+//	m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_workgroupSize = 64;
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 0, sizeof(int),    (void *) &m_numSpheres);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 1, sizeof(cl_mem), (void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 3, sizeof(cl_mem), (void *) &m_dBodyIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 4, sizeof(cl_mem), (void *) &m_dPosHash);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 5, sizeof(cl_mem), (void *) &m_dCellStart);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 6, sizeof(cl_mem), (void *) &m_dPairBuff);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 7, sizeof(cl_mem), (void *) &m_dPairBuffStart);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 8, sizeof(cl_mem), (void *) &m_dPairBuffCurr);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 9, sizeof(cl_mem), (void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-	m_ckSetupBatchesKernel = clCreateKernel(m_cpProgram, "kSetupBatches", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 0, sizeof(int),		(void *) &m_numPairs);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 2, sizeof(cl_mem),	(void *) &m_dObjUsed);
-	ciErrNum |= clSetKernelArg(m_ckSetupBatchesKernel, 3, sizeof(cl_mem),	(void *) &m_dSimParams);
+///*
+	initKernel(GPUDEMO_KERNEL_COMPACT_PAIRS, "kCompactPairs");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 0, sizeof(int),	(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 1, sizeof(cl_mem),	(void *) &m_dPairBuff);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 2, sizeof(cl_mem),	(void *) &m_dPairScan);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 3, sizeof(cl_mem),	(void *) &m_dPairBuffStart);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 4, sizeof(cl_mem),	(void *) &m_dPairBuffCurr);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 5, sizeof(cl_mem),	(void *) &m_dBodyIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 6, sizeof(cl_mem),	(void *) &m_dPairIds);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+//*/
+
+//	m_ckInitObjUsageTabKernel = clCreateKernel(m_cpProgram, "kInitObjUsageTab", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_INIT_BATCHES, "kInitObjUsageTab");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INIT_BATCHES].m_kernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INIT_BATCHES].m_kernel, 1, sizeof(cl_mem),(void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INIT_BATCHES].m_kernel, 2, sizeof(cl_mem),(void *) &m_dInvInertiaMass);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INIT_BATCHES].m_kernel, 3, sizeof(cl_mem),(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-	m_ckCheckBatchesKernel = clCreateKernel(m_cpProgram, "kCheckBatches", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 0, sizeof(int),		(void *) &m_numPairs);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 2, sizeof(cl_mem),	(void *) &m_dObjUsed);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 3, sizeof(cl_mem),	(void *) &m_dSimParams);
-	ciErrNum |= clSetKernelArg(m_ckCheckBatchesKernel, 4, sizeof(int),		(void *) &m_maxBatches);
+//	m_ckSetupBatchesKernel = clCreateKernel(m_cpProgram, "kSetupBatches", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_COMPUTE_BATCHES, "kSetupBatches");
+//	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 2;
+//	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 4;
+//	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 8;
+	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 16;
+//	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 32;
+//	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 48;
+//	m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_workgroupSize = 64;
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_kernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_kernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_kernel, 2, sizeof(cl_mem),	(void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_BATCHES].m_kernel, 3, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-	m_ckSetupContactsKernel = clCreateKernel(m_cpProgram, "kSetupContacts", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 0, sizeof(int),		(void *) &m_numPairs);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 2, sizeof(cl_mem),	(void *) &m_dPos);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 3, sizeof(cl_mem),	(void *) &m_dShapeBuf);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 4, sizeof(cl_mem),	(void *) &m_dContacts);
-	ciErrNum |= clSetKernelArg(m_ckSetupContactsKernel, 5, sizeof(cl_mem),	(void *) &m_dSimParams);
+//	m_ckCheckBatchesKernel = clCreateKernel(m_cpProgram, "kCheckBatches", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_CHECK_BATCHES, "kCheckBatches");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 2, sizeof(cl_mem),	(void *) &m_dObjUsed);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 3, sizeof(cl_mem),	(void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 4, sizeof(int),		(void *) &m_maxBatches);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-	m_ckSolveConstraintsKernel = clCreateKernel(m_cpProgram, "kSolveConstraints", &ciErrNum);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(int),		(void *) &m_numPairs);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 1, sizeof(cl_mem),	(void *) &m_dContacts);
+//	m_ckSetupContactsKernel = clCreateKernel(m_cpProgram, "kSetupContacts", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_COMPUTE_CONTACTS, "kSetupContacts");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 1, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 2, sizeof(cl_mem),	(void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 3, sizeof(cl_mem),	(void *) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 4, sizeof(cl_mem),	(void *) &m_dContacts);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 5, sizeof(cl_mem),	(void *) &m_dSimParams);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+//	m_ckSolveConstraintsKernel = clCreateKernel(m_cpProgram, "kSolveConstraints", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_SOLVE_CONSTRAINTS, "kSolveConstraints");
 	// parameter 2 will be set later (batchNum)
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 3, sizeof(cl_mem),	(void *) &m_dTrans);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 4, sizeof(cl_mem),	(void *) &m_dPairIds);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 5, sizeof(cl_mem),	(void *) &m_dLinVel);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 6, sizeof(cl_mem),	(void *) &m_dAngVel);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 7, sizeof(cl_mem),	(void *) &m_dInvInertiaMass);
-	ciErrNum |= clSetKernelArg(m_ckSolveConstraintsKernel, 8, sizeof(cl_mem),	(void *) &m_dSimParams);
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 0, sizeof(int),		(void *) &m_numPairs);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 1, sizeof(cl_mem),	(void *) &m_dContacts);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 3, sizeof(cl_mem),	(void *) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 4, sizeof(cl_mem),	(void *) &m_dPairIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 5, sizeof(cl_mem),	(void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 6, sizeof(cl_mem),	(void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 7, sizeof(cl_mem),	(void *) &m_dInvInertiaMass);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 8, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #ifndef CL_PLATFORM_MINI_CL
-	m_ckBitonicSortHashKernel = clCreateKernel(m_cpProgram, "kBitonicSortHash", &ciErrNum);
-    ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 0,      sizeof(cl_mem), (void *)&m_dPosHash);
+//	m_ckBitonicSortHashKernel = clCreateKernel(m_cpProgram, "kBitonicSortHash", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_ALL_GLOB, "kBitonicSortHash");
+	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_ALL_GLOB].m_kernel, 0,      sizeof(cl_mem), (void *)&m_dPosHash);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+//	m_ckBitonicSortLocal = clCreateKernel(m_cpProgram, "bitonicSortLocal", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL, "bitonicSortLocal");
+//	m_ckBitonicSortLocal1 = clCreateKernel(m_cpProgram, "bitonicSortLocal1", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1, "bitonicSortLocal1");
+//	m_ckBitonicMergeGlobal = clCreateKernel(m_cpProgram, "bitonicMergeGlobal", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL, "bitonicMergeGlobal");
+//	m_ckBitonicMergeLocal = clCreateKernel(m_cpProgram, "bitonicMergeLocal", &ciErrNum);
+	initKernel(GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "bitonicMergeLocal");
 
-	m_ckBitonicSortLocal = clCreateKernel(m_cpProgram, "bitonicSortLocal", &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_ckBitonicSortLocal1 = clCreateKernel(m_cpProgram, "bitonicSortLocal1", &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_ckBitonicMergeGlobal = clCreateKernel(m_cpProgram, "bitonicMergeGlobal", &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_ckBitonicMergeLocal = clCreateKernel(m_cpProgram, "bitonicMergeLocal", &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1, "scanExclusiveLocal1");
+	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2, "scanExclusiveLocal2");
+	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE, "uniformUpdate");
+
 #endif //CL_PLATFORM_MINI_CL
 }
 
@@ -621,8 +685,9 @@ void btSpheresGridDemoDynamicsWorld::runSetSpheresKernel()
 {
     cl_int ciErrNum;
 	{
-		BT_PROFILE("SetSpheres");
-		runKernelWithWorkgroupSize(m_ckSetSpheresKernel, m_numSpheres, 256);
+		BT_PROFILE("ComputeCellId");
+//		runKernelWithWorkgroupSize(m_ckSetSpheresKernel, m_numSpheres, 256);
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_CELL_ID, m_numSpheres);
 		ciErrNum = clFinish(m_cqCommandQue);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
@@ -682,9 +747,10 @@ void btSpheresGridDemoDynamicsWorld::runPredictUnconstrainedMotionKernel()
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
     // Set work size and execute the kernel
-	ciErrNum = clSetKernelArg(m_ckPredictUnconstrainedMotionKernel, 5, sizeof(float), &m_timeStep);
+	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 5, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	runKernelWithWorkgroupSize(m_ckPredictUnconstrainedMotionKernel, m_numObjects, 512);
+//	runKernelWithWorkgroupSize(m_ckPredictUnconstrainedMotionKernel, m_numObjects, 512);
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_APPLY_GRAVITY, m_numObjects);
 	ciErrNum = clFinish(m_cqCommandQue);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
@@ -693,9 +759,10 @@ void btSpheresGridDemoDynamicsWorld::runPredictUnconstrainedMotionKernel()
 void btSpheresGridDemoDynamicsWorld::runIntegrateTransformsKernel()
 {
     cl_int ciErrNum;
-	ciErrNum = clSetKernelArg(m_ckIntegrateTransformsKernel, 6, sizeof(float), &m_timeStep);
+	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS].m_kernel, 6, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	runKernelWithWorkgroupSize(m_ckIntegrateTransformsKernel, m_numObjects, 256);
+//	runKernelWithWorkgroupSize(m_ckIntegrateTransformsKernel, m_numObjects, 256);
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS, m_numObjects);
 	ciErrNum = clFinish(m_cqCommandQue);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 /*
@@ -867,6 +934,9 @@ void btSpheresGridDemoDynamicsWorld::runFindCellStartKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dCellStart, CL_TRUE, 0, memSize, &(m_hCellStart[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_FIND_CELL_START, m_numSpheres);
+	ciErrNum = clFinish(m_cqCommandQue);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
 
@@ -879,7 +949,8 @@ void btSpheresGridDemoDynamicsWorld::runBroadphaseCDKernel()
 #else
 //	int memSize = m_numSpheres * sizeof(btInt2);
 //	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffStartCurr, CL_TRUE, 0, memSize, &(m_hPairBuffStartCurr[0]), 0, NULL, NULL);
-	runKernelWithWorkgroupSize(m_ckBroadphaseCDKernel, m_numSpheres, 128);
+//	runKernelWithWorkgroupSize(m_ckBroadphaseCDKernel, m_numSpheres, 128);
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_FIND_PAIRS, m_numSpheres);
 	ciErrNum = clFinish(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
@@ -912,25 +983,34 @@ void btSpheresGridDemoDynamicsWorld::runBroadphaseCDKernel()
 void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
 {
     cl_int ciErrNum;
-#if 1
+	int memSize;
+#if 0
 	// CPU version
 	// get data from GPU
-	int memSize = m_numSpheres * sizeof(btInt2);
-	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffStartCurr, CL_TRUE, 0, memSize, &(m_hPairBuffStartCurr[0]), 0, NULL, NULL);
+	memSize = m_numSpheres * sizeof(int);
+	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// do scan
 	m_hPairScan[0] = 0;
-	for(int i = 1; i < m_numSpheres; i++)
+	for(int i = 1; i <= m_numSpheres; i++)
 	{
-		int count_prev = m_hPairBuffStartCurr[i - 1].y;
+		int count_prev = m_hPairBuffCurr[i - 1];
 		m_hPairScan[i] = m_hPairScan[i-1] + count_prev;
 	}
-	m_numPairs = m_hPairScan[m_numSpheres - 1];
+	m_numPairs = m_hPairScan[m_numSpheres];
 	// write back to GPU
 	memSize = m_numSpheres * sizeof(int);
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
+	scanExclusive(m_dPairScan, m_dPairBuffCurr, m_scanSize);
+	// now read the total number of pairs to CPU (this is necessary to run other kernels) 
+	memSize = sizeof(int);
+	int offset = sizeof(int) * m_numSpheres;
+	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, offset, memSize, &m_numPairs, 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	ciErrNum = clFinish(m_cqCommandQue);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
 
@@ -938,13 +1018,13 @@ void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
 void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 {
     cl_int ciErrNum;
-#if 1
+#if 0
 	// CPU version
 	// get data from GPU
-	int memSize = m_numSpheres * sizeof(btInt2);
-	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffStartCurr, CL_TRUE, 0, memSize, &(m_hPairBuffStartCurr[0]), 0, NULL, NULL);
+	int memSize = (m_numSpheres + 1) * sizeof(int);
+	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	memSize = m_numSpheres * sizeof(int);
+	memSize = (m_numSpheres + 1) * sizeof(int);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	memSize = m_numSpheres * m_maxNeighbors * sizeof(int);
@@ -953,8 +1033,8 @@ void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 	int numPairs = 0;
 	for(int i = 0; i < m_numSpheres; i++)
 	{
-		int count = m_hPairBuffStartCurr[i].y;
-		int inpStart = m_hPairBuffStartCurr[i].x;
+		int count = m_hPairBuffCurr[i];
+		int inpStart = m_hPairBuffStart[i];
 		int outStart = m_hPairScan[i];
 		int	objIdA = m_hBodyIds[i];
 		for(int j = 0; j < count; j++)
@@ -982,6 +1062,9 @@ void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPACT_PAIRS, m_numSpheres);
+	ciErrNum = clFinish(m_cqCommandQue);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #endif
 }
 
@@ -1049,21 +1132,24 @@ void btSpheresGridDemoDynamicsWorld::runSetupBatchesKernel()
 	{
 		{
 			BT_PROFILE_SETUP_BATCHES("Init");
-			runKernelWithWorkgroupSize(m_ckInitObjUsageTabKernel, m_numObjects, 512);
+//			runKernelWithWorkgroupSize(m_ckInitObjUsageTabKernel, m_numObjects, 512);
+			runKernelWithWorkgroupSize(GPUDEMO_KERNEL_INIT_BATCHES, m_numObjects);
 			ciErrNum = clFinish(m_cqCommandQue);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 		{
 			BT_PROFILE_SETUP_BATCHES("Setup");
-			runKernelWithWorkgroupSize(m_ckSetupBatchesKernel, m_numPairs, 16);
+//			runKernelWithWorkgroupSize(m_ckSetupBatchesKernel, m_numPairs, 16);
+			runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_BATCHES, m_numPairs);
 			ciErrNum = clFinish(m_cqCommandQue);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 		{
 			BT_PROFILE_SETUP_BATCHES("Check");
-			ciErrNum = clSetKernelArg(m_ckCheckBatchesKernel, 5, sizeof(int), &nBatch);
+			ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 5, sizeof(int), &nBatch);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-			runKernelWithWorkgroupSize(m_ckCheckBatchesKernel, m_numPairs, 256);
+//			runKernelWithWorkgroupSize(m_ckCheckBatchesKernel, m_numPairs, 256);
+			runKernelWithWorkgroupSize(GPUDEMO_KERNEL_CHECK_BATCHES, m_numPairs);
 			ciErrNum = clFinish(m_cqCommandQue);
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
@@ -1255,13 +1341,16 @@ void btSpheresGridDemoDynamicsWorld::runSetupContactsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
-	runKernelWithWorkgroupSize(m_ckSetupContactsKernel, m_numPairs, 256);
+//	runKernelWithWorkgroupSize(m_ckSetupContactsKernel, m_numPairs, 256);
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_CONTACTS, m_numPairs);
 	ciErrNum = clFinish(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+/*
 	// read results from GPU
 	int memSize = m_numPairs * sizeof(btSpheresContPair);
     ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
+*/
 #endif
 }
 
@@ -1300,24 +1389,25 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
     ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 #else
-	ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 9, sizeof(float), &m_timeStep);
+	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 9, sizeof(float), &m_timeStep);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	{
 		BT_PROFILE("enqueue");
-		ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(int), &m_numPairs);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+//		ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 0, sizeof(int), &m_numPairs);
+//		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
 		{
 			for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
 			{
-				ciErrNum = clSetKernelArg(m_ckSolveConstraintsKernel, 2, sizeof(int), &nBatch);
+				ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 2, sizeof(int), &nBatch);
 				oclCHECKERROR(ciErrNum, CL_SUCCESS);
 				//runKernelWithWorkgroupSize(m_ckSolveConstraintsKernel, m_numPairs, 64);
-				runKernelWithWorkgroupSize(m_ckSolveConstraintsKernel, m_numPairs, 64);
+				runKernelWithWorkgroupSize(GPUDEMO_KERNEL_SOLVE_CONSTRAINTS, m_numPairs);
 			}
 		}
 		clFinish(m_cqCommandQue);
 	}
+/*
 	{
 		BT_PROFILE("read from GPU");
 		// read results to CPU
@@ -1327,6 +1417,7 @@ void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
+*/
 #endif
 }
 
@@ -1410,14 +1501,45 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 }	
 
 
-void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(cl_kernel kernelFunc, int globalSize, int workgroupSize)
+
+void btSpheresGridDemoDynamicsWorld::initKernel(int kernelId, char* pName)
+{
+	cl_int ciErrNum;
+	cl_kernel kernel = clCreateKernel(m_cpProgram, pName, &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	size_t wgSize;
+	ciErrNum = clGetKernelWorkGroupInfo(kernel, m_cdDevice, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &wgSize, NULL);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+/*
+	unsigned int wgszPow2 = 1;
+	for(int n = 0; n < 31; n++)
+	{
+		if(wgszPow2 > wgSize)
+		{
+			wgszPow2 >>= 1;
+			break;
+		}
+		wgszPow2 <<= 1;
+	}
+*/
+	m_kernels[kernelId].m_Id = kernelId;
+	m_kernels[kernelId].m_kernel = kernel;
+	m_kernels[kernelId].m_name = pName;
+//	m_kernels[kernelId].m_workgroupSize = wgszPow2;
+	m_kernels[kernelId].m_workgroupSize = wgSize;
+	return;
+}
+
+void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(int kernelId, int globalSize)
 {
 	if(globalSize <= 0)
 	{
 		return;
 	}
+	cl_kernel kernelFunc = m_kernels[kernelId].m_kernel;
 	cl_int ciErrNum = clSetKernelArg(kernelFunc, 0, sizeof(int), (void*)&globalSize);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	int workgroupSize = m_kernels[kernelId].m_workgroupSize;
 	if(workgroupSize <= 0)
 	{ // let OpenCL library calculate workgroup size
 		size_t globalWorkSize[2];
@@ -1430,8 +1552,6 @@ void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(cl_kernel kernel
 		#if defined(CL_PLATFORM_MINI_CL)
 			workgroupSize = 4;
 		#else
-			int maxWorkgroupSize;
-			clGetDeviceInfo(m_cdDevice, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(maxWorkgroupSize), &maxWorkgroupSize, NULL);
 			#if defined(CL_PLATFORM_NVIDIA)
 				// use given value
 			#else
@@ -1457,6 +1577,7 @@ void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(cl_kernel kernel
 
 
 
+
 //Note: logically shared with BitonicSort OpenCL code!
 static const unsigned int LOCAL_SIZE_LIMIT = 1024U;
 
@@ -1472,25 +1593,25 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
     {
         btAssert( (batch * arrayLength) % LOCAL_SIZE_LIMIT == 0);
         //Launch bitonicSortLocal
-        ciErrNum  = clSetKernelArg(m_ckBitonicSortLocal, 0,   sizeof(cl_mem), (void *)&pKey);
-        ciErrNum |= clSetKernelArg(m_ckBitonicSortLocal, 1,  sizeof(cl_uint), (void *)&arrayLength);
-        ciErrNum |= clSetKernelArg(m_ckBitonicSortLocal, 2,  sizeof(cl_uint), (void *)&dir);
+		ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 0,   sizeof(cl_mem), (void *)&pKey);
+        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1,  sizeof(cl_uint), (void *)&arrayLength);
+        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 2,  sizeof(cl_uint), (void *)&dir);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
         localWorkSize  = LOCAL_SIZE_LIMIT / 2;
         globalWorkSize = batch * arrayLength / 2;
-        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortLocal, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
     }
     else
     {
         //Launch bitonicSortLocal1
-        ciErrNum  = clSetKernelArg(m_ckBitonicSortLocal1, 0,  sizeof(cl_mem), (void *)&pKey);
+        ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
         localWorkSize  = LOCAL_SIZE_LIMIT / 2;
         globalWorkSize = batch * arrayLength / 2;
-        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortLocal1, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
         for(unsigned int size = 2 * LOCAL_SIZE_LIMIT; size <= arrayLength; size <<= 1)
@@ -1500,33 +1621,33 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
                 if(stride >= LOCAL_SIZE_LIMIT)
                 {
                     //Launch bitonicMergeGlobal
-                    ciErrNum  = clSetKernelArg(m_ckBitonicMergeGlobal, 0,  sizeof(cl_mem), (void *)&pKey);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 1, sizeof(cl_uint), (void *)&arrayLength);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 2, sizeof(cl_uint), (void *)&size);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 3, sizeof(cl_uint), (void *)&stride);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeGlobal, 4, sizeof(cl_uint), (void *)&dir);
+                    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 2, sizeof(cl_uint), (void *)&size);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 3, sizeof(cl_uint), (void *)&stride);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
                     localWorkSize  = LOCAL_SIZE_LIMIT / 4;
                     globalWorkSize = batch * arrayLength / 2;
 
-                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicMergeGlobal, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
                 }
                 else
                 {
                     //Launch bitonicMergeLocal
-                    ciErrNum  = clSetKernelArg(m_ckBitonicMergeLocal, 0,  sizeof(cl_mem), (void *)&pKey);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 1, sizeof(cl_uint), (void *)&arrayLength);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 2, sizeof(cl_uint), (void *)&stride);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 3, sizeof(cl_uint), (void *)&size);
-                    ciErrNum |= clSetKernelArg(m_ckBitonicMergeLocal, 4, sizeof(cl_uint), (void *)&dir);
+					ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 2, sizeof(cl_uint), (void *)&stride);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 3, sizeof(cl_uint), (void *)&size);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
                     localWorkSize  = LOCAL_SIZE_LIMIT / 2;
                     globalWorkSize = batch * arrayLength / 2;
 
-                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicMergeLocal, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
                     break;
                 }
@@ -1534,3 +1655,99 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
         }
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Common definitions
+////////////////////////////////////////////////////////////////////////////////
+#define WORKGROUP_SIZE  512
+
+static unsigned int iSnapUp(unsigned int dividend, unsigned int divisor)
+{
+    return ((dividend % divisor) == 0) ? dividend : (dividend - dividend % divisor + divisor);
+}
+
+static unsigned int factorRadix2(unsigned int& log2L, unsigned int L)
+{
+    if(!L){
+        log2L = 0;
+        return 0;
+    }else{
+        for(log2L = 0; (L & 1) == 0; L >>= 1, log2L++);
+        return L;
+    }
+}
+
+
+
+void btSpheresGridDemoDynamicsWorld::scanExclusiveLocal1(cl_mem d_Dst, cl_mem d_Src, unsigned int n, unsigned int size)
+{
+    cl_int ciErrNum;
+    size_t localWorkSize, globalWorkSize;
+
+    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 0, sizeof(cl_mem), (void *)&d_Dst);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 1, sizeof(cl_mem), (void *)&d_Src);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 2, 2 * WORKGROUP_SIZE * sizeof(unsigned int), NULL);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 3, sizeof(unsigned int), (void *)&size);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+    localWorkSize = WORKGROUP_SIZE;
+    globalWorkSize = (n * size) / 4;
+
+    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}
+
+
+void btSpheresGridDemoDynamicsWorld::scanExclusiveLocal2(cl_mem d_Buffer, cl_mem d_Dst, cl_mem d_Src, unsigned int n, unsigned int size)
+{
+    cl_int ciErrNum;
+    size_t localWorkSize, globalWorkSize;
+
+    unsigned int elements = n * size;
+    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 0, sizeof(cl_mem), (void *)&d_Buffer);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 1, sizeof(cl_mem), (void *)&d_Dst);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 2, sizeof(cl_mem), (void *)&d_Src);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 3, 2 * WORKGROUP_SIZE * sizeof(unsigned int), NULL);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 4, sizeof(unsigned int), (void *)&elements);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 5, sizeof(unsigned int), (void *)&size);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+    localWorkSize = WORKGROUP_SIZE;
+    globalWorkSize = iSnapUp(elements, WORKGROUP_SIZE);
+
+    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}
+
+void btSpheresGridDemoDynamicsWorld::uniformUpdate(cl_mem d_Dst, cl_mem d_Buffer, unsigned int n)
+{
+    cl_int ciErrNum;
+    size_t localWorkSize, globalWorkSize;
+
+    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE].m_kernel, 0, sizeof(cl_mem), (void *)&d_Dst);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE].m_kernel, 1, sizeof(cl_mem), (void *)&d_Buffer);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+     localWorkSize = WORKGROUP_SIZE;
+    globalWorkSize = n * WORKGROUP_SIZE;
+
+    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}
+
+void btSpheresGridDemoDynamicsWorld::scanExclusive(cl_mem d_Dst, cl_mem d_Src, unsigned int arrayLength)
+{
+//	arrayLength = getMaxPowOf2(arrayLength + 1);
+	if(arrayLength <= (4 * WORKGROUP_SIZE))
+	{
+		scanExclusiveLocal1(d_Dst, d_Src, 1, 4 * WORKGROUP_SIZE);
+	}
+	else
+	{
+		scanExclusiveLocal1(d_Dst, d_Src, arrayLength / (4 * WORKGROUP_SIZE),  4 * WORKGROUP_SIZE);
+		scanExclusiveLocal2(m_dScanTmpBuffer, d_Dst, d_Src, 1, arrayLength / (4 * WORKGROUP_SIZE));
+		uniformUpdate(d_Dst, m_dScanTmpBuffer, arrayLength / (4 * WORKGROUP_SIZE));
+	}
+}
+

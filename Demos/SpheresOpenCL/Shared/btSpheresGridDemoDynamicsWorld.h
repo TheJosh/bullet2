@@ -90,6 +90,39 @@ struct btSpheresContPair
 	btVector3 m_normal;  // + impulse accumulator in w
 };
 
+enum
+{
+	GPUDEMO_KERNEL_APPLY_GRAVITY = 0,
+	GPUDEMO_KERNEL_COMPUTE_CELL_ID,
+	GPUDEMO_KERNEL_FIND_CELL_START,
+	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_ALL_GLOB,
+	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL,
+	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1,
+	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL,
+	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL,
+	GPUDEMO_KERNEL_FIND_PAIRS,
+	GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1,
+	GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2,
+	GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE,
+	GPUDEMO_KERNEL_COMPACT_PAIRS,
+	GPUDEMO_KERNEL_INIT_BATCHES,
+	GPUDEMO_KERNEL_COMPUTE_BATCHES,
+	GPUDEMO_KERNEL_CHECK_BATCHES,
+	GPUDEMO_KERNEL_COMPUTE_CONTACTS,
+	GPUDEMO_KERNEL_SOLVE_CONSTRAINTS,
+	GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS,
+	GPUDEMO_KERNEL_TOTAL
+};
+
+
+struct btKernelInfo
+{
+	int			m_Id;
+	cl_kernel	m_kernel;
+	char*		m_name;
+	int			m_workgroupSize;
+};
+
 class btSpheresGridDemoDynamicsWorld : public btDiscreteDynamicsWorld
 {
 public:
@@ -99,6 +132,7 @@ public:
 protected:
 	int			m_numObjects;
 	int			m_hashSize; // power of 2 >= m_numSpheres;
+	int			m_scanSize; // power of 2 >= m_numSpheres;
 	int			m_numGridCells; 
 	int			m_maxNeighbors;
 	int			m_numPairs; 
@@ -121,7 +155,8 @@ protected:
 	btAlignedObjectArray<btInt2>	m_hPosHash;
 	btAlignedObjectArray<int>		m_hCellStart;
 	btAlignedObjectArray<int>		m_hPairBuff;
-	btAlignedObjectArray<btInt2>	m_hPairBuffStartCurr;
+	btAlignedObjectArray<int>		m_hPairBuffStart;
+	btAlignedObjectArray<int>		m_hPairBuffCurr;
 	btAlignedObjectArray<int>		m_hPairScan;
 	btAlignedObjectArray<btPairId>	m_hPairIds;
 	btAlignedObjectArray<int>		m_hObjUsed;
@@ -139,12 +174,14 @@ protected:
 	cl_mem		m_dPosHash;
 	cl_mem		m_dCellStart;
 	cl_mem		m_dPairBuff;
-	cl_mem		m_dPairBuffStartCurr;
+	cl_mem		m_dPairBuffStart;
+	cl_mem		m_dPairBuffCurr;
 	cl_mem		m_dPairScan;
 	cl_mem		m_dPairIds;
 	cl_mem		m_dObjUsed;
 	cl_mem		m_dContacts;
 	cl_mem		m_dSimParams; // copy of m_simParams : global simulation paramerers such as gravity, etc. 
+	cl_mem		m_dScanTmpBuffer;
 
 
 	// OpenCL 
@@ -154,6 +191,8 @@ public:
 	cl_command_queue	m_cqCommandQue;
 	cl_program			m_cpProgram;
 protected:
+	btKernelInfo		m_kernels[GPUDEMO_KERNEL_TOTAL];
+/*
 	cl_kernel			m_ckSetSpheresKernel;
 	cl_kernel			m_ckPredictUnconstrainedMotionKernel;
 	cl_kernel			m_ckIntegrateTransformsKernel;
@@ -168,6 +207,7 @@ protected:
 	cl_kernel			m_ckBitonicSortLocal1;
 	cl_kernel			m_ckBitonicMergeGlobal;
 	cl_kernel			m_ckBitonicMergeLocal;
+*/
 
 
 	btVector3			m_worldMin;
@@ -227,8 +267,13 @@ public:
 	void runSetupContactsKernel();
 	void runSolveConstraintsKernel();
 	void solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum);
-	void runKernelWithWorkgroupSize(cl_kernel kernelFunc, int globalSize, int workgroupSize);
+	void initKernel(int kernelId, char* pName);
+	void runKernelWithWorkgroupSize(int kernelId, int globalSize);
 	void bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir);
+	void scanExclusiveLocal1(cl_mem d_Dst, cl_mem d_Src, unsigned int n, unsigned int size);
+	void scanExclusiveLocal2(cl_mem d_Buffer, cl_mem d_Dst, cl_mem d_Src, unsigned int n, unsigned int size);
+	void uniformUpdate(cl_mem d_Dst, cl_mem d_Buffer, unsigned int n);
+	void scanExclusive(cl_mem d_Dst, cl_mem d_Src, unsigned int arrayLength);
 };
 
 

@@ -93,6 +93,34 @@ __kernel void kSetSpheres(	int numSpheres,
 	pPosHash[index].y = index;
 }
 
+__kernel void kFindCellStart(	int numSpheres, 
+								__global int2* pHash, 
+								__global int* cellStart GUID_ARG)
+{
+    int index = get_global_id(0);
+    if(index >= numSpheres)
+	{
+		return;
+	}
+	__local int sharedHash[513];
+    int2 sortedData = pHash[index];
+	// Load hash data into shared memory so that we can look 
+	// at neighboring body's hash value without loading
+	// two hash values per thread
+	sharedHash[get_local_id(0) + 1] = sortedData.x;
+	if((index > 0) && (get_local_id(0) == 0))
+	{
+		// first thread in block must load neighbor body hash
+		sharedHash[0] = pHash[index-1].x;
+	}
+    barrier(CLK_LOCAL_MEM_FENCE);
+	if((index == 0) || (sortedData.x != sharedHash[get_local_id(0)]))
+	{
+		cellStart[sortedData.x] = index;
+	}
+}
+
+
 float4 getRotation(__global float4* trans)
 {
 	float trace = trans[0].x + trans[1].y + trans[2].z;
@@ -236,8 +264,10 @@ void findPairsInCell(	int4 gridPos,
 						__global float4* pShapeBuff, 
 						__global int* pBodyIds,
 						__global int*   pPairBuff,
-						__global int2*	pPairBuffStartCurr,
-						__global float4* pParams)
+						__global int*	pPairBuffStart,
+						__global int*	pPairBuffCurr,
+						__global float4* pParams,
+						int check_less)
 {
 	int4 pGridDim = *((__global int4*)(pParams + 3));
     if (	(gridPos.x < 0) || (gridPos.x > pGridDim.x - 1)
@@ -257,9 +287,14 @@ void findPairsInCell(	int4 gridPos,
     int2 sortedData = pHash[index];
 	int unsorted_indx = sortedData.y;
 	int bodyIdA = pBodyIds[unsorted_indx];
-	int2 start_curr = pPairBuffStartCurr[unsorted_indx];
-	int start = start_curr.x;
-	int curr = start_curr.y;
+
+//	int2 start_curr = pPairBuffStartCurr[unsorted_indx];
+//	int start = start_curr.x;
+//	int curr = start_curr.y;
+	int start = pPairBuffStart[unsorted_indx];
+	int curr = pPairBuffCurr[unsorted_indx];
+	
+	
 //	int2 start_curr_next = pPairBuffStartCurr[unsorted_indx+1];
 	int bucketEnd = bucketStart + 8;
 	for(int index2 = bucketStart; index2 < bucketEnd; index2++) 
@@ -271,7 +306,20 @@ void findPairsInCell(	int4 gridPos,
 		}
 		int unsorted_indx2 = cellData.y;
 		int bodyIdB = pBodyIds[unsorted_indx2];
-        if((bodyIdB != bodyIdA) && (unsorted_indx2 > unsorted_indx)) // check not colliding with self
+		int do_comp = 0;
+		if(bodyIdB != bodyIdA)
+		{
+			if(check_less)
+			{
+				if(unsorted_indx2 > unsorted_indx) do_comp = 1;
+			}
+			else
+			{
+				if(unsorted_indx2 != unsorted_indx) do_comp = 1; // check not colliding with self
+			}
+		}
+//        if((bodyIdB != bodyIdA) && (unsorted_indx2 != unsorted_indx)) // check not colliding with self
+        if(do_comp)
         {   
 			float4 posB = pPos[unsorted_indx2];
 			posB.w = pShapeBuff[unsorted_indx2].w;
@@ -279,14 +327,16 @@ void findPairsInCell(	int4 gridPos,
 			float dist2 = del.x * del.x + del.y * del.y + del.z * del.z;
 			float rad2 = posB.w + posA.w;
 			rad2 = rad2 * rad2;
-			if((dist2 < rad2) && (curr < 12))
+//			if((dist2 < rad2) && (curr < 12))
+			if((dist2 < rad2) && (curr < 24))
 			{
 				pPairBuff[start+curr] = unsorted_indx2;
 				curr++;
 			}
 		}
 	}
-	pPairBuffStartCurr[unsorted_indx].y = curr;
+//	pPairBuffStartCurr[unsorted_indx].y = curr;
+	pPairBuffCurr[unsorted_indx] = curr;
     return;
 }
 
@@ -300,7 +350,8 @@ __kernel void kBroadphaseCD(int numSpheres,
 							__global int2* pHash,
 							__global int* pCellStart,
 							__global int* pPairBuff,
-							__global int2* pPairBuffStartCurr,
+							__global int* pPairBuffStart,
+							__global int* pPairBuffCurr,
 							__global float4* pParams GUID_ARG)
 {
     int index = get_global_id(0);
@@ -311,16 +362,18 @@ __kernel void kBroadphaseCD(int numSpheres,
     int2 sortedData = pHash[index];
 	int unsorted_indx = sortedData.y;
 	// clear pair buffer 
-	pPairBuffStartCurr[unsorted_indx].y = 0;
+	pPairBuffCurr[unsorted_indx] = 0;
+	
 	//
 	// DEBUG : COULD BE REMOVED LATER
 	//
-	int buf_start_indx = pPairBuffStartCurr[unsorted_indx].x;
-	int buf_sz = pPairBuffStartCurr[unsorted_indx+1].x - buf_start_indx;
+	int buf_start_indx = pPairBuffStart[unsorted_indx];
+	int buf_sz = pPairBuffStart[unsorted_indx+1] - buf_start_indx;
 	for(int i = 0; i < buf_sz; i++)
 	{
 		pPairBuff[buf_start_indx + i] = -1;
 	}
+	
     // get address in grid
 	float4 pos = pPos[unsorted_indx];
     int4 gridPosA = getGridPos(pos, pParams);
@@ -336,21 +389,76 @@ __kernel void kBroadphaseCD(int numSpheres,
     pos.w = pShapeBuf[unsorted_indx].w;
     // examine only neighbouring cells
     int4 gridPosB; 
-    for(int z=-1; z<=1; z++) 
+    for(int z=-1; z<= 1; z++) 
     {
 		gridPosB.z = gridPosA.z + z;
-        for(int y=-1; y<=1; y++) 
+        for(int y=-1; y<= 1; y++) 
         {
 			gridPosB.y = gridPosA.y + y;
-            for(int x=-1; x<=1; x++) 
+//			int xmax = (y == -1)? 1 : ((z != 1)? 0 : -1);
+//            for(int x=-1; x<= xmax; x++) 
+            for(int x=-1; x<= 1; x++) 
             {
 				gridPosB.x = gridPosA.x + x;
-                findPairsInCell(gridPosB, index, pos, pPos, pHash, pCellStart, pShapeBuf, pBodyIds, pPairBuff, pPairBuffStartCurr, pParams);
+				int comp_less = 1; // (z == 0)&&(y == 0)&&(x == 0);
+                findPairsInCell(gridPosB, index, pos, pPos, pHash, pCellStart, pShapeBuf, pBodyIds, pPairBuff, pPairBuffStart, pPairBuffCurr, pParams, comp_less);
             }
         }
     }
 }
 
+
+
+/*
+struct btPairId
+{
+	int m_objA;	//x
+	int m_objB;	//y
+	int m_sphA;	//z
+	int m_sphB;	//w
+	int m_batch;//x
+	int m_pair;	//y
+	int m_pad[2];
+};
+*/
+
+#if 1
+__kernel void kCompactPairs(int numSpheres, 
+							__global int* pPairBuff, 
+							__global int* pPairScan, 
+							__global int* pPairStart, 
+							__global int* pPairCurr,
+							__global int* pBodyIds, 
+							__global int4* pPairIds GUID_ARG)
+{
+    int index = get_global_id(0);
+    if(index >= numSpheres)
+    {
+		return;
+    }
+	int count = pPairCurr[index];
+	int inpStart = pPairStart[index];
+	int outStart = pPairScan[index];
+	int	objIdA = pBodyIds[index];
+	for(int j = 0; j < count; j++)
+	{
+		int sphereIdB = pPairBuff[inpStart + j];
+		int objIdB = pBodyIds[sphereIdB];
+		int4 pairId1;
+		int4 pairId2;
+		pairId1.x = objIdA;		// m_objA
+		pairId1.y = objIdB;		// m_objB
+		pairId1.z = index;		// m_sphA
+		pairId1.w = sphereIdB;	// m_sphB
+		pairId2.x = -1;			// m_batch
+		pairId2.y = 0;			// m_pair
+		pairId2.z = 0;			// m_pad[0]
+		pairId2.w = 0;			// m_pad[1]
+		pPairIds[(outStart + j) * 2 + 0] = pairId1;
+		pPairIds[(outStart + j) * 2 + 1] = pairId2;
+	}
+} 
+#endif
 
 /*
 struct btPairId
@@ -829,3 +937,196 @@ __kernel void bitonicMergeLocal(__global int2* pKey, uint arrayLength, uint stri
     pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
 }
 
+/*
+ * Copyright 1993-2009 NVIDIA Corporation.  All rights reserved.
+ *
+ * NVIDIA Corporation and its licensors retain all intellectual property and 
+ * proprietary rights in and to this software and related documentation. 
+ * Any use, reproduction, disclosure, or distribution of this software 
+ * and related documentation without an express license agreement from
+ * NVIDIA Corporation is strictly prohibited.
+ *
+ * Please refer to the applicable NVIDIA end user license agreement (EULA) 
+ * associated with this source code for terms and conditions that govern 
+ * your use of this NVIDIA software.
+ * 
+ */
+
+
+
+//All three kernels run 512 threads per workgroup
+//Must be a power of two
+#define WORKGROUP_SIZE 512
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Scan codelets
+////////////////////////////////////////////////////////////////////////////////
+#if(1)
+    //Naive inclusive scan: O(N * log2(N)) operations
+    //Allocate 2 * 'size' local memory, initialize the first half
+    //with 'size' zeros avoiding if(pos >= offset) condition evaluation
+    //and saving instructions
+    inline uint scan1Inclusive(uint idata, __local uint *l_Data, uint size){
+        uint pos = 2 * get_local_id(0) - (get_local_id(0) & (size - 1));
+        l_Data[pos] = 0;
+        pos += size;
+        l_Data[pos] = idata;
+
+        for(uint offset = 1; offset < size; offset <<= 1){
+            barrier(CLK_LOCAL_MEM_FENCE);
+            uint t = l_Data[pos] + l_Data[pos - offset];
+            barrier(CLK_LOCAL_MEM_FENCE);
+            l_Data[pos] = t;
+        }
+
+        return l_Data[pos];
+    }
+
+    inline uint scan1Exclusive(uint idata, __local uint *l_Data, uint size){
+        return scan1Inclusive(idata, l_Data, size) - idata;
+    }
+
+#else
+    #define LOG2_WARP_SIZE 5U
+    #define      WARP_SIZE (1U << LOG2_WARP_SIZE)
+
+    //Almost the same as naive scan1Inclusive but doesn't need barriers
+    //and works only for size <= WARP_SIZE
+    inline uint warpScanInclusive(uint idata, __local uint *l_Data, uint size){
+        uint pos = 2 * get_local_id(0) - (get_local_id(0) & (size - 1));
+        l_Data[pos] = 0;
+        pos += size;
+        l_Data[pos] = idata;
+
+        if(size >=  2) l_Data[pos] += l_Data[pos -  1];
+        if(size >=  4) l_Data[pos] += l_Data[pos -  2];
+        if(size >=  8) l_Data[pos] += l_Data[pos -  4];
+        if(size >= 16) l_Data[pos] += l_Data[pos -  8];
+        if(size >= 32) l_Data[pos] += l_Data[pos - 16];
+
+        return l_Data[pos];
+    }
+
+    inline uint warpScanExclusive(uint idata, __local uint *l_Data, uint size){
+        return warpScanInclusive(idata, l_Data, size) - idata;
+    }
+
+    inline uint scan1Inclusive(uint idata, __local uint *l_Data, uint size){
+        if(size > WARP_SIZE){
+            //Bottom-level inclusive warp scan
+            uint warpResult = warpScanInclusive(idata, l_Data, WARP_SIZE);
+
+            //Save top elements of each warp for exclusive warp scan
+            //sync to wait for warp scans to complete (because l_Data is being overwritten)
+            barrier(CLK_LOCAL_MEM_FENCE);
+            if( (get_local_id(0) & (WARP_SIZE - 1)) == (WARP_SIZE - 1) )
+                l_Data[get_local_id(0) >> LOG2_WARP_SIZE] = warpResult;
+
+            //wait for warp scans to complete
+            barrier(CLK_LOCAL_MEM_FENCE);
+            if( get_local_id(0) < (WORKGROUP_SIZE / WARP_SIZE) ){
+                //grab top warp elements
+                uint val = l_Data[get_local_id(0)];
+                //calculate exclsive scan and write back to shared memory
+                l_Data[get_local_id(0)] = warpScanExclusive(val, l_Data, size >> LOG2_WARP_SIZE);
+            }
+
+            //return updated warp scans with exclusive scan results
+            barrier(CLK_LOCAL_MEM_FENCE);
+            return warpResult + l_Data[get_local_id(0) >> LOG2_WARP_SIZE];
+        }else{
+            return warpScanInclusive(idata, l_Data, size);
+        }
+    }
+
+    inline uint scan1Exclusive(uint idata, __local uint *l_Data, uint size){
+        return scan1Inclusive(idata, l_Data, size) - idata;
+    }
+#endif
+
+
+//Vector scan: the array to be scanned is stored
+//in work-item private memory as uint4
+inline uint4 scan4Inclusive(uint4 data4, __local uint *l_Data, uint size){
+    //Level-0 inclusive scan
+    data4.y += data4.x;
+    data4.z += data4.y;
+    data4.w += data4.z;
+
+    //Level-1 exclusive scan
+    uint val = scan1Inclusive(data4.w, l_Data, size / 4) - data4.w;
+
+    return (data4 + (uint4)val);
+}
+
+inline uint4 scan4Exclusive(uint4 data4, __local uint *l_Data, uint size){
+    return scan4Inclusive(data4, l_Data, size) - data4;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Scan kernels
+////////////////////////////////////////////////////////////////////////////////
+__kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
+void scanExclusiveLocal1(
+    __global uint4 *d_Dst,
+    __global uint4 *d_Src,
+    __local uint *l_Data,
+    uint size
+){
+    //Load data
+    uint4 idata4 = d_Src[get_global_id(0)];
+
+    //Calculate exclusive scan
+    uint4 odata4  = scan4Exclusive(idata4, l_Data, size);
+
+    //Write back
+    d_Dst[get_global_id(0)] = odata4;
+}
+
+//Exclusive scan of top elements of bottom-level scans (4 * THREADBLOCK_SIZE)
+__kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
+void scanExclusiveLocal2(
+    __global uint *d_Buf,
+    __global uint *d_Dst,
+    __global uint *d_Src,
+    __local uint *l_Data,
+    uint N,
+    uint arrayLength
+){
+    //Load top elements
+    //Convert results of bottom-level scan back to inclusive
+    //Skip loads and stores for inactive work-items of the work-group with highest index(pos >= N)
+    uint data = 0;
+    if(get_global_id(0) < N)
+    data =
+        d_Dst[(4 * WORKGROUP_SIZE - 1) + (4 * WORKGROUP_SIZE) * get_global_id(0)] + 
+        d_Src[(4 * WORKGROUP_SIZE - 1) + (4 * WORKGROUP_SIZE) * get_global_id(0)];
+
+    //Compute
+    uint odata = scan1Exclusive(data, l_Data, arrayLength);
+
+    //Avoid out-of-bound access
+    if(get_global_id(0) < N)
+        d_Buf[get_global_id(0)] = odata;
+}
+
+//Final step of large-array scan: combine basic inclusive scan with exclusive scan of top elements of input arrays
+__kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
+void uniformUpdate(
+    __global uint4 *d_Data,
+    __global uint *d_Buf
+){
+    __local uint buf;
+
+    uint4 data4 = d_Data[get_global_id(0)];
+
+    if(get_local_id(0) == 0)
+        buf = d_Buf[get_group_id(0)];
+
+    barrier(CLK_LOCAL_MEM_FENCE);
+    data4 += (uint4)buf;
+    d_Data[get_global_id(0)] = data4;
+}

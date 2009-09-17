@@ -332,6 +332,7 @@ void	SpheresGridDemo::initPhysics()
 //		for (int j=0;j<800;j++)
 		for (int j=0;j<50;j++)
 		for (int i=0;i<200;i++)
+//		for (int i=0;i<20;i++)
 		{
 			trans.setOrigin(btVector3(25+j*6,30+i*3,0.));
 			loader.createBodyForCompoundShape(compound,false,trans,1.);
