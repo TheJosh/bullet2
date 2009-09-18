@@ -17,12 +17,12 @@ subject to the following restrictions:
 	#define GUID_ARG 
 #endif
 
-__kernel void kPredictUnconstrainedMotion(	int numObjects,
-											__global float4* pLinVel, 
-											__global float4* pAngVel, 
-											__global float4* pParams, 
-											__global float4* pInvInertiaMass, 
-											float timeStep GUID_ARG)
+__kernel void kApplyGravity(int numObjects,
+							__global float4* pLinVel, 
+							__global float4* pAngVel, 
+							__global float4* pParams, 
+							__global float4* pInvInertiaMass, 
+							float timeStep GUID_ARG)
 {
     int index = get_global_id(0);
     if(index >= numObjects)
@@ -62,13 +62,13 @@ unsigned int getPosHash(int4 gridPos, __global float4* pParams)
 } 
 
 
-__kernel void kSetSpheres(	int numSpheres, 
-							__global float4* pPos, 
-							__global float4* pTrans,
-							__global float4* pShapeBuf,
-							__global int* pBodyIds,
-							__global int2* pPosHash,
-							__global float4* pParams GUID_ARG)
+__kernel void kComputeCellId(	int numSpheres, 
+								__global float4* pPos, 
+								__global float4* pTrans,
+								__global float4* pShapeBuf,
+								__global int* pBodyIds,
+								__global int2* pPosHash,
+								__global float4* pParams GUID_ARG)
 {
     int index = get_global_id(0);
     if(index >= numSpheres)
@@ -91,6 +91,17 @@ __kernel void kSetSpheres(	int numSpheres,
 	unsigned int hash = getPosHash(gridPos, pParams);
 	pPosHash[index].x = hash;
 	pPosHash[index].y = index;
+}
+
+__kernel void kClearCellStart(	int numCells, 
+								__global int* pCellStart GUID_ARG)
+{
+    int index = get_global_id(0);
+    if(index >= numCells)
+	{
+		return;
+	}
+	pCellStart[index] = -1;
 }
 
 __kernel void kFindCellStart(	int numSpheres, 
@@ -287,15 +298,8 @@ void findPairsInCell(	int4 gridPos,
     int2 sortedData = pHash[index];
 	int unsorted_indx = sortedData.y;
 	int bodyIdA = pBodyIds[unsorted_indx];
-
-//	int2 start_curr = pPairBuffStartCurr[unsorted_indx];
-//	int start = start_curr.x;
-//	int curr = start_curr.y;
 	int start = pPairBuffStart[unsorted_indx];
 	int curr = pPairBuffCurr[unsorted_indx];
-	
-	
-//	int2 start_curr_next = pPairBuffStartCurr[unsorted_indx+1];
 	int bucketEnd = bucketStart + 8;
 	for(int index2 = bucketStart; index2 < bucketEnd; index2++) 
 	{
@@ -318,7 +322,6 @@ void findPairsInCell(	int4 gridPos,
 				if(unsorted_indx2 != unsorted_indx) do_comp = 1; // check not colliding with self
 			}
 		}
-//        if((bodyIdB != bodyIdA) && (unsorted_indx2 != unsorted_indx)) // check not colliding with self
         if(do_comp)
         {   
 			float4 posB = pPos[unsorted_indx2];
@@ -327,15 +330,13 @@ void findPairsInCell(	int4 gridPos,
 			float dist2 = del.x * del.x + del.y * del.y + del.z * del.z;
 			float rad2 = posB.w + posA.w;
 			rad2 = rad2 * rad2;
-//			if((dist2 < rad2) && (curr < 12))
-			if((dist2 < rad2) && (curr < 24))
+			if((dist2 < rad2) && (curr < 12))
 			{
 				pPairBuff[start+curr] = unsorted_indx2;
 				curr++;
 			}
 		}
 	}
-//	pPairBuffStartCurr[unsorted_indx].y = curr;
 	pPairBuffCurr[unsorted_indx] = curr;
     return;
 }
@@ -343,7 +344,7 @@ void findPairsInCell(	int4 gridPos,
 
 
 
-__kernel void kBroadphaseCD(int numSpheres,
+__kernel void kFindPairs(	int numSpheres,
 							__global float4* pPos, 
 							__global float4* pShapeBuf,
 							__global int* pBodyIds,
@@ -387,20 +388,20 @@ __kernel void kBroadphaseCD(int numSpheres,
 	}
     
     pos.w = pShapeBuf[unsorted_indx].w;
-    // examine only neighbouring cells
+    // examine only part of neighbouring cells
+    // (---)(0--)(+--)(-0-)(00-)(--0)(0-0)
     int4 gridPosB; 
-    for(int z=-1; z<= 1; z++) 
+    for(int z = -1; z <= 1; z++) 
     {
 		gridPosB.z = gridPosA.z + z;
-        for(int y=-1; y<= 1; y++) 
+        for(int y = -1; y < 1; y++) 
         {
 			gridPosB.y = gridPosA.y + y;
-//			int xmax = (y == -1)? 1 : ((z != 1)? 0 : -1);
-//            for(int x=-1; x<= xmax; x++) 
-            for(int x=-1; x<= 1; x++) 
+			int xmax = (y == -1)? 1 : ((z != 1)? 0 : -1);
+            for(int x = -1; x <= xmax; x++) 
             {
 				gridPosB.x = gridPosA.x + x;
-				int comp_less = 1; // (z == 0)&&(y == 0)&&(x == 0);
+				int comp_less = (z == 0)&&(y == 0)&&(x == 0);
                 findPairsInCell(gridPosB, index, pos, pPos, pHash, pCellStart, pShapeBuf, pBodyIds, pPairBuff, pPairBuffStart, pPairBuffCurr, pParams, comp_less);
             }
         }
@@ -446,10 +447,18 @@ __kernel void kCompactPairs(int numSpheres,
 		int objIdB = pBodyIds[sphereIdB];
 		int4 pairId1;
 		int4 pairId2;
+#if 0		
+		int revert = (index > sphereIdB);
+		pairId1.x = revert ? objIdB : objIdA;		// m_objA
+		pairId1.y = revert ? objIdA : objIdB;		// m_objB
+		pairId1.z = revert ? sphereIdB : index;		// m_sphA
+		pairId1.w = revert ? index : sphereIdB;	// m_sphB
+#else
 		pairId1.x = objIdA;		// m_objA
 		pairId1.y = objIdB;		// m_objB
 		pairId1.z = index;		// m_sphA
 		pairId1.w = sphereIdB;	// m_sphB
+#endif
 		pairId2.x = -1;			// m_batch
 		pairId2.y = 0;			// m_pair
 		pairId2.z = 0;			// m_pad[0]
@@ -478,7 +487,7 @@ struct btSpheresContPair
 };
 */
 
-__kernel void kSetupContacts(	int numPairs,
+__kernel void kComputeContacts(	int numPairs,
 								__global int4* pPairIds, 
 								__global float4* pPos,
 								__global float4* pShapeBuf,
@@ -615,10 +624,10 @@ __kernel void kSolveConstraints(int numPairs,
 	}
 }
 
-__kernel void kInitObjUsageTab(	int numObjects,
-								__global int* pObjUsed, 
-								__global float4* pInvInertiaMass,
-								__global float4* pParams GUID_ARG)
+__kernel void kInitBatches(	int numObjects,
+							__global int* pObjUsed, 
+							__global float4* pInvInertiaMass,
+							__global float4* pParams GUID_ARG)
 {
     int index = get_global_id(0);
     if(index >= numObjects)
@@ -642,10 +651,10 @@ __kernel void kInitObjUsageTab(	int numObjects,
 #endif	
 }
 
-__kernel void kSetupBatches(int numPairs,
-							__global int4* pPairIds, 
-							__global int* pObjUsed, 
-							__global float4* pParams GUID_ARG)
+__kernel void kComputeBatches(	int numPairs,
+								__global int4* pPairIds, 
+								__global int* pObjUsed, 
+								__global float4* pParams GUID_ARG)
 {
     int index = get_global_id(0);
     if(index >= numPairs)
@@ -810,7 +819,7 @@ inline void ComparatorLocal(__local int2* keyA, __local int2* keyB, uint dir)
 ////////////////////////////////////////////////////////////////////////////////
 // Monolithic bitonic sort kernel for short arrays fitting into local memory
 ////////////////////////////////////////////////////////////////////////////////
-__kernel void bitonicSortLocal(__global int2* pKey, uint arrayLength, uint dir GUID_ARG)
+__kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uint dir GUID_ARG)
 {
     __local int2 l_key[LOCAL_SIZE_LIMIT];
 
@@ -853,7 +862,7 @@ __kernel void bitonicSortLocal(__global int2* pKey, uint arrayLength, uint dir G
 //Almost the same as bitonicSortLocal with the only exception
 //of even / odd subarrays (of LOCAL_SIZE_LIMIT points) being
 //sorted in opposite directions
-__kernel void bitonicSortLocal1(__global int2* pKey GUID_ARG)
+__kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
 {
     __local int2 l_key[LOCAL_SIZE_LIMIT];
 
@@ -894,7 +903,7 @@ __kernel void bitonicSortLocal1(__global int2* pKey GUID_ARG)
 }
 
 //Bitonic merge iteration for 'stride' >= LOCAL_SIZE_LIMIT
-__kernel void bitonicMergeGlobal(__global int2* pKey, uint arrayLength, uint size, uint stride, uint dir GUID_ARG)
+__kernel void kBitonicSortCellIdMergeGlobal(__global int2* pKey, uint arrayLength, uint size, uint stride, uint dir GUID_ARG)
 {
     uint global_comparatorI = get_global_id(0);
     uint        comparatorI = global_comparatorI & (arrayLength / 2 - 1);
@@ -914,7 +923,7 @@ __kernel void bitonicMergeGlobal(__global int2* pKey, uint arrayLength, uint siz
 
 //Combined bitonic merge steps for
 //'size' > LOCAL_SIZE_LIMIT and 'stride' = [1 .. LOCAL_SIZE_LIMIT / 2]
-__kernel void bitonicMergeLocal(__global int2* pKey, uint arrayLength, uint stride, uint size, uint dir GUID_ARG)
+__kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength, uint stride, uint size, uint dir GUID_ARG)
 {
     __local int2 l_key[LOCAL_SIZE_LIMIT];
 
@@ -958,7 +967,7 @@ __kernel void bitonicMergeLocal(__global int2* pKey, uint arrayLength, uint stri
 //Must be a power of two
 #define WORKGROUP_SIZE 512
 
-
+#ifndef CL_PLATFORM_MINI_CL
 
 ////////////////////////////////////////////////////////////////////////////////
 // Scan codelets
@@ -1070,11 +1079,11 @@ inline uint4 scan4Exclusive(uint4 data4, __local uint *l_Data, uint size){
 // Scan kernels
 ////////////////////////////////////////////////////////////////////////////////
 __kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
-void scanExclusiveLocal1(
+void kScanPairsExclusiveLocal1(
     __global uint4 *d_Dst,
     __global uint4 *d_Src,
     __local uint *l_Data,
-    uint size
+    uint size GUID_ARG
 ){
     //Load data
     uint4 idata4 = d_Src[get_global_id(0)];
@@ -1088,13 +1097,13 @@ void scanExclusiveLocal1(
 
 //Exclusive scan of top elements of bottom-level scans (4 * THREADBLOCK_SIZE)
 __kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
-void scanExclusiveLocal2(
+void kScanPairsExclusiveLocal2(
     __global uint *d_Buf,
     __global uint *d_Dst,
     __global uint *d_Src,
     __local uint *l_Data,
     uint N,
-    uint arrayLength
+    uint arrayLength GUID_ARG
 ){
     //Load top elements
     //Convert results of bottom-level scan back to inclusive
@@ -1115,9 +1124,9 @@ void scanExclusiveLocal2(
 
 //Final step of large-array scan: combine basic inclusive scan with exclusive scan of top elements of input arrays
 __kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
-void uniformUpdate(
+void kScanPairsUniformUpdate(
     __global uint4 *d_Data,
-    __global uint *d_Buf
+    __global uint *d_Buf GUID_ARG
 ){
     __local uint buf;
 
@@ -1130,3 +1139,5 @@ void uniformUpdate(
     data4 += (uint4)buf;
     d_Data[get_global_id(0)] = data4;
 }
+
+#endif

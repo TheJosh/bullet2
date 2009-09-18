@@ -20,6 +20,7 @@ subject to the following restrictions:
 #include "LinearMath/btMinMax.h"
 #include "MiniCLTask.h"
 
+
 #ifdef __SPU__
 #include <spu_printf.h>
 #else
@@ -178,6 +179,12 @@ struct MiniCLTask_LocalStoreMemory
 
 #define GUID_ARG ,int __guid_arg
 
+//#include <CL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+// this one gives error for redefinition 
+// CL/cl_platform.h(56) : error C2371: 'uint64_t' : redefinition; different basic types
+// src\bulletmultithreaded\PlatformDefinitions.h(22) :
+// so use hack for now
+#define CL_PLATFORM_MINI_CL 0x12345
 #include "../Shared/SpheresGrid.cl"
 #include "../Shared/Integration.cl"
 
@@ -214,51 +221,57 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 	"kIntegrateTransforms",
 	"kBroadphaseCD"
 */
-	case CMD_MINICL_PREDICT_MOTION :
+	case CMD_MINICL_APPLY_GRAVITY :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kPredictUnconstrainedMotion(*(int*)    &taskDesc.m_argData[0][0],
-											*(float4**)&taskDesc.m_argData[1][0],
-											*(float4**)&taskDesc.m_argData[2][0],
-											*(float4**)&taskDesc.m_argData[3][0],
-											*(float4**)&taskDesc.m_argData[4][0],
-											*(float*)  &taskDesc.m_argData[5][0],
-											i);
+				kApplyGravity(	*(int*)    &taskDesc.m_argData[0][0],
+								*(float4**)&taskDesc.m_argData[1][0],
+								*(float4**)&taskDesc.m_argData[2][0],
+								*(float4**)&taskDesc.m_argData[3][0],
+								*(float4**)&taskDesc.m_argData[4][0],
+								*(float*)  &taskDesc.m_argData[5][0],
+								i);
 			}
 			break;
 		}
-	case CMD_MINICL_SET_SPHERES :
+	case CMD_MINICL_COMPUTE_CELL_ID :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kSetSpheres(*(int*)    &taskDesc.m_argData[0][0],
-							*(float4**)&taskDesc.m_argData[1][0],
-							*(float4**)&taskDesc.m_argData[2][0],
-							*(float4**)&taskDesc.m_argData[3][0],
-							*(int**)   &taskDesc.m_argData[4][0],
-							*(int2**)  &taskDesc.m_argData[5][0],
-							*(float4**)&taskDesc.m_argData[6][0],
-							i);
+				kComputeCellId(	*(int*)    &taskDesc.m_argData[0][0],
+								*(float4**)&taskDesc.m_argData[1][0],
+								*(float4**)&taskDesc.m_argData[2][0],
+								*(float4**)&taskDesc.m_argData[3][0],
+								*(int**)   &taskDesc.m_argData[4][0],
+								*(int2**)  &taskDesc.m_argData[5][0],
+								*(float4**)&taskDesc.m_argData[6][0],
+								i);
 			}
 			break;
 		}
-	case CMD_MINICL_INTEGRATE_TRANSFORMS :
+	case CMD_MINICL_CLEAR_CELL_START :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kIntegrateTransforms(	*(int*)    &taskDesc.m_argData[0][0],
-										*(float4**)&taskDesc.m_argData[1][0],
-										*(float4**)&taskDesc.m_argData[2][0],
-										*(float4**)&taskDesc.m_argData[3][0],
-										*(float4**)&taskDesc.m_argData[4][0],
-										*(float4**)&taskDesc.m_argData[5][0],
-										*(float*)  &taskDesc.m_argData[6][0],
-										i);
+				kClearCellStart(*(int*)    &taskDesc.m_argData[0][0],
+								*(int**)   &taskDesc.m_argData[1][0],
+								i);
 			}
 			break;
 		}
-	case CMD_MINICL_BITONIC_SORT_HASH : 
+	case CMD_MINICL_FIND_CELL_START :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kFindCellStart(	*(int*)    &taskDesc.m_argData[0][0],
+								*(int2**)  &taskDesc.m_argData[1][0],
+								*(int**)   &taskDesc.m_argData[2][0],
+								i);
+			}
+			break;
+		}
+	case CMD_MINICL_BITONIC_SORT_CELL_ID_ALL_GLOB : 
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
@@ -269,42 +282,144 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			}
 			break;
 		}
-	case CMD_MINICL_BROADPHASE_CD :
+
+	case CMD_MINICL_BITONIC_SORT_CELL_ID_LOCAL : 
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kBroadphaseCD(	*(int*)	&taskDesc.m_argData[0][0],
-								*(float4**)&taskDesc.m_argData[1][0],
-								*(float4**)&taskDesc.m_argData[2][0],
-								*(int**)   &taskDesc.m_argData[3][0],
-								*(int2**)  &taskDesc.m_argData[4][0],
-								*(int**)   &taskDesc.m_argData[5][0],
-								*(int**)   &taskDesc.m_argData[6][0],
-								*(int2**)  &taskDesc.m_argData[7][0],
-								*(float4**)&taskDesc.m_argData[8][0],
+				kBitonicSortCellIdLocal(*(int2**)		&taskDesc.m_argData[0][0],
+										*(unsigned int*)&taskDesc.m_argData[1][0],
+										*(unsigned int*)&taskDesc.m_argData[2][0],
+										i);
+			}
+			break;
+		}
+	case CMD_MINICL_BITONIC_SORT_CELL_ID_LOCAL_1 : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kBitonicSortCellIdLocal1(	*(int2**)		&taskDesc.m_argData[0][0],
+											i);
+			}
+			break;
+		}
+	case CMD_MINICL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kBitonicSortCellIdMergeGlobal(	*(int2**)		&taskDesc.m_argData[0][0],
+												*(unsigned int*)&taskDesc.m_argData[1][0],
+												*(unsigned int*)&taskDesc.m_argData[2][0],
+												*(unsigned int*)&taskDesc.m_argData[3][0],
+												*(unsigned int*)&taskDesc.m_argData[4][0],
+												i);
+			}
+			break;
+		}
+	case CMD_MINICL_BITONIC_SORT_CELL_ID_MERGE_LOCAL : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kBitonicSortCellIdMergeLocal(	*(int2**)		&taskDesc.m_argData[0][0],
+												*(unsigned int*)&taskDesc.m_argData[1][0],
+												*(unsigned int*)&taskDesc.m_argData[2][0],
+												*(unsigned int*)&taskDesc.m_argData[3][0],
+												*(unsigned int*)&taskDesc.m_argData[4][0],
+												i);
+			}
+			break;
+		}
+	case CMD_MINICL_FIND_PAIRS :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kFindPairs(	*(int*)		&taskDesc.m_argData[0][0],
+							*(float4**)	&taskDesc.m_argData[1][0],
+							*(float4**)	&taskDesc.m_argData[2][0],
+							*(int**)	&taskDesc.m_argData[3][0],
+							*(int2**)	&taskDesc.m_argData[4][0],
+							*(int**)	&taskDesc.m_argData[5][0],
+							*(int**)	&taskDesc.m_argData[6][0],
+							*(int**)	&taskDesc.m_argData[7][0],
+							*(int**)	&taskDesc.m_argData[8][0],
+							*(float4**)	&taskDesc.m_argData[9][0],
+							i);
+
+			}
+			break;
+		}
+#if 0
+	case CMD_MINICL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1 : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kScanPairsExclusiveLocal1(	*(uint4**)			&taskDesc.m_argData[0][0],
+											*(uint4**)			&taskDesc.m_argData[1][0],
+											*(unsigned int**)	&taskDesc.m_argData[2][0],
+											*(int*)				&taskDesc.m_argData[3][0],
+											i);
+			}
+			break;
+		}
+	case CMD_MINICL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2 : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kScanPairsExclusiveLocal2(	*(unsigned int**)	&taskDesc.m_argData[0][0],
+											*(unsigned int**)	&taskDesc.m_argData[1][0],
+											*(unsigned int**)	&taskDesc.m_argData[2][0],
+											*(unsigned int**)	&taskDesc.m_argData[3][0],
+											*(unsigned int*)	&taskDesc.m_argData[4][0],
+											*(unsigned int*)	&taskDesc.m_argData[5][0],
+											i);
+			}
+			break;
+		}
+	case CMD_MINICL_SCAN_PAIRS_UNIFORM_UPDATE : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kScanPairsUniformUpdate(*(uint4**)			&taskDesc.m_argData[0][0],
+										*(unsigned int**)	&taskDesc.m_argData[2][0],
+										i);
+			}
+			break;
+		}
+#endif
+
+	case CMD_MINICL_COMPACT_PAIRS : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kCompactPairs(	*(int*)		&taskDesc.m_argData[0][0],
+								*(int**)	&taskDesc.m_argData[1][0],
+								*(int**)	&taskDesc.m_argData[2][0],
+								*(int**)	&taskDesc.m_argData[3][0],
+								*(int**)	&taskDesc.m_argData[4][0],
+								*(int**)	&taskDesc.m_argData[5][0],
+								*(int4**)	&taskDesc.m_argData[6][0],
+								i);
+			}
+			break;
+		}
+	case CMD_MINICL_INIT_BATCHES : 
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kInitBatches(	*(int*)		&taskDesc.m_argData[0][0],
+								*(int**)	&taskDesc.m_argData[1][0],
+								*(float4**)	&taskDesc.m_argData[2][0],
+								*(float4**)	&taskDesc.m_argData[3][0],
 								i);
 
 			}
 			break;
 		}
-	case CMD_MINICL_INIT_OBJ_USAGE_TAB : 
+	case CMD_MINICL_COMPUTE_BATCHES :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kInitObjUsageTab(	*(int*)		&taskDesc.m_argData[0][0],
-									*(int**)	&taskDesc.m_argData[1][0],
-									*(float4**)	&taskDesc.m_argData[2][0],
-									*(float4**)	&taskDesc.m_argData[3][0],
-									i);
-
-			}
-			break;
-		}
-	case CMD_MINICL_SETUP_BATCHES :
-		{
-			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
-			{
-				kSetupBatches(	*(int*)		&taskDesc.m_argData[0][0],	
+				kComputeBatches(*(int*)		&taskDesc.m_argData[0][0],	
 								*(int4**)	&taskDesc.m_argData[1][0],
 								*(int**)	&taskDesc.m_argData[2][0],
 								*(float4**)	&taskDesc.m_argData[3][0],
@@ -328,17 +443,17 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			}
 			break;
 		}
-	case CMD_MINICL_SETUP_CONTACTS :
+	case CMD_MINICL_COMPUTE_CONTACTS :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 			{
-				kSetupContacts(	*(int*)		&taskDesc.m_argData[0][0],	
-								*(int4**)	&taskDesc.m_argData[1][0],
-								*(float4**)	&taskDesc.m_argData[2][0],
-								*(float4**)	&taskDesc.m_argData[3][0],
-								*(float4**)	&taskDesc.m_argData[4][0],
-								*(float4**)	&taskDesc.m_argData[5][0],
-								i);
+				kComputeContacts(	*(int*)		&taskDesc.m_argData[0][0],	
+									*(int4**)	&taskDesc.m_argData[1][0],
+									*(float4**)	&taskDesc.m_argData[2][0],
+									*(float4**)	&taskDesc.m_argData[3][0],
+									*(float4**)	&taskDesc.m_argData[4][0],
+									*(float4**)	&taskDesc.m_argData[5][0],
+									i);
 
 			}
 			break;
@@ -359,6 +474,21 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 									*(float*)	&taskDesc.m_argData[9][0],
 									i);
 
+			}
+			break;
+		}
+	case CMD_MINICL_INTEGRATE_TRANSFORMS :
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+				kIntegrateTransforms(	*(int*)    &taskDesc.m_argData[0][0],
+										*(float4**)&taskDesc.m_argData[1][0],
+										*(float4**)&taskDesc.m_argData[2][0],
+										*(float4**)&taskDesc.m_argData[3][0],
+										*(float4**)&taskDesc.m_argData[4][0],
+										*(float4**)&taskDesc.m_argData[5][0],
+										*(float*)  &taskDesc.m_argData[6][0],
+										i);
 			}
 			break;
 		}

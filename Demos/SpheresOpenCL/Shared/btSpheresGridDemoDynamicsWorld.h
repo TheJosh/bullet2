@@ -94,6 +94,7 @@ enum
 {
 	GPUDEMO_KERNEL_APPLY_GRAVITY = 0,
 	GPUDEMO_KERNEL_COMPUTE_CELL_ID,
+	GPUDEMO_KERNEL_CLEAR_CELL_START,
 	GPUDEMO_KERNEL_FIND_CELL_START,
 	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_ALL_GLOB,
 	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL,
@@ -192,23 +193,6 @@ public:
 	cl_program			m_cpProgram;
 protected:
 	btKernelInfo		m_kernels[GPUDEMO_KERNEL_TOTAL];
-/*
-	cl_kernel			m_ckSetSpheresKernel;
-	cl_kernel			m_ckPredictUnconstrainedMotionKernel;
-	cl_kernel			m_ckIntegrateTransformsKernel;
-	cl_kernel			m_ckBroadphaseCDKernel;
-	cl_kernel			m_ckInitObjUsageTabKernel;
-	cl_kernel			m_ckSetupBatchesKernel;
-	cl_kernel			m_ckCheckBatchesKernel;
-	cl_kernel			m_ckSetupContactsKernel;
-	cl_kernel			m_ckSolveConstraintsKernel;
-	cl_kernel			m_ckBitonicSortHashKernel;
-	cl_kernel			m_ckBitonicSortLocal;
-	cl_kernel			m_ckBitonicSortLocal1;
-	cl_kernel			m_ckBitonicMergeGlobal;
-	cl_kernel			m_ckBitonicMergeLocal;
-*/
-
 
 	btVector3			m_worldMin;
 	btVector3			m_worldMax;
@@ -254,17 +238,16 @@ public:
 	void allocateBuffers();
 	void grabSimulationData();
 	void adjustGrid();
-	void setPointers();
-	void runSetSpheresKernel();
-	void runPredictUnconstrainedMotionKernel();
+	void runComputeCellIdKernel();
+	void runApplyGravityKernel();
 	void runIntegrateTransformsKernel();
 	void runSortHashKernel();
 	void runFindCellStartKernel();
-	void runBroadphaseCDKernel();
+	void runFindPairsKernel();
 	void runScanPairsKernel();
 	void runCompactPairsKernel();
-	void runSetupBatchesKernel();
-	void runSetupContactsKernel();
+	void runComputeBatchesKernel();
+	void runComputeContactsKernel();
 	void runSolveConstraintsKernel();
 	void solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum);
 	void initKernel(int kernelId, char* pName);

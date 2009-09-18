@@ -380,3 +380,25 @@ clFinish(cl_command_queue /* command_queue */) CL_API_SUFFIX__VERSION_1_0
 {
 	return CL_SUCCESS;
 }
+
+
+extern CL_API_ENTRY cl_int CL_API_CALL
+clGetKernelWorkGroupInfo(cl_kernel                  /* kernel */,
+                         cl_device_id               /* device */,
+                         cl_kernel_work_group_info  wgi/* param_name */,
+                         size_t   sz                  /* param_value_size */,
+                         void *     ptr                /* param_value */,
+                         size_t *                   /* param_value_size_ret */) CL_API_SUFFIX__VERSION_1_0
+{
+	if((wgi == CL_KERNEL_WORK_GROUP_SIZE)
+	 &&(sz == sizeof(int))
+	 &&(ptr != NULL))
+	{
+		*((int*)ptr) = 4;
+		return CL_SUCCESS;
+	}
+	else
+	{
+		return CL_INVALID_VALUE;
+	}
+}
