@@ -64,7 +64,7 @@ const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] =
 	"kFindCellStart",
 	"kBitonicSortHash",
 	"kBitonicSortCellIdLocal",
-	"kBitonicSortCellIdLocal",
+	"kBitonicSortCellIdLocal1",
 	"kBitonicSortCellIdMergeGlobal",
 	"kBitonicSortCellIdMergeLocal",
 	"kFindPairs",

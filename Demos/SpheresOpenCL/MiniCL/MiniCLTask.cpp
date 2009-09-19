@@ -28,13 +28,15 @@ subject to the following restrictions:
 #define spu_printf printf
 #endif
 
+int gMiniCLNumOutstandingTasks = 0;
+
 #define __kernel
 #define __global
 #define __local
 #define get_global_id(a)	__guid_arg
-#define get_local_id(a)		__guid_arg
-#define get_local_size(a)	(4) // TODO : get from scheduler
-#define get_group_id(a)		(0) // TODO : get from scheduler
+#define get_local_id(a)		((__guid_arg) % gMiniCLNumOutstandingTasks)
+#define get_local_size(a)	(gMiniCLNumOutstandingTasks)
+#define get_group_id(a)		((__guid_arg) / gMiniCLNumOutstandingTasks)
 
 #define CLK_LOCAL_MEM_FENCE		0x01
 #define CLK_GLOBAL_MEM_FENCE	0x02
@@ -168,6 +170,39 @@ struct int4
 	int x,y,z,w;
 };
 
+struct uint4
+{
+	unsigned int x,y,z,w;
+	uint4() {}
+	uint4(uint val) { x = y = z = w = val; }
+	uint4& operator+=(const uint4& other)
+	{
+		x += other.x;
+		y += other.y;
+		z += other.z;
+		w += other.w;
+		return *this;
+	}
+};
+uint4 operator+(const uint4& a,const uint4& b)
+{
+	uint4 tmp;
+	tmp.x = a.x + b.x;
+	tmp.y = a.y + b.y;
+	tmp.z = a.z + b.z;
+	tmp.w = a.w + b.w;
+	return tmp;
+}
+uint4 operator-(const uint4& a,const uint4& b)
+{
+	uint4 tmp;
+	tmp.x = a.x - b.x;
+	tmp.y = a.y - b.y;
+	tmp.z = a.z - b.z;
+	tmp.w = a.w - b.w;
+	return tmp;
+}
+
 #define native_sqrt sqrtf
 #define native_sin sinf
 #define native_cos cosf
@@ -178,6 +213,7 @@ struct MiniCLTask_LocalStoreMemory
 };
 
 #define GUID_ARG ,int __guid_arg
+#define GUID_ARG_VAL ,__guid_arg
 
 //#include <CL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
 // this one gives error for redefinition 
@@ -348,7 +384,7 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			}
 			break;
 		}
-#if 0
+#if 1
 	case CMD_MINICL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1 : 
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)

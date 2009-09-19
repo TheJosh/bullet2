@@ -69,6 +69,7 @@ class SpheresGridDemo : public GlutDemoApplication
 	public:
 
 		int m_demoType;
+		int m_drawGridMode;
 
 	btIntegrationDemoDynamicsWorld* m_pWorldI;
 	btSpheresGridDemoDynamicsWorld* m_pWorldS;
@@ -80,6 +81,7 @@ class SpheresGridDemo : public GlutDemoApplication
 		m_argc = argc;
 		m_argv = argv;
 		m_demoType = DEMO_OE_CAKE_2D;//DEMO_INTEGRATION;
+		m_drawGridMode = 0; 
 	}
 	virtual ~SpheresGridDemo()
 	{

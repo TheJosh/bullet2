@@ -651,7 +651,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 7, sizeof(cl_mem),	(void *) &m_dInvInertiaMass);
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 8, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#ifndef CL_PLATFORM_MINI_CL
+
 	initKernel(GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_ALL_GLOB, "kBitonicSortHash");
 	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_ALL_GLOB].m_kernel, 0, sizeof(cl_mem), (void *)&m_dPosHash);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -664,8 +664,6 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1, "kScanPairsExclusiveLocal1");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2, "kScanPairsExclusiveLocal2");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE, "kScanPairsUniformUpdate");
-
-#endif //CL_PLATFORM_MINI_CL
 }
 
 void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
@@ -764,7 +762,8 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
 	cl_int ciErrNum;
 	int memSize = m_numSpheres * sizeof(btInt2);
-#if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
+//#if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
+#if defined(CL_PLATFORM_AMD)
 	// bitonic sort on MiniCL does not work because barrier() finction is not implemented yet
 	// CPU version
 	// get hash from GPU
@@ -892,7 +891,7 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 void btSpheresGridDemoDynamicsWorld::runFindCellStartKernel()
 {
     cl_int ciErrNum;
-#ifdef CL_PLATFORM_MINI_CL
+#if 0
 	// CPU version
 	// get hash from GPU
 	int memSize = m_numSpheres * sizeof(btInt2);
@@ -989,6 +988,12 @@ void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	ciErrNum = clFinish(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+/* 
+	// debug check
+	memSize = m_numSpheres * sizeof(int);
+	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+*/
 #endif
 }
 
@@ -1503,9 +1508,9 @@ void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(int kernelId, in
 	}
 	else
 	{
-		#if defined(CL_PLATFORM_MINI_CL)
-			workgroupSize = 4;
-		#endif
+//		#if defined(CL_PLATFORM_MINI_CL)
+//			workgroupSize = 4;
+//		#endif
 		size_t localWorkSize[2], globalWorkSize[2];
 		workgroupSize = btMin(workgroupSize, globalSize);
 		int num_t = globalSize / workgroupSize;
@@ -1528,26 +1533,27 @@ void btSpheresGridDemoDynamicsWorld::runKernelWithWorkgroupSize(int kernelId, in
 
 //Note: logically shared with BitonicSort OpenCL code!
 // TODO : get parameter from OpenCL and pass it to kernel (needed for platforms other than NVIDIA)
-static const unsigned int LOCAL_SIZE_LIMIT = 1024U;
+//static const unsigned int LOCAL_SIZE_LIMIT = 1024U;
 
 void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir)
 {
+	unsigned int localSizeLimit = m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_workgroupSize * 2;
     if(arrayLength < 2)
         return;
     //Only power-of-two array lengths are supported so far
     dir = (dir != 0);
     cl_int ciErrNum;
     size_t localWorkSize, globalWorkSize;
-    if(arrayLength <= LOCAL_SIZE_LIMIT)
+    if(arrayLength <= localSizeLimit)
     {
-        btAssert( (batch * arrayLength) % LOCAL_SIZE_LIMIT == 0);
+        btAssert( (batch * arrayLength) % localSizeLimit == 0);
         //Launch bitonicSortLocal
 		ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 0,   sizeof(cl_mem), (void *)&pKey);
         ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1,  sizeof(cl_uint), (void *)&arrayLength);
         ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 2,  sizeof(cl_uint), (void *)&dir);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-        localWorkSize  = LOCAL_SIZE_LIMIT / 2;
+        localWorkSize  = localSizeLimit / 2;
         globalWorkSize = batch * arrayLength / 2;
         ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -1558,16 +1564,16 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
         ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-        localWorkSize  = LOCAL_SIZE_LIMIT / 2;
+        localWorkSize  = localSizeLimit / 2;
         globalWorkSize = batch * arrayLength / 2;
         ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-        for(unsigned int size = 2 * LOCAL_SIZE_LIMIT; size <= arrayLength; size <<= 1)
+        for(unsigned int size = 2 * localSizeLimit; size <= arrayLength; size <<= 1)
         {
             for(unsigned stride = size / 2; stride > 0; stride >>= 1)
             {
-                if(stride >= LOCAL_SIZE_LIMIT)
+                if(stride >= localSizeLimit)
                 {
                     //Launch bitonicMergeGlobal
                     ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
@@ -1577,7 +1583,7 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
                     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-                    localWorkSize  = LOCAL_SIZE_LIMIT / 4;
+                    localWorkSize  = localSizeLimit / 4;
                     globalWorkSize = batch * arrayLength / 2;
 
                     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
@@ -1593,7 +1599,7 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
                     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-                    localWorkSize  = LOCAL_SIZE_LIMIT / 2;
+                    localWorkSize  = localSizeLimit / 2;
                     globalWorkSize = batch * arrayLength / 2;
 
                     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
@@ -1610,7 +1616,7 @@ void btSpheresGridDemoDynamicsWorld::bitonicSortNv(cl_mem pKey, unsigned int bat
 // Common definitions
 ////////////////////////////////////////////////////////////////////////////////
 // TODO : get parameter from OpenCL and pass it to kernel (needed for platforms other than NVIDIA)
-#define WORKGROUP_SIZE  512
+//#define WORKGROUP_SIZE  512
 
 static unsigned int iSnapUp(unsigned int dividend, unsigned int divisor)
 {
@@ -1634,14 +1640,15 @@ void btSpheresGridDemoDynamicsWorld::scanExclusiveLocal1(cl_mem d_Dst, cl_mem d_
 {
     cl_int ciErrNum;
     size_t localWorkSize, globalWorkSize;
+	int workGroupSize = m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_workgroupSize;
 
     ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 0, sizeof(cl_mem), (void *)&d_Dst);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 1, sizeof(cl_mem), (void *)&d_Src);
-    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 2, 2 * WORKGROUP_SIZE * sizeof(unsigned int), NULL);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 2, 2 * workGroupSize * sizeof(unsigned int), NULL);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 3, sizeof(unsigned int), (void *)&size);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-    localWorkSize = WORKGROUP_SIZE;
+    localWorkSize = workGroupSize;
     globalWorkSize = (n * size) / 4;
 
     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
@@ -1653,18 +1660,19 @@ void btSpheresGridDemoDynamicsWorld::scanExclusiveLocal2(cl_mem d_Buffer, cl_mem
 {
     cl_int ciErrNum;
     size_t localWorkSize, globalWorkSize;
+	int workGroupSize = m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_workgroupSize;
 
     unsigned int elements = n * size;
     ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 0, sizeof(cl_mem), (void *)&d_Buffer);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 1, sizeof(cl_mem), (void *)&d_Dst);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 2, sizeof(cl_mem), (void *)&d_Src);
-    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 3, 2 * WORKGROUP_SIZE * sizeof(unsigned int), NULL);
+    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 3, 2 * workGroupSize * sizeof(unsigned int), NULL);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 4, sizeof(unsigned int), (void *)&elements);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 5, sizeof(unsigned int), (void *)&size);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-    localWorkSize = WORKGROUP_SIZE;
-    globalWorkSize = iSnapUp(elements, WORKGROUP_SIZE);
+    localWorkSize = workGroupSize;
+    globalWorkSize = iSnapUp(elements, workGroupSize);
 
     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -1674,13 +1682,14 @@ void btSpheresGridDemoDynamicsWorld::uniformUpdate(cl_mem d_Dst, cl_mem d_Buffer
 {
     cl_int ciErrNum;
     size_t localWorkSize, globalWorkSize;
+	int workGroupSize = m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_workgroupSize;
 
     ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE].m_kernel, 0, sizeof(cl_mem), (void *)&d_Dst);
     ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE].m_kernel, 1, sizeof(cl_mem), (void *)&d_Buffer);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-     localWorkSize = WORKGROUP_SIZE;
-    globalWorkSize = n * WORKGROUP_SIZE;
+     localWorkSize = workGroupSize;
+    globalWorkSize = n * workGroupSize;
 
     ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -1688,16 +1697,17 @@ void btSpheresGridDemoDynamicsWorld::uniformUpdate(cl_mem d_Dst, cl_mem d_Buffer
 
 void btSpheresGridDemoDynamicsWorld::scanExclusive(cl_mem d_Dst, cl_mem d_Src, unsigned int arrayLength)
 {
+	unsigned int workGroupSize = m_kernels[GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1].m_workgroupSize;
 //	arrayLength = getMaxPowOf2(arrayLength + 1);
-	if(arrayLength <= (4 * WORKGROUP_SIZE))
+	if(arrayLength <= (4 * workGroupSize))
 	{
-		scanExclusiveLocal1(d_Dst, d_Src, 1, 4 * WORKGROUP_SIZE);
+		scanExclusiveLocal1(d_Dst, d_Src, 1, 4 * workGroupSize);
 	}
 	else
 	{
-		scanExclusiveLocal1(d_Dst, d_Src, arrayLength / (4 * WORKGROUP_SIZE),  4 * WORKGROUP_SIZE);
-		scanExclusiveLocal2(m_dScanTmpBuffer, d_Dst, d_Src, 1, arrayLength / (4 * WORKGROUP_SIZE));
-		uniformUpdate(d_Dst, m_dScanTmpBuffer, arrayLength / (4 * WORKGROUP_SIZE));
+		scanExclusiveLocal1(d_Dst, d_Src, arrayLength / (4 * workGroupSize),  4 * workGroupSize);
+		scanExclusiveLocal2(m_dScanTmpBuffer, d_Dst, d_Src, 1, arrayLength / (4 * workGroupSize));
+		uniformUpdate(d_Dst, m_dScanTmpBuffer, arrayLength / (4 * workGroupSize));
 	}
 }
 

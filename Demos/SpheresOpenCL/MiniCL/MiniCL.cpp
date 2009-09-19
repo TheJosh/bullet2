@@ -212,6 +212,27 @@ CL_API_ENTRY cl_int CL_API_CALL clEnqueueNDRangeKernel(cl_command_queue /* comma
 	return 0;
 }
 
+#define LOCAL_BUF_SIZE 32768
+static int sLocalMemBuf[LOCAL_BUF_SIZE * 4 + 16];
+static int* spLocalBufCurr = NULL;
+static int sLocalBufUsed = LOCAL_BUF_SIZE; // so it will be reset at the first call
+static void* localBufMalloc(int size)
+{
+	int size16 = (size + 15) >> 4; // in 16-byte units
+	if((sLocalBufUsed + size16) > LOCAL_BUF_SIZE)
+	{ // reset
+		spLocalBufCurr = sLocalMemBuf;
+		while((int)spLocalBufCurr & 0x0F) spLocalBufCurr++; // align to 16 bytes
+		sLocalBufUsed = 0;
+	}
+	void* ret = spLocalBufCurr;
+	spLocalBufCurr += size16 * 4;
+	sLocalBufUsed += size;
+	return ret;
+}
+
+
+
 CL_API_ENTRY cl_int CL_API_CALL clSetKernelArg(cl_kernel    clKernel ,
                cl_uint      arg_index ,
                size_t       arg_size ,
@@ -229,7 +250,15 @@ CL_API_ENTRY cl_int CL_API_CALL clSetKernelArg(cl_kernel    clKernel ,
 			printf("error: clSetKernelArg argdata too large: %d (maximum is %d)\n",arg_size,MINICL_MAX_ARGLENGTH);
 		} else
 		{
-			memcpy(	kernel->m_argData[arg_index],arg_value,arg_size);
+			if(arg_value == NULL)
+			{	// this is only for __local memory qualifier
+				void* ptr = localBufMalloc(arg_size);
+				memcpy(	kernel->m_argData[arg_index], &ptr, sizeof(void*));
+			}
+			else
+			{
+				memcpy(	kernel->m_argData[arg_index],arg_value,arg_size);
+			}
 			kernel->m_argSizes[arg_index] = arg_size;
 		}
 	}
@@ -343,7 +372,9 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
                         cl_int *                 errcode_ret ) CL_API_SUFFIX__VERSION_1_0
 {
 	
-	int maxNumOutstandingTasks = 4;
+//	int maxNumOutstandingTasks = 4;
+	int maxNumOutstandingTasks = 1;
+	gMiniCLNumOutstandingTasks = maxNumOutstandingTasks;
 
 #ifdef WIN32
 	Win32ThreadSupport* threadSupport = new Win32ThreadSupport(Win32ThreadSupport::Win32ThreadConstructionInfo(
@@ -383,7 +414,7 @@ clFinish(cl_command_queue /* command_queue */) CL_API_SUFFIX__VERSION_1_0
 
 
 extern CL_API_ENTRY cl_int CL_API_CALL
-clGetKernelWorkGroupInfo(cl_kernel                  /* kernel */,
+clGetKernelWorkGroupInfo(cl_kernel                   kernel ,
                          cl_device_id               /* device */,
                          cl_kernel_work_group_info  wgi/* param_name */,
                          size_t   sz                  /* param_value_size */,
@@ -394,7 +425,9 @@ clGetKernelWorkGroupInfo(cl_kernel                  /* kernel */,
 	 &&(sz == sizeof(int))
 	 &&(ptr != NULL))
 	{
-		*((int*)ptr) = 4;
+		MiniCLKernel* miniCLKernel = (MiniCLKernel*)kernel;
+		MiniCLTaskScheduler* scheduler = miniCLKernel->m_scheduler;
+		*((int*)ptr) = scheduler->getMaxNumOutstandingTasks();
 		return CL_SUCCESS;
 	}
 	else

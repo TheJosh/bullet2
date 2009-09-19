@@ -13,8 +13,11 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#if !defined(GUID_ARG)
+#if defined(GUID_ARG)
+	extern int gMiniCLNumOutstandingTasks;
+#else
 	#define GUID_ARG 
+	#define GUID_ARG_VAL
 #endif
 
 __kernel void kApplyGravity(int numObjects,
@@ -667,6 +670,7 @@ __kernel void kComputeBatches(	int numPairs,
 	int batchId = pPairIds[currPair * 2 + 1].x;
 	int localWorkSz = get_local_size(0);
 	int localIdx = get_local_id(0);
+///*	
 	for(int i = 0; i < localWorkSz; i++)
 	{
 		if((i == localIdx) // so work item with lower local ID has priority to write
@@ -685,6 +689,26 @@ __kernel void kComputeBatches(	int numPairs,
 		}
 		barrier(CLK_GLOBAL_MEM_FENCE);
 	}
+//*/
+/*
+	for(int i = 0; i < localWorkSz; i++)
+	{
+		if((i == localIdx) // so work item with lower local ID has priority to write
+		&&(batchId < 0)
+		&&(pObjUsed[objIdA] < 0)
+		&&(pObjUsed[objIdB] < 0))
+		{
+			if(pObjUsed[objIdA] == -1) 
+			{
+				pObjUsed[objIdA] = index;
+			}
+			if(pObjUsed[objIdB] == -1) 
+			{
+				pObjUsed[objIdB] = index;
+			}
+		}
+	}
+*/
 }
 
 __kernel void kCheckBatches(int numPairs,
@@ -794,7 +818,8 @@ __kernel void kBitonicSortHash(	__global int2* pHash,
  * 
  */
 
-#define LOCAL_SIZE_LIMIT 1024U
+//#define LOCAL_SIZE_LIMIT 1024U
+#define LOCAL_SIZE_MAX 1024U
 
 inline void ComparatorPrivate(int2* keyA, int2* keyB, uint dir)
 {
@@ -821,12 +846,13 @@ inline void ComparatorLocal(__local int2* keyA, __local int2* keyB, uint dir)
 ////////////////////////////////////////////////////////////////////////////////
 __kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uint dir GUID_ARG)
 {
-    __local int2 l_key[LOCAL_SIZE_LIMIT];
+    __local int2 l_key[LOCAL_SIZE_MAX];
+    int localSizeLimit = get_local_size(0) * 2;
 
     //Offset to the beginning of subbatch and load data
-    pKey += get_group_id(0) * LOCAL_SIZE_LIMIT + get_local_id(0);
-    l_key[get_local_id(0) +                      0] = pKey[                     0];
-    l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)] = pKey[(LOCAL_SIZE_LIMIT / 2)];
+    pKey += get_group_id(0) * localSizeLimit + get_local_id(0);
+    l_key[get_local_id(0) +                    0] = pKey[                   0];
+    l_key[get_local_id(0) + (localSizeLimit / 2)] = pKey[(localSizeLimit / 2)];
 
     for(uint size = 2; size < arrayLength; size <<= 1)
     {
@@ -851,8 +877,8 @@ __kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uin
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
-    pKey[                     0] = l_key[get_local_id(0) +                      0];
-    pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
+    pKey[                   0] = l_key[get_local_id(0) +                    0];
+    pKey[(localSizeLimit / 2)] = l_key[get_local_id(0) + (localSizeLimit / 2)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -864,16 +890,17 @@ __kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uin
 //sorted in opposite directions
 __kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
 {
-    __local int2 l_key[LOCAL_SIZE_LIMIT];
+    __local int2 l_key[LOCAL_SIZE_MAX];
+    uint localSizeLimit = get_local_size(0) * 2;
 
     //Offset to the beginning of subarray and load data
-    pKey += get_group_id(0) * LOCAL_SIZE_LIMIT + get_local_id(0);
-    l_key[get_local_id(0) +                      0] = pKey[                     0];
-    l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)] = pKey[(LOCAL_SIZE_LIMIT / 2)];
+    pKey += get_group_id(0) * localSizeLimit + get_local_id(0);
+    l_key[get_local_id(0) +                    0] = pKey[                   0];
+    l_key[get_local_id(0) + (localSizeLimit / 2)] = pKey[(localSizeLimit / 2)];
 
-    uint comparatorI = get_global_id(0) & ((LOCAL_SIZE_LIMIT / 2) - 1);
+    uint comparatorI = get_global_id(0) & ((localSizeLimit / 2) - 1);
 
-    for(uint size = 2; size < LOCAL_SIZE_LIMIT; size <<= 1)
+    for(uint size = 2; size < localSizeLimit; size <<= 1)
     {
         //Bitonic merge
         uint ddd = (comparatorI & (size / 2)) != 0;
@@ -885,11 +912,11 @@ __kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
         }
     }
 
-    //Odd / even arrays of LOCAL_SIZE_LIMIT elements
+    //Odd / even arrays of localSizeLimit elements
     //sorted in opposite directions
     {
         uint ddd = (get_group_id(0) & 1);
-        for(uint stride = LOCAL_SIZE_LIMIT / 2; stride > 0; stride >>= 1)
+        for(uint stride = localSizeLimit / 2; stride > 0; stride >>= 1)
         {
             barrier(CLK_LOCAL_MEM_FENCE);
             uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
@@ -898,8 +925,8 @@ __kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
-    pKey[                     0] = l_key[get_local_id(0) +                      0];
-    pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
+    pKey[                   0] = l_key[get_local_id(0) +                    0];
+    pKey[(localSizeLimit / 2)] = l_key[get_local_id(0) + (localSizeLimit / 2)];
 }
 
 //Bitonic merge iteration for 'stride' >= LOCAL_SIZE_LIMIT
@@ -925,11 +952,12 @@ __kernel void kBitonicSortCellIdMergeGlobal(__global int2* pKey, uint arrayLengt
 //'size' > LOCAL_SIZE_LIMIT and 'stride' = [1 .. LOCAL_SIZE_LIMIT / 2]
 __kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength, uint stride, uint size, uint dir GUID_ARG)
 {
-    __local int2 l_key[LOCAL_SIZE_LIMIT];
+    __local int2 l_key[LOCAL_SIZE_MAX];
+    int localSizeLimit = get_local_size(0) * 2;
 
-    pKey += get_group_id(0) * LOCAL_SIZE_LIMIT + get_local_id(0);
-    l_key[get_local_id(0) +                      0] = pKey[                     0];
-    l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)] = pKey[(LOCAL_SIZE_LIMIT / 2)];
+    pKey += get_group_id(0) * localSizeLimit + get_local_id(0);
+    l_key[get_local_id(0) +                    0] = pKey[                   0];
+    l_key[get_local_id(0) + (localSizeLimit / 2)] = pKey[(localSizeLimit / 2)];
 
     //Bitonic merge
     uint comparatorI = get_global_id(0) & ((arrayLength / 2) - 1);
@@ -942,8 +970,8 @@ __kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);
-    pKey[                     0] = l_key[get_local_id(0) +                      0];
-    pKey[(LOCAL_SIZE_LIMIT / 2)] = l_key[get_local_id(0) + (LOCAL_SIZE_LIMIT / 2)];
+    pKey[                   0] = l_key[get_local_id(0) +                    0];
+    pKey[(localSizeLimit / 2)] = l_key[get_local_id(0) + (localSizeLimit / 2)];
 }
 
 /*
@@ -963,159 +991,96 @@ __kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength
 
 
 
-//All three kernels run 512 threads per workgroup
 //Must be a power of two
-#define WORKGROUP_SIZE 512
-
-#ifndef CL_PLATFORM_MINI_CL
-
 ////////////////////////////////////////////////////////////////////////////////
 // Scan codelets
 ////////////////////////////////////////////////////////////////////////////////
-#if(1)
-    //Naive inclusive scan: O(N * log2(N)) operations
-    //Allocate 2 * 'size' local memory, initialize the first half
-    //with 'size' zeros avoiding if(pos >= offset) condition evaluation
-    //and saving instructions
-    inline uint scan1Inclusive(uint idata, __local uint *l_Data, uint size){
-        uint pos = 2 * get_local_id(0) - (get_local_id(0) & (size - 1));
-        l_Data[pos] = 0;
-        pos += size;
-        l_Data[pos] = idata;
 
-        for(uint offset = 1; offset < size; offset <<= 1){
-            barrier(CLK_LOCAL_MEM_FENCE);
-            uint t = l_Data[pos] + l_Data[pos - offset];
-            barrier(CLK_LOCAL_MEM_FENCE);
-            l_Data[pos] = t;
-        }
+//Naive inclusive scan: O(N * log2(N)) operations
+//Allocate 2 * 'size' local memory, initialize the first half
+//with 'size' zeros avoiding if(pos >= offset) condition evaluation
+ //and saving instructions
+ inline uint scan1Inclusive(uint idata, __local uint *l_Data, uint size GUID_ARG)
+ {
+    uint pos = 2 * get_local_id(0) - (get_local_id(0) & (size - 1));
+    l_Data[pos] = 0;
+    pos += size;
+    l_Data[pos] = idata;
 
-        return l_Data[pos];
+    for(uint offset = 1; offset < size; offset <<= 1){
+        barrier(CLK_LOCAL_MEM_FENCE);
+        uint t = l_Data[pos] + l_Data[pos - offset];
+        barrier(CLK_LOCAL_MEM_FENCE);
+        l_Data[pos] = t;
     }
 
-    inline uint scan1Exclusive(uint idata, __local uint *l_Data, uint size){
-        return scan1Inclusive(idata, l_Data, size) - idata;
-    }
+    return l_Data[pos];
+}
 
-#else
-    #define LOG2_WARP_SIZE 5U
-    #define      WARP_SIZE (1U << LOG2_WARP_SIZE)
-
-    //Almost the same as naive scan1Inclusive but doesn't need barriers
-    //and works only for size <= WARP_SIZE
-    inline uint warpScanInclusive(uint idata, __local uint *l_Data, uint size){
-        uint pos = 2 * get_local_id(0) - (get_local_id(0) & (size - 1));
-        l_Data[pos] = 0;
-        pos += size;
-        l_Data[pos] = idata;
-
-        if(size >=  2) l_Data[pos] += l_Data[pos -  1];
-        if(size >=  4) l_Data[pos] += l_Data[pos -  2];
-        if(size >=  8) l_Data[pos] += l_Data[pos -  4];
-        if(size >= 16) l_Data[pos] += l_Data[pos -  8];
-        if(size >= 32) l_Data[pos] += l_Data[pos - 16];
-
-        return l_Data[pos];
-    }
-
-    inline uint warpScanExclusive(uint idata, __local uint *l_Data, uint size){
-        return warpScanInclusive(idata, l_Data, size) - idata;
-    }
-
-    inline uint scan1Inclusive(uint idata, __local uint *l_Data, uint size){
-        if(size > WARP_SIZE){
-            //Bottom-level inclusive warp scan
-            uint warpResult = warpScanInclusive(idata, l_Data, WARP_SIZE);
-
-            //Save top elements of each warp for exclusive warp scan
-            //sync to wait for warp scans to complete (because l_Data is being overwritten)
-            barrier(CLK_LOCAL_MEM_FENCE);
-            if( (get_local_id(0) & (WARP_SIZE - 1)) == (WARP_SIZE - 1) )
-                l_Data[get_local_id(0) >> LOG2_WARP_SIZE] = warpResult;
-
-            //wait for warp scans to complete
-            barrier(CLK_LOCAL_MEM_FENCE);
-            if( get_local_id(0) < (WORKGROUP_SIZE / WARP_SIZE) ){
-                //grab top warp elements
-                uint val = l_Data[get_local_id(0)];
-                //calculate exclsive scan and write back to shared memory
-                l_Data[get_local_id(0)] = warpScanExclusive(val, l_Data, size >> LOG2_WARP_SIZE);
-            }
-
-            //return updated warp scans with exclusive scan results
-            barrier(CLK_LOCAL_MEM_FENCE);
-            return warpResult + l_Data[get_local_id(0) >> LOG2_WARP_SIZE];
-        }else{
-            return warpScanInclusive(idata, l_Data, size);
-        }
-    }
-
-    inline uint scan1Exclusive(uint idata, __local uint *l_Data, uint size){
-        return scan1Inclusive(idata, l_Data, size) - idata;
-    }
-#endif
-
+inline uint scan1Exclusive(uint idata, __local uint *l_Data, uint size GUID_ARG)
+{
+    return scan1Inclusive(idata, l_Data, size GUID_ARG_VAL) - idata;
+}
 
 //Vector scan: the array to be scanned is stored
 //in work-item private memory as uint4
-inline uint4 scan4Inclusive(uint4 data4, __local uint *l_Data, uint size){
+inline uint4 scan4Inclusive(uint4 data4, __local uint *l_Data, uint size GUID_ARG)
+{
     //Level-0 inclusive scan
     data4.y += data4.x;
     data4.z += data4.y;
     data4.w += data4.z;
 
     //Level-1 exclusive scan
-    uint val = scan1Inclusive(data4.w, l_Data, size / 4) - data4.w;
+    uint val = scan1Inclusive(data4.w, l_Data, size / 4 GUID_ARG_VAL) - data4.w;
 
     return (data4 + (uint4)val);
 }
 
-inline uint4 scan4Exclusive(uint4 data4, __local uint *l_Data, uint size){
-    return scan4Inclusive(data4, l_Data, size) - data4;
+inline uint4 scan4Exclusive(uint4 data4, __local uint *l_Data, uint size GUID_ARG)
+{
+    return scan4Inclusive(data4, l_Data, size GUID_ARG_VAL) - data4;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Scan kernels
 ////////////////////////////////////////////////////////////////////////////////
-__kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
-void kScanPairsExclusiveLocal1(
-    __global uint4 *d_Dst,
-    __global uint4 *d_Src,
-    __local uint *l_Data,
-    uint size GUID_ARG
-){
+__kernel void kScanPairsExclusiveLocal1(__global uint4 *d_Dst,
+										__global uint4 *d_Src,
+										__local uint *l_Data,
+										uint size GUID_ARG)
+{
     //Load data
     uint4 idata4 = d_Src[get_global_id(0)];
 
     //Calculate exclusive scan
-    uint4 odata4  = scan4Exclusive(idata4, l_Data, size);
+    uint4 odata4  = scan4Exclusive(idata4, l_Data, size GUID_ARG_VAL);
 
     //Write back
     d_Dst[get_global_id(0)] = odata4;
 }
 
 //Exclusive scan of top elements of bottom-level scans (4 * THREADBLOCK_SIZE)
-__kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
-void kScanPairsExclusiveLocal2(
-    __global uint *d_Buf,
-    __global uint *d_Dst,
-    __global uint *d_Src,
-    __local uint *l_Data,
-    uint N,
-    uint arrayLength GUID_ARG
-){
+__kernel void kScanPairsExclusiveLocal2(__global uint *d_Buf,
+										__global uint *d_Dst,
+										__global uint *d_Src,
+										__local uint *l_Data,
+										uint N,
+										uint arrayLength GUID_ARG)
+{
+	int workGroupSize = get_local_size(0);
     //Load top elements
     //Convert results of bottom-level scan back to inclusive
     //Skip loads and stores for inactive work-items of the work-group with highest index(pos >= N)
     uint data = 0;
     if(get_global_id(0) < N)
     data =
-        d_Dst[(4 * WORKGROUP_SIZE - 1) + (4 * WORKGROUP_SIZE) * get_global_id(0)] + 
-        d_Src[(4 * WORKGROUP_SIZE - 1) + (4 * WORKGROUP_SIZE) * get_global_id(0)];
+        d_Dst[(4 * workGroupSize - 1) + (4 * workGroupSize) * get_global_id(0)] + 
+        d_Src[(4 * workGroupSize - 1) + (4 * workGroupSize) * get_global_id(0)];
 
     //Compute
-    uint odata = scan1Exclusive(data, l_Data, arrayLength);
+    uint odata = scan1Exclusive(data, l_Data, arrayLength GUID_ARG_VAL);
 
     //Avoid out-of-bound access
     if(get_global_id(0) < N)
@@ -1123,11 +1088,9 @@ void kScanPairsExclusiveLocal2(
 }
 
 //Final step of large-array scan: combine basic inclusive scan with exclusive scan of top elements of input arrays
-__kernel __attribute__((reqd_work_group_size(WORKGROUP_SIZE, 1, 1)))
-void kScanPairsUniformUpdate(
-    __global uint4 *d_Data,
-    __global uint *d_Buf GUID_ARG
-){
+__kernel void kScanPairsUniformUpdate(	__global uint4 *d_Data,
+										__global uint *d_Buf GUID_ARG)
+{
     __local uint buf;
 
     uint4 data4 = d_Data[get_global_id(0)];
@@ -1140,4 +1103,3 @@ void kScanPairsUniformUpdate(
     d_Data[get_global_id(0)] = data4;
 }
 
-#endif

@@ -497,6 +497,13 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 	(void)y;
 	switch (key) 
 	{
+		case 'G' :
+			if(m_demoType != DEMO_INTEGRATION)
+			{
+				m_drawGridMode++;
+				m_drawGridMode %= 3;
+			}
+			break;
 		case 'j' : 
 			m_demoType++;
 			m_demoType %= DEMO_TOTAL_NUM;
@@ -580,6 +587,53 @@ void SpheresGridDemo::renderme()
 	glUseProgram(0);
 	glDisable(GL_POINT_SPRITE_ARB);
 
+	if((m_demoType != DEMO_INTEGRATION) && m_drawGridMode)
+	{
+		btVector3& wmin =  m_pWorldS->m_worldMin;
+		btVector3& wmax =  m_pWorldS->m_worldMax;
+		glBegin(GL_LINE_LOOP);
+		glVertex3f(wmin[0], wmin[1], wmin[2]);
+		glVertex3f(wmin[0], wmax[1], wmin[2]);
+		glVertex3f(wmax[0], wmax[1], wmin[2]);
+		glVertex3f(wmax[0], wmin[1], wmin[2]);
+		glVertex3f(wmax[0], wmin[1], wmax[2]);
+		glVertex3f(wmax[0], wmax[1], wmax[2]);
+		glVertex3f(wmin[0], wmax[1], wmax[2]);
+		glVertex3f(wmin[0], wmin[1], wmax[2]);
+		glEnd();
+		glBegin(GL_LINES);
+		glVertex3f(wmin[0], wmin[1], wmin[2]);
+		glVertex3f(wmax[0], wmin[1], wmin[2]);
+		glVertex3f(wmin[0], wmin[1], wmax[2]);
+		glVertex3f(wmax[0], wmin[1], wmax[2]);
+		glVertex3f(wmin[0], wmax[1], wmin[2]);
+		glVertex3f(wmin[0], wmax[1], wmax[2]);
+		glVertex3f(wmax[0], wmax[1], wmin[2]);
+		glVertex3f(wmax[0], wmax[1], wmax[2]);
+		glEnd();
+		if(m_drawGridMode == 2)
+		{
+			int szx = m_pWorldS->m_simParams.m_gridSize[0];
+			int szy = m_pWorldS->m_simParams.m_gridSize[1];
+			glBegin(GL_LINES);
+			for(int i = 1; i < (szx-1); i++)
+			{
+				float wgt = (float)i / (float)(szx-1);
+				btVector3 vtx = wmax * wgt + wmin * (1.0f - wgt); 
+				glVertex3f(vtx[0], wmin[1], wmin[2]);
+				glVertex3f(vtx[0], wmax[1], wmin[2]);
+			}
+			for(int i = 1; i < (szy-1); i++)
+			{
+				float wgt = (float)i / (float)(szy-1);
+				btVector3 vtx = wmax * wgt + wmin * (1.0f - wgt); 
+				glVertex3f(wmin[0], vtx[1], wmin[2]);
+				glVertex3f(wmax[0], vtx[1], wmin[2]);
+			}
+		glEnd();
+		}
+	}
+
 	if ((m_debugMode & btIDebugDraw::DBG_NoHelpText)==0)
 	{
 		setOrthographicProjection();
@@ -657,6 +711,12 @@ void SpheresGridDemo::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 	if(m_demoType == DEMO_INTEGRATION)
 	{
 		sprintf(buf,"TAB to toggle between CPU  and GPU solvers");
+		GLDebugDrawString(xOffset,yStart,buf);
+		yStart += yIncr;
+	}
+	else
+	{
+		sprintf(buf,"G to draw broadphase grid");
 		GLDebugDrawString(xOffset,yStart,buf);
 		yStart += yIncr;
 	}

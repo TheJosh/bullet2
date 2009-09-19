@@ -41,7 +41,8 @@ subject to the following restrictions:
 
 #define SPHERES_GRID_MAX_OBJS (65536)
 #define SPHERES_GRID_MAX_NEIGHBORS (32)
-#define SPHERES_GRID_MAX_BATCHES (20)
+//#define SPHERES_GRID_MAX_BATCHES (20)
+#define SPHERES_GRID_MAX_BATCHES (32)
 
 // REAL number of threads executing in parallel
 #if defined(CL_PLATFORM_MINI_CL)
@@ -194,13 +195,13 @@ public:
 protected:
 	btKernelInfo		m_kernels[GPUDEMO_KERNEL_TOTAL];
 
-	btVector3			m_worldMin;
-	btVector3			m_worldMax;
 	btScalar			m_minSphereRad;
 	btScalar			m_maxSphereRad;
 	btVector3			m_cellSize;
 
 public:
+	btVector3			m_worldMin;
+	btVector3			m_worldMax;
 	// vbo variables
 	GLuint			m_vbo;
 	unsigned int	m_posVbo;

@@ -93,6 +93,8 @@ ATTRIBUTE_ALIGNED16(struct) MiniCLTaskDesc
 	int			m_argSizes[MINI_CL_MAX_ARG];
 };
 
+extern int gMiniCLNumOutstandingTasks;
+
 
 void	processMiniCLTask(void* userPtr, void* lsMemory);
 void*	createMiniCLLocalStoreMemory();
