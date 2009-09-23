@@ -664,6 +664,20 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1, "kScanPairsExclusiveLocal1");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2, "kScanPairsExclusiveLocal2");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE, "kScanPairsUniformUpdate");
+	
+	for(int i = 0; i < SIMSTAGE_TOTAL; i++)
+	{
+		m_useCPU[i] = false;
+	}
+	#if defined(CL_PLATFORM_MINI_CL)
+		m_useCPU[SIMSTAGE_SCAN_PAIRS] = true; 
+	#endif
+	#if defined(CL_PLATFORM_AMD)
+		m_useCPU[SIMSTAGE_SORT_CELL_ID] = true; // sloooow, incorrect, crashes application
+		m_useCPU[SIMSTAGE_FIND_CELL_START] = true; // run-time error "Unimplemented"
+		m_useCPU[SIMSTAGE_SCAN_PAIRS] = true; // works, but very slow (up to 100 times)
+		m_useCPU[SIMSTAGE_COMPUTE_BATCHES] = true; // run-time error "Unimplemented"
+	#endif
 }
 
 void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
@@ -702,41 +716,44 @@ void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
 void btSpheresGridDemoDynamicsWorld::runApplyGravityKernel()
 {
     cl_int ciErrNum;
-#if 0
-	// CPU version
-	// get velocities from GPU
-	int memSize = sizeof(btVector3) * m_numObjects;
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// execute kernel
-	for(int n = 0; n < m_numObjects; n++)
+	if(m_useCPU[SIMSTAGE_APPLY_GRAVITY])
 	{
-		unsigned int index = n;
-		btVector3 mass0 =	m_hInvInertiaMass[index * 3 + 0];
-		if(mass0[3] > 0.f)
+		// CPU version
+		// get velocities from GPU
+		int memSize = sizeof(btVector3) * m_numObjects;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// execute kernel
+		for(int n = 0; n < m_numObjects; n++)
 		{
-			btVector3 linVel = m_hLinVel[index];
-			btVector3 gravity(m_simParams[0],m_simParams[1],m_simParams[2]);
-			linVel += gravity * m_timeStep;
-			m_hLinVel[index] = linVel;
+			unsigned int index = n;
+			btVector3 mass0 =	m_hInvInertiaMass[index * 3 + 0];
+			if(mass0[3] > 0.f)
+			{
+				btVector3 linVel = m_hLinVel[index];
+				btVector3 gravity(m_simParams.m_gravity[0],m_simParams.m_gravity[1],m_simParams.m_gravity[2]);
+				linVel += gravity * m_timeStep;
+				m_hLinVel[index] = linVel;
+			}
 		}
+		// write back to GPU
+		memSize = sizeof(btVector3) * m_numObjects;
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	// write back to GPU
-	memSize = sizeof(btVector3) * m_numObjects;
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-    // Set work size and execute the kernel
-	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 5, sizeof(float), &m_timeStep);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_APPLY_GRAVITY, m_numObjects);
-	ciErrNum = clFinish(m_cqCommandQue);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#endif
+	else
+	{
+		// Set work size and execute the kernel
+		ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_APPLY_GRAVITY].m_kernel, 5, sizeof(float), &m_timeStep);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_APPLY_GRAVITY, m_numObjects);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
 }
 
 void btSpheresGridDemoDynamicsWorld::runIntegrateTransformsKernel()
@@ -762,119 +779,121 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
 	cl_int ciErrNum;
 	int memSize = m_numSpheres * sizeof(btInt2);
-//#if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
-#if defined(CL_PLATFORM_AMD)
-	// bitonic sort on MiniCL does not work because barrier() finction is not implemented yet
-	// CPU version
-	// get hash from GPU
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// sort
-	class btHashPosKey
+	if(m_useCPU[SIMSTAGE_SORT_CELL_ID])
 	{
-	public:
-		unsigned int hash;
-		unsigned int index;
-		void quickSort(btHashPosKey* pData, int lo, int hi)
+		// CPU version
+		// get hash from GPU
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// sort
+		class btHashPosKey
 		{
-			int i=lo, j=hi;
-			btHashPosKey x = pData[(lo+hi)/2];
-			do
-			{    
-				while(pData[i].hash < x.hash) i++; 
-				while(x.hash < pData[j].hash) j--;
-				if(i <= j)
+		public:
+			unsigned int hash;
+			unsigned int index;
+			void quickSort(btHashPosKey* pData, int lo, int hi)
+			{
+				int i=lo, j=hi;
+				btHashPosKey x = pData[(lo+hi)/2];
+				do
+				{    
+					while(pData[i].hash < x.hash) i++; 
+					while(x.hash < pData[j].hash) j--;
+					if(i <= j)
+					{
+						btHashPosKey t = pData[i];
+						pData[i] = pData[j];
+						pData[j] = t;
+						i++; j--;
+					}
+				} while(i <= j);
+				if(lo < j) pData->quickSort(pData, lo, j);
+				if(i < hi) pData->quickSort(pData, i, hi);
+			}
+			void bitonicSort(btHashPosKey* pData, int lo, int n, bool dir)
+			{
+				if(n > 1)
+				{
+					int m = n / 2;
+					bitonicSort(pData, lo, m, !dir);
+					bitonicSort(pData, lo + m, n - m, dir);
+					bitonicMerge(pData, lo, n, dir);
+				}
+			}
+			void bitonicMerge(btHashPosKey* pData, int lo, int n, bool dir)
+			{
+				if(n > 1)
+				{
+					int m = greatestPowerOfTwoLessThan(n);
+					for(int i = lo; i < (lo + n - m); i++)
+					{
+						compare(pData, i, i + m, dir);
+					}
+					bitonicMerge(pData, lo, m, dir);
+					bitonicMerge(pData, lo + m, n - m, dir);
+				}
+			}
+			void compare(btHashPosKey* pData, int i, int j, bool dir)
+			{
+				if(dir == (pData[i].hash > pData[j].hash))
 				{
 					btHashPosKey t = pData[i];
 					pData[i] = pData[j];
 					pData[j] = t;
-					i++; j--;
 				}
-			} while(i <= j);
-			if(lo < j) pData->quickSort(pData, lo, j);
-			if(i < hi) pData->quickSort(pData, i, hi);
-		}
-		void bitonicSort(btHashPosKey* pData, int lo, int n, bool dir)
-		{
-			if(n > 1)
-			{
-				int m = n / 2;
-				bitonicSort(pData, lo, m, !dir);
-				bitonicSort(pData, lo + m, n - m, dir);
-				bitonicMerge(pData, lo, n, dir);
 			}
-		}
-		void bitonicMerge(btHashPosKey* pData, int lo, int n, bool dir)
-		{
-			if(n > 1)
+			int greatestPowerOfTwoLessThan(int n)
 			{
-				int m = greatestPowerOfTwoLessThan(n);
-				for(int i = lo; i < (lo + n - m); i++)
+				int k = 1;
+				while(k < n)
 				{
-					compare(pData, i, i + m, dir);
+					k = k << 1;
 				}
-				bitonicMerge(pData, lo, m, dir);
-				bitonicMerge(pData, lo + m, n - m, dir);
+				return k>>1;
 			}
-		}
-		void compare(btHashPosKey* pData, int i, int j, bool dir)
-		{
-			if(dir == (pData[i].hash > pData[j].hash))
-			{
-				btHashPosKey t = pData[i];
-				pData[i] = pData[j];
-				pData[j] = t;
-			}
-		}
-		int greatestPowerOfTwoLessThan(int n)
-		{
-			int k = 1;
-			while(k < n)
-			{
-				k = k << 1;
-			}
-			return k>>1;
-		}
-	};
-	btHashPosKey* pHash = (btHashPosKey*)(&m_hPosHash[0]);
-//	pHash->quickSort(pHash, 0, m_numSpheres - 1);
-	pHash->bitonicSort(pHash, 0, m_hashSize, true);
-	// write back to GPU
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-	#if 0
-	{
-		size_t localWorkSize[2], globalWorkSize[2];
-		int dir = 1;
-
-		int numWorkItems = m_hashSize / 2;
-
-		int workGroupSize  = (numWorkItems < m_workGroupSize) ? numWorkItems : m_workGroupSize;
-		int numBatches = numWorkItems / workGroupSize;
-
-		localWorkSize[0]  = workGroupSize;
-		globalWorkSize[0] = workGroupSize;
-		localWorkSize[1] = 1;
-		globalWorkSize[1] = 1;
-
-		ciErrNum  = clSetKernelArg(m_ckBitonicSortHashKernel, 1, sizeof(int), (void *)&numBatches);
-		ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 2, sizeof(int), (void *)&dir);
-		oclCHECKERROR (ciErrNum, CL_SUCCESS);
-
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortHashKernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
-		oclCHECKERROR (ciErrNum, CL_SUCCESS);
-		// read results from GPU
-		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+		};
+		btHashPosKey* pHash = (btHashPosKey*)(&m_hPosHash[0]);
+	//	pHash->quickSort(pHash, 0, m_numSpheres - 1);
+		pHash->bitonicSort(pHash, 0, m_hashSize, true);
+		// write back to GPU
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	#else
-		int dir = 1;
-		bitonicSortNv(m_dPosHash, 1, m_hashSize, dir);
-		ciErrNum = clFinish(m_cqCommandQue);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	#endif
-#endif
+	else
+	{
+		#if 0
+		{ // bitonic sort on GPU (global memory)
+			size_t localWorkSize[2], globalWorkSize[2];
+			int dir = 1;
+
+			int numWorkItems = m_hashSize / 2;
+
+			int workGroupSize  = (numWorkItems < m_workGroupSize) ? numWorkItems : m_workGroupSize;
+			int numBatches = numWorkItems / workGroupSize;
+
+			localWorkSize[0]  = workGroupSize;
+			globalWorkSize[0] = workGroupSize;
+			localWorkSize[1] = 1;
+			globalWorkSize[1] = 1;
+
+			ciErrNum  = clSetKernelArg(m_ckBitonicSortHashKernel, 1, sizeof(int), (void *)&numBatches);
+			ciErrNum |= clSetKernelArg(m_ckBitonicSortHashKernel, 2, sizeof(int), (void *)&dir);
+			oclCHECKERROR (ciErrNum, CL_SUCCESS);
+
+			ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_ckBitonicSortHashKernel, 1, NULL, globalWorkSize, localWorkSize, 0, NULL, NULL);
+			oclCHECKERROR (ciErrNum, CL_SUCCESS);
+			// read results from GPU
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		}
+		#else
+			 // bitonic sort on GPU (shared memory)	
+			int dir = 1;
+			bitonicSortNv(m_dPosHash, 1, m_hashSize, dir);
+			ciErrNum = clFinish(m_cqCommandQue);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		#endif
+	}
 #if 0
 	// check order
 	for(int i = 1; i < m_hashSize; i++)
@@ -891,37 +910,40 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 void btSpheresGridDemoDynamicsWorld::runFindCellStartKernel()
 {
     cl_int ciErrNum;
-#if 0
-	// CPU version
-	// get hash from GPU
-	int memSize = m_numSpheres * sizeof(btInt2);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// clear cells
-	for(int i = 0; i < m_numGridCells; i++)
+	if(m_useCPU[SIMSTAGE_FIND_CELL_START])
 	{
-		m_hCellStart[i] = -1;
-	}
-	// find start of each cell in sorted hash
-	btInt2 hash = m_hPosHash[0];
-	m_hCellStart[hash.x] = 0;
-	for(int i = 1; i < m_numSpheres; i++)
-	{
-		if(m_hPosHash[i-1].x != m_hPosHash[i].x)
+		// CPU version
+		// get hash from GPU
+		int memSize = m_numSpheres * sizeof(btInt2);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// clear cells
+		for(int i = 0; i < m_numGridCells; i++)
 		{
-			m_hCellStart[m_hPosHash[i].x] = i;
+			m_hCellStart[i] = -1;
 		}
+		// find start of each cell in sorted hash
+		btInt2 hash = m_hPosHash[0];
+		m_hCellStart[hash.x] = 0;
+		for(int i = 1; i < m_numSpheres; i++)
+		{
+			if(m_hPosHash[i-1].x != m_hPosHash[i].x)
+			{
+				m_hCellStart[m_hPosHash[i].x] = i;
+			}
+		}
+		// write back to GPU
+		memSize = m_numGridCells * sizeof(int);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dCellStart, CL_TRUE, 0, memSize, &(m_hCellStart[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	// write back to GPU
-	memSize = m_numGridCells * sizeof(int);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dCellStart, CL_TRUE, 0, memSize, &(m_hCellStart[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_CLEAR_CELL_START, m_numGridCells);
-	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_FIND_CELL_START, m_numSpheres);
-	ciErrNum = clFinish(m_cqCommandQue);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#endif
+	else
+	{	// GPU
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_CLEAR_CELL_START, m_numGridCells);
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_FIND_CELL_START, m_numSpheres);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
 }
 
 
@@ -961,93 +983,99 @@ void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
 {
     cl_int ciErrNum;
 	int memSize;
-#ifdef CL_PLATFORM_MINI_CL
-	// CPU version
-	// get data from GPU
-	memSize = m_numSpheres * sizeof(int);
-	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// do scan
-	m_hPairScan[0] = 0;
-	for(int i = 1; i <= m_numSpheres; i++)
+	if(m_useCPU[SIMSTAGE_SCAN_PAIRS])
 	{
-		int count_prev = m_hPairBuffCurr[i - 1];
-		m_hPairScan[i] = m_hPairScan[i-1] + count_prev;
+		// CPU version
+		// get data from GPU
+		memSize = m_numSpheres * sizeof(int);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// do scan
+		m_hPairScan[0] = 0;
+		for(int i = 1; i <= m_numSpheres; i++)
+		{
+			int count_prev = m_hPairBuffCurr[i - 1];
+			m_hPairScan[i] = m_hPairScan[i-1] + count_prev;
+		}
+		m_numPairs = m_hPairScan[m_numSpheres];
+		// write back to GPU
+		memSize = m_numSpheres * sizeof(int);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	m_numPairs = m_hPairScan[m_numSpheres];
-	// write back to GPU
-	memSize = m_numSpheres * sizeof(int);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-	scanExclusive(m_dPairScan, m_dPairBuffCurr, m_scanSize);
-	// now read the total number of pairs to CPU (this is necessary to run other kernels) 
-	memSize = sizeof(int);
-	int offset = sizeof(int) * m_numSpheres;
-	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, offset, memSize, &m_numPairs, 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	ciErrNum = clFinish(m_cqCommandQue);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	else
+	{
+		scanExclusive(m_dPairScan, m_dPairBuffCurr, m_scanSize);
+		// now read the total number of pairs to CPU (this is necessary to run other kernels) 
+		memSize = sizeof(int);
+		int offset = sizeof(int) * m_numSpheres;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, offset, memSize, &m_numPairs, 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
 /* 
 	// debug check
 	memSize = m_numSpheres * sizeof(int);
 	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 */
-#endif
 }
 
 
 void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 {
     cl_int ciErrNum;
-#if 0
-	// CPU version
-	// get data from GPU
-	int memSize = (m_numSpheres + 1) * sizeof(int);
-	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	memSize = (m_numSpheres + 1) * sizeof(int);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	memSize = m_numSpheres * m_maxNeighbors * sizeof(int);
-	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuff, CL_TRUE, 0, memSize, &(m_hPairBuff[0]), 0, NULL, NULL);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	int numPairs = 0;
-	for(int i = 0; i < m_numSpheres; i++)
+	if(m_useCPU[SIMSTAGE_COMPACT_PAIRS])
 	{
-		int count = m_hPairBuffCurr[i];
-		int inpStart = m_hPairBuffStart[i];
-		int outStart = m_hPairScan[i];
-		int	objIdA = m_hBodyIds[i];
-		for(int j = 0; j < count; j++)
+		// CPU version
+		// get data from GPU
+		int memSize = (m_numSpheres + 1) * sizeof(int);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuffCurr, CL_TRUE, 0, memSize, &(m_hPairBuffCurr[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		memSize = (m_numSpheres + 1) * sizeof(int);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairScan, CL_TRUE, 0, memSize, &(m_hPairScan[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		memSize = m_numSpheres * m_maxNeighbors * sizeof(int);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairBuff, CL_TRUE, 0, memSize, &(m_hPairBuff[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		int numPairs = 0;
+		for(int i = 0; i < m_numSpheres; i++)
 		{
-			int sphereIdB = m_hPairBuff[inpStart + j];
-			int objIdB = m_hBodyIds[sphereIdB];
-			btPairId pairId;
-			pairId.m_objA = objIdA;
-			pairId.m_sphA = i;
-			pairId.m_objB = objIdB;
-			pairId.m_sphB = sphereIdB;
-			pairId.m_pair = 0;
-			pairId.m_batch = -1;
-			m_hPairIds[outStart + j] = pairId;
-			numPairs++;
+			int count = m_hPairBuffCurr[i];
+			int inpStart = m_hPairBuffStart[i];
+			int outStart = m_hPairScan[i];
+			int	objIdA = m_hBodyIds[i];
+			for(int j = 0; j < count; j++)
+			{
+				int sphereIdB = m_hPairBuff[inpStart + j];
+				int objIdB = m_hBodyIds[sphereIdB];
+				btPairId pairId;
+				pairId.m_objA = objIdA;
+				pairId.m_sphA = i;
+				pairId.m_objB = objIdB;
+				pairId.m_sphB = sphereIdB;
+				pairId.m_pair = 0;
+				pairId.m_batch = -1;
+				m_hPairIds[outStart + j] = pairId;
+				numPairs++;
+			}
 		}
+		if(numPairs != m_numPairs)
+		{
+			printf("ERROR : number of pairs mismatch %d : %d\n",numPairs, m_numPairs);
+		}
+		// write pair ids back to GPU
+		memSize = m_numPairs * sizeof(btPairId);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	if(numPairs != m_numPairs)
+	else
 	{
-		printf("ERROR : number of pairs mismatch %d : %d\n",numPairs, m_numPairs);
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPACT_PAIRS, m_numSpheres);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	// write pair ids back to GPU
-	memSize = m_numPairs * sizeof(btPairId);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPACT_PAIRS, m_numSpheres);
-	ciErrNum = clFinish(m_cqCommandQue);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#endif
 }
 
 
@@ -1058,89 +1086,92 @@ void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 void btSpheresGridDemoDynamicsWorld::runComputeBatchesKernel()
 {
     cl_int ciErrNum;
-#if defined(CL_PLATFORM_AMD)
-	m_numBatches = 0;
-	// CPU version
-	int memSize = m_numPairs * sizeof(btPairId);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	for(int n_batch = 0; n_batch < m_maxBatches; n_batch++)
+	if(m_useCPU[SIMSTAGE_COMPUTE_BATCHES])
 	{
-		bool lastBatch = (n_batch == (m_maxBatches - 1));
-		for(int i = 0; i < m_numObjects; i++)
-		{
-			btVector3 mass0 =	m_hInvInertiaMass[i * 3 + 0];
-			if(mass0[3] > 0.f)
-			{
-				m_hObjUsed[i] = -1;
-			}
-			else
-			{
-				m_hObjUsed[i] = -2;
-			}
-		}
-		for(int i = 0; i < m_numPairs; i++)
-		{
-			btPairId pairId = m_hPairIds[i];
-
-			if((pairId.m_batch < 0)
-			 &&(m_hObjUsed[pairId.m_objA] < 0)
-			 &&(m_hObjUsed[pairId.m_objB] < 0))
-			{
-				m_hPairIds[i].m_batch = n_batch;
-				m_numBatches = n_batch + 1;
-				if((m_hObjUsed[pairId.m_objA] == -1) && !lastBatch) 
-				{
-					m_hObjUsed[pairId.m_objA] = i;
-				}
-				if((m_hObjUsed[pairId.m_objB] == -1) && !lastBatch) 
-				{
-					m_hObjUsed[pairId.m_objB] = i;
-				}
-			}
-		}
-	}
-	// write results back to GPU
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-	m_numBatches = m_maxBatches;
-//  debug breakpoint
-//	if(m_numPairs)
-//	{
-//		ciErrNum = 0;
-//	}
-	for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
-	{
-		{
-			BT_PROFILE_SETUP_BATCHES("Init");
-			runKernelWithWorkgroupSize(GPUDEMO_KERNEL_INIT_BATCHES, m_numObjects);
-			ciErrNum = clFinish(m_cqCommandQue);
-			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		}
-		{
-			BT_PROFILE_SETUP_BATCHES("Compute");
-			runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_BATCHES, m_numPairs);
-			ciErrNum = clFinish(m_cqCommandQue);
-			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		}
-		{
-			BT_PROFILE_SETUP_BATCHES("Check");
-			ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 5, sizeof(int), &nBatch);
-			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-			runKernelWithWorkgroupSize(GPUDEMO_KERNEL_CHECK_BATCHES, m_numPairs);
-			ciErrNum = clFinish(m_cqCommandQue);
-			oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		}
-	}
-	{ // this is needed for validation and coloring only
-		BT_PROFILE_SETUP_BATCHES("Read");
-		// read results from GPU
+		m_numBatches = 0;
+		// CPU version
 		int memSize = m_numPairs * sizeof(btPairId);
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		for(int n_batch = 0; n_batch < m_maxBatches; n_batch++)
+		{
+			bool lastBatch = (n_batch == (m_maxBatches - 1));
+			for(int i = 0; i < m_numObjects; i++)
+			{
+				btVector3 mass0 =	m_hInvInertiaMass[i * 3 + 0];
+				if(mass0[3] > 0.f)
+				{
+					m_hObjUsed[i] = -1;
+				}
+				else
+				{
+					m_hObjUsed[i] = -2;
+				}
+			}
+			for(int i = 0; i < m_numPairs; i++)
+			{
+				btPairId pairId = m_hPairIds[i];
+
+				if((pairId.m_batch < 0)
+				 &&(m_hObjUsed[pairId.m_objA] < 0)
+				 &&(m_hObjUsed[pairId.m_objB] < 0))
+				{
+					m_hPairIds[i].m_batch = n_batch;
+					m_numBatches = n_batch + 1;
+					if((m_hObjUsed[pairId.m_objA] == -1) && !lastBatch) 
+					{
+						m_hObjUsed[pairId.m_objA] = i;
+					}
+					if((m_hObjUsed[pairId.m_objB] == -1) && !lastBatch) 
+					{
+						m_hObjUsed[pairId.m_objB] = i;
+					}
+				}
+			}
+		}
+		// write results back to GPU
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-#endif
+	else
+	{
+		m_numBatches = m_maxBatches;
+	//  debug breakpoint
+	//	if(m_numPairs)
+	//	{
+	//		ciErrNum = 0;
+	//	}
+		for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
+		{
+			{
+				BT_PROFILE_SETUP_BATCHES("Init");
+				runKernelWithWorkgroupSize(GPUDEMO_KERNEL_INIT_BATCHES, m_numObjects);
+				ciErrNum = clFinish(m_cqCommandQue);
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			}
+			{
+				BT_PROFILE_SETUP_BATCHES("Compute");
+				runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_BATCHES, m_numPairs);
+				ciErrNum = clFinish(m_cqCommandQue);
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			}
+			{
+				BT_PROFILE_SETUP_BATCHES("Check");
+				ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_CHECK_BATCHES].m_kernel, 5, sizeof(int), &nBatch);
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+				runKernelWithWorkgroupSize(GPUDEMO_KERNEL_CHECK_BATCHES, m_numPairs);
+				ciErrNum = clFinish(m_cqCommandQue);
+				oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			}
+		}
+		{ // this is needed for validation and coloring only
+			BT_PROFILE_SETUP_BATCHES("Read");
+			// read results from GPU
+			int memSize = m_numPairs * sizeof(btPairId);
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		}
+	}
 #if 0
 	{
 		BT_PROFILE_SETUP_BATCHES("Validate");
@@ -1262,139 +1293,143 @@ void btSpheresGridDemoDynamicsWorld::runComputeBatchesKernel()
 		// printf("pairs : %4d, batches : %d, left : %d\n", m_numPairs, m_numBatches, numLeft);
 	}
 #endif
-
 }
 
 
 void btSpheresGridDemoDynamicsWorld::runComputeContactsKernel()
 {
     cl_int ciErrNum;
-#if 0
-	// CPU version
-	// get pair IDs ...
-	int memSize = m_numPairs * sizeof(btPairId);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// ... and sphere positions
-	memSize = sizeof(float) * 4 * m_numSpheres;
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// compute contacts
-	for(int i = 0; i < m_numPairs; i++)
+	if(m_useCPU[SIMSTAGE_COMPUTE_CONTACTS])
 	{
-		int sphIdA = m_hPairIds[i].m_sphA;
-		int sphIdB = m_hPairIds[i].m_sphB;
-		btVector3 posA = m_hPos[sphIdA];
-		btVector3 posB = m_hPos[sphIdB];
-		btScalar radA = m_hShapeBuf[sphIdA][3];
-		btScalar radB = m_hShapeBuf[sphIdB][3];
-		btVector3 del = posB - posA;
-		btScalar dist = del.dot(del);
-		dist = btSqrt(dist);
-		btScalar maxD = radA + radB;
-		if(dist > maxD)
-		{ // should never happen
-			printf("ERROR : no collision for pair %d\n", i);
-			continue;
-		}
-		btScalar penetration = maxD - dist;
-		btVector3 normal;
-		if(dist > btScalar(0.f)) 
+		// CPU version
+		// get pair IDs ...
+		int memSize = m_numPairs * sizeof(btPairId);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPairIds, CL_TRUE, 0, memSize, &(m_hPairIds[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// ... and sphere positions
+		memSize = sizeof(float) * 4 * m_numSpheres;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// compute contacts
+		for(int i = 0; i < m_numPairs; i++)
 		{
-			btScalar fact = btScalar(-1.0f) / dist;
-			normal = del * fact; 
+			int sphIdA = m_hPairIds[i].m_sphA;
+			int sphIdB = m_hPairIds[i].m_sphB;
+			btVector3 posA = m_hPos[sphIdA];
+			btVector3 posB = m_hPos[sphIdB];
+			btScalar radA = m_hShapeBuf[sphIdA][3];
+			btScalar radB = m_hShapeBuf[sphIdB][3];
+			btVector3 del = posB - posA;
+			btScalar dist = del.dot(del);
+			dist = btSqrt(dist);
+			btScalar maxD = radA + radB;
+			if(dist > maxD)
+			{ // should never happen
+				printf("ERROR : no collision for pair %d\n", i);
+				continue;
+			}
+			btScalar penetration = maxD - dist;
+			btVector3 normal;
+			if(dist > btScalar(0.f)) 
+			{
+				btScalar fact = btScalar(-1.0f) / dist;
+				normal = del * fact; 
+			}
+			else
+			{	
+				normal.setValue(1.f, 0.f, 0.f);
+			}
+			btVector3 tmp = (normal * radA);
+			btVector3 contact = posA - tmp;
+			contact.setW(penetration);
+			normal.setW(0);
+			m_hContacts[i].m_contact = contact;
+			m_hContacts[i].m_normal = normal;
 		}
-		else
-		{	
-			normal.setValue(1.f, 0.f, 0.f);
-		}
-		btVector3 tmp = (normal * radA);
-		btVector3 contact = posA - tmp;
-		contact.setW(penetration);
-		normal.setW(0);
-		m_hContacts[i].m_contact = contact;
-		m_hContacts[i].m_normal = normal;
+		// write back to GPU
+		memSize = m_numPairs * sizeof(btSpheresContPair);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-	// write back to GPU
-	memSize = m_numPairs * sizeof(btSpheresContPair);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-//	runKernelWithWorkgroupSize(m_ckSetupContactsKernel, m_numPairs, 256);
-	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_CONTACTS, m_numPairs);
-	ciErrNum = clFinish(m_cqCommandQue);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-/*
-	// read results from GPU
-	int memSize = m_numPairs * sizeof(btSpheresContPair);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-*/
-#endif
+	else
+	{
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_CONTACTS, m_numPairs);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		/*
+		// read results from GPU
+		int memSize = m_numPairs * sizeof(btSpheresContPair);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		*/
+	}
 }
 
 void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 {
     cl_int ciErrNum;
-#if 0
-	// CPU version
-	int memSize = m_numPairs * sizeof(btSpheresContPair);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	// get velocities from GPU
-	memSize = sizeof(btVector3) * m_numObjects;
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	memSize = sizeof(btVector3) * 4 * m_numObjects;
-    ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dTrans, CL_TRUE, 0, memSize, &(m_hTrans[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
+	if(m_useCPU[SIMSTAGE_SOLVE_CONSTRAINTS])
 	{
-		for(int nBatch = 0; nBatch < m_numBatches; nBatch++)
-		{
-			btSpheresContPair* pPairs = &(m_hContacts[0]);
-			for(int nPair = 0; nPair < m_numPairs; nPair++)
-			{
-				solvePairCPU(pPairs + nPair, nPair, nBatch);
-			}
-		}
-	}
-	// write back to GPU
-	memSize = sizeof(btVector3) * m_numObjects;
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-#else
-	ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 9, sizeof(float), &m_timeStep);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	{
-		BT_PROFILE("enqueue");
-		for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
-		{
-			for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
-			{
-				ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 2, sizeof(int), &nBatch);
-				oclCHECKERROR(ciErrNum, CL_SUCCESS);
-				runKernelWithWorkgroupSize(GPUDEMO_KERNEL_SOLVE_CONSTRAINTS, m_numPairs);
-			}
-		}
-		clFinish(m_cqCommandQue);
-	}
-/*
-	{
-		BT_PROFILE("read from GPU");
-		// read results to CPU
-		int memSize = sizeof(btVector3) * m_numObjects;
+		// CPU version
+		int memSize = m_numPairs * sizeof(btSpheresContPair);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// get velocities from GPU
+		memSize = sizeof(btVector3) * m_numObjects;
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		memSize = sizeof(btVector3) * 4 * m_numObjects;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dTrans, CL_TRUE, 0, memSize, &(m_hTrans[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
+		{
+			for(int nBatch = 0; nBatch < m_numBatches; nBatch++)
+			{
+				btSpheresContPair* pPairs = &(m_hContacts[0]);
+				for(int nPair = 0; nPair < m_numPairs; nPair++)
+				{
+					solvePairCPU(pPairs + nPair, nPair, nBatch);
+				}
+			}
+		}
+		// write back to GPU
+		memSize = sizeof(btVector3) * m_numObjects;
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-*/
-#endif
+	else
+	{
+		ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 9, sizeof(float), &m_timeStep);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		{
+			BT_PROFILE("enqueue");
+			for(int nIter = 0; nIter < m_numSolverIterations; nIter++)
+			{
+				for(int nBatch = 0; nBatch < m_maxBatches; nBatch++)
+				{
+					ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 2, sizeof(int), &nBatch);
+					oclCHECKERROR(ciErrNum, CL_SUCCESS);
+					runKernelWithWorkgroupSize(GPUDEMO_KERNEL_SOLVE_CONSTRAINTS, m_numPairs);
+				}
+			}
+			clFinish(m_cqCommandQue);
+		}
+		/*
+		{
+			BT_PROFILE("read from GPU");
+			// read results to CPU
+			int memSize = sizeof(btVector3) * m_numObjects;
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		}
+		*/
+	}
 }
 
 float computeImpulse(btVector3& relVel, float penetration, btVector3& normal, float timeStep)

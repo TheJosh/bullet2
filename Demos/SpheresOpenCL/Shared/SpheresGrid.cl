@@ -1091,15 +1091,14 @@ __kernel void kScanPairsExclusiveLocal2(__global uint *d_Buf,
 __kernel void kScanPairsUniformUpdate(	__global uint4 *d_Data,
 										__global uint *d_Buf GUID_ARG)
 {
-    __local uint buf;
+    __local uint buf[1]; // AMD compiler requires an array here :-)
 
     uint4 data4 = d_Data[get_global_id(0)];
 
     if(get_local_id(0) == 0)
-        buf = d_Buf[get_group_id(0)];
+        buf[0] = d_Buf[get_group_id(0)];
 
     barrier(CLK_LOCAL_MEM_FENCE);
-    data4 += (uint4)buf;
+    data4 += (uint4)buf[0];
     d_Data[get_global_id(0)] = data4;
 }
-

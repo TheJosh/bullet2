@@ -497,6 +497,19 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 	(void)y;
 	switch (key) 
 	{
+		case 'U' :
+			if((m_demoType != DEMO_INTEGRATION) && (m_GpuCpuTogglePtr != SIMSTAGE_NONE))
+			{
+				m_pWorldS->m_useCPU[m_GpuCpuTogglePtr] = !m_pWorldS->m_useCPU[m_GpuCpuTogglePtr];
+			}
+			break;
+		case 'D' :
+			if(m_demoType != DEMO_INTEGRATION)
+			{
+				m_GpuCpuTogglePtr++;
+				m_GpuCpuTogglePtr %= SIMSTAGE_TOTAL;
+			}
+			break;
 		case 'G' :
 			if(m_demoType != DEMO_INTEGRATION)
 			{
@@ -719,6 +732,13 @@ void SpheresGridDemo::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 		sprintf(buf,"G to draw broadphase grid");
 		GLDebugDrawString(xOffset,yStart,buf);
 		yStart += yIncr;
+		sprintf(buf,"D and U to toggle between GPU and CPU");
+		GLDebugDrawString(xOffset,yStart,buf);
+		yStart += yIncr;
+		if(m_GpuCpuTogglePtr)
+		{
+			outputSimstageInfo(xOffset, yStart, yIncr);
+		}
 	}
 	
 }
@@ -777,3 +797,34 @@ void SpheresGridDemo::myinit()
 	m_pWorldS->initCLKernels(m_argc, m_argv);
 }
 
+
+
+void SpheresGridDemo::outputSimstageInfo(int & xOffset,int & yStart, int  yIncr)
+{
+	int i;
+	char buf[128];
+	static char* simstageNames[SIMSTAGE_TOTAL] = 
+	{
+		"",
+		"APPLY GRAVITY",
+		"COMPUTE CELL ID",
+		"SORT CELL ID",
+		"FIND CELL START",
+		"FIND PAIRS",
+		"SCAN PAIRS",
+		"COMPACT PAIRS",
+		"COMPUTE BATCHES",
+		"COMPUTE CONTACTS",
+		"SOLVE CONSTRAINTS",
+		"INTEGRATE TRANSFORMS"
+	};
+	for(i = SIMSTAGE_APPLY_GRAVITY; i < SIMSTAGE_TOTAL; i++)
+	{
+		sprintf(buf,"%s %s on %s", 
+				(i == m_GpuCpuTogglePtr)?"->":"  ",
+				simstageNames[i], 
+				m_pWorldS->m_useCPU[i]?"CPU":"GPU" );
+		GLDebugDrawString(xOffset,yStart,buf);
+		yStart += yIncr;
+	}
+}

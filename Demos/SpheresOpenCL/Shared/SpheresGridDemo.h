@@ -70,6 +70,7 @@ class SpheresGridDemo : public GlutDemoApplication
 
 		int m_demoType;
 		int m_drawGridMode;
+		int m_GpuCpuTogglePtr;
 
 	btIntegrationDemoDynamicsWorld* m_pWorldI;
 	btSpheresGridDemoDynamicsWorld* m_pWorldS;
@@ -82,6 +83,7 @@ class SpheresGridDemo : public GlutDemoApplication
 		m_argv = argv;
 		m_demoType = DEMO_OE_CAKE_2D;//DEMO_INTEGRATION;
 		m_drawGridMode = 0; 
+		m_GpuCpuTogglePtr = SIMSTAGE_NONE;
 	}
 	virtual ~SpheresGridDemo()
 	{
@@ -115,6 +117,8 @@ class SpheresGridDemo : public GlutDemoApplication
 */
 
 	void outputDebugInfo(int & xOffset,int & yStart, int  yIncr);
+	void outputSimstageInfo(int & xOffset,int & yStart, int  yIncr);
+
 	virtual void renderme();
 	virtual void myinit();
 	void init_scene_directly();
