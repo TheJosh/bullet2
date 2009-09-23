@@ -89,7 +89,7 @@
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
 				AdditionalDependencies="glut32.lib glew32.lib OpenCL.lib cudart.lib"
-				OutputFile="..\..\ReleaseSpheresGridNv.exe"
+				OutputFile="..\..\ReleaseSpheresGridNvCuda.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/Win32&quot;;&quot;$(CUDA_LIB_PATH)&quot;"
@@ -747,6 +747,14 @@
 			</File>
 			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGridDemo.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Resource Files"
+			>
+			<File
+				RelativePath="..\..\msvc\appSpheresOCL_NvCuda.rc"
 				>
 			</File>
 		</Filter>
