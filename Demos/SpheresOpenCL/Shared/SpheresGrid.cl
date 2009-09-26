@@ -18,6 +18,8 @@ subject to the following restrictions:
 #else
 	#define GUID_ARG 
 	#define GUID_ARG_VAL
+	#define SPHERES_GRID_MANIFOLD_CACHE_SIZE	(4)
+	#define SPHERES_GRID_NUM_OBJ_MANIFOLDS		(12)
 #endif
 
 __kernel void kApplyGravity(int numObjects,
@@ -490,6 +492,40 @@ struct btSpheresContPair
 };
 */
 
+void computeContactPoint(	int sphIdA, 
+							int sphIdB,
+							__global float4* pPos,
+							__global float4* pShapeBuf,
+							float4* contAndNorm)
+{
+	float4 posA = pPos[sphIdA];
+	float4 posB = pPos[sphIdB];
+	float radA = pShapeBuf[sphIdA].w;
+	float radB = pShapeBuf[sphIdB].w;
+	float4 del = posB - posA;
+	float dist = dot(del, del);
+	dist = native_sqrt(dist);
+	float maxD = radA + radB;
+	if(dist > maxD)
+	{ // should never happen
+		return;
+	}
+	float penetration = maxD - dist;
+	if(dist > 0.f) 
+	{
+		float fact = -1.0f / dist;
+		contAndNorm[1] = del * fact; 
+	}
+	else
+	{	
+		contAndNorm[1].x = 1.f; contAndNorm[1].y = contAndNorm[1].z = 0.f;
+	}
+	float4 tmp = contAndNorm[1] * radA;
+	contAndNorm[0] = posA - tmp;
+	contAndNorm[0].w = penetration;
+	contAndNorm[1].w = 0.f;
+}
+
 __kernel void kComputeContacts(	int numPairs,
 								__global int4* pPairIds, 
 								__global float4* pPos,
@@ -504,36 +540,158 @@ __kernel void kComputeContacts(	int numPairs,
     }
 	int sphIdA = pPairIds[index * 2].z;
 	int sphIdB = pPairIds[index * 2].w;
-	float4 posA = pPos[sphIdA];
-	float4 posB = pPos[sphIdB];
-	float radA = pShapeBuf[sphIdA].w;
-	float radB = pShapeBuf[sphIdB].w;
-	float4 del = posB - posA;
-	float dist = dot(del, del);
-	dist = native_sqrt(dist);
-	float maxD = radA + radB;
-	if(dist > maxD)
-	{ // should never happen
-		return;
-	}
-	float penetration = maxD - dist;
-	float4 normal;
-	if(dist > 0.f) 
-	{
-		float fact = -1.0f / dist;
-		normal = del * fact; 
-	}
-	else
-	{	
-		normal.x = 1.f; normal.y = normal.z = 0.f;
-	}
-	float4 tmp = normal * radA;
-	float4 contact = posA - tmp;
-	contact.w = penetration;
-	normal.w = 0.f;
-	pContacts[index * 2 + 0] = contact;
-	pContacts[index * 2 + 1] = normal;
+	float4 contAndNorm[2];
+	computeContactPoint(sphIdA, sphIdB, pPos, pShapeBuf, contAndNorm);
+	pContacts[index * 2 + 0] = contAndNorm[0];
+	pContacts[index * 2 + 1] = contAndNorm[1];
 }
+
+void compareArea(float4 cont, float4* cache, int iA, int iB, int iC, iD, float* minArea, int* minIndex)
+{
+	float4 a0 = cont - cache[iB];
+	float4 b0 = cache[iC] - cache[iD];
+	float4 area = cross(a0,b0);
+	float res = dot(area, area);
+	if(res < *minArea)
+	{
+		*minArea = res;
+		*minIndex = iA;
+	}
+}
+
+void addPointToCache(__global float4* pManifBuff, int buffOffset, float4* contAndNorm)
+{
+	float maxPenetration = contAndNorm[0].w;
+	int maxPenetrationIndex = -1;
+	float4 cachedCont[4], res[4];
+	for(int i = 0; i < SPHERES_GRID_MANIFOLD_CACHE_SIZE; i++)
+	{
+		cachedCont[i] = pManifBuff[buffOffset + i * 2];
+		if(cachedCont[i].w < 0.f)
+		{ // empty slot
+			pManifBuff[buffOffset + i * 2 + 0] = contAndNorm[0];
+			pManifBuff[buffOffset + i * 2 + 1] = contAndNorm[1];
+			return;
+		}
+		else if (cachedCont[i].w > maxPenetration)
+		{
+			maxPenetrationIndex = i;
+			maxPenetration = cachedCont[i].w;
+		}
+	}
+	float minArea = FLT_MAX;
+	int minIndex = -1;
+	if(maxPenetrationIndex != 0)
+	{
+		compareArea(contAndNorm[0], cachedCont, 0, 1, 3, 2, &minArea, &minIndex);
+	}
+	if(maxPenetrationIndex != 1)
+	{
+		compareArea(contAndNorm[0], cachedCont, 1, 0, 3, 2, &minArea, &minIndex);
+	}
+	if(maxPenetrationIndex != 2)
+	{
+		compareArea(contAndNorm[0], cachedCont, 2, 0, 3, 1, &minArea, &minIndex);
+	}
+	if(maxPenetrationIndex != 3)
+	{
+		compareArea(contAndNorm[0], cachedCont, 3, 0, 2, 1, &minArea, &minIndex);
+	}
+	if(minIndex >= 0)
+	{ // replace cache point
+		pManifBuff[buffOffset + minIndex * 2 + 0] = contAndNorm[0];
+		pManifBuff[buffOffset + minIndex * 2 + 1] = contAndNorm[1];
+	}
+}
+
+
+__kernel void kComputeContacts1(int numObjects,
+								__global int2* pShapeIds,
+								__global float4* pShapeBuf,
+								__global int* pBodyIds, 
+								__global int* pPairBuff, 
+								__global int* pPairStart, 
+								__global int* pPairCurr,
+								__global float4* pPos,
+								__global float4* pManifBuff,
+								__global int* pManifObjId GUID_ARG)
+//								,
+//								__local  int* manifObjIds GUID_ARG)
+{
+    int index = get_global_id(0);
+    if(index >= numObjects)
+    {
+		return;
+    }
+    float4 empty_pt;
+    empty_pt = -1.f;
+    __local int manifObjIds[SPHERES_GRID_NUM_OBJ_MANIFOLDS * 192];
+    for(int i = 0; i < SPHERES_GRID_NUM_OBJ_MANIFOLDS; i++)
+    {
+		manifObjIds[i + get_local_id(0) * SPHERES_GRID_NUM_OBJ_MANIFOLDS] = -1;
+		int buffOffset = (index * SPHERES_GRID_NUM_OBJ_MANIFOLDS + i) * SPHERES_GRID_MANIFOLD_CACHE_SIZE * 2; 
+		for(int j = 0; j < SPHERES_GRID_MANIFOLD_CACHE_SIZE; j++)
+		{
+			pManifBuff[buffOffset + j * 2] = empty_pt;
+		}
+    }
+#if 1    
+    int totalManif = 0;
+    int2 startCount = pShapeIds[index];
+    for(int nSphere = 0; nSphere < startCount.y; nSphere++)
+    {
+		int sphereIdA = startCount.x + nSphere;
+		int objIdA = pBodyIds[sphereIdA];
+		int start = pPairStart[sphereIdA];
+		int count = pPairCurr[sphereIdA];
+		for(int nPair = 0; nPair < count; nPair++)
+		{
+			int sphereIdB = pPairBuff[start + nPair];
+			float4 contAndNorm[2];
+			computeContactPoint(sphereIdA, sphereIdB, pPos, pShapeBuf, contAndNorm);
+			int objIdB = pBodyIds[sphereIdB];
+			int numFound = -1;
+			int numFree = -1;
+			for(int nManif = 0; nManif < SPHERES_GRID_NUM_OBJ_MANIFOLDS; nManif++)
+			{
+				int objId = manifObjIds[nManif + get_local_id(0) * SPHERES_GRID_NUM_OBJ_MANIFOLDS];
+				if(objId == objIdB)
+				{
+					numFound = nManif;
+					break;
+				}
+				if((numFree == -1) & (objId == -1))
+				{
+					numFree = nManif;
+				}
+			}
+			if(numFound >= 0)
+			{
+				int buffOffset = (index * SPHERES_GRID_NUM_OBJ_MANIFOLDS + numFound) * SPHERES_GRID_MANIFOLD_CACHE_SIZE * 2; 
+				addPointToCache(pManifBuff, buffOffset, contAndNorm);
+			}
+			else if(numFree >= 0)
+			{
+				int buffOffset = (index * SPHERES_GRID_NUM_OBJ_MANIFOLDS + numFree) * SPHERES_GRID_MANIFOLD_CACHE_SIZE * 2; 
+				addPointToCache(pManifBuff, buffOffset, contAndNorm);
+				manifObjIds[numFree + get_local_id(0) * SPHERES_GRID_NUM_OBJ_MANIFOLDS] = objIdB;
+				totalManif++;
+			}
+			else
+			{
+				// cache is fool, disregard this point
+			}
+		}
+    }
+    __local int4* pIdsL = (__local int4*)(manifObjIds + get_local_id(0) * SPHERES_GRID_NUM_OBJ_MANIFOLDS);
+    __global int4* pIdsG = (__global int4*)(pManifObjId + index * SPHERES_GRID_NUM_OBJ_MANIFOLDS);
+    for(int i = 0; i < SPHERES_GRID_NUM_OBJ_MANIFOLDS/4; i++, pIdsG++, pIdsL++)
+    {
+		*pIdsG = *pIdsL;
+	}
+#endif
+}
+
 
 
 float computeImpulse(float4 relVel, float penetration, float4 normal, float timeStep)

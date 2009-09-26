@@ -71,6 +71,10 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 		runFindPairsKernel();
 	}
 	{
+		BT_PROFILE("ReduceContacts");
+		runComputeContacts1Kernel();
+	}
+	{
 		BT_PROFILE("ScanPairs");
 		runScanPairsKernel();
 	}
@@ -269,6 +273,22 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
 	m_hContacts.resize(m_maxPairs);
 	memSize = m_maxPairs * sizeof(btSpheresContPair);
 	m_dContacts = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	// persistent manifolds (cache for object-object contact points)
+	m_hManifBuff.resize(2 * SPHERES_GRID_MANIFOLD_CACHE_SIZE * SPHERES_GRID_NUM_OBJ_MANIFOLDS * m_numObjects);
+	memSize = sizeof(btSpheresContPair) * SPHERES_GRID_MANIFOLD_CACHE_SIZE * SPHERES_GRID_NUM_OBJ_MANIFOLDS * m_numObjects;
+	m_dManifBuff = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	memSize = SPHERES_GRID_NUM_OBJ_MANIFOLDS * m_numObjects;
+	m_hManifObjId.resize(memSize);
+	for(unsigned int i = 0; i < memSize; i++)
+	{
+		m_hManifObjId[i] = -1;
+	}
+	memSize = sizeof(int) *  SPHERES_GRID_NUM_OBJ_MANIFOLDS * m_numObjects;
+	m_dManifObjId = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+    ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dManifObjId, CL_TRUE, 0, memSize, &(m_hManifObjId[0]), 0, NULL, NULL);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// global simulation parameters
 	memSize = sizeof(btSimParams);
@@ -594,6 +614,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_FIND_PAIRS].m_kernel, 9, sizeof(cl_mem), (void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
+
 	initKernel(GPUDEMO_KERNEL_COMPACT_PAIRS, "kCompactPairs");
 	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 0, sizeof(int),	(void *) &m_numPairs);
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPACT_PAIRS].m_kernel, 1, sizeof(cl_mem),	(void *) &m_dPairBuff);
@@ -638,6 +659,19 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 3, sizeof(cl_mem),	(void *) &m_dShapeBuf);
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 4, sizeof(cl_mem),	(void *) &m_dContacts);
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 5, sizeof(cl_mem),	(void *) &m_dSimParams);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
+
+	initKernel(GPUDEMO_KERNEL_COMPUTE_CONTACTS_1, "kComputeContacts1");
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 1, sizeof(cl_mem), (void *) &m_dShapeIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 3, sizeof(cl_mem), (void *) &m_dBodyIds);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 4, sizeof(cl_mem), (void *) &m_dPairBuff);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 5, sizeof(cl_mem), (void *) &m_dPairBuffStart);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 6, sizeof(cl_mem), (void *) &m_dPairBuffCurr);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 7, sizeof(cl_mem), (void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 8, sizeof(cl_mem), (void *) &m_dManifBuff);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 9, sizeof(cl_mem), (void *) &m_dManifObjId);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
 	initKernel(GPUDEMO_KERNEL_SOLVE_CONSTRAINTS, "kSolveConstraints");
@@ -1364,6 +1398,26 @@ void btSpheresGridDemoDynamicsWorld::runComputeContactsKernel()
 		*/
 	}
 }
+
+
+void btSpheresGridDemoDynamicsWorld::runComputeContacts1Kernel()
+{
+    cl_int ciErrNum;
+	//	set local memory byffer for object Id's
+//	int wgs = m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_workgroupSize;
+//	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 10, SPHERES_GRID_NUM_OBJ_MANIFOLDS  * wgs * sizeof(int), NULL);
+	// run kernel
+	runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COMPUTE_CONTACTS_1, m_numObjects);
+	ciErrNum = clFinish(m_cqCommandQue);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	/*
+	// read results from GPU
+	int memSize = m_numPairs * sizeof(btSpheresContPair);
+	ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dContacts, CL_TRUE, 0, memSize, &(m_hContacts[0]), 0, NULL, NULL);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	*/
+}
+
 
 void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 {

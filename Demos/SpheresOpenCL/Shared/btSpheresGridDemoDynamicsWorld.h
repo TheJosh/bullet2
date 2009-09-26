@@ -52,6 +52,8 @@ subject to the following restrictions:
 #define SPHERES_GRID_MAX_WORKGROUP_SIZE  (512) // TODO : get from device
 #endif
 
+#define SPHERES_GRID_MANIFOLD_CACHE_SIZE	(4)
+#define SPHERES_GRID_NUM_OBJ_MANIFOLDS		(12)
 
 struct btPairId
 {
@@ -103,6 +105,7 @@ enum
 	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL,
 	GPUDEMO_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL,
 	GPUDEMO_KERNEL_FIND_PAIRS,
+	GPUDEMO_KERNEL_COMPUTE_CONTACTS_1,
 	GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1,
 	GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2,
 	GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE,
@@ -183,6 +186,9 @@ protected:
 	btAlignedObjectArray<int>		m_hObjUsed;
 	//btAlignedObjectArray<int>		m_hNumPairsInBatch;
 	btAlignedObjectArray<btSpheresContPair> m_hContacts;
+	// persistent manifolds (cache for object-object contact points)
+	btAlignedObjectArray<btVector3>	m_hManifBuff;
+	btAlignedObjectArray<int>		m_hManifObjId;
 	// GPU side data
 	cl_mem		m_dShapeBuf;
 	cl_mem		m_dShapeIds;
@@ -203,6 +209,9 @@ protected:
 	cl_mem		m_dContacts;
 	cl_mem		m_dSimParams; // copy of m_simParams : global simulation paramerers such as gravity, etc. 
 	cl_mem		m_dScanTmpBuffer;
+	// persistent manifolds (cache for object-object contact points)
+	cl_mem		m_dManifBuff; // (<contact+penetration><normal>) * SPHERES_GRID_MANIFOLD_CACHE_SIZE * SPHERES_GRID_NUM_OBJ_MANIFOLDS
+	cl_mem		m_dManifObjId; // <ObjId> * SPHERES_GRID_NUM_OBJ_MANIFOLDS
 
 
 	// OpenCL 
@@ -268,6 +277,7 @@ public:
 	void runCompactPairsKernel();
 	void runComputeBatchesKernel();
 	void runComputeContactsKernel();
+	void runComputeContacts1Kernel();
 	void runSolveConstraintsKernel();
 	void solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum);
 	void initKernel(int kernelId, char* pName);
