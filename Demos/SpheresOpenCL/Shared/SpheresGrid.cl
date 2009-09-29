@@ -15,6 +15,8 @@ subject to the following restrictions:
 
 #if defined(GUID_ARG)
 	extern int gMiniCLNumOutstandingTasks;
+#define SPHERES_GRID_MANIFOLD_CACHE_SIZE	(4)
+#define SPHERES_GRID_NUM_OBJ_MANIFOLDS		(12)
 #else
 	#define GUID_ARG 
 	#define GUID_ARG_VAL
@@ -546,7 +548,7 @@ __kernel void kComputeContacts(	int numPairs,
 	pContacts[index * 2 + 1] = contAndNorm[1];
 }
 
-void compareArea(float4 cont, float4* cache, int iA, int iB, int iC, iD, float* minArea, int* minIndex)
+void compareArea(float4 cont, float4* cache, int iA, int iB, int iC, int iD, float* minArea, int* minIndex)
 {
 	float4 a0 = cont - cache[iB];
 	float4 b0 = cache[iC] - cache[iD];
@@ -624,7 +626,11 @@ __kernel void kComputeContacts1(int numObjects,
 		return;
     }
     float4 empty_pt;
-    empty_pt = -1.f;
+    empty_pt.x = -1.f;
+    empty_pt.y = -1.f;
+    empty_pt.z = -1.f;
+    empty_pt.w = -1.f;
+    
     __local int manifObjIds[SPHERES_GRID_NUM_OBJ_MANIFOLDS * 192];
     for(int i = 0; i < SPHERES_GRID_NUM_OBJ_MANIFOLDS; i++)
     {
