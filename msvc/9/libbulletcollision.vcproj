@@ -1306,6 +1306,38 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionDispatch\btBox2dBox2dCollisionAlgorithm.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionDispatch\btBox2dBox2dCollisionAlgorithm.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionShapes\btBox2dShape.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionShapes\btBox2dShape.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionShapes\btConvex2dShape.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\src\BulletCollision\CollisionShapes\btConvex2dShape.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

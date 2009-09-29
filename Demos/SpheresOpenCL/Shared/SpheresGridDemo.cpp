@@ -22,6 +22,11 @@ subject to the following restrictions:
 #endif
 
 
+#include "GL_DialogDynamicsWorld.h"
+#include "GL_DialogWindow.h"
+
+
+
 #include "BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h"
 #include "BulletCollision/CollisionDispatch/btSimulationIslandManager.h"
 #include "GLDebugFont.h"
@@ -121,6 +126,8 @@ public:
 
 void SpheresGridDemo::clientMoveAndDisplay()
 {
+
+
 	updateCamera();
 	glDisable(GL_LIGHTING);
 	glColor3f(1.f, 1.f, 1.f);
@@ -132,6 +139,11 @@ void SpheresGridDemo::clientMoveAndDisplay()
 	//simple dynamics world doesn't handle fixed-time-stepping
 	float ms = getDeltaTimeMicroseconds();
 
+	renderme(); 
+
+	if (m_dialogDynamicsWorld)
+		m_dialogDynamicsWorld->draw(gTimeStep);
+
 	///step the simulation
 	if (m_dynamicsWorld)
 	{
@@ -140,7 +152,7 @@ void SpheresGridDemo::clientMoveAndDisplay()
 		m_dynamicsWorld->debugDrawWorld();
 	}
 
-	renderme(); 
+	
 
 	ms = getDeltaTimeMicroseconds();
 
@@ -162,6 +174,9 @@ void SpheresGridDemo::displayCallback(void) {
 	//optional but useful: debug drawing to detect problems
 	if (m_dynamicsWorld)
 		m_dynamicsWorld->debugDrawWorld();
+
+	//if (m_dialogDynamicsWorld)
+	//	m_dialogDynamicsWorld->draw(gTimeStep);
 
 	glFlush();
 	glutSwapBuffers();
@@ -218,6 +233,7 @@ public:
 
 void	SpheresGridDemo::initPhysics()
 {
+	
 	setTexturing(false);
 	setShadows(false);
 
@@ -249,6 +265,50 @@ void	SpheresGridDemo::initPhysics()
 	m_pWorldI = new btIntegrationDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, 65536);
 	m_pWorldS = new btSpheresGridDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, 65536);
 	
+	m_dialogDynamicsWorld = new GL_DialogDynamicsWorld();
+	GL_DialogWindow* settings = m_dialogDynamicsWorld->createDialog(50,0,280,280,"CPU fallback");
+	
+	m_pWorldS->m_useCpuControls[0] = 0;
+	GL_ToggleControl* ctrl = 0;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_APPLY_GRAVITY] = m_dialogDynamicsWorld->createToggle(settings,"Apply Gravity");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CELL_ID] = m_dialogDynamicsWorld->createToggle(settings,"Compute Cell ID");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_SORT_CELL_ID] = m_dialogDynamicsWorld->createToggle(settings,"Sort Cell ID");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_CELL_START] = m_dialogDynamicsWorld->createToggle(settings,"Find Cell Start");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Find Pairs");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_SCAN_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Scan Pairs");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPACT_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Compact Pairs");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES] = m_dialogDynamicsWorld->createToggle(settings,"Compute Batches");
+	ctrl->m_active = false;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CONTACTS] = m_dialogDynamicsWorld->createToggle(settings,"Compute Contacts");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_SOLVE_CONSTRAINTS] = m_dialogDynamicsWorld->createToggle(settings,"Solve Constraints");
+	ctrl->m_active = true;
+	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_INTEGRATE_TRANSFORMS] = m_dialogDynamicsWorld->createToggle(settings,"Integrate Transforms");
+	ctrl->m_active = true;	
+
+	for(int i = 1; i < SIMSTAGE_TOTAL; i++)
+	{
+		m_pWorldS->m_useCpuControls[i]->m_active = false;
+	}
+#if defined(CL_PLATFORM_MINI_CL)
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active = true; 
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; 
+
+#endif
+#if defined(CL_PLATFORM_AMD)
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; // sloooow, incorrect, crashes application
+	m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active = true; // run-time error "Unimplemented"
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active = true; // works, but very slow (up to 100 times)
+	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES]->m_active = true; // run-time error "Unimplemented"
+#endif
+
 	if(m_demoType == DEMO_INTEGRATION)
 	{
 		m_dynamicsWorld = m_pWorldI;
@@ -419,6 +479,8 @@ void SpheresGridDemo::setRandomZCoordinate(btScalar range)
 
 void	SpheresGridDemo::exitPhysics()
 {
+	delete m_dialogDynamicsWorld;
+	m_dialogDynamicsWorld = 0;
 
 	//cleanup in the reverse order of creation/initialization
 
@@ -497,12 +559,6 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 	(void)y;
 	switch (key) 
 	{
-		case 'U' :
-			if((m_demoType != DEMO_INTEGRATION) && (m_GpuCpuTogglePtr != SIMSTAGE_NONE))
-			{
-				m_pWorldS->m_useCPU[m_GpuCpuTogglePtr] = !m_pWorldS->m_useCPU[m_GpuCpuTogglePtr];
-			}
-			break;
 		case 'D' :
 			if(m_demoType != DEMO_INTEGRATION)
 			{
@@ -562,6 +618,8 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 
 void SpheresGridDemo::renderme()
 {
+
+
 	glPointSize(5.0f);
 	glEnable(GL_POINT_SPRITE_ARB);
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
@@ -599,6 +657,7 @@ void SpheresGridDemo::renderme()
     glDisableClientState(GL_COLOR_ARRAY); 
 	glUseProgram(0);
 	glDisable(GL_POINT_SPRITE_ARB);
+	glBindBufferARB(GL_ARRAY_BUFFER,0);
 
 	if((m_demoType != DEMO_INTEGRATION) && m_drawGridMode)
 	{
@@ -735,10 +794,7 @@ void SpheresGridDemo::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 		sprintf(buf,"D and U to toggle between GPU and CPU");
 		GLDebugDrawString(xOffset,yStart,buf);
 		yStart += yIncr;
-		if(m_GpuCpuTogglePtr)
-		{
-			outputSimstageInfo(xOffset, yStart, yIncr);
-		}
+		
 	}
 	
 }
@@ -799,32 +855,30 @@ void SpheresGridDemo::myinit()
 
 
 
-void SpheresGridDemo::outputSimstageInfo(int & xOffset,int & yStart, int  yIncr)
+
+
+
+void SpheresGridDemo::mouseFunc(int button, int state, int x, int y)
 {
-	int i;
-	char buf[128];
-	static char* simstageNames[SIMSTAGE_TOTAL] = 
+
+	if (!m_dialogDynamicsWorld->mouseFunc(button,state,x,y))
 	{
-		"",
-		"APPLY GRAVITY",
-		"COMPUTE CELL ID",
-		"SORT CELL ID",
-		"FIND CELL START",
-		"FIND PAIRS",
-		"SCAN PAIRS",
-		"COMPACT PAIRS",
-		"COMPUTE BATCHES",
-		"COMPUTE CONTACTS",
-		"SOLVE CONSTRAINTS",
-		"INTEGRATE TRANSFORMS"
-	};
-	for(i = SIMSTAGE_APPLY_GRAVITY; i < SIMSTAGE_TOTAL; i++)
-	{
-		sprintf(buf,"%s %s on %s", 
-				(i == m_GpuCpuTogglePtr)?"->":"  ",
-				simstageNames[i], 
-				m_pWorldS->m_useCPU[i]?"CPU":"GPU" );
-		GLDebugDrawString(xOffset,yStart,buf);
-		yStart += yIncr;
+		DemoApplication::mouseFunc(button,state,x,y);
 	}
 }
+
+void	SpheresGridDemo::mouseMotionFunc(int x,int y)
+{
+	m_dialogDynamicsWorld->mouseMotionFunc(x,y);
+	DemoApplication::mouseMotionFunc(x,y);
+}
+
+
+
+void SpheresGridDemo::reshape(int w, int h)
+{
+	if (m_dialogDynamicsWorld)
+		m_dialogDynamicsWorld->setScreenSize(w,h);
+	GlutDemoApplication::reshape(w,h);
+}
+

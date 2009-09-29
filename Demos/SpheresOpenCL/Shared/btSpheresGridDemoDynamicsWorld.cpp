@@ -37,6 +37,7 @@ subject to the following restrictions:
 #include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
 
 #include "btSpheresGridDemoDynamicsWorld.h"
+#include "GL_DialogWindow.h"
 
 btSpheresGridDemoDynamicsWorld::~btSpheresGridDemoDynamicsWorld()
 {
@@ -72,7 +73,7 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 	}
 	{
 		BT_PROFILE("ReduceContacts");
-		runComputeContacts1Kernel();
+		//runComputeContacts1Kernel();
 	}
 	{
 		BT_PROFILE("ScanPairs");
@@ -435,6 +436,7 @@ void btSpheresGridDemoDynamicsWorld::createVBO()
         *ptr++ = 1.0f;
     }
     glUnmapBufferARB(GL_ARRAY_BUFFER);
+	glBindBufferARB(GL_ARRAY_BUFFER, 0);
 }
 
 
@@ -661,7 +663,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS].m_kernel, 5, sizeof(cl_mem),	(void *) &m_dSimParams);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
-
+#if 0
 	initKernel(GPUDEMO_KERNEL_COMPUTE_CONTACTS_1, "kComputeContacts1");
 	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 1, sizeof(cl_mem), (void *) &m_dShapeIds);
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 2, sizeof(cl_mem), (void *) &m_dShapeBuf);
@@ -673,7 +675,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 8, sizeof(cl_mem), (void *) &m_dManifBuff);
 	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COMPUTE_CONTACTS_1].m_kernel, 9, sizeof(cl_mem), (void *) &m_dManifObjId);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
+#endif
 	initKernel(GPUDEMO_KERNEL_SOLVE_CONSTRAINTS, "kSolveConstraints");
 	// parameter 2 will be set later (batchNum)
 	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_SOLVE_CONSTRAINTS].m_kernel, 0, sizeof(int),		(void *) &m_numPairs);
@@ -699,19 +701,7 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2, "kScanPairsExclusiveLocal2");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE, "kScanPairsUniformUpdate");
 	
-	for(int i = 0; i < SIMSTAGE_TOTAL; i++)
-	{
-		m_useCPU[i] = false;
-	}
-	#if defined(CL_PLATFORM_MINI_CL)
-		m_useCPU[SIMSTAGE_SCAN_PAIRS] = true; 
-	#endif
-	#if defined(CL_PLATFORM_AMD)
-		m_useCPU[SIMSTAGE_SORT_CELL_ID] = true; // sloooow, incorrect, crashes application
-		m_useCPU[SIMSTAGE_FIND_CELL_START] = true; // run-time error "Unimplemented"
-		m_useCPU[SIMSTAGE_SCAN_PAIRS] = true; // works, but very slow (up to 100 times)
-		m_useCPU[SIMSTAGE_COMPUTE_BATCHES] = true; // run-time error "Unimplemented"
-	#endif
+	
 }
 
 void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
@@ -743,6 +733,7 @@ void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, sizeof(float) * 4 * m_numSpheres, ptr, 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		glUnmapBufferARB(GL_ARRAY_BUFFER); 
+		glBindBufferARB(GL_ARRAY_BUFFER,0);
 	}
 }
 
@@ -750,7 +741,7 @@ void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
 void btSpheresGridDemoDynamicsWorld::runApplyGravityKernel()
 {
     cl_int ciErrNum;
-	if(m_useCPU[SIMSTAGE_APPLY_GRAVITY])
+	if(m_useCpuControls[SIMSTAGE_APPLY_GRAVITY]->m_active)
 	{
 		// CPU version
 		// get velocities from GPU
@@ -813,7 +804,7 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 {
 	cl_int ciErrNum;
 	int memSize = m_numSpheres * sizeof(btInt2);
-	if(m_useCPU[SIMSTAGE_SORT_CELL_ID])
+	if(m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active)
 	{
 		// CPU version
 		// get hash from GPU
@@ -887,8 +878,8 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 			}
 		};
 		btHashPosKey* pHash = (btHashPosKey*)(&m_hPosHash[0]);
-	//	pHash->quickSort(pHash, 0, m_numSpheres - 1);
-		pHash->bitonicSort(pHash, 0, m_hashSize, true);
+		pHash->quickSort(pHash, 0, m_numSpheres - 1);
+	//	pHash->bitonicSort(pHash, 0, m_hashSize, true);
 		// write back to GPU
 		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -944,7 +935,7 @@ void btSpheresGridDemoDynamicsWorld::runSortHashKernel()
 void btSpheresGridDemoDynamicsWorld::runFindCellStartKernel()
 {
     cl_int ciErrNum;
-	if(m_useCPU[SIMSTAGE_FIND_CELL_START])
+	if(m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active)
 	{
 		// CPU version
 		// get hash from GPU
@@ -1017,7 +1008,7 @@ void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
 {
     cl_int ciErrNum;
 	int memSize;
-	if(m_useCPU[SIMSTAGE_SCAN_PAIRS])
+	if(m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active)
 	{
 		// CPU version
 		// get data from GPU
@@ -1060,7 +1051,7 @@ void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
 void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 {
     cl_int ciErrNum;
-	if(m_useCPU[SIMSTAGE_COMPACT_PAIRS])
+	if(m_useCpuControls[SIMSTAGE_COMPACT_PAIRS]->m_active)
 	{
 		// CPU version
 		// get data from GPU
@@ -1120,7 +1111,7 @@ void btSpheresGridDemoDynamicsWorld::runCompactPairsKernel()
 void btSpheresGridDemoDynamicsWorld::runComputeBatchesKernel()
 {
     cl_int ciErrNum;
-	if(m_useCPU[SIMSTAGE_COMPUTE_BATCHES])
+	if(m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES]->m_active)
 	{
 		m_numBatches = 0;
 		// CPU version
@@ -1324,6 +1315,7 @@ void btSpheresGridDemoDynamicsWorld::runComputeBatchesKernel()
 
 		}
 		glUnmapBufferARB(GL_ARRAY_BUFFER);
+		glBindBufferARB(GL_ARRAY_BUFFER,0);
 		// printf("pairs : %4d, batches : %d, left : %d\n", m_numPairs, m_numBatches, numLeft);
 	}
 #endif
@@ -1333,7 +1325,7 @@ void btSpheresGridDemoDynamicsWorld::runComputeBatchesKernel()
 void btSpheresGridDemoDynamicsWorld::runComputeContactsKernel()
 {
     cl_int ciErrNum;
-	if(m_useCPU[SIMSTAGE_COMPUTE_CONTACTS])
+	if(m_useCpuControls[SIMSTAGE_COMPUTE_CONTACTS]->m_active)
 	{
 		// CPU version
 		// get pair IDs ...
@@ -1422,7 +1414,7 @@ void btSpheresGridDemoDynamicsWorld::runComputeContacts1Kernel()
 void btSpheresGridDemoDynamicsWorld::runSolveConstraintsKernel()
 {
     cl_int ciErrNum;
-	if(m_useCPU[SIMSTAGE_SOLVE_CONSTRAINTS])
+	if(m_useCpuControls[SIMSTAGE_SOLVE_CONSTRAINTS]->m_active)
 	{
 		// CPU version
 		int memSize = m_numPairs * sizeof(btSpheresContPair);
@@ -1565,6 +1557,7 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 
 void btSpheresGridDemoDynamicsWorld::initKernel(int kernelId, char* pName)
 {
+	
 	cl_int ciErrNum;
 	cl_kernel kernel = clCreateKernel(m_cpProgram, pName, &ciErrNum);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);

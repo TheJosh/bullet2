@@ -1,6 +1,6 @@
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2009 Erwin Coumans  http://bulletphysics.org
+Copyright (c) 2003-2006 Erwin Coumans  http://continuousphysics.com/Bullet/
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -13,15 +13,30 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+#include "btBox2dShape.h"
 
-#ifndef BT_DEBUG_FONT_H
-#define BT_DEBUG_FONT_H
 
-#include "LinearMath/btVector3.h"
+//{ 
 
-void	GLDebugDrawStringInternal(int x,int y,const char* string,const btVector3& rgb);
-void	GLDebugDrawString(int x,int y,const char* string);
-void	GLDebugResetFont(int screenWidth,int screenHeight);
 
-#endif //BT_DEBUG_FONT_H
+void btBox2dShape::getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
+{
+	btTransformAabb(getHalfExtentsWithoutMargin(),getMargin(),t,aabbMin,aabbMax);
+}
+
+
+void	btBox2dShape::calculateLocalInertia(btScalar mass,btVector3& inertia) const
+{
+	//btScalar margin = btScalar(0.);
+	btVector3 halfExtents = getHalfExtentsWithMargin();
+
+	btScalar lx=btScalar(2.)*(halfExtents.x());
+	btScalar ly=btScalar(2.)*(halfExtents.y());
+	btScalar lz=btScalar(2.)*(halfExtents.z());
+
+	inertia.setValue(mass/(btScalar(12.0)) * (ly*ly + lz*lz),
+					mass/(btScalar(12.0)) * (lx*lx + lz*lz),
+					mass/(btScalar(12.0)) * (lx*lx + ly*ly));
+
+}
 

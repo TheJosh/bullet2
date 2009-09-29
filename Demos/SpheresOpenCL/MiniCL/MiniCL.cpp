@@ -372,8 +372,8 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
                         cl_int *                 errcode_ret ) CL_API_SUFFIX__VERSION_1_0
 {
 	
-//	int maxNumOutstandingTasks = 4;
-	int maxNumOutstandingTasks = 1;
+	int maxNumOutstandingTasks = 4;
+//	int maxNumOutstandingTasks = 1;
 	gMiniCLNumOutstandingTasks = maxNumOutstandingTasks;
 
 #ifdef WIN32

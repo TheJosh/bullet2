@@ -152,7 +152,8 @@ public:
 	int			m_numSpheres;
 	int			m_usedDevice;
 	btScalar	m_sphereRad;
-	bool		m_useCPU[SIMSTAGE_TOTAL];
+	struct GL_ToggleControl* m_useCpuControls[SIMSTAGE_TOTAL];
+	
 protected:
 	int			m_numObjects;
 	int			m_hashSize; // power of 2 >= m_numSpheres;

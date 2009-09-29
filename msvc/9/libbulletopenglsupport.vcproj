@@ -594,6 +594,22 @@
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\Demos\OpenGL\GL_DialogDynamicsWorld.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\Demos\OpenGL\GL_DialogDynamicsWorld.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\Demos\OpenGL\GL_DialogWindow.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\..\Demos\OpenGL\GL_DialogWindow.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

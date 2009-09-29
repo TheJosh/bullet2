@@ -329,6 +329,7 @@ void btIntegrationDemoDynamicsWorld::grabSimulationData()
 	void* ptr = glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY_ARB);
 	memcpy(ptr, &(m_hPos[0]), m_numSpheres * sizeof(btVector3));
 	glUnmapBufferARB(GL_ARRAY_BUFFER); 
+	glBindBufferARB(GL_ARRAY_BUFFER,0);
 }
 
 
@@ -364,6 +365,7 @@ void btIntegrationDemoDynamicsWorld::createVBO()
         *ptr++ = 1.0f;
     }
     glUnmapBufferARB(GL_ARRAY_BUFFER);
+	glBindBufferARB(GL_ARRAY_BUFFER,0);
 }
 
 
@@ -619,6 +621,7 @@ void btIntegrationDemoDynamicsWorld::runIntegrateMotionKernel()
 			oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		}
 		glUnmapBufferARB(GL_ARRAY_BUFFER); 
+		glBindBufferARB(GL_ARRAY_BUFFER,0);
 	}
 }
 

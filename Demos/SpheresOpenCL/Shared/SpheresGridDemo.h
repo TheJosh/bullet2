@@ -46,6 +46,7 @@ enum
 class SpheresGridDemo : public GlutDemoApplication
 {
 
+	class GL_DialogDynamicsWorld* m_dialogDynamicsWorld;
 	//keep the collision shapes, for deletion/cleanup
 	btAlignedObjectArray<btCollisionShape*>	m_collisionShapes;
 
@@ -74,6 +75,8 @@ class SpheresGridDemo : public GlutDemoApplication
 
 	btIntegrationDemoDynamicsWorld* m_pWorldI;
 	btSpheresGridDemoDynamicsWorld* m_pWorldS;
+	
+
 	// shader
 	GLuint				m_shaderProgram;
 
@@ -103,6 +106,9 @@ class SpheresGridDemo : public GlutDemoApplication
 
 	virtual void clientResetScene();
 
+	virtual void mouseFunc(int button, int state, int x, int y);
+	virtual void	mouseMotionFunc(int x,int y);
+	virtual	void reshape(int w, int h);
 /*
 	static DemoApplication* Create()
 	{
@@ -117,7 +123,7 @@ class SpheresGridDemo : public GlutDemoApplication
 */
 
 	void outputDebugInfo(int & xOffset,int & yStart, int  yIncr);
-	void outputSimstageInfo(int & xOffset,int & yStart, int  yIncr);
+	
 
 	virtual void renderme();
 	virtual void myinit();
