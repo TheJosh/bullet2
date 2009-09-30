@@ -91,6 +91,9 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 		BT_PROFILE("ComputeContacts");
 		runComputeContactsKernel();
 	}
+
+	
+
 	{
 		BT_PROFILE("SolveConstraints");
 		runSolveConstraintsKernel();
@@ -98,6 +101,11 @@ int	btSpheresGridDemoDynamicsWorld::stepSimulation( btScalar timeStep, int maxSu
 	{
 		BT_PROFILE("Integrate");
 		runIntegrateTransformsKernel();
+	}
+
+	{
+		BT_PROFILE("CollideSphereWalls");
+		runCollideSphereWallsKernel();
 	}
 
 	gStepNum++;
@@ -260,7 +268,7 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
 	m_dPairScan = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	// collision pairs
-	m_maxPairs = m_numSpheres * 4;
+	m_maxPairs = m_numSpheres * 16;
 	m_hPairIds.resize(m_maxPairs);
 	memSize = m_maxPairs * sizeof(btPairId);
 	m_dPairIds = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
@@ -302,8 +310,15 @@ void btSpheresGridDemoDynamicsWorld::allocateBuffers()
 
 void btSpheresGridDemoDynamicsWorld::adjustGrid()
 {
-	btVector3 wmin( BT_LARGE_FLOAT,  BT_LARGE_FLOAT,  BT_LARGE_FLOAT);
-	btVector3 wmax(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+	//btVector3 wmin( BT_LARGE_FLOAT,  BT_LARGE_FLOAT,  BT_LARGE_FLOAT);
+	//btVector3 wmax(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
+
+	btVector3 wmin( BT_LARGE_FLOAT,  0,-10);
+	btVector3 wmax(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, 10);
+
+	//btVector3 wmin( -100,-100,-100);
+	//btVector3 wmax(100, 100, 100);
+
 	btCollisionObjectArray& collisionObjects = getCollisionObjectArray();
 	for(int i = 0; i < m_numObjects; i++)
 	{
@@ -701,7 +716,21 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2, "kScanPairsExclusiveLocal2");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE, "kScanPairsUniformUpdate");
 	
-	
+
+	initKernel(GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS,"kCollideSphereWalls");
+
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 0, sizeof(int),	(void *) &m_numObjects);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 1, sizeof(cl_mem), (void *) &m_dLinVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 2, sizeof(cl_mem), (void *) &m_dAngVel);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 3, sizeof(cl_mem), (void *) &m_dSimParams);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 4, sizeof(cl_mem), (void *) &m_dInvInertiaMass);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 5, sizeof(cl_mem),	(void *) &m_dPos);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 6, sizeof(cl_mem),	(void *) &m_dTrans);
+	ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 7, sizeof(cl_mem),	(void *) &m_dShapeBuf);
+	ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 8, sizeof(cl_mem), (void *) &m_dShapeIds);
+
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+
 }
 
 void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
@@ -738,6 +767,44 @@ void btSpheresGridDemoDynamicsWorld::runComputeCellIdKernel()
 }
 
 
+void btSpheresGridDemoDynamicsWorld::runCollideSphereWallsKernel()
+{
+	 cl_int ciErrNum;
+	if(m_useCpuControls[SIMSTAGE_KERNEL_COLLIDE_SPHERE_WALLS]->m_active)
+	{
+		// CPU version
+		// get velocities from GPU
+		int memSize = sizeof(btVector3) * m_numObjects;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		// execute kernel
+		for(int n = 0; n < m_numObjects; n++)
+		{
+			unsigned int index = n;
+			btVector3 mass0 =	m_hInvInertiaMass[index * 3 + 0];
+			//todo
+
+		}
+		// write back to GPU
+		memSize = sizeof(btVector3) * m_numObjects;
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dLinVel, CL_TRUE, 0, memSize, &(m_hLinVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dAngVel, CL_TRUE, 0, memSize, &(m_hAngVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
+	else
+	{
+		// Set work size and execute the kernel
+		ciErrNum = clSetKernelArg(m_kernels[GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS].m_kernel, 9, sizeof(float), &m_timeStep);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		runKernelWithWorkgroupSize(GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS, m_numObjects);
+		ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
+
+}
 void btSpheresGridDemoDynamicsWorld::runApplyGravityKernel()
 {
     cl_int ciErrNum;

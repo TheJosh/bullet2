@@ -117,6 +117,7 @@ enum
 	GPUDEMO_KERNEL_COMPUTE_CONTACTS,
 	GPUDEMO_KERNEL_SOLVE_CONSTRAINTS,
 	GPUDEMO_KERNEL_INTEGRATE_TRANSFORMS,
+	GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS,
 	GPUDEMO_KERNEL_TOTAL
 };
 
@@ -135,6 +136,7 @@ enum
 	SIMSTAGE_COMPUTE_CONTACTS,
 	SIMSTAGE_SOLVE_CONSTRAINTS,
 	SIMSTAGE_INTEGRATE_TRANSFORMS,
+	SIMSTAGE_KERNEL_COLLIDE_SPHERE_WALLS,
 	SIMSTAGE_TOTAL
 };
 
@@ -280,6 +282,7 @@ public:
 	void runComputeContactsKernel();
 	void runComputeContacts1Kernel();
 	void runSolveConstraintsKernel();
+	void runCollideSphereWallsKernel();
 	void solvePairCPU(btSpheresContPair* pPair, int pairIdx, int batchNum);
 	void initKernel(int kernelId, char* pName);
 	void runKernelWithWorkgroupSize(int kernelId, int globalSize);

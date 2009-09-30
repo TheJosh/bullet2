@@ -46,6 +46,159 @@ __kernel void kApplyGravity(int numObjects,
 	}
 }
 
+float computeImpulse(float4 relVel, float penetration, float4 normal, float timeStep)
+{
+	float collisionConstant	=	0.1f;
+	float baumgarteConstant	=	0.1f;
+	float penetrationError	=	0.02f;
+
+	float lambdaDt = 0.f;
+
+	if(penetration >= 0.f)
+	{
+		return lambdaDt;
+	}
+
+	penetration = min(0.0f, penetration + penetrationError);
+	lambdaDt	= - dot(normal,relVel) * collisionConstant;
+	lambdaDt	-=	(baumgarteConstant/timeStep * penetration);
+	return lambdaDt;
+}
+
+
+__kernel void kCollideSphereWalls(int numObjects,
+							__global float4* pLinVel, 
+							__global float4* pAngVel, 
+							__global float4* pParams,///has the world extends (for the walls)
+							__global float4* pInvInertiaMass, 
+							__global float4* pPos, 
+							__global float4* pTrans,
+							__global float4* pShapeBuf,
+							__global int2* pShapeIds,///in x is the start offset into pShapeBuff, in y is the number of spheres
+							float timeStep GUID_ARG)
+{
+    int index = get_global_id(0);
+    int objIdA = index;
+    
+    if(index >= numObjects)
+	{
+		return;
+	}
+	
+	float4 tmp;
+	tmp.x = 1.f;
+	tmp.y = 1.f;
+	tmp.z = 1.f;
+	tmp.w = 0.f;
+	
+	//float4 tmp(0,0,0,0);
+	
+	float4 worldMin = pParams[1]+tmp;
+	float4 cellSize = pParams[2];
+	int4 pGridDim = *((__global int4*)(pParams + 3));
+	float4 gridDim;
+	gridDim.x = pGridDim.x;
+	gridDim.y = pGridDim.y;
+	gridDim.z = pGridDim.z;
+	
+	
+		
+	float4 worldMax = worldMin+cellSize*gridDim-tmp-tmp;
+
+	int2 offsetAndCount = pShapeIds[index];
+	
+	
+	float4 centerOfMass = pTrans[objIdA * 4 + 3];
+
+	float4 linVelA = pLinVel[objIdA];
+	float4 angVelA = pAngVel[objIdA];
+	
+
+	//for each plane
+	float4 contNormals[6];
+	for (int j=0;j<6;j++)
+	{
+		contNormals[j].x = 0;
+		contNormals[j].y = 0;
+		contNormals[j].z = 0;
+		contNormals[j].w = 0;
+	}
+	
+	contNormals[0].x = 1;
+	contNormals[1].y = 1;
+	contNormals[2].z = 1;
+	contNormals[3].x = -1;
+	contNormals[4].y = -1;
+	contNormals[5].z = -1;	
+	
+	
+	float planeOffsets[6];
+	planeOffsets[0] = worldMin.x;
+	planeOffsets[1] = worldMin.y;
+	planeOffsets[2] = worldMin.z;
+	planeOffsets[3] = -worldMax.x;
+	planeOffsets[4] = -worldMax.y;
+	planeOffsets[5] = -worldMax.z;
+	
+	float4 damping;
+	damping.x = 0.1f;
+	damping.y = 0.1f;
+	damping.z = 0.1f;
+	damping.w = 0.f;
+	
+	for (int j=0;j<6;j++)
+	{
+		float planeOffset = planeOffsets[j];
+				
+		for (int i=0;i<offsetAndCount.y;i++)
+		{
+			float4 sphereWorldPos = pPos[offsetAndCount.x + i];
+
+			float4 contPointA =  sphereWorldPos - centerOfMass;
+			
+			float penetration = planeOffset - dot(sphereWorldPos,contNormals[j]);
+			
+			if(penetration > 0.f)
+			{
+				
+				//pPos[offsetAndCount.x + i] += contNormals[j]*penetration;
+				pTrans[objIdA * 4 + 3] += contNormals[j]*penetration;
+				
+				linVelA = linVelA - damping * contNormals[j]* dot(linVelA,contNormals[j]);
+				
+				
+#if 0
+
+				
+				
+				
+				float4 velA = linVelA + cross(angVelA,contPointA);
+				float4 relVel = velA;// - velB;
+				float lambdaDt = computeImpulse(relVel, -penetration, contNormals[j], timeStep);
+				float rLambdaDt = 0.f;//contNormal.w;
+				float pLambdaDt = rLambdaDt;
+				rLambdaDt = max(rLambdaDt + lambdaDt, 0.f);
+				//lambdaDt = rLambdaDt - pLambdaDt;
+				//pPair[objIdA * 2 + 1].w = rLambdaDt;
+				float4 impulse = contNormals[j] * lambdaDt * 0.5f;
+				float invMassA = pInvInertiaMass[objIdA * 3 + 0].w;
+				if(invMassA > 0.f)
+				{
+					linVelA += impulse;
+					//angVelA += cross(contPointA,impulse);
+				}
+#endif
+			}
+
+		}
+}
+	linVelA.w = 0.f;
+	angVelA.w = 0.f;
+	pLinVel[objIdA] = linVelA;
+	pAngVel[objIdA] = angVelA;
+   
+}
+
 int4 getGridPos(float4 worldPos, __global float4* pParams)
 {
     int4 gridPos;
@@ -700,24 +853,6 @@ __kernel void kComputeContacts1(int numObjects,
 
 
 
-float computeImpulse(float4 relVel, float penetration, float4 normal, float timeStep)
-{
-	float collisionConstant	=	0.1f;
-	float baumgarteConstant	=	0.1f;
-	float penetrationError	=	0.02f;
-
-	float lambdaDt = 0.f;
-
-	if(penetration >= 0.f)
-	{
-		return lambdaDt;
-	}
-
-	penetration = min(0.0f, penetration + penetrationError);
-	lambdaDt	= - dot(normal,relVel) * collisionConstant;
-	lambdaDt	-=	(baumgarteConstant/timeStep * penetration);
-	return lambdaDt;
-}
 
 __kernel void kSolveConstraints(int numPairs,
 								__global float4* pPair,

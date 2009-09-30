@@ -97,9 +97,22 @@ struct float4
 		w *= scalar;
 		return (*this);
 	}
+
+	
+	
+	
 	
 };
 
+float4 fabs(const float4& a)
+{
+	float4 tmp;
+	tmp.x = a.x < 0.f ? 0.f  : a.x;
+	tmp.y = a.y < 0.f ? 0.f  : a.y;
+	tmp.z = a.z < 0.f ? 0.f  : a.z;
+	tmp.w = a.w < 0.f ? 0.f  : a.w;
+	return tmp;
+}
 float4 operator+(const float4& a,const float4& b)
 {
 	float4 tmp;
@@ -271,6 +284,30 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 			}
 			break;
 		}
+
+	case CMD_MINICL_COLLIDE_SPHERE_WALLS:
+		{
+			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
+			{
+
+				
+
+				kCollideSphereWalls(	*(int*)    &taskDesc.m_argData[0][0], //numObjects
+								*(float4**)&taskDesc.m_argData[1][0],//pLinVel
+								*(float4**)&taskDesc.m_argData[2][0],//pAngVel
+								*(float4**)&taskDesc.m_argData[3][0],//pParams
+								*(float4**)&taskDesc.m_argData[4][0],//pInvInertiaMass
+								*(float4**)&taskDesc.m_argData[5][0],//pos
+								*(float4**)&taskDesc.m_argData[6][0],//trans
+								*(float4**)&taskDesc.m_argData[7][0],//pShapeBuf
+								*(int2**)  &taskDesc.m_argData[8][0], //shape ids
+								*(float*)  &taskDesc.m_argData[9][0],//timeStep
+								i);
+			}
+
+			break;
+		}
+
 	case CMD_MINICL_COMPUTE_CELL_ID :
 		{
 			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)

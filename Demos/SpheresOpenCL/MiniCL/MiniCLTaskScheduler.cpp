@@ -78,7 +78,8 @@ const char* cMiniCLKernels[CMD_MINICL_TOTAL_COMMANDS] =
 	"kComputeContacts",
 	"kSolveConstraints",
 	"kIntegrateTransforms",
-	"kIntegrateMotion"
+	"kIntegrateMotion",
+	"kCollideSphereWalls",
 };
 
 

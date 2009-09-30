@@ -3,12 +3,14 @@
 #define __PHYSICS_COMMON_H__ 1
 #ifdef WIN32
 #include "BulletMultiThreaded/Win32ThreadSupport.h"
-#else
-#include "BulletMultiThreaded/SequentialThreadSupport.h"
 #endif
+
+#include "BulletMultiThreaded/SequentialThreadSupport.h"
 #include "MiniCLTaskScheduler.h"
 #include "MiniCLTask.h"
 #include "LinearMath/btMinMax.h"
+
+//#define DEBUG_MINICL_KERNELS 1
 
 /*
 	m_threadSupportCollision = new Win32ThreadSupport(Win32ThreadSupport::Win32ThreadConstructionInfo(
@@ -95,6 +97,12 @@ CL_API_ENTRY cl_int CL_API_CALL clGetDeviceInfo(
 			{
 				printf("error: param_value_size should be at least %d\n",sizeof(cl_uint));
 			}
+			break;
+		}
+	case CL_DEVICE_MAX_CLOCK_FREQUENCY:
+		{
+			 cl_uint* clock_frequency = (cl_uint*)param_value;
+			 *clock_frequency = 3*1024;
 			break;
 		}
 	default:
@@ -376,17 +384,24 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
 //	int maxNumOutstandingTasks = 1;
 	gMiniCLNumOutstandingTasks = maxNumOutstandingTasks;
 
-#ifdef WIN32
+#ifdef DEBUG_MINICL_KERNELS
+	SequentialThreadSupport::SequentialThreadConstructionInfo stc("MiniCL",processMiniCLTask,createMiniCLLocalStoreMemory);
+	SequentialThreadSupport* threadSupport = new SequentialThreadSupport(stc);
+#else
+
+#if WIN32
 	Win32ThreadSupport* threadSupport = new Win32ThreadSupport(Win32ThreadSupport::Win32ThreadConstructionInfo(
 								"MiniCL",
 								processMiniCLTask, //processCollisionTask,
 								createMiniCLLocalStoreMemory,//createCollisionLocalStoreMemory,
 								maxNumOutstandingTasks));
 #else
+	///todo: add posix thread support for other platforms
 	SequentialThreadSupport::SequentialThreadConstructionInfo stc("MiniCL",processMiniCLTask,createMiniCLLocalStoreMemory);
 	SequentialThreadSupport* threadSupport = new SequentialThreadSupport(stc);
-	
 #endif
+
+#endif //DEBUG_MINICL_KERNELS
 	
 	
 	MiniCLTaskScheduler* scheduler = new MiniCLTaskScheduler(threadSupport,maxNumOutstandingTasks);

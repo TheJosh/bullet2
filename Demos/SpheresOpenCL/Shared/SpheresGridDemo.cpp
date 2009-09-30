@@ -13,6 +13,23 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+#define START_POS_X btScalar(0.f)
+#define START_POS_Y btScalar(140.f)
+#define START_POS_Z btScalar(0.f)
+#define ARRAY_SIZE_X 20
+#define ARRAY_SIZE_Y 500
+//#define ARRAY_SIZE_Y 5
+#define ARRAY_SIZE_Z 80
+//#define ARRAY_SIZE_Z 1
+#define DIST btScalar(2.f)
+
+#define STRESS_X  60
+//#define STRESS_Y  200
+#define STRESS_Y  400
+
+
+		
+
 ///The 3 following lines include the CPU implementation of the kernels, keep them in this order.
 #include "BulletMultiThreaded/btGpuDefines.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
@@ -40,15 +57,7 @@ subject to the following restrictions:
 #include "SpheresGridDemo.h"
 
 
-#define START_POS_X btScalar(0.f)
-#define START_POS_Y btScalar(140.f)
-#define START_POS_Z btScalar(0.f)
-#define ARRAY_SIZE_X 20
-#define ARRAY_SIZE_Y 500
-//#define ARRAY_SIZE_Y 5
-#define ARRAY_SIZE_Z 80
-//#define ARRAY_SIZE_Z 1
-#define DIST btScalar(2.f)
+
 
 
 btScalar gTimeStep = btScalar(1./60.);
@@ -270,28 +279,19 @@ void	SpheresGridDemo::initPhysics()
 	
 	m_pWorldS->m_useCpuControls[0] = 0;
 	GL_ToggleControl* ctrl = 0;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_APPLY_GRAVITY] = m_dialogDynamicsWorld->createToggle(settings,"Apply Gravity");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CELL_ID] = m_dialogDynamicsWorld->createToggle(settings,"Compute Cell ID");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_SORT_CELL_ID] = m_dialogDynamicsWorld->createToggle(settings,"Sort Cell ID");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_CELL_START] = m_dialogDynamicsWorld->createToggle(settings,"Find Cell Start");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Find Pairs");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_SCAN_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Scan Pairs");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPACT_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Compact Pairs");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES] = m_dialogDynamicsWorld->createToggle(settings,"Compute Batches");
-	ctrl->m_active = false;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CONTACTS] = m_dialogDynamicsWorld->createToggle(settings,"Compute Contacts");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_SOLVE_CONSTRAINTS] = m_dialogDynamicsWorld->createToggle(settings,"Solve Constraints");
-	ctrl->m_active = true;
-	ctrl = m_pWorldS->m_useCpuControls[SIMSTAGE_INTEGRATE_TRANSFORMS] = m_dialogDynamicsWorld->createToggle(settings,"Integrate Transforms");
-	ctrl->m_active = true;	
+	m_pWorldS->m_useCpuControls[SIMSTAGE_APPLY_GRAVITY] = m_dialogDynamicsWorld->createToggle(settings,"Apply Gravity");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CELL_ID] = m_dialogDynamicsWorld->createToggle(settings,"Compute Cell ID");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SORT_CELL_ID] = m_dialogDynamicsWorld->createToggle(settings,"Sort Cell ID");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_CELL_START] = m_dialogDynamicsWorld->createToggle(settings,"Find Cell Start");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_FIND_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Find Pairs");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SCAN_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Scan Pairs");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPACT_PAIRS] = m_dialogDynamicsWorld->createToggle(settings,"Compact Pairs");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES] = m_dialogDynamicsWorld->createToggle(settings,"Compute Batches");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CONTACTS] = m_dialogDynamicsWorld->createToggle(settings,"Compute Contacts");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_SOLVE_CONSTRAINTS] = m_dialogDynamicsWorld->createToggle(settings,"Solve Constraints");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_INTEGRATE_TRANSFORMS] = m_dialogDynamicsWorld->createToggle(settings,"Integrate Transforms");
+	m_pWorldS->m_useCpuControls[SIMSTAGE_KERNEL_COLLIDE_SPHERE_WALLS] = m_dialogDynamicsWorld->createToggle(settings,"Collide Sphere Walls");
+	
 
 	for(int i = 1; i < SIMSTAGE_TOTAL; i++)
 	{
@@ -300,6 +300,8 @@ void	SpheresGridDemo::initPhysics()
 #if defined(CL_PLATFORM_MINI_CL)
 	m_pWorldS->m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active = true; 
 	m_pWorldS->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; 
+	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_CONTACTS]->m_active = true; 
+	
 
 #endif
 #if defined(CL_PLATFORM_AMD)
@@ -375,26 +377,25 @@ void	SpheresGridDemo::initPhysics()
 	btDynamicsWorld* tmpW = m_dynamicsWorld;
 	m_dynamicsWorld = m_pWorldS;
 	SpheresGridDemoOecakeLoader	loader(this);
-	loader.processFile("test1.oec");
+	//loader.processFile("test1.oec");
 	#if 1 /// stress test
 		btCompoundShape* compound = new btCompoundShape();
 		btSphereShape* sphere = new btSphereShape(1.f);
 		btTransform localTrans;
 		localTrans.setIdentity();
-		localTrans.setOrigin(btVector3(1,0,0));
+		localTrans.setOrigin(btVector3(0,0,0));
 		compound->addChildShape(localTrans,sphere);
-		localTrans.setOrigin(btVector3(-1,0,0));
-		compound->addChildShape(localTrans,sphere);
+		//localTrans.setOrigin(btVector3(-1,0,0));
+		//compound->addChildShape(localTrans,sphere);
 
 		btTransform trans;
 		trans.setIdentity();
 
-//		for (int j=0;j<800;j++)
-		for (int j=0;j<50;j++)
-		for (int i=0;i<200;i++)
-//		for (int i=0;i<20;i++)
+		btVector3 offset(0.00001,0.00001,0.00001);
+		for (int j=0;j<STRESS_X;j++)
+		for (int i=0;i<STRESS_Y;i++)
 		{
-			trans.setOrigin(btVector3(25+j*6,30+i*3,0.));
+			trans.setOrigin(offset*i+btVector3(25+j*6,30+i*3,0.));
 			loader.createBodyForCompoundShape(compound,false,trans,1.);
 		}
 	#endif
