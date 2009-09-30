@@ -18,6 +18,10 @@ subject to the following restrictions:
 
 #define USE_BULLET_BODIES 0
 
+///enable one or both options (NVidia profiler doesn't support multi-OpenCL context)
+#define INTEGRATION_DEMO 1
+#define SPHERES_DEMO 1
+
 #include "DemoApplication.h"
 #include "LinearMath/btAlignedObjectArray.h"
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
@@ -73,8 +77,13 @@ class SpheresGridDemo : public GlutDemoApplication
 		int m_drawGridMode;
 		int m_GpuCpuTogglePtr;
 
+#ifdef INTEGRATION_DEMO
 	btIntegrationDemoDynamicsWorld* m_pWorldI;
+#endif //INTEGRATION_DEMO
+
+#ifdef SPHERES_DEMO
 	btSpheresGridDemoDynamicsWorld* m_pWorldS;
+#endif
 	
 
 	// shader
@@ -87,6 +96,7 @@ class SpheresGridDemo : public GlutDemoApplication
 		m_demoType = DEMO_OE_CAKE_2D;//DEMO_INTEGRATION;
 		m_drawGridMode = 0; 
 		m_GpuCpuTogglePtr = SIMSTAGE_NONE;
+		m_dialogDynamicsWorld = 0;
 	}
 	virtual ~SpheresGridDemo()
 	{

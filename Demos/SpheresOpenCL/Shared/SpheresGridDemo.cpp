@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define START_POS_Y btScalar(140.f)
 #define START_POS_Z btScalar(0.f)
 #define ARRAY_SIZE_X 20
-#define ARRAY_SIZE_Y 500
+#define ARRAY_SIZE_Y 50
 //#define ARRAY_SIZE_Y 5
 #define ARRAY_SIZE_Z 80
 //#define ARRAY_SIZE_Z 1
@@ -25,7 +25,7 @@ subject to the following restrictions:
 
 #define STRESS_X  60
 //#define STRESS_Y  200
-#define STRESS_Y  400
+#define STRESS_Y  40
 
 
 		
@@ -271,9 +271,15 @@ void	SpheresGridDemo::initPhysics()
 	///the default constraint solver
 	m_solver = new btSequentialImpulseConstraintSolver();
 
+#ifdef INTEGRATION_DEMO
 	m_pWorldI = new btIntegrationDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, 65536);
+#endif
+
+#ifdef SPHERES_DEMO
 	m_pWorldS = new btSpheresGridDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, 65536);
-	
+#endif
+
+#ifdef SPHERES_DEMO
 	m_dialogDynamicsWorld = new GL_DialogDynamicsWorld();
 	GL_DialogWindow* settings = m_dialogDynamicsWorld->createDialog(50,0,280,280,"CPU fallback");
 	
@@ -311,20 +317,32 @@ void	SpheresGridDemo::initPhysics()
 	m_pWorldS->m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES]->m_active = true; // run-time error "Unimplemented"
 #endif
 
+#endif //#ifdef SPHERES_DEMO
+
+
 	if(m_demoType == DEMO_INTEGRATION)
 	{
+#ifdef INTEGRATION_DEMO
 		m_dynamicsWorld = m_pWorldI;
+#endif
 	}
 	else
 	{
+#ifdef SPHERES_DEMO
 		m_dynamicsWorld = m_pWorldS;
+#endif //#ifdef SPHERES_DEMO
 	}
+#ifdef INTEGRATION_DEMO
 	m_pWorldI->getSimulationIslandManager()->setSplitIslands(true);
 	m_pWorldI->setGravity(btVector3(0,-10.,0));
 	m_pWorldI->getSolverInfo().m_numIterations = 4;
+#endif //INTEGRATION_DEMO
+
+#ifdef SPHERES_DEMO
 	m_pWorldS->getSimulationIslandManager()->setSplitIslands(true);
 	m_pWorldS->setGravity(btVector3(0,-10.,0));
 	m_pWorldS->getSolverInfo().m_numIterations = 4;
+#endif //#ifdef SPHERES_DEMO
 
 	{
 		btCollisionShape* colShape = new btSphereShape(btScalar(1.0f));
@@ -365,16 +383,19 @@ void	SpheresGridDemo::initPhysics()
 		printf("\n... Done!\n");
 	#else
 		// add just one sphere
+#ifdef INTEGRATION_DEMO
 		startTransform.setOrigin(btVector3(start_x, start_y, start_z));
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,0,colShape,localInertia);
 		rbInfo.m_startWorldTransform = startTransform;
 		btRigidBody* body = new btRigidBody(rbInfo);
 		m_pWorldI->addRigidBody(body);
+#endif
 		// now fill m_hPos and m_hLinVel directly
 		init_scene_directly();
 	#endif
 	}
 	btDynamicsWorld* tmpW = m_dynamicsWorld;
+#ifdef SPHERES_DEMO
 	m_dynamicsWorld = m_pWorldS;
 	SpheresGridDemoOecakeLoader	loader(this);
 	//loader.processFile("test1.oec");
@@ -400,16 +421,25 @@ void	SpheresGridDemo::initPhysics()
 		}
 	#endif
 	m_dynamicsWorld = tmpW;
+#else
+	m_dynamicsWorld = m_pWorldI;
+#endif//#ifdef SPHERES_DEMO
+
 
 	clientResetScene();
-
+#ifdef INTEGRATION_DEMO
 	m_pWorldI->initDeviceData();
+#endif
+
+#ifdef SPHERES_DEMO
 	m_pWorldS->initDeviceData();
+#endif
 	print_used_device();
 }
 
 void SpheresGridDemo::init_scene_directly()
 {
+#ifdef INTEGRATION_DEMO
 	float start_x = START_POS_X - ARRAY_SIZE_X * DIST * btScalar(0.5f);
 	float start_y = START_POS_Y - ARRAY_SIZE_Y * DIST * btScalar(0.5f);
 	float start_z = START_POS_Z - ARRAY_SIZE_Z * DIST * btScalar(0.5f);
@@ -430,6 +460,7 @@ void SpheresGridDemo::init_scene_directly()
 		}
 	}
 	m_pWorldI->m_numSpheres = total;
+#endif
 }
 
 
@@ -453,14 +484,20 @@ void SpheresGridDemo::clientResetScene()
 	}
 	else
 	{
+#ifdef SPHERES_DEMO
 		m_pWorldS->grabSimulationData();
+#endif//#ifdef SPHERES_DEMO
+#ifdef INTEGRATION_DEMO
 		m_pWorldI->grabSimulationData();
+#endif
+
 	}
 }
 
 
 void SpheresGridDemo::setRandomZCoordinate(btScalar range)
 {
+#ifdef SPHERES_DEMO
 	int numObjects = m_pWorldS->getNumCollisionObjects();
 	btCollisionObjectArray objArray = m_pWorldS->getCollisionObjectArray();
 	for(int i = 0; i < numObjects; i++)
@@ -476,6 +513,7 @@ void SpheresGridDemo::setRandomZCoordinate(btScalar range)
 			body->setCenterOfMassTransform(trans);
 		}
 	}
+#endif
 }
 
 void	SpheresGridDemo::exitPhysics()
@@ -484,9 +522,11 @@ void	SpheresGridDemo::exitPhysics()
 	m_dialogDynamicsWorld = 0;
 
 	//cleanup in the reverse order of creation/initialization
+	int i;
+
+#ifdef SPHERES_DEMO
 
 	//remove the rigidbodies from the dynamics world and delete them
-	int i;
 	for (i=m_pWorldS->getNumCollisionObjects()-1; i>=0 ;i--)
 	{
 		btCollisionObject* obj = m_pWorldS->getCollisionObjectArray()[i];
@@ -498,6 +538,9 @@ void	SpheresGridDemo::exitPhysics()
 		m_pWorldS->removeCollisionObject( obj );
 		delete obj;
 	}
+#endif
+#ifdef INTEGRATION_DEMO
+
 	for (i=m_pWorldI->getNumCollisionObjects()-1; i>=0 ;i--)
 	{
 		btCollisionObject* obj = m_pWorldI->getCollisionObjectArray()[i];
@@ -509,6 +552,7 @@ void	SpheresGridDemo::exitPhysics()
 		m_pWorldI->removeCollisionObject( obj );
 		delete obj;
 	}
+#endif
 
 	//delete collision shapes
 	for (int j=0;j<m_collisionShapes.size();j++)
@@ -517,9 +561,14 @@ void	SpheresGridDemo::exitPhysics()
 		delete shape;
 	}
 
+#ifdef INTEGRATION_DEMO
 	delete m_pWorldI;
+#endif
+
+#ifdef SPHERES_DEMO
 	delete m_pWorldS;
-	
+#endif
+
 	delete m_solver;
 	
 	delete m_broadphase;
@@ -536,6 +585,7 @@ void SpheresGridDemo::print_used_device()
 		return;
 	}
 	printf("\nIntegration demo : ");
+#ifdef INTEGRATION_DEMO
 	switch(m_pWorldI->m_usedDevice)
 	{
 		case 0 : 
@@ -551,6 +601,8 @@ void SpheresGridDemo::print_used_device()
 			printf("Using unknown device\n");
 			break;
 	}
+#endif
+
 }
 
 
@@ -579,11 +631,16 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 			m_demoType %= DEMO_TOTAL_NUM;
 			if(m_demoType == DEMO_INTEGRATION)
 			{
+#ifdef INTEGRATION_DEMO
 				m_dynamicsWorld = m_pWorldI;
+#endif
+
 			}
 			else
 			{
+#ifdef SPHERES_DEMO
 				m_dynamicsWorld = m_pWorldS;
+#endif
 			}
 			clientResetScene();
 			break;
@@ -594,12 +651,15 @@ void SpheresGridDemo::keyboardCallback(unsigned char key, int x, int y)
 		case '\t' : 
 			if(m_demoType == DEMO_INTEGRATION)
 			{
+#ifdef INTEGRATION_DEMO
 				m_pWorldI->m_usedDevice++;
 				#if BT_USE_CUDA
 					m_pWorldI->m_usedDevice %= 3;
 				#else
 					m_pWorldI->m_usedDevice %= 2;
 				#endif
+#endif
+
 				print_used_device();
 			}
 			break;
@@ -636,30 +696,47 @@ void SpheresGridDemo::renderme()
 	btScalar dist = (m_glutScreenWidth > m_glutScreenHeight) ? m_glutScreenHeight : m_glutScreenWidth;
 	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointScale"), dist  );
 //	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointRadius"), 0.5f );
+#ifdef SPHERES_DEMO
+#ifdef INTEGRATION_DEMO
+	int numSpheres = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->getNumSpheres() : m_pWorldS->getNumSpheres();
+	int	col_vbo = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->m_colVbo : m_pWorldS->m_colVbo;
+	int curr_vbo = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->m_vbo : m_pWorldS->m_vbo;
 	float sphere_rad = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->m_sphereRad : m_pWorldS->m_sphereRad;
+#else
+	int numSpheres = m_pWorldS->getNumSpheres();
+	int	col_vbo = m_pWorldS->m_colVbo;
+	int curr_vbo =  m_pWorldS->m_vbo;
+	float sphere_rad = m_pWorldS->m_sphereRad;
+#endif
+#else
+	int numSpheres = m_pWorldI->getNumSpheres();
+	int	col_vbo = m_pWorldI->m_colVbo;
+	int curr_vbo =  m_pWorldI->m_vbo;
+	float sphere_rad = m_pWorldI->m_sphereRad;
+#endif
+
+	
+
 	glUniform1f( glGetUniformLocation(m_shaderProgram, "pointRadius"), sphere_rad );
 	glColor3f(1, 1, 1);
 
 	// render from the vbo
-	int curr_vbo = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->m_vbo : m_pWorldS->m_vbo;
     glBindBuffer(GL_ARRAY_BUFFER, curr_vbo);
     glVertexPointer(4, GL_FLOAT, 0, 0);
     glEnableClientState(GL_VERTEX_ARRAY);
-	curr_vbo = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->m_colVbo : m_pWorldS->m_colVbo;
-    if(curr_vbo) 
+    if(col_vbo) 
 	{
-		glBindBufferARB(GL_ARRAY_BUFFER_ARB, curr_vbo);
+		glBindBufferARB(GL_ARRAY_BUFFER_ARB, col_vbo);
 		glColorPointer(4, GL_FLOAT, 0, 0);
 		glEnableClientState(GL_COLOR_ARRAY);
 	}
-	int numSpheres = (m_demoType == DEMO_INTEGRATION) ? m_pWorldI->getNumSpheres() : m_pWorldS->getNumSpheres();
 	glDrawArrays(GL_POINTS, 0, numSpheres);
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY); 
 	glUseProgram(0);
 	glDisable(GL_POINT_SPRITE_ARB);
 	glBindBufferARB(GL_ARRAY_BUFFER,0);
-
+#ifdef SPHERES_DEMO
 	if((m_demoType != DEMO_INTEGRATION) && m_drawGridMode)
 	{
 		btVector3& wmin =  m_pWorldS->m_worldMin;
@@ -706,6 +783,7 @@ void SpheresGridDemo::renderme()
 		glEnd();
 		}
 	}
+#endif
 
 	if ((m_debugMode & btIDebugDraw::DBG_NoHelpText)==0)
 	{
@@ -715,6 +793,7 @@ void SpheresGridDemo::renderme()
 		int  yIncr = 20.f;
 		if(m_demoType == DEMO_INTEGRATION)
 		{
+#ifdef INTEGRATION_DEMO
 			switch(m_pWorldI->m_usedDevice)
 			{
 				case 0:
@@ -728,6 +807,8 @@ void SpheresGridDemo::renderme()
 					break;
 			}
 			yStart += 30.f;
+#endif
+
 		}
 		showProfileInfo(xOffset, yStart, yIncr);
 		outputDebugInfo(xOffset, yStart, yIncr);
@@ -846,12 +927,21 @@ void SpheresGridDemo::myinit()
 #endif //__APPLE__
 	
 	m_shaderProgram = _compileProgram(vertexShader, spherePixelShader);
+#ifdef INTEGRATION_DEMO
 	m_pWorldI->initCLKernels(m_argc, m_argv);
+#endif
+
+#ifdef SPHERES_DEMO
+#ifdef INTEGRATION_DEMO
 	m_pWorldS->m_cxMainContext = m_pWorldI->m_cxMainContext;
 	m_pWorldS->m_cdDevice = m_pWorldI->m_cdDevice;
 	m_pWorldS->m_cqCommandQue = m_pWorldI->m_cqCommandQue;
 	m_pWorldS->m_cpProgram = m_pWorldI->m_cpProgram;
 	m_pWorldS->initCLKernels(m_argc, m_argv);
+#else
+	m_pWorldS->initCLKernels(m_argc, m_argv);
+#endif
+#endif
 }
 
 
