@@ -460,30 +460,32 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 {
     cl_int ciErrNum;
 
-#ifndef CL_PLATFORM_MINI_CL
-    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
-//    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-  
-    // Get and log the device info
-//    if(cutCheckCmdLineFlag(argc, (const char**)argv, "device"))
-//	{
-//		int device_nr = 0;
-//		cutGetCmdLineArgumenti(argc, (const char**)argv, "device", &device_nr);
-//		m_cdDevice = oclGetDev(m_cxMainContext, device_nr);
-//		m_cdDevice = btOclGetDev(m_cxMainContext, device_nr);
-//	}
-//	else
+	if (!m_cxMainContext)
 	{
-//		m_cdDevice = oclGetMaxFlopsDev(m_cxMainContext);
-		m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
+		//m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
+		m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+	//    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	  
+		// Get and log the device info
+	//    if(cutCheckCmdLineFlag(argc, (const char**)argv, "device"))
+	//	{
+	//		int device_nr = 0;
+	//		cutGetCmdLineArgumenti(argc, (const char**)argv, "device", &device_nr);
+	//		m_cdDevice = oclGetDev(m_cxMainContext, device_nr);
+	//		m_cdDevice = btOclGetDev(m_cxMainContext, device_nr);
+	//	}
+	//	else
+		{
+	//		m_cdDevice = oclGetMaxFlopsDev(m_cxMainContext);
+			m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
+		}
+	//	oclPrintDevInfo(LOGBOTH, m_cdDevice);
+
+		// create a command-queue
+		m_cqCommandQue = clCreateCommandQueue(m_cxMainContext, m_cdDevice, 0, &ciErrNum);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-//	oclPrintDevInfo(LOGBOTH, m_cdDevice);
-
-	// create a command-queue
-	m_cqCommandQue = clCreateCommandQueue(m_cxMainContext, m_cdDevice, 0, &ciErrNum);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
 	// Program Setup
 	size_t program_length;
 	char* fileName = "SpheresGrid.cl";
@@ -557,22 +559,6 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 		exit(-1); 
 	}
 	printf("OK\n");
-#elif defined(CL_PLATFORM_MINI_CL)
-	#if 0
-	///create kernels from binary
-		int numDevices = 1;
-		::size_t* lengths = (::size_t*) malloc(numDevices * sizeof(::size_t));
-		const unsigned char** images = (const unsigned char**) malloc(numDevices * sizeof(const void*));
-		for(int i = 0; i < numDevices; ++i) {
-			images[i] = 0;
-			lengths[i] = 0;
-		}
-		cl_device_id cdDevices[2];
-		cdDevices[0] = m_cdDevice;
-		m_cpProgram = clCreateProgramWithBinary(m_cxMainContext, 1, cdDevices,lengths, images, 0, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	#endif
-#endif
 
 	// create the kernels
 	//m_ckSetSpheresKernel = clCreateKernel(m_cpProgram, "kSetSpheres", &ciErrNum);
@@ -715,6 +701,8 @@ void btSpheresGridDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_1, "kScanPairsExclusiveLocal1");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_EXCLUSIVE_LOCAL_2, "kScanPairsExclusiveLocal2");
 	initKernel(GPUDEMO_KERNEL_SCAN_PAIRS_UNIFORM_UPDATE, "kScanPairsUniformUpdate");
+	
+
 	
 
 	initKernel(GPUDEMO_KERNEL_COLLIDE_SPHERE_WALLS,"kCollideSphereWalls");
@@ -1075,7 +1063,9 @@ void btSpheresGridDemoDynamicsWorld::runScanPairsKernel()
 {
     cl_int ciErrNum;
 	int memSize;
-	if(m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active)
+	bool numPairsTooLowForGpu = m_scanSize < 256;
+
+	if(m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active || numPairsTooLowForGpu)
 	{
 		// CPU version
 		// get data from GPU
@@ -1631,10 +1621,14 @@ void btSpheresGridDemoDynamicsWorld::initKernel(int kernelId, char* pName)
 	size_t wgSize;
 	ciErrNum = clGetKernelWorkGroupInfo(kernel, m_cdDevice, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &wgSize, NULL);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	if (wgSize > 64)
+		wgSize = 64;
 	m_kernels[kernelId].m_Id = kernelId;
 	m_kernels[kernelId].m_kernel = kernel;
 	m_kernels[kernelId].m_name = pName;
 	m_kernels[kernelId].m_workgroupSize = wgSize;
+
+	
 	return;
 }
 

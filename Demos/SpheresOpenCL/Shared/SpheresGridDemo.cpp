@@ -23,9 +23,10 @@ subject to the following restrictions:
 //#define ARRAY_SIZE_Z 1
 #define DIST btScalar(2.f)
 
-#define STRESS_X  60
+#define STRESS_X  200
 //#define STRESS_Y  200
-#define STRESS_Y  40
+#define STRESS_Y  64
+
 
 
 		

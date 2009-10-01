@@ -269,25 +269,32 @@ __kernel void kFindCellStart(	int numSpheres,
 								__global int* cellStart GUID_ARG)
 {
     int index = get_global_id(0);
-    if(index >= numSpheres)
-	{
-		return;
-	}
 	__local int sharedHash[513];
-    int2 sortedData = pHash[index];
-	// Load hash data into shared memory so that we can look 
-	// at neighboring body's hash value without loading
-	// two hash values per thread
-	sharedHash[get_local_id(0) + 1] = sortedData.x;
-	if((index > 0) && (get_local_id(0) == 0))
+	int2 sortedData;
+	
+    if(index < numSpheres)
 	{
-		// first thread in block must load neighbor body hash
-		sharedHash[0] = pHash[index-1].x;
+
+		sortedData = pHash[index];
+		// Load hash data into shared memory so that we can look 
+		// at neighboring body's hash value without loading
+		// two hash values per thread
+		sharedHash[get_local_id(0) + 1] = sortedData.x;
+		if((index > 0) && (get_local_id(0) == 0))
+		{
+			// first thread in block must load neighbor body hash
+			sharedHash[0] = pHash[index-1].x;
+		}
+		
 	}
     barrier(CLK_LOCAL_MEM_FENCE);
-	if((index == 0) || (sortedData.x != sharedHash[get_local_id(0)]))
+	
+	if(index < numSpheres)
 	{
-		cellStart[sortedData.x] = index;
+		if((index == 0) || (sortedData.x != sharedHash[get_local_id(0)]))
+		{
+			cellStart[sortedData.x] = index;
+		}
 	}
 }
 
@@ -959,55 +966,43 @@ __kernel void kComputeBatches(	int numPairs,
 								__global float4* pParams GUID_ARG)
 {
     int index = get_global_id(0);
-    if(index >= numPairs)
-    {
-		return;
-    }
+    
     int currPair = index;
-	int objIdA = pPairIds[currPair * 2].x;
-	int objIdB = pPairIds[currPair * 2].y;
-	int batchId = pPairIds[currPair * 2 + 1].x;
+	int objIdA;
+	int objIdB;
+	int batchId;
 	int localWorkSz = get_local_size(0);
 	int localIdx = get_local_id(0);
-///*	
+
+    if(index < numPairs)
+    {
+		currPair = index;
+		objIdA = pPairIds[currPair * 2].x;
+		objIdB = pPairIds[currPair * 2].y;
+		batchId = pPairIds[currPair * 2 + 1].x;
+    }
+	
 	for(int i = 0; i < localWorkSz; i++)
 	{
-		if((i == localIdx) // so work item with lower local ID has priority to write
-		&&(batchId < 0)
-		&&(pObjUsed[objIdA] < 0)
-		&&(pObjUsed[objIdB] < 0))
+		if(index < numPairs)
 		{
-			if(pObjUsed[objIdA] == -1) 
+			if((i == localIdx) // so work item with lower local ID has priority to write
+			&&(batchId < 0)
+			&&(pObjUsed[objIdA] < 0)
+			&&(pObjUsed[objIdB] < 0))
 			{
-				pObjUsed[objIdA] = index;
-			}
-			if(pObjUsed[objIdB] == -1) 
-			{
-				pObjUsed[objIdB] = index;
+				if(pObjUsed[objIdA] == -1) 
+				{
+					pObjUsed[objIdA] = index;
+				}
+				if(pObjUsed[objIdB] == -1) 
+				{
+					pObjUsed[objIdB] = index;
+				}
 			}
 		}
 		barrier(CLK_GLOBAL_MEM_FENCE);
 	}
-//*/
-/*
-	for(int i = 0; i < localWorkSz; i++)
-	{
-		if((i == localIdx) // so work item with lower local ID has priority to write
-		&&(batchId < 0)
-		&&(pObjUsed[objIdA] < 0)
-		&&(pObjUsed[objIdB] < 0))
-		{
-			if(pObjUsed[objIdA] == -1) 
-			{
-				pObjUsed[objIdA] = index;
-			}
-			if(pObjUsed[objIdB] == -1) 
-			{
-				pObjUsed[objIdB] = index;
-			}
-		}
-	}
-*/
 }
 
 __kernel void kCheckBatches(int numPairs,

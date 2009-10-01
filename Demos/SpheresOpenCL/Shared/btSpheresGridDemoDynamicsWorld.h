@@ -249,6 +249,7 @@ public:
 			int maxObjs = SPHERES_GRID_MAX_OBJS, int maxNeighbors = SPHERES_GRID_MAX_NEIGHBORS)
 		: btDiscreteDynamicsWorld(dispatcher, pairCache, constraintSolver, collisionConfiguration)
 	{ 
+		m_cxMainContext = 0;
 		m_usedDevice = 1;
 //		m_useCPU = false;
 		m_sphereRad = btScalar(0.5f);

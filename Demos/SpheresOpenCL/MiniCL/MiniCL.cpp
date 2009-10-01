@@ -158,6 +158,31 @@ CL_API_ENTRY cl_int CL_API_CALL clEnqueueReadBuffer(cl_command_queue     command
 	return 0;
 }
 
+
+CL_API_ENTRY cl_int clGetProgramBuildInfo(cl_program            /* program */,
+                      cl_device_id          /* device */,
+                      cl_program_build_info /* param_name */,
+                      size_t                /* param_value_size */,
+                      void *                /* param_value */,
+                      size_t *              /* param_value_size_ret */) CL_API_SUFFIX__VERSION_1_0
+{
+
+	return 0;
+}
+
+
+// Program Object APIs
+CL_API_ENTRY cl_program
+clCreateProgramWithSource(cl_context         context ,
+                          cl_uint           /* count */,
+                          const char **     /* strings */,
+                          const size_t *    /* lengths */,
+                          cl_int *          errcode_ret ) CL_API_SUFFIX__VERSION_1_0
+{
+	*errcode_ret = CL_SUCCESS;
+	return (cl_program)context;
+}
+
 CL_API_ENTRY cl_int CL_API_CALL clEnqueueWriteBuffer(cl_command_queue     command_queue ,
                     cl_mem               buffer ,
                     cl_bool             /* blocking_read */,
@@ -303,7 +328,7 @@ CL_API_ENTRY cl_int CL_API_CALL clBuildProgram(cl_program           /* program *
                void (*pfn_notify)(cl_program /* program */, void * /* user_data */),
                void *               /* user_data */) CL_API_SUFFIX__VERSION_1_0
 {
-	return 0;
+	return CL_SUCCESS;
 }
 
 CL_API_ENTRY cl_program CL_API_CALL clCreateProgramWithBinary(cl_context                     context ,

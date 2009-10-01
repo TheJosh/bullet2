@@ -316,6 +316,30 @@ extern CL_API_ENTRY cl_int CL_API_CALL clGetContextInfo(cl_context         /* co
 	return 0;
 }
 
+CL_API_ENTRY cl_int clGetProgramBuildInfo(cl_program            /* program */,
+                      cl_device_id          /* device */,
+                      cl_program_build_info /* param_name */,
+                      size_t                /* param_value_size */,
+                      void *                /* param_value */,
+                      size_t *              /* param_value_size_ret */) CL_API_SUFFIX__VERSION_1_0
+{
+
+	return 0;
+}
+
+
+// Program Object APIs
+CL_API_ENTRY cl_program
+clCreateProgramWithSource(cl_context         context ,
+                          cl_uint           /* count */,
+                          const char **     /* strings */,
+                          const size_t *    /* lengths */,
+                          cl_int *          errcode_ret ) CL_API_SUFFIX__VERSION_1_0
+{
+	*errcode_ret = CL_SUCCESS;
+	return (cl_program)context;
+}
+
 CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_properties * /* properties */,
                         cl_device_type          /* device_type */,
                         void (*pfn_notify)(const char *, const void *, size_t, void *) /* pfn_notify */,
