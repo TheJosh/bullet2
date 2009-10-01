@@ -1611,7 +1611,6 @@ void btSpheresGridDemoDynamicsWorld::solvePairCPU(btSpheresContPair* pPair, int 
 }	
 
 
-
 void btSpheresGridDemoDynamicsWorld::initKernel(int kernelId, char* pName)
 {
 	
@@ -1628,7 +1627,6 @@ void btSpheresGridDemoDynamicsWorld::initKernel(int kernelId, char* pName)
 	m_kernels[kernelId].m_name = pName;
 	m_kernels[kernelId].m_workgroupSize = wgSize;
 
-	
 	return;
 }
 

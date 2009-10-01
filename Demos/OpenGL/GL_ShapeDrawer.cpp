@@ -273,28 +273,28 @@ public:
 };
 
 
-void GL_ShapeDrawer::drawSphere(btScalar r, int lats, int longs) 
+void GL_ShapeDrawer::drawSphere(btScalar rad, int lats, int longs) 
 {
 	int i, j;
 	for(i = 0; i <= lats; i++) {
 		btScalar lat0 = SIMD_PI * (-btScalar(0.5) + (btScalar) (i - 1) / lats);
-		btScalar z0  = sin(lat0);
-		btScalar zr0 =  cos(lat0);
+		btScalar z0  = rad*btSin(lat0);
+		btScalar zr0 =  rad*btCos(lat0);
 
 		btScalar lat1 = SIMD_PI * (-btScalar(0.5) + (btScalar) i / lats);
-		btScalar z1 = sin(lat1);
-		btScalar zr1 = cos(lat1);
+		btScalar z1 = rad*btSin(lat1);
+		btScalar zr1 = rad*btCos(lat1);
 
 		glBegin(GL_QUAD_STRIP);
 		for(j = 0; j <= longs; j++) {
 			btScalar lng = 2 * SIMD_PI * (btScalar) (j - 1) / longs;
-			btScalar x = cos(lng);
-			btScalar y = sin(lng);
+			btScalar x = btCos(lng);
+			btScalar y = btSin(lng);
 
-			glNormal3f(x * zr0, y * zr0, z0);
-			glVertex3f(x * zr0, y * zr0, z0);
 			glNormal3f(x * zr1, y * zr1, z1);
 			glVertex3f(x * zr1, y * zr1, z1);
+			glNormal3f(x * zr0, y * zr0, z0);
+			glVertex3f(x * zr0, y * zr0, z0);
 		}
 		glEnd();
 	}

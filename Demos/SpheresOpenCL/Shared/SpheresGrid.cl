@@ -141,9 +141,9 @@ __kernel void kCollideSphereWalls(int numObjects,
 	planeOffsets[5] = -worldMax.z;
 	
 	float4 damping;
-	damping.x = 0.1f;
-	damping.y = 0.1f;
-	damping.z = 0.1f;
+	damping.x = 1.5f;
+	damping.y = 1.5f;
+	damping.z = 1.5f;
 	damping.w = 0.f;
 	
 	for (int j=0;j<6;j++)

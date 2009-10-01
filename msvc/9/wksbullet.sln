@@ -60,6 +60,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appSpheresOCL_NvCuda", "app
 		{7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A} = {7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appBasicDemo", "appBasicDemo.vcproj", "{3578834A-4B06-DE6F-78AC-FE11F7226D35}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6ADA430D-009C-2ED4-A787-2AC2D6FEB8CE} = {6ADA430D-009C-2ED4-A787-2AC2D6FEB8CE}
+		{7C428E76-9271-6284-20F0-9B38ED6931E3} = {7C428E76-9271-6284-20F0-9B38ED6931E3}
+		{61BD1097-CF2E-B296-DAA9-73A6FE135319} = {61BD1097-CF2E-B296-DAA9-73A6FE135319}
+		{7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A} = {7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -214,6 +222,18 @@ Global
 		{41BC3212-EF53-4426-AB4C-8E499CB2BD35}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
 		{41BC3212-EF53-4426-AB4C-8E499CB2BD35}.ReleaseDoublePrecision|Win32.ActiveCfg = ReleaseDoublePrecision|Win32
 		{41BC3212-EF53-4426-AB4C-8E499CB2BD35}.ReleaseDoublePrecision|Win32.Build.0 = ReleaseDoublePrecision|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.Debug|Win32.Build.0 = Debug|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.DebugDll|Win32.Build.0 = DebugDll|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.DebugDoublePrecision|Win32.ActiveCfg = DebugDoublePrecision|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.DebugDoublePrecision|Win32.Build.0 = DebugDoublePrecision|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.Release|Win32.ActiveCfg = Release|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.Release|Win32.Build.0 = Release|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.ReleaseDoublePrecision|Win32.ActiveCfg = ReleaseDoublePrecision|Win32
+		{3578834A-4B06-DE6F-78AC-FE11F7226D35}.ReleaseDoublePrecision|Win32.Build.0 = ReleaseDoublePrecision|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
