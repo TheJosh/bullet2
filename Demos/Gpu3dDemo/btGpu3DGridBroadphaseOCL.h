@@ -46,13 +46,6 @@ class btGpu3DGridBroadphaseOCL : public btGpu3DGridBroadphase
 protected:
     // GPU data
 	// moved to btGpuDemo3dOCLWrap for now
-//  cl_mem	m_dBodiesHash;
-//  cl_mem	m_dCellStart;
-//	cl_mem	m_dPairBuff; 
-//	cl_mem	m_dPairBuffStartCurr;
-//	cl_mem	m_dAABB;
-//	cl_mem	m_dPairScan;
-//	cl_mem	m_dPairOut;
 public:
 	btGpu3DGridBroadphaseOCL(	btOverlappingPairCache* overlappingPairCache,
 						const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
