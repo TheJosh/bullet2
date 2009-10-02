@@ -14,6 +14,15 @@ subject to the following restrictions:
 */
 
 
+///The 3 following lines include the CPU implementation of the kernels, keep them in this order.
+#include "BulletMultiThreaded/btGpuDefines.h"
+#include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
+#include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
+
+
 #include "BulletMultiThreaded/SpuNarrowPhaseCollisionTask/SpuGatheringCollisionTask.h"
 #include "BulletMultiThreaded/SpuContactManifoldCollisionAlgorithm.h"
 
@@ -21,7 +30,11 @@ subject to the following restrictions:
 
 #include "BulletMultiThreaded/SpuGatheringCollisionDispatcher.h"
 #include "BulletMultiThreaded/Win32ThreadSupport.h"
+#include "btGpu3DGridBroadphaseOCL.h"
 #include "GLDebugFont.h"
+
+#include "btGpuDemo3dOCLWrap.h"
+
 extern int gSkippedCol;
 extern int gProcessedCol;
 
@@ -79,7 +92,9 @@ extern int gProcessedCol;
 
 #include "BulletCollision/CollisionDispatch/btSimulationIslandManager.h"
 
+#if BT_USE_CUDA
 #include "../Extras/CUDA/btCudaBroadphase.h"
+#endif
 
 btScalar gTimeStep = btScalar(1./60.);
 
@@ -237,7 +252,8 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 	int numOfCellsY = (int)numOfCells[1];
 	int numOfCellsZ = (int)numOfCells[2];
 
-//	m_broadphase = new bt3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
+	m_broadphase = new btGpu3DGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
+//	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
 //#define USE_CUDA_BROADPHASE 1
 #ifdef USE_CUDA_BROADPHASE
 	m_broadphase = new btCudaBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,18,8,1./1.5);
@@ -249,7 +265,7 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 	dbvt->m_deferedcollide=false;
 	dbvt->m_prediction = 0.f;
 #else
-	m_broadphase = new btAxisSweep3(gWorldMin,gWorldMax,32000,gPairCache,true);//(btDbvtBroadphase(gPairCache);
+//@@@	m_broadphase = new btAxisSweep3(gWorldMin,gWorldMax,32000,gPairCache,true);//(btDbvtBroadphase(gPairCache);
 #endif //DBVT
 
 #endif	
@@ -279,13 +295,15 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 //	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
 //##	btCudaDemoDynamicsWorld* pDdw = new btCudaDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
 	btCudaDemoDynamicsWorld3D* pDdw = new btCudaDemoDynamicsWorld3D(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
+	m_pWorld = pDdw;
 	m_dynamicsWorld = pDdw;
 	pDdw->getDispatchInfo().m_enableSPU=true;
 	pDdw->getSimulationIslandManager()->setSplitIslands(sCurrSolverIndex == 0);
 	pDdw->setObjRad(SCALING);
 	pDdw->setWorldMin(gWorldMin);
 	pDdw->setWorldMax(gWorldMax);
-#ifdef BT_USE_CUDA
+//#ifdef BT_USE_CUDA
+#if 1
 	gUseCPUSolver = false;
 #else
 	gUseCPUSolver = true;
@@ -555,7 +573,8 @@ void BasicDemo3D::keyboardCallback(unsigned char key, int x, int y)
 			}
 		case 'u' :
 			{
-#ifdef BT_USE_CUDA
+//#ifdef BT_USE_CUDA
+#if 1
 				btCudaDemoDynamicsWorld3D* pDdw = (btCudaDemoDynamicsWorld3D*)m_dynamicsWorld;
 				gUseCPUSolver = !gUseCPUSolver;
 				pDdw->setUseCPUSolver(gUseCPUSolver);
@@ -850,3 +869,17 @@ void BasicDemo3D::setWireMode(bool wireOnOff)
 	m_dynamicsWorld->getDebugDrawer()->setDebugMode(dbgDrawMode);
 	m_debugMode = dbgDrawMode;
 } // BasicDemo3D::setWireMode()
+
+
+void BasicDemo3D::myinit()
+{
+	static bool firstCall = true;
+	DemoApplication::myinit();
+	if(firstCall)
+	{
+		btGpuDemo3dOCLWrap::initCL(m_argc, m_argv);
+		btGpuDemo3dOCLWrap::allocateBuffers(m_pWorld->m_maxObj, m_pWorld->m_maxConstr, m_pWorld->m_maxPointsPerConstr, m_pWorld->m_maxBatches);
+		btGpuDemo3dOCLWrap::initKernels();
+		firstCall = false;
+	}
+}

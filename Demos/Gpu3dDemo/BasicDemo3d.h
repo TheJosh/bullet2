@@ -27,6 +27,7 @@ class btCollisionDispatcher;
 class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
+class btCudaDemoDynamicsWorld3D;
 
 ///BasicDemo is good starting point for learning the code base and porting.
 class BasicDemo3D : public GlutDemoApplication
@@ -47,10 +48,17 @@ class BasicDemo3D : public GlutDemoApplication
 	int m_mouseOldX;
 	int m_mouseOldY;
 
+	int m_argc;
+	char** m_argv;
+
 	public:
 
-	BasicDemo3D()
+	class btCudaDemoDynamicsWorld3D* m_pWorld;
+
+	BasicDemo3D(int argc, char** argv)
 	{
+		m_argc = argc;
+		m_argv = argv;
 	}
 	virtual ~BasicDemo3D()
 	{
@@ -72,7 +80,7 @@ class BasicDemo3D : public GlutDemoApplication
 
 	static DemoApplication* Create()
 	{
-		BasicDemo3D* demo = new BasicDemo3D;
+		BasicDemo3D* demo = new BasicDemo3D(0, NULL);
 		demo->myinit();
 		demo->initPhysics();
 		demo->m_mouseButtons = 0;
@@ -84,7 +92,8 @@ class BasicDemo3D : public GlutDemoApplication
 	void DrawConstraintInfo();
 	void outputDebugInfo(int & xOffset,int & yStart, int  yIncr);
 	virtual void renderme();
-	
+	virtual void myinit();
+
 	void setWireMode(bool wireOnOff);
 };
 

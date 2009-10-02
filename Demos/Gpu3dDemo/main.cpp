@@ -44,7 +44,7 @@ int main(int argc,char** argv)
 {
 	GLDebugDrawer	gDebugDrawer;
 	
-	BasicDemo3D ccdDemo;
+	BasicDemo3D ccdDemo(argc, argv);
 	ccdDemo.initPhysics();
 	ccdDemo.getDynamicsWorld()->setDebugDrawer(&gDebugDrawer);
 	ccdDemo.setWireMode(false);

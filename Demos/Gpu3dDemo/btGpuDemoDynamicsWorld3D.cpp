@@ -14,6 +14,17 @@ subject to the following restrictions:
 */
 
 //--------------------------------------------------------------------------
+#include <stdio.h>
+#ifdef __APPLE__
+//CL_PLATFORM_MINI_CL could be defined in build system
+#else
+#include <GL/glew.h>
+#include <CL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+#endif //__APPLE__
+
+#include "btOclUtils.h"
+
+#include "btGpuDemo3dOCLWrap.h"
 
 #include "btGpuDemoDynamicsWorld3D.h"
 #include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
@@ -150,9 +161,9 @@ void btCudaDemoDynamicsWorld3D::grabConstrData()
 			{	
 				btManifoldPoint& cp = manifold->getContactPoint(n);
 				btVector3 v = cp.getPositionWorldOnA();
-				m_hContact[m_numConstraints * m_maxPointsPerConstr + n] = *((float3*)&v);
+				m_hContact[m_numConstraints * m_maxPointsPerConstr + n] = *((float4*)&v);
 				v = cp.m_normalWorldOnB;
-				m_hNormal[m_numConstraints * m_maxPointsPerConstr + n] = *((float3*)&v);
+				m_hNormal[m_numConstraints * m_maxPointsPerConstr + n] = *((float4*)&v);
 				float dist = cp.getDistance();
 				if(dist > 0.f)
 				{
@@ -273,16 +284,15 @@ void btCudaDemoDynamicsWorld3D::writebackData()
 void btCudaDemoDynamicsWorld3D::copyDataToGPU()
 {
 	BT_PROFILE("copyDataToGPU");
-#ifdef BT_USE_CUDA
-	btCuda_copyArrayToDevice(m_dIds, m_hIds, sizeof(int2) * m_numConstraints);
-	btCuda_copyArrayToDevice(m_dBatchIds, m_hBatchIds, sizeof(int) * m_numConstraints);
-	btCuda_copyArrayToDevice(m_dContact, m_hContact, m_numConstraints * m_maxPointsPerConstr * sizeof(float3)); 
-	btCuda_copyArrayToDevice(m_dNormal, m_hNormal, m_numConstraints * m_maxPointsPerConstr * sizeof(float3)); 
-	btCuda_copyArrayToDevice(m_dPositionConstraint, m_hPositionConstraint, m_numConstraints * m_maxPointsPerConstr * sizeof(float)); 
+	btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dIds, m_hIds, sizeof(int) * 2 * m_numConstraints);
+	btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dBatchIds, m_hBatchIds, sizeof(int) * m_numConstraints);
+	btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dContact, m_hContact, m_numConstraints * m_maxPointsPerConstr * sizeof(float) * 4); 
+	btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dNormal, m_hNormal, m_numConstraints * m_maxPointsPerConstr * sizeof(float) * 4); 
+	btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dPositionConstraint, m_hPositionConstraint, m_numConstraints * m_maxPointsPerConstr * sizeof(float)); 
 
 	if(m_copyIntegrDataToGPU)
 	{
-		btCuda_copyArrayToDevice(m_dTrans, m_hTrans, m_numObj * sizeof(float4) * 4); 
+		btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dTrans, m_hTrans, m_numObj * sizeof(float) * 4 * 4); 
 		if(m_useCudaMotIntegr)
 		{
 			m_copyIntegrDataToGPU = false;
@@ -291,10 +301,9 @@ void btCudaDemoDynamicsWorld3D::copyDataToGPU()
 
 	if(!m_useCudaMotIntegr)
 	{ 
-		btCuda_copyArrayToDevice(m_dVel, m_hVel, m_numObj * sizeof(float4));
-		btCuda_copyArrayToDevice(m_dAngVel, m_hAngVel, m_numObj * sizeof(float4)); 
+		btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dVel, m_hVel, m_numObj * sizeof(float) * 4);
+		btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dAngVel, m_hAngVel, m_numObj * sizeof(float) * 4); 
 	}
-#endif
 } // btCudaDemoDynamicsWorld3D::copyDataToGPU()
 
 //--------------------------------------------------------------------------
@@ -302,10 +311,10 @@ void btCudaDemoDynamicsWorld3D::copyDataToGPU()
 void btCudaDemoDynamicsWorld3D::copyDataFromGPU()
 {
 	BT_PROFILE("copy velocity data from device");
-#ifdef BT_USE_CUDA
-	btCuda_copyArrayFromDevice(m_hVel, m_dVel, m_numObj * sizeof(float4));
-	btCuda_copyArrayFromDevice(m_hAngVel, m_dAngVel, m_numObj * sizeof(float4)); 
-#endif
+//#ifdef BT_USE_CUDA
+	btGpuDemo3dOCLWrap::copyArrayFromDevice(m_hVel, btGpuDemo3dOCLWrap::m_dVel, m_numObj * sizeof(float) * 4);
+	btGpuDemo3dOCLWrap::copyArrayFromDevice(m_hAngVel, btGpuDemo3dOCLWrap::m_dAngVel, m_numObj * sizeof(float) * 4); 
+//#endif
 } // btCudaDemoDynamicsWorld3D::copyDataFromGPU()
 
 //--------------------------------------------------------------------------
@@ -322,24 +331,31 @@ void btCudaDemoDynamicsWorld3D::solveConstraints(btContactSolverInfo& solverInfo
 		solveConstraintsCPU(solverInfo);
 		return;
 	}
-#ifdef BT_USE_CUDA
 	BT_PROFILE("solveConstraints");
 	grabData();
 	createBatches();
 	copyDataToGPU();
 
-	btCudaPartProps partProps;
-	partProps.m_mass = 1.0f;
-	partProps.m_diameter = m_objRad * 2.0f;
-	partProps.m_restCoeff = 1.0f;
+//#ifdef BT_USE_CUDA
 
-	btCudaBoxProps boxProps;
-	boxProps.minX = m_worldMin[0];
-	boxProps.maxX = m_worldMax[0];
-	boxProps.minY = m_worldMin[1];
-	boxProps.maxY = m_worldMax[1];
-	boxProps.minZ = m_worldMin[2];
-	boxProps.maxZ = m_worldMax[2];
+//	btCudaPartProps partProps;
+//	partProps.m_mass = 1.0f;
+//	partProps.m_diameter = m_objRad * 2.0f;
+//	partProps.m_restCoeff = 1.0f;
+
+//	btCudaBoxProps boxProps;
+//	boxProps.minX = m_worldMin[0];
+//	boxProps.maxX = m_worldMax[0];
+//	boxProps.minY = m_worldMin[1];
+//	boxProps.maxY = m_worldMax[1];
+//	boxProps.minZ = m_worldMin[2];
+//	boxProps.maxZ = m_worldMax[2];
+	btVector3 hParams[2];
+	hParams[0] = m_worldMin;
+	hParams[1] = m_worldMax;
+	btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dParams, hParams, sizeof(btVector3) * 2);
+
+
 	{
 		BT_PROFILE("btCuda_collisionBatchResolutionBox");
 		
@@ -347,13 +363,18 @@ void btCudaDemoDynamicsWorld3D::solveConstraints(btContactSolverInfo& solverInfo
 		btDispatcherInfo& dispatchInfo = getDispatchInfo();
 		btScalar timeStep = dispatchInfo.m_timeStep;
 
-		btCuda_clearAccumulationOfLambdaDt(m_dLambdaDtBox, m_numConstraints, m_maxPointsPerConstr);
+		//btCuda_clearAccumulationOfLambdaDt(m_dLambdaDtBox, m_numConstraints, m_maxPointsPerConstr);
+		btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO3D_KERNEL_CLEAR_ACCUM_IMPULSE, m_numConstraints);
 
 		for(int i=0;i<nIter;i++)
 		{
-			btCuda_collisionWithWallBox3D(m_dTrans, m_dVel, m_dAngVel, partProps, boxProps, m_numObj, timeStep);
-			int* pBatchIds = m_dBatchIds;
-			int* pppBatchIds = m_hBatchIds;
+//			btCuda_collisionWithWallBox3D(m_dTrans, m_dVel, m_dAngVel, partProps, boxProps, m_numObj, timeStep);
+			btGpuDemo3dOCLWrap::setKernelArg(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, 5, sizeof(float),	(void*)&timeStep);
+			btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, m_numObj);
+
+//			int* pBatchIds = m_dBatchIds;
+//			int* pppBatchIds = m_hBatchIds;
+			int batchIdOffset = 0;
 			for(int iBatch=0;iBatch < m_maxBatches;iBatch++)
 			{
 				int numConstraints = m_numInBatches[iBatch]; 
@@ -361,6 +382,7 @@ void btCudaDemoDynamicsWorld3D::solveConstraints(btContactSolverInfo& solverInfo
 				{
 					break;
 				}
+				/*
 				btCuda_collisionBatchResolutionBox3D( m_dIds, pBatchIds, numConstraints,
 													m_dTrans, m_dVel,
 													m_dAngVel,
@@ -369,14 +391,21 @@ void btCudaDemoDynamicsWorld3D::solveConstraints(btContactSolverInfo& solverInfo
 													m_dNormal,
 													m_dContact,
 													partProps, iBatch, timeStep);
-				pBatchIds += numConstraints;
-				pppBatchIds += numConstraints;
+				*/
+				btGpuDemo3dOCLWrap::setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 10, sizeof(int), (void*)&iBatch);
+				btGpuDemo3dOCLWrap::setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 11, sizeof(int), (void*)&batchIdOffset);
+				btGpuDemo3dOCLWrap::setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 12, sizeof(float), (void*)&timeStep);
+				btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, numConstraints);
+				batchIdOffset += numConstraints;
+//				pBatchIds += numConstraints;
+//				pppBatchIds += numConstraints;
 			}
 		}
 	}
+//#ifdef BT_USE_CUDA
 	copyDataFromGPU();
 	writebackData();
-#endif // BT_USE_CUDA
+//#endif // BT_USE_CUDA
 	m_numSimStep++;
 } // btCudaDemoDynamicsWorld3D::solveConstraints()
 
@@ -526,16 +555,19 @@ void btCudaDemoDynamicsWorld3D::predictUnconstraintMotion(btScalar timeStep)
 		}
 		else
 		{
-#ifdef BT_USE_CUDA
+//#ifdef BT_USE_CUDA
+#if 1
 			//BT_PROFILE("CUDA motIntegr -- integrate on CUDA");
-			btCuda_copyArrayToDevice(m_dForceTorqueDamp, m_hForceTorqueDamp, sizeof(float) * m_numObj * 4 * 2);
+			btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dForceTorqueDamp, m_hForceTorqueDamp, sizeof(float) * m_numObj * 4 * 2);
 			if(m_copyIntegrDataToGPU)
 			{
-				btCuda_copyArrayToDevice(m_dInvInertiaMass, m_hInvInertiaMass, sizeof(float) * m_numObj * 4 * 3);
+				btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dInvInertiaMass, m_hInvInertiaMass, sizeof(float) * m_numObj * 4 * 3);
 			}
-			btCuda_copyArrayToDevice(m_dVel, m_hVel, m_numObj * sizeof(float4));
-			btCuda_copyArrayToDevice(m_dAngVel, m_hAngVel, m_numObj * sizeof(float4)); 
-			btCuda_integrVel(m_dForceTorqueDamp, m_dInvInertiaMass, m_dVel, m_dAngVel, timeStep, m_numObj); 
+			btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dVel, m_hVel, m_numObj * sizeof(float) * 4);
+			btGpuDemo3dOCLWrap::copyArrayToDevice(btGpuDemo3dOCLWrap::m_dAngVel, m_hAngVel, m_numObj * sizeof(float) * 4); 
+
+			btGpuDemo3dOCLWrap::setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, 5, sizeof(float), (void*)&timeStep);
+			btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, m_numObj);
 			copyDataFromGPU();
 			writebackData();
 #endif
@@ -561,9 +593,11 @@ void btCudaDemoDynamicsWorld3D::integrateTransforms(btScalar timeStep)
 		}
 		else
 		{
-#ifdef BT_USE_CUDA
-			btCuda_integrTrans(m_dTrans, m_dVel, m_dAngVel, timeStep, m_numObj);
-			btCuda_copyArrayFromDevice(m_hTrans, m_dTrans, m_numObj * sizeof(float4) * 4); 
+// #ifdef BT_USE_CUDA
+ #if 1
+			btGpuDemo3dOCLWrap::setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, 5, sizeof(float), (void*)&timeStep);
+			btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, m_numObj);
+			btGpuDemo3dOCLWrap::copyArrayFromDevice(m_hTrans, btGpuDemo3dOCLWrap::m_dTrans, m_numObj * sizeof(float) * 4 * 4); 
 #endif
 		}
 		m_numObj = getNumCollisionObjects();
@@ -587,6 +621,7 @@ void btCudaDemoDynamicsWorld3D::integrateTransforms(btScalar timeStep)
 		btDiscreteDynamicsWorld::integrateTransforms(timeStep);
 	}
 } // btCudaDemoDynamicsWorld3D::integrateTransforms()
+
 
 //--------------------------------------------------------------------------
 //--------------------------------------------------------------------------

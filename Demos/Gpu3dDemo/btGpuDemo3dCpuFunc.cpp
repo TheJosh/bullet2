@@ -23,7 +23,7 @@ subject to the following restrictions:
 
 //----------------------------------------------------------------------------------------
 
-#include "BulletMultiThreaded/btGpuDefines.h"
+#include "btGpuDefines.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #include "btGpuDemo3dSharedCode.h"
 

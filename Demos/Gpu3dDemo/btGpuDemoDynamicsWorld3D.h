@@ -18,6 +18,17 @@ subject to the following restrictions:
 
 #include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
 
+
+#ifdef __APPLE__
+#include <OpenCL/cl.h>
+#else
+// standard utility and system includes
+#include <CL/cl.h>
+// Extra CL/GL include
+#include <CL/cl_gl.h>
+#endif
+
+
 //#define BT_USE_CUDA 1
 // To enable CUDA : 
 // 1. Uncomment //#define BT_USE_CUDA 1
@@ -31,7 +42,7 @@ subject to the following restrictions:
 	#define BT_GPU_PREF(func) btCuda_##func
 	#include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #else
-	#include "BulletMultiThreaded/btGpuDefines.h"
+	#include "btGpuDefines.h"
 	#include "../../src/BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #endif
 
@@ -52,11 +63,13 @@ subject to the following restrictions:
 
 class btCudaDemoDynamicsWorld3D : public btDiscreteDynamicsWorld
 {
-protected:
+	public: 
 	int						m_maxObj;
 	int						m_maxNeihbors;
 	int						m_maxConstr;
 	int						m_maxPointsPerConstr;
+	int						m_maxBatches;
+protected:
 
 	int						m_numObj;
 	int						m_numSimStep;
@@ -85,7 +98,6 @@ protected:
 	float4*					m_hAngVel;
 	int*					m_hConstraintBuffer;
 	int*					m_hConstraintCounter;
-	int						m_maxBatches;
 	int						m_numBatches;
 	int						m_numConstraints;
 	int2*					m_hIds;
@@ -97,8 +109,8 @@ protected:
 	// ------------- these are only needed for CPU version and for debugging
 	float*					m_hLambdaDtBox;
 	float*					m_hPositionConstraint;
-	float3*					m_hNormal;
-	float3*					m_hContact;
+	float4*					m_hNormal;
+	float4*					m_hContact;
 	// ------------- 
 
 	btScalar 				m_objRad;
@@ -163,8 +175,8 @@ public:
 
 		m_hLambdaDtBox = new float[sz * m_maxPointsPerConstr];
 		m_hPositionConstraint = new float[sz * m_maxPointsPerConstr];
-		m_hNormal = new float3[sz * m_maxPointsPerConstr];
-		m_hContact = new float3[sz * m_maxPointsPerConstr];
+		m_hNormal = new float4[sz * m_maxPointsPerConstr];
+		m_hContact = new float4[sz * m_maxPointsPerConstr];
 
 		m_numSimStep = 0;
 
@@ -246,6 +258,7 @@ public:
 	void setUseSeqImpSolver(bool useSeqImpSolver) { m_useSeqImpSolver = useSeqImpSolver; }
 	void setUseCudaMotIntegr(bool useCudaMotIntegr) { m_useCudaMotIntegr = useCudaMotIntegr; }
 	void resetScene(void) { m_copyIntegrDataToGPU = true; }
+
 };
 
 
