@@ -46,7 +46,7 @@ int main(int argc,char** argv)
 {
 	
 	
-	BasicDemo ccdDemo;
+	BasicDemo ccdDemo(argc, argv);
 	ccdDemo.initPhysics();
 	ccdDemo.getDynamicsWorld()->setDebugDrawer(&gDebugDrawer);
 

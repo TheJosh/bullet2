@@ -265,7 +265,7 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 	dbvt->m_deferedcollide=false;
 	dbvt->m_prediction = 0.f;
 #else
-//@@@	m_broadphase = new btAxisSweep3(gWorldMin,gWorldMax,32000,gPairCache,true);//(btDbvtBroadphase(gPairCache);
+//	m_broadphase = new btAxisSweep3(gWorldMin,gWorldMax,32000,gPairCache,true);//(btDbvtBroadphase(gPairCache);
 #endif //DBVT
 
 #endif	

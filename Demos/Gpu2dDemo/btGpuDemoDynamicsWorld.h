@@ -39,7 +39,7 @@ subject to the following restrictions:
 	#define BT_GPU_PREF(func) btCuda_##func
 	#include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #else
-	#include "BulletMultiThreaded/btGpuDefines.h"
+	#include "btGpuDefines.h"
 	#include "../../src/BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #endif
 
@@ -63,9 +63,14 @@ extern btGpuDemoDynamicsWorld* gpCudaDemoDynamicsWorld; // to access world membe
 
 class btGpuDemoDynamicsWorld : public btDiscreteDynamicsWorld
 {
-protected:
+public:
 	int						m_maxObjs;
 	int						m_maxNeighbors;
+	int						m_maxVtxPerObj;
+	int						m_maxBatches;
+	int						m_maxShapeBufferSize;
+
+protected:
 
 	int						m_numObj;
 	int						m_numSimStep;
@@ -101,13 +106,11 @@ protected:
 	btOverlappingPairCache*	m_pairCache;
 	int*					m_hConstraintBuffer;
 	int*					m_hConstraintCounter;
-	int						m_maxBatches;
 	int						m_numBatches;
 	int						m_totalNumConstraints;
 	int2*					m_hIds;
 	int*					m_hBatchIds;
 	
-	int						m_maxVtxPerObj;
 
 	int2*					m_dIds;
 	int*					m_dBatchIds;
@@ -129,7 +132,6 @@ protected:
 
 	
 	// shape buffer
-	int						m_maxShapeBufferSize;
 	int						m_firstFreeShapeBufferOffset;
 	char*					m_hShapeBuffer;  // (pos.x, pos.y, pos.z, radius)
 	char*					m_dShapeBuffer;//pointer in device memory

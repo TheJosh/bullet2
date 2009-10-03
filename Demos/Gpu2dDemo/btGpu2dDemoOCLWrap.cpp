@@ -27,55 +27,62 @@ subject to the following restrictions:
 #include "LinearMath/btMinMax.h"
 #include "btOclUtils.h"
 
-#include "btGpuDemo3dOCLWrap.h"
+#include "btGpuDemo2dOCLWrap.h"
 
 
-cl_context			btGpuDemo3dOCLWrap::m_cxMainContext;
-cl_device_id		btGpuDemo3dOCLWrap::m_cdDevice;
-cl_command_queue	btGpuDemo3dOCLWrap::m_cqCommandQue;
-cl_program			btGpuDemo3dOCLWrap::m_cpProgram;
-btKernelInfo		btGpuDemo3dOCLWrap::m_kernels[GPUDEMO3D_KERNEL_TOTAL];
-
-cl_mem btGpuDemo3dOCLWrap::m_dTrans;
-cl_mem btGpuDemo3dOCLWrap::m_dVel;
-cl_mem btGpuDemo3dOCLWrap::m_dAngVel;
-cl_mem btGpuDemo3dOCLWrap::m_dIds;
-cl_mem btGpuDemo3dOCLWrap::m_dBatchIds;
-cl_mem btGpuDemo3dOCLWrap::m_dLambdaDtBox;
-cl_mem btGpuDemo3dOCLWrap::m_dPositionConstraint;
-cl_mem btGpuDemo3dOCLWrap::m_dNormal;
-cl_mem btGpuDemo3dOCLWrap::m_dContact;
-cl_mem btGpuDemo3dOCLWrap::m_dForceTorqueDamp;
-cl_mem btGpuDemo3dOCLWrap::m_dInvInertiaMass;
-cl_mem btGpuDemo3dOCLWrap::m_dParams;
-
-int	btGpuDemo3dOCLWrap::m_maxObj;
-int	btGpuDemo3dOCLWrap::m_maxNeihbors;
-int	btGpuDemo3dOCLWrap::m_maxConstr;
-int	btGpuDemo3dOCLWrap::m_maxPointsPerConstr;
-int	btGpuDemo3dOCLWrap::m_numObj;
-int	btGpuDemo3dOCLWrap::m_maxBatches;
-int	btGpuDemo3dOCLWrap::m_numBatches;
-int	btGpuDemo3dOCLWrap::m_numConstraints;
+cl_context			btGpuDemo2dOCLWrap::m_cxMainContext;
+cl_device_id		btGpuDemo2dOCLWrap::m_cdDevice;
+cl_command_queue	btGpuDemo2dOCLWrap::m_cqCommandQue;
+cl_program			btGpuDemo2dOCLWrap::m_cpProgram;
+btKernelInfo		btGpuDemo2dOCLWrap::m_kernels[GPUDEMO2D_KERNEL_TOTAL];
 
 
-cl_mem	btGpuDemo3dOCLWrap::m_dBodiesHash;
-cl_mem	btGpuDemo3dOCLWrap::m_dCellStart;
-cl_mem	btGpuDemo3dOCLWrap::m_dPairBuff; 
-cl_mem	btGpuDemo3dOCLWrap::m_dPairBuffStartCurr;
-cl_mem	btGpuDemo3dOCLWrap::m_dAABB;
-cl_mem	btGpuDemo3dOCLWrap::m_dPairScan;
-cl_mem	btGpuDemo3dOCLWrap::m_dPairOut;
-cl_mem	btGpuDemo3dOCLWrap::m_dBpParams;
+cl_mem	btGpuDemo2dOCLWrap::m_dPos;
+cl_mem	btGpuDemo2dOCLWrap::m_dRot;
+cl_mem	btGpuDemo2dOCLWrap::m_dVel;
+cl_mem	btGpuDemo2dOCLWrap::m_dAngVel;
+cl_mem	btGpuDemo2dOCLWrap::m_dpPos;
+cl_mem	btGpuDemo2dOCLWrap::m_dpRot;
+cl_mem	btGpuDemo2dOCLWrap::m_dpVel;
+cl_mem	btGpuDemo2dOCLWrap::m_dpAngVel;
+cl_mem	btGpuDemo2dOCLWrap::m_dIds;
+cl_mem	btGpuDemo2dOCLWrap::m_dBatchIds;
+cl_mem	btGpuDemo2dOCLWrap::m_dLambdaDtBox;
+cl_mem	btGpuDemo2dOCLWrap::m_dContact; // 8 floats : pos.x, pos.y, pos.z, penetration, norm.x, norm.y, norm.z, reserved
+cl_mem	btGpuDemo2dOCLWrap::m_dInvMass;
+cl_mem	btGpuDemo2dOCLWrap::m_dcPos;
+cl_mem	btGpuDemo2dOCLWrap::m_dcRot;
+cl_mem	btGpuDemo2dOCLWrap::m_dcVel;
+cl_mem	btGpuDemo2dOCLWrap::m_dcAngVel;
+cl_mem	btGpuDemo2dOCLWrap::m_dShapeBuffer;
+cl_mem	btGpuDemo2dOCLWrap::m_dShapeIds;
+cl_mem	btGpuDemo2dOCLWrap::m_dParams;
 
-int btGpuDemo3dOCLWrap::m_maxHandles;
-int btGpuDemo3dOCLWrap::m_maxLargeHandles;
-int btGpuDemo3dOCLWrap::m_maxPairsPerBody;
-int btGpuDemo3dOCLWrap::m_numCells;
-int btGpuDemo3dOCLWrap::m_hashSize;
-bool btGpuDemo3dOCLWrap::m_broadphaseInited = false;
+int	btGpuDemo2dOCLWrap::m_maxObjs;
+int	btGpuDemo2dOCLWrap::m_maxNeighbors;
+int	btGpuDemo2dOCLWrap::m_maxConstr;
+int	btGpuDemo2dOCLWrap::m_maxVtxPerObj;
+int	btGpuDemo2dOCLWrap::m_maxBatches;
+int	btGpuDemo2dOCLWrap::m_maxShapeBufferSize;
 
-void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
+
+cl_mem	btGpuDemo2dOCLWrap::m_dBodiesHash;
+cl_mem	btGpuDemo2dOCLWrap::m_dCellStart;
+cl_mem	btGpuDemo2dOCLWrap::m_dPairBuff; 
+cl_mem	btGpuDemo2dOCLWrap::m_dPairBuffStartCurr;
+cl_mem	btGpuDemo2dOCLWrap::m_dAABB;
+cl_mem	btGpuDemo2dOCLWrap::m_dPairScan;
+cl_mem	btGpuDemo2dOCLWrap::m_dPairOut;
+cl_mem	btGpuDemo2dOCLWrap::m_dBpParams;
+
+int btGpuDemo2dOCLWrap::m_maxHandles;
+int btGpuDemo2dOCLWrap::m_maxLargeHandles;
+int btGpuDemo2dOCLWrap::m_maxPairsPerBody;
+int btGpuDemo2dOCLWrap::m_numCells;
+int btGpuDemo2dOCLWrap::m_hashSize;
+bool btGpuDemo2dOCLWrap::m_broadphaseInited = false;
+
+void btGpuDemo2dOCLWrap::initCL(int argc, char** argv)
 {
     cl_int ciErrNum;
 
@@ -91,7 +98,7 @@ void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
 
 	// Program Setup
 	size_t program_length;
-	char* fileName = "Gpu3dDemoOCL.cl";
+	char* fileName = "Gpu2dDemoOCL.cl";
 	FILE * fp = fopen(fileName, "rb");
 	char newFileName[512];
 	
@@ -106,7 +113,7 @@ void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
 	
 	if (fp == NULL)
 	{
-		sprintf(newFileName,"Demos//Gpu3dDemo//%s",fileName);
+		sprintf(newFileName,"Demos//Gpu2dDemo//%s",fileName);
 		fp = fopen(newFileName, "rb");
 		if (fp)
 			fileName = newFileName;
@@ -114,7 +121,7 @@ void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
 
 	if (fp == NULL)
 	{
-		sprintf(newFileName,"..//..//Demos//Gpu3dDemo//%s",fileName);
+		sprintf(newFileName,"..//..//Demos//Gpu2dDemo//%s",fileName);
 		fp = fopen(newFileName, "rb");
 		if (fp)
 			fileName = newFileName;
@@ -173,7 +180,7 @@ void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
 
 
 
-void btGpuDemo3dOCLWrap::initKernel(int kernelId, char* pName)
+void btGpuDemo2dOCLWrap::initKernel(int kernelId, char* pName)
 {
 	
 	cl_int ciErrNum;
@@ -189,7 +196,7 @@ void btGpuDemo3dOCLWrap::initKernel(int kernelId, char* pName)
 	return;
 }
 
-void btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize)
+void btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize)
 {
 	if(globalSize <= 0)
 	{
@@ -229,61 +236,49 @@ void btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize
 }
 
 
+void btGpuDemo2dOCLWrap::allocateArray(cl_mem* ppBuf, int memSize)
+{
+    cl_int ciErrNum;
+    *ppBuf = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}
 
-void btGpuDemo3dOCLWrap::allocateBuffers(int maxObjs, int maxConstr, int maxPointsPerConstr, int maxBatches)
+
+
+void btGpuDemo2dOCLWrap::allocateBuffers(int maxObjs, int maxNeighbors, int maxVtxPerObj, int maxBatches, int maxShapeBufferSize)
 {
     cl_int ciErrNum;
 
-	m_maxObj = maxObjs;
-	m_maxConstr = maxConstr;
-	m_maxPointsPerConstr = maxPointsPerConstr;
+	m_maxObjs = maxObjs;
+	m_maxNeighbors = maxNeighbors;
+	m_maxVtxPerObj = maxVtxPerObj;
+	m_maxBatches = maxBatches;
+	m_maxConstr = m_maxObjs * m_maxNeighbors;
+	m_maxShapeBufferSize = maxShapeBufferSize;
 
-    unsigned int memSize = sizeof(float)* 4 * m_maxObj * 4;
-    m_dTrans = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	int sz = m_maxObjs * m_maxNeighbors;
 
-	memSize = sizeof(float)* 4 * m_maxObj;
-	m_dVel = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	m_dAngVel = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(int) * m_maxConstr;
-	m_dIds = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(int) * 2 * m_maxConstr;
-	m_dBatchIds = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(float) * m_maxConstr * m_maxPointsPerConstr;
-	m_dLambdaDtBox = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_dPositionConstraint = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(float) * 4 * m_maxConstr * m_maxPointsPerConstr;
-	m_dNormal = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	m_dContact = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(float) * m_maxObj * 4 * 2;
-	m_dForceTorqueDamp = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(float) * m_maxObj * 4 * 3;
-	m_dInvInertiaMass = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-	memSize = sizeof(float) * 4 * 2;
-	m_dParams = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-    oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	allocateArray(&m_dPos, sizeof(float) * 4 * m_maxObjs);
+	allocateArray(&m_dRot, sizeof(float) * m_maxObjs);
+	allocateArray(&m_dVel, sizeof(float) * 4 * m_maxObjs);
+	allocateArray(&m_dAngVel, sizeof(float) * m_maxObjs);
+	allocateArray(&m_dpPos, sizeof(float) * 4 * m_maxObjs);
+	allocateArray(&m_dpRot, sizeof(float) * m_maxObjs);
+	allocateArray(&m_dpVel, sizeof(float) * 4 * m_maxObjs);
+	allocateArray(&m_dpAngVel, sizeof(float) * m_maxObjs);
+	allocateArray(&m_dInvMass, sizeof(float) * m_maxObjs);
+	allocateArray(&m_dIds, sizeof(int) * 2 * m_maxConstr);
+	allocateArray(&m_dBatchIds, sizeof(int) * m_maxConstr);
+	allocateArray(&m_dLambdaDtBox, sizeof(float) * m_maxConstr * m_maxVtxPerObj);
+	allocateArray(&m_dContact, sizeof(float) * m_maxConstr * m_maxVtxPerObj * 8);
+	allocateArray(&m_dShapeBuffer, m_maxShapeBufferSize);
+	allocateArray(&m_dShapeIds, sizeof(int) * 2 * m_maxObjs);
+	allocateArray(&m_dParams, sizeof(float) * 4 * 2);
 
 	// broadphase
 	if(m_broadphaseInited)
 	{
+		int memSize;
 		memSize = m_hashSize * 2 * sizeof(unsigned int);
 		m_dBodiesHash = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -320,40 +315,42 @@ void btGpuDemo3dOCLWrap::allocateBuffers(int maxObjs, int maxConstr, int maxPoin
 	}
 }
 
-void btGpuDemo3dOCLWrap::initKernels()
+void btGpuDemo2dOCLWrap::initKernels()
 {
-	initKernel(GPUDEMO3D_KERNEL_CLEAR_ACCUM_IMPULSE, "kClearAccumImpulse");
-	setKernelArg(GPUDEMO3D_KERNEL_CLEAR_ACCUM_IMPULSE, 1, sizeof(cl_mem),	(void*)&m_dLambdaDtBox);
-	setKernelArg(GPUDEMO3D_KERNEL_CLEAR_ACCUM_IMPULSE, 2, sizeof(int),		(void*)&m_maxPointsPerConstr);
+	initKernel(GPUDEMO2D_KERNEL_CLEAR_ACCUM_IMPULSE, "kClearAccumImpulse");
+	setKernelArg(GPUDEMO2D_KERNEL_CLEAR_ACCUM_IMPULSE, 1, sizeof(cl_mem),	(void*)&m_dLambdaDtBox);
+	setKernelArg(GPUDEMO2D_KERNEL_CLEAR_ACCUM_IMPULSE, 2, sizeof(int),		(void*)&m_maxVtxPerObj);
 
-	initKernel(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, "kCollisionWithWallBox");
-	setKernelArg(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, 1, sizeof(cl_mem),	(void*)&m_dTrans);
-	setKernelArg(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, 2, sizeof(cl_mem),	(void*)&m_dVel);
-	setKernelArg(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, 3, sizeof(cl_mem),	(void*)&m_dAngVel);
-	setKernelArg(GPUDEMO3D_KERNEL_COLLISION_WITH_WALL, 4, sizeof(cl_mem),	(void*)&m_dParams);
+	initKernel(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, "kComputeConstraints");
+	setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 1, sizeof(cl_mem),	(void*)&m_dIds);
+	setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 2, sizeof(cl_mem),	(void*)&m_dPos);
+	setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 3, sizeof(cl_mem),	(void*)&m_dRot);
+	setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 4, sizeof(cl_mem),	(void*)&m_dShapeBuffer);
+	setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 5, sizeof(cl_mem),	(void*)&m_dShapeIds);
+	setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 6, sizeof(cl_mem),	(void*)&m_dContact);
 
-	initKernel(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, "kSolveConstraint");
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 1, sizeof(cl_mem),	(void*)&m_dIds);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 2, sizeof(cl_mem),	(void*)&m_dBatchIds);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 3, sizeof(cl_mem),	(void*)&m_dTrans);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 4, sizeof(cl_mem),	(void*)&m_dVel);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 5, sizeof(cl_mem),	(void*)&m_dAngVel);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 6, sizeof(cl_mem),	(void*)&m_dLambdaDtBox);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 7, sizeof(cl_mem),	(void*)&m_dPositionConstraint);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 8, sizeof(cl_mem),	(void*)&m_dNormal);
-	setKernelArg(GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS, 9, sizeof(cl_mem),	(void*)&m_dContact);
 
-	initKernel(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, "kIntegrateVelocities");
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, 1, sizeof(cl_mem),	(void*)&m_dForceTorqueDamp);
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, 2, sizeof(cl_mem),	(void*)&m_dInvInertiaMass);
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, 3, sizeof(cl_mem),	(void*)&m_dVel);	
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES, 4, sizeof(cl_mem),	(void*)&m_dAngVel);	
+	initKernel(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, "kCollisionWithWallBox");
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 1, sizeof(cl_mem),	(void*)&m_dPos);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 2, sizeof(cl_mem),	(void*)&m_dVel);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 3, sizeof(cl_mem),	(void*)&m_dRot);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 4, sizeof(cl_mem),	(void*)&m_dAngVel);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 5, sizeof(cl_mem),	(void*)&m_dShapeBuffer);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 6, sizeof(cl_mem),	(void*)&m_dShapeIds);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 7, sizeof(cl_mem),	(void*)&m_dInvMass);
+	setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 8, sizeof(cl_mem),	(void*)&m_dParams);
 
-	initKernel(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, "kIntegrateTransforms");
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, 1, sizeof(cl_mem),	(void*)&m_dTrans);
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, 2, sizeof(cl_mem),	(void*)&m_dVel);
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, 3, sizeof(cl_mem),	(void*)&m_dAngVel);
-	setKernelArg(GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS, 4, sizeof(cl_mem),	(void*)&m_dInvInertiaMass);
+
+	initKernel(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, "kSolveConstraints");
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 1, sizeof(cl_mem),	(void*)&m_dIds);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 2, sizeof(cl_mem),	(void*)&m_dBatchIds);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 3, sizeof(cl_mem),	(void*)&m_dPos);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 4, sizeof(cl_mem),	(void*)&m_dVel);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 5, sizeof(cl_mem),	(void*)&m_dRot);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 6, sizeof(cl_mem),	(void*)&m_dAngVel);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 7, sizeof(cl_mem),	(void*)&m_dLambdaDtBox);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 8, sizeof(cl_mem),	(void*)&m_dContact);
+	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 9, sizeof(cl_mem),	(void*)&m_dInvMass);
 
 	if(m_broadphaseInited)
 	{
@@ -405,7 +402,7 @@ void btGpuDemo3dOCLWrap::initKernels()
 	}
 }
 
-void btGpuDemo3dOCLWrap::setKernelArg(int kernelId, int argNum, int argSize, void* argPtr)
+void btGpuDemo2dOCLWrap::setKernelArg(int kernelId, int argNum, int argSize, void* argPtr)
 {
     cl_int ciErrNum;
 	ciErrNum  = clSetKernelArg(m_kernels[kernelId].m_kernel, argNum, argSize, argPtr);
@@ -414,7 +411,7 @@ void btGpuDemo3dOCLWrap::setKernelArg(int kernelId, int argNum, int argSize, voi
 
 
 
-void btGpuDemo3dOCLWrap::copyArrayToDevice(cl_mem device, const void* host, unsigned int size, int devOffs, int hostOffs)
+void btGpuDemo2dOCLWrap::copyArrayToDevice(cl_mem device, const void* host, unsigned int size, int devOffs, int hostOffs)
 {
     cl_int ciErrNum;
 	char* pHost = (char*)host + hostOffs;
@@ -422,7 +419,7 @@ void btGpuDemo3dOCLWrap::copyArrayToDevice(cl_mem device, const void* host, unsi
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
-void btGpuDemo3dOCLWrap::copyArrayFromDevice(void* host, const cl_mem device, unsigned int size, int hostOffs, int devOffs)
+void btGpuDemo2dOCLWrap::copyArrayFromDevice(void* host, const cl_mem device, unsigned int size, int hostOffs, int devOffs)
 {
     cl_int ciErrNum;
 	char* pHost = (char*)host + hostOffs;
@@ -446,7 +443,7 @@ static unsigned int getMaxPowOf2(unsigned int num)
 }
 
 
-void btGpuDemo3dOCLWrap::setBroadphaseBuffers(int maxHandles, int maxLargeHandles, int maxPairsPerBody, int numCells)
+void btGpuDemo2dOCLWrap::setBroadphaseBuffers(int maxHandles, int maxLargeHandles, int maxPairsPerBody, int numCells)
 {
 	m_maxHandles = maxHandles;
 	m_maxLargeHandles = maxLargeHandles;
@@ -459,7 +456,7 @@ void btGpuDemo3dOCLWrap::setBroadphaseBuffers(int maxHandles, int maxLargeHandle
 
 //Note: logically shared with BitonicSort OpenCL code!
 
-void btGpuDemo3dOCLWrap::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir)
+void btGpuDemo2dOCLWrap::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir)
 {
 	unsigned int localSizeLimit = m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_workgroupSize * 2;
     if(arrayLength < 2)

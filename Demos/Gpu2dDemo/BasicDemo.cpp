@@ -14,9 +14,12 @@ subject to the following restrictions:
 */
 
 ///The 3 following lines include the CPU implementation of the kernels, keep them in this order.
-#include "BulletMultiThreaded/btGpuDefines.h"
+#include "btGpuDefines.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
+#ifndef __APPLE__
+#include <GL/glew.h>
+#endif
 
 
 
@@ -26,6 +29,8 @@ subject to the following restrictions:
 
 #include "btGpuDemoDynamicsWorld.h"
 #include "GLDebugFont.h"
+
+#include "btGpuDemo2dOCLWrap.h"
 
 #define USE_CUDA_DEMO_PAIR_CASHE 0
 
@@ -91,7 +96,8 @@ btScalar gTimeStep = btScalar(1./60.);
 
 bool gbDrawBatches = false;
 int gSelectedBatch = CUDA_DEMO_DYNAMICS_WORLD_MAX_BATCHES;
-#ifdef BT_USE_CUDA
+//#ifdef BT_USE_CUDA
+#if 0
 bool gUseCPUSolver = false;
 #else
 bool gUseCPUSolver = true;
@@ -304,6 +310,7 @@ void	BasicDemo::initPhysics()
 
 	btGpuDemoDynamicsWorld* pDdw = new btGpuDemoDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration, MAX_PROXIES);
 	m_dynamicsWorld = pDdw;
+	m_pWorld = pDdw;
 	pDdw->getSimulationIslandManager()->setSplitIslands(true);
 	pDdw->setObjRad(SCALING);
 	pDdw->setWorldMin(gWorldMin);
@@ -363,9 +370,9 @@ void	BasicDemo::initPhysics()
 
 #if OECAKE_LOADER
 	BasicDemoOecakeLoader	loader(this);
-	if (!loader.processFile("test1.oec"))
+	if (!loader.processFile("Gpu2dDemo.oec"))
 	{
-		loader.processFile("../../test1.oec");
+		loader.processFile("../../Gpu2dDemo.oec");
 	}
 #if 0 // perfomance test : work-in-progress
 	{ // add more object, but share their shapes
@@ -806,3 +813,16 @@ void BasicDemo::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 		yStart += yIncr;
 	}
 } // BasicDemo::outputDebugInfo()
+
+void BasicDemo::myinit()
+{
+	static bool firstCall = true;
+	DemoApplication::myinit();
+	if(firstCall)
+	{
+		btGpuDemo2dOCLWrap::initCL(m_argc, m_argv);
+		btGpuDemo2dOCLWrap::allocateBuffers(m_pWorld->m_maxObjs, m_pWorld->m_maxNeighbors, m_pWorld->m_maxVtxPerObj, m_pWorld->m_maxBatches, m_pWorld->m_maxShapeBufferSize);
+		btGpuDemo2dOCLWrap::initKernels();
+		firstCall = false;
+	}
+}

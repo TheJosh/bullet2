@@ -32,6 +32,7 @@ class btCollisionDispatcher;
 class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
+class btGpuDemoDynamicsWorld;
 #include "GlutDemoApplication.h"
 
 ///BasicDemo is good starting point for learning the code base and porting.
@@ -49,14 +50,20 @@ class BasicDemo : public GlutDemoApplication
 
 	btDefaultCollisionConfiguration* m_collisionConfiguration;
 
+	btGpuDemoDynamicsWorld* m_pWorld;
+
 	int m_mouseButtons;
 	int m_mouseOldX;
 	int m_mouseOldY;
+	int m_argc;
+	char** m_argv;
 
 	public:
 
-	BasicDemo()
+	BasicDemo(int argc, char** argv)
 	{
+		m_argc = argc;
+		m_argv = argv;
 	}
 	virtual ~BasicDemo()
 	{
@@ -77,21 +84,12 @@ class BasicDemo : public GlutDemoApplication
 
 	virtual void clientResetScene();
 
-	static DemoApplication* Create()
-	{
-		BasicDemo* demo = new BasicDemo;
-		demo->myinit();
-		demo->initPhysics();
-		demo->m_mouseButtons = 0;
-		demo->m_mouseOldX = 0;
-		demo->m_mouseOldY = 0;
-		return demo;
-	}
 
 	void DrawConstraintInfo();
 	void outputDebugInfo(int & xOffset,int & yStart, int  yIncr);
 	virtual void renderme();
 	void addCollisionShape(btCollisionShape* pShape) { m_collisionShapes.push_back(pShape); }
+	virtual void myinit();
 };
 
 

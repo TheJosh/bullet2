@@ -12,6 +12,8 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
+#ifndef BTGPUDEMO2DOCLWRAP_H
+#define BTGPUDEMO2DOCLWRAP_H
 
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
@@ -24,9 +26,11 @@ subject to the following restrictions:
 
 enum
 {
-	GPUDEMO3D_KERNEL_CLEAR_ACCUM_IMPULSE = 0,
-	GPUDEMO3D_KERNEL_COLLISION_WITH_WALL,
-	GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS,
+	GPUDEMO2D_KERNEL_CLEAR_ACCUM_IMPULSE = 0,
+	GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS,
+	GPUDEMO2D_KERNEL_COLLISION_WITH_WALL,
+	GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS,
+
 	GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES,
 	GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS,
 	GPUDEMO3D_KERNEL_CALC_HASH_AABB,
@@ -40,7 +44,7 @@ enum
 	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1,
 	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL,
 	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL,
-	GPUDEMO3D_KERNEL_TOTAL
+	GPUDEMO2D_KERNEL_TOTAL
 };
 
 
@@ -53,41 +57,47 @@ struct btKernelInfo
 };
 
 
-class btGpuDemo3dOCLWrap
+class btGpuDemo2dOCLWrap
 {
 protected:
 	static cl_context		m_cxMainContext;
 	static cl_device_id		m_cdDevice;
 	static cl_command_queue	m_cqCommandQue;
 	static cl_program		m_cpProgram;
-	static btKernelInfo		m_kernels[GPUDEMO3D_KERNEL_TOTAL];
+	static btKernelInfo		m_kernels[GPUDEMO2D_KERNEL_TOTAL];
 	static bool m_broadphaseInited;
 
 
 public:
 
-	static int	m_maxObj;
-	static int	m_maxNeihbors;
+	static int	m_maxObjs;
+	static int	m_maxNeighbors;
 	static int	m_maxConstr;
-	static int	m_maxPointsPerConstr;
-	static int	m_numObj;
+	static int	m_maxVtxPerObj;
 	static int	m_maxBatches;
-	static int	m_numBatches;
-	static int	m_numConstraints;
+	static int	m_maxShapeBufferSize;
 
-
-	static cl_mem	m_dTrans;
+	static cl_mem	m_dPos;
+	static cl_mem	m_dRot;
 	static cl_mem	m_dVel;
 	static cl_mem	m_dAngVel;
+	static cl_mem	m_dpPos;
+	static cl_mem	m_dpRot;
+	static cl_mem	m_dpVel;
+	static cl_mem	m_dpAngVel;
 	static cl_mem	m_dIds;
 	static cl_mem	m_dBatchIds;
 	static cl_mem	m_dLambdaDtBox;
-	static cl_mem	m_dPositionConstraint;
-	static cl_mem	m_dNormal;
-	static cl_mem	m_dContact;
-	static cl_mem	m_dForceTorqueDamp;
-	static cl_mem	m_dInvInertiaMass;
+	static cl_mem	m_dContact; // 8 floats : pos.x, pos.y, pos.z, penetration, norm.x, norm.y, norm.z, reserved
+	static cl_mem	m_dInvMass;
+	static cl_mem	m_dShapeBuffer;
+	static cl_mem	m_dShapeIds;
 	static cl_mem	m_dParams;
+
+	static cl_mem	m_dcPos;
+	static cl_mem	m_dcRot;
+	static cl_mem	m_dcVel;
+	static cl_mem	m_dcAngVel;
 
 	// broadphase data
 	static cl_mem	m_dBodiesHash;
@@ -109,8 +119,9 @@ public:
 
 
 	static void initCL(int argc, char** argv);
+	static void allocateArray(cl_mem* ppBuf, int memSize);
 	static void initKernels();
-	static void allocateBuffers(int maxObjs, int maxConstr, int maxPointsPerConstr, int maxBatches);
+	static void allocateBuffers(int maxObjs, int maxNeighbors, int maxVtxPerObj, int maxBatches, int maxShapeBufferSize);
 	static void initKernel(int kernelId, char* pName);
 	static void runKernelWithWorkgroupSize(int kernelId, int globalSize);
 	static void setKernelArg(int kernelId, int argNum, int argSize, void* argPtr);
@@ -122,3 +133,5 @@ public:
 	static void bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir);
 
 };
+
+#endif // BTGPUDEMO2DOCLWRAP

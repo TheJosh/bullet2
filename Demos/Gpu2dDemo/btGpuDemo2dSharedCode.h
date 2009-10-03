@@ -46,9 +46,10 @@ BT_GPU___global__ void clearAccumulationOfLambdaDtD(float* lambdaDtBox, int numC
 
 #define SPHERE_FACT 1.0f
 
-BT_GPU___device__ void testSphSph(float3 aPos, float3 bPos, float radA, float radB, float4* pOut)
+BT_GPU___device__ void testSphSph(float4 aPos, float4 bPos, float radA, float radB, float4* pOut)
 {
-	float3 del = bPos - aPos;
+	float4 del = bPos - aPos;
+	del.w = 0.f;
 	float dist = BT_GPU_dot(del, del);
 	dist = sqrtf(dist);
 	float maxD = radA + radB;
@@ -59,7 +60,7 @@ BT_GPU___device__ void testSphSph(float3 aPos, float3 bPos, float radA, float ra
 	}
 	float penetration = (radA + radB - dist) * SPHERE_FACT;
 //	float penetration = (dist - radA - radB) * SPHERE_FACT;
-	float3 normal;
+	float4 normal;
 	if(dist > 0.f) 
 	{
 		float fact = -1.0f/dist;
@@ -68,11 +69,10 @@ BT_GPU___device__ void testSphSph(float3 aPos, float3 bPos, float radA, float ra
 	}
 	else
 	{
-		normal = BT_GPU_make_float3(1.f, 0.f, 0.f);
+		normal = BT_GPU_make_float4(1.f, 0.f, 0.f, 0.f);
 	}
-//	float3 contact = (bPos + aPos + normal * (radB - radA)) * 0.5f;
-	float3 tmp = (normal * radA);
-	float3 contact = aPos - tmp;
+	float4 tmp = (normal * radA);
+	float4 contact = aPos - tmp;
 	
 	// now add point
 	int numPoints = 0;
@@ -85,8 +85,9 @@ BT_GPU___device__ void testSphSph(float3 aPos, float3 bPos, float radA, float ra
 	}
 	if(numPoints < MAX_VTX_PER_OBJ)
 	{
-		pOut[numPoints * 2] = BT_GPU_make_float42(contact, penetration);
-		pOut[numPoints * 2 + 1] = BT_GPU_make_float42(normal, 0.f);
+		contact.w = penetration;
+		pOut[numPoints * 2] = contact;
+		pOut[numPoints * 2 + 1] = normal;
 	}
 } // testSphSph()
 
@@ -103,9 +104,8 @@ BT_GPU___global__ void setConstraintDataD(int2 *constraints,
 {
     int idx = BT_GPU___mul24(BT_GPU_blockIdx.x, BT_GPU_blockDim.x) + BT_GPU_threadIdx.x;
 	int aId,bId;
-	float3 aPos,bPos;
+	float4 aPos,bPos;
 //	float positionConstraint;
-//	float3 normal;
 	float aRot,bRot;
 	float sideLength2	=	pProp.m_diameter*0.5f/sqrt(2.0f);
 
@@ -114,8 +114,8 @@ BT_GPU___global__ void setConstraintDataD(int2 *constraints,
 		aId=constraints[idx].x;
 		bId=constraints[idx].y;
 		
-		aPos=BT_GPU_make_float34(BT_GPU_FETCH4(pos,aId));
-		bPos=BT_GPU_make_float34(BT_GPU_FETCH4(pos,bId));
+		aPos=pos[aId];
+		bPos=pos[bId];
 		aRot= rotation[aId];
 		bRot= rotation[bId];
 		float cosA = cosf(aRot);
@@ -127,10 +127,10 @@ BT_GPU___global__ void setConstraintDataD(int2 *constraints,
 		float4* shapeB = (float4*)(shapes + shapeIds[bId].x);
 		int numSphB = shapeIds[bId].y;
 		int i, j;
-		float3 ai =	BT_GPU_make_float3(cosA, sinA, 0.f);
-		float3 aj =	BT_GPU_make_float3(-sinA, cosA, 0.f);
-		float3 bi =	BT_GPU_make_float3(cosB, sinB, 0.f);
-		float3 bj =	BT_GPU_make_float3(-sinB, cosB, 0.f);
+		float4 ai =	BT_GPU_make_float4(cosA, sinA, 0.f, 0.f);
+		float4 aj =	BT_GPU_make_float4(-sinA, cosA, 0.f, 0.f);
+		float4 bi =	BT_GPU_make_float4(cosB, sinB, 0.f, 0.f);
+		float4 bj =	BT_GPU_make_float4(-sinB, cosB, 0.f, 0.f);
 		float4* pOut = contact + idx * MAX_VTX_PER_OBJ * 2;
 		for(i = 0; i < MAX_VTX_PER_OBJ; i++)
 		{
@@ -139,9 +139,9 @@ BT_GPU___global__ void setConstraintDataD(int2 *constraints,
 		}
 		for(i = 0; i < numSphA; i++)
 		{	
-			float3 va = aPos;
-			float3 tmp = ai * shapeA[i].x; 
-			float3 tmp2 = aj * shapeA[i].y;
+			float4 va = aPos;
+			float4 tmp = ai * shapeA[i].x; 
+			float4 tmp2 = aj * shapeA[i].y;
 			
 			va += tmp;
 			va += tmp2;
@@ -149,9 +149,9 @@ BT_GPU___global__ void setConstraintDataD(int2 *constraints,
 			float radA = shapeA[i].w;
 			for(j = 0; j < numSphB; j++)
 			{
-				float3 vb = bPos;
-				float3 tmp =bi * shapeB[j].x;
-				float3 tmp2 = bj * shapeB[j].y;
+				float4 vb = bPos;
+				float4 tmp =bi * shapeB[j].x;
+				float4 tmp2 = bj * shapeB[j].y;
 				vb += tmp;
 				vb += tmp2;
 				float radB = shapeB[j].w;
@@ -162,9 +162,9 @@ BT_GPU___global__ void setConstraintDataD(int2 *constraints,
 }
 
 
-BT_GPU___device__ float computeImpulse1(float3 rVel,
+BT_GPU___device__ float computeImpulse1(float4 rVel,
 								 float positionConstraint,
-								 float3 cNormal,
+								 float4 cNormal,
 								 float dt)
 {
 //	const float collisionConstant	=	0.1f;
@@ -175,7 +175,6 @@ BT_GPU___device__ float computeImpulse1(float3 rVel,
 	const float penetrationError	=	0.02f;
 
 	float lambdaDt=0;
-	float3 impulse=BT_GPU_make_float3(0.f,0.f,0.f);
 
 	if(positionConstraint > 0)
 		return lambdaDt;
@@ -203,10 +202,10 @@ BT_GPU___global__ void collisionWithWallBoxD(float4 *pos,
 								   float dt)
 {
     int idx = BT_GPU___mul24(BT_GPU_blockIdx.x, BT_GPU_blockDim.x) + BT_GPU_threadIdx.x;
-	float3 aPos;
+	float4 aPos;
 	float aRot;
 	float positionConstraint;
-	float3 impulse;
+	float4 impulse;
 	
 
 	if((idx > 0) && (idx < nParticles))
@@ -216,51 +215,50 @@ BT_GPU___global__ void collisionWithWallBoxD(float4 *pos,
 		{
 			return;
 		}
-		aPos=BT_GPU_make_float34(BT_GPU_FETCH4(pos,idx));
+		aPos=pos[idx];
 		aRot=rotation[idx];
 		float4* shape = (float4*)(shapes + shapeIds[idx].x);
 		int numSph = shapeIds[idx].y;
 		float cosA = cosf(aRot);
 		float sinA = sinf(aRot);
-		float3 ai =	BT_GPU_make_float3(cosA, sinA, 0.f);
-		float3 aj =	BT_GPU_make_float3(-sinA, cosA, 0.f);
+		float4 ai =	BT_GPU_make_float4(cosA, sinA, 0.f, 0.f);
+		float4 aj =	BT_GPU_make_float4(-sinA, cosA, 0.f, 0.f);
 
 		for(int iVtx=0;iVtx < numSph; iVtx++){
-			float3 aVel = BT_GPU_make_float3(vel[idx].x, vel[idx].y, vel[idx].z);
+			float4 aVel = BT_GPU_make_float4(vel[idx].x, vel[idx].y, vel[idx].z, 0.f);
 			float aAngVel = angVel[idx];
-			float3 rerVertex = ai * shape[iVtx].x;
-			float3 tmp = aj * shape[iVtx].y;
+			float4 rerVertex = ai * shape[iVtx].x;
+			float4 tmp = aj * shape[iVtx].y;
 			rerVertex += tmp;
-			float3 vPos = aPos + rerVertex;
+			float4 vPos = aPos + rerVertex;
 			float rad = shape[iVtx].w;
-			float3 vVel	=aVel+BT_GPU_cross(BT_GPU_make_float3(0.0f,0.0f,aAngVel),rerVertex);
+			float4 vVel	=aVel+BT_GPU_cross(BT_GPU_make_float4(0.0f,0.0f,aAngVel, 0.f),rerVertex);
 //			float restitution=1.0;
 			float restitution=0.3f;
 			{
 				positionConstraint	=vPos.y - rad - gProp.minY;
-				impulse				=BT_GPU_make_float31(0.0f);
+				impulse				=BT_GPU_make_float4(0.0f, 0.f, 0.f, 0.f);
 
 				if(positionConstraint < 0)
 				{
-					float3 groundNormal;
-					groundNormal = BT_GPU_make_float3(0.0f,1.0f,0.0f);
+					float4 groundNormal;
+					groundNormal = BT_GPU_make_float4(0.0f,1.0f,0.0f, 0.f);
 					impulse	=groundNormal*
 						restitution * computeImpulse1(vVel,positionConstraint,
 						groundNormal,
 						dt);
 #if USE_FRICTION	// only with ground for now
-					float3 lat_vel = vVel - groundNormal * BT_GPU_dot(groundNormal,vVel);
+					float4 lat_vel = vVel - groundNormal * BT_GPU_dot(groundNormal,vVel);
 					float lat_vel_len = BT_GPU_dot(lat_vel, lat_vel);
 					if (lat_vel_len > 0)
 					{
 						lat_vel_len = sqrtf(lat_vel_len);
 						lat_vel *= 1.f/lat_vel_len;	
-						float3 tmp = lat_vel * BT_GPU_dot(lat_vel, vVel) * FRICTION_BOX_GROUND_FACT;
+						float4 tmp = lat_vel * BT_GPU_dot(lat_vel, vVel) * FRICTION_BOX_GROUND_FACT;
 						impulse	-= tmp;
 					}
 #endif //USE_FRICTION
-					float4 tmp = BT_GPU_make_float42(impulse,0.0f);
-					vel[idx]	+=	tmp;
+					vel[idx]	+=	impulse;
 					float tmp2 = BT_GPU_cross(rerVertex,impulse).z;
 					angVel[idx]	+=	tmp2;
 				}
@@ -268,32 +266,30 @@ BT_GPU___global__ void collisionWithWallBoxD(float4 *pos,
 
 			{
 				positionConstraint	=vPos.x - rad - gProp.minX;
-				impulse				=BT_GPU_make_float31(0.0f);
+				impulse				=BT_GPU_make_float4(0.0f, 0.f, 0.f, 0.f);
 
 				if(positionConstraint < 0){
-					impulse	=BT_GPU_make_float3(1.0f,0.0f,0.0f)* restitution * 
+					impulse	=BT_GPU_make_float4(1.0f,0.0f,0.0f, 0.f)* restitution * 
 						computeImpulse1(vVel,positionConstraint,
-						BT_GPU_make_float3(1.0f,0.0f,0.0f),
+						BT_GPU_make_float4(1.0f,0.0f,0.0f, 0.f),
 						dt);
 
-					float4 tmp = BT_GPU_make_float42(impulse,0.0f);
-					vel[idx]	+=	tmp;
+					vel[idx]	+=	impulse;
 					angVel[idx]	+=	BT_GPU_cross(rerVertex,impulse).z;
 				}
 			}
 
 			{
 				positionConstraint	= gProp.maxX - vPos.x - rad;
-				impulse				=BT_GPU_make_float31(0.0f);
+				impulse				=BT_GPU_make_float4(0.0f, 0.f, 0.f, 0.f);
 
 				if(positionConstraint < 0){
-					impulse	=BT_GPU_make_float3(-1.0f,0.0f,0.0f)* restitution * 
+					impulse	=BT_GPU_make_float4(-1.0f,0.0f,0.0f, 0.f)* restitution * 
 						computeImpulse1(vVel,positionConstraint,
-						BT_GPU_make_float3(-1.0f,0.0f,0.0f),
+						BT_GPU_make_float4(-1.0f,0.0f,0.0f, 0.f),
 						dt);
 
-					float4 tmp = BT_GPU_make_float42(impulse,0.0f);
-					vel[idx]	+=	tmp;
+					vel[idx]	+=	impulse;
 					angVel[idx]	+=	BT_GPU_cross(rerVertex,impulse).z;
 				}
 			}
@@ -314,30 +310,30 @@ BT_GPU___device__ void collisionResolutionBox(	int constrId,
 												float dt)
 {
 #if 1
-	float3 relVel;
-	float3 impulse;
+	float4 relVel;
+	float4 impulse;
 	float lambdaDt;
 	float positionConstraint;
 	int aId=constraints[constrId].x;
 	int bId=constraints[constrId].y;
-	float3 aPos=BT_GPU_make_float34(BT_GPU_FETCH4(pos,aId));
-	float3 bPos=BT_GPU_make_float34(BT_GPU_FETCH4(pos,bId));
-	float3 aVel=BT_GPU_make_float34(vel[aId]);
-	float3 bVel=BT_GPU_make_float34(vel[bId]);
+	float4 aPos=pos[aId];
+	float4 bPos=pos[bId];
+	float4 aVel=vel[aId];
+	float4 bVel=vel[bId];
 	float aAngVel=angularVel[aId];
 	float bAngVel=angularVel[bId];
 	float4* pCont = contact + constrId * MAX_VTX_PER_OBJ * 2;
 	//	test Vertices in A to Box B
 	for(int iVtx=0;iVtx<MAX_VTX_PER_OBJ;iVtx++){
-		float3 contactPoint	= BT_GPU_make_float34(pCont[iVtx * 2]);
+		float4 contactPoint	= pCont[iVtx * 2];
 		contactPoint = contactPoint - aPos;
 		positionConstraint = pCont[iVtx * 2].w;
 		if(positionConstraint >= 0)
 		{
-			float3 contactNormal = BT_GPU_make_float34(pCont[iVtx * 2 + 1]);
-			relVel=(aVel+BT_GPU_cross(BT_GPU_make_float3(0.0f,0.0f,aAngVel),
+			float4 contactNormal = pCont[iVtx * 2 + 1];
+			relVel=(aVel+BT_GPU_cross(BT_GPU_make_float4(0.0f,0.0f,aAngVel, 0.f),
 				contactPoint))
-				-(bVel+BT_GPU_cross(BT_GPU_make_float3(0.0f,0.0f,bAngVel),
+				-(bVel+BT_GPU_cross(BT_GPU_make_float4(0.0f,0.0f,bAngVel, 0.f),
 				contactPoint+aPos-bPos));
 
 			lambdaDt=	computeImpulse1(relVel,-positionConstraint,
@@ -351,17 +347,17 @@ BT_GPU___device__ void collisionResolutionBox(	int constrId,
 				lambdaDt=rLambdaDt-pLambdaDt;
 				lambdaDtBox[(MAX_VTX_PER_OBJ)*(2*constrId)+iVtx]=rLambdaDt;
 			}
-			impulse=	contactNormal*lambdaDt*0.5;
+			impulse=	contactNormal*lambdaDt*0.5f;
 #if USE_FRICTION
 			if(pCont[iVtx * 2 + 1].w <= 0)
 			{
-				float3 lat_vel = relVel - contactNormal * BT_GPU_dot(contactNormal, relVel);
+				float4 lat_vel = relVel - contactNormal * BT_GPU_dot(contactNormal, relVel);
 				float lat_vel_len = BT_GPU_dot(lat_vel, lat_vel);
 				if (lat_vel_len > 0)
 				{
 					lat_vel_len = sqrtf(lat_vel_len);
 					lat_vel *= 1.f/lat_vel_len;
-					float3 tmp = lat_vel * BT_GPU_dot(lat_vel , relVel) * FRICTION_BOX_BOX_FACT;
+					float4 tmp = lat_vel * BT_GPU_dot(lat_vel , relVel) * FRICTION_BOX_BOX_FACT;
 					impulse	-= tmp;
 				}
 			}
@@ -378,8 +374,8 @@ BT_GPU___device__ void collisionResolutionBox(	int constrId,
 			}
 		}
 	}
-	vel[aId]=BT_GPU_make_float42(aVel,0.0f);
-	vel[bId]=BT_GPU_make_float42(bVel,0.0f);
+	vel[aId]=aVel;
+	vel[bId]=bVel;
 	angularVel[aId]=aAngVel;
 	angularVel[bId]=bAngVel;
 #endif

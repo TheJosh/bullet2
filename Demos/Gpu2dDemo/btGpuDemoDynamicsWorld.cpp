@@ -27,6 +27,7 @@ subject to the following restrictions:
 #include "BulletDynamics/ConstraintSolver/btTypedConstraint.h"
 #include "BulletDynamics/ConstraintSolver/btPoint2PointConstraint.h"
 
+#include "btGpuDemo2dOCLWrap.h"
 
 
 
@@ -296,45 +297,56 @@ void btGpuDemoDynamicsWorld::copyDataToGPU()
 {
 	BT_PROFILE("copyDataToGPU");
 
-#ifdef BT_USE_CUDA
+//#ifdef BT_USE_CUDA
+#if 0
 
-	btCuda_copyArrayToDevice(m_dIds, m_hIds, sizeof(int2) * m_totalNumConstraints);
-	btCuda_copyArrayToDevice(m_dBatchIds, m_hBatchIds, sizeof(int) * m_totalNumConstraints);
+//	btCuda_copyArrayToDevice(m_dIds, m_hIds, sizeof(int2) * m_totalNumConstraints);
+//	btCuda_copyArrayToDevice(m_dBatchIds, m_hBatchIds, sizeof(int) * m_totalNumConstraints);
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dIds, m_hIds, sizeof(int2) * m_totalNumConstraints);
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dBatchIds, m_hBatchIds, sizeof(int) * m_totalNumConstraints);
 
 	if(m_numNonContactConstraints)
 	{ // non-contact constraints are set up by CPU, so copy data to GPU
-		int nonContConstrOffs = (m_totalNumConstraints - m_numNonContactConstraints) * 2 * m_maxVtxPerObj;
-		int nonContConstrSize = 2 * m_numNonContactConstraints * m_maxVtxPerObj;
-		btCuda_copyArrayToDevice(m_dContact + nonContConstrOffs, m_hContact + nonContConstrOffs, sizeof(float4) * nonContConstrSize);
+		int nonContConstrOffs = (m_totalNumConstraints - m_numNonContactConstraints) * 2 * m_maxVtxPerObj * sizeof(float4);
+		int nonContConstrSize = 2 * m_numNonContactConstraints * m_maxVtxPerObj * sizeof(float4);
+//		btCuda_copyArrayToDevice(m_dContact + nonContConstrOffs, m_hContact + nonContConstrOffs, sizeof(float4) * nonContConstrSize);
+		btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dContact, m_hContact, nonContConstrSize, nonContConstrOffs, nonContConstrOffs);
 	}
 
 	if(m_numSimStep & 1)
 	{
-		m_dcPos = m_dpPos;
-		m_dcVel = m_dpVel;
-		m_dcRot = m_dpRot;
-		m_dcAngVel = m_dpAngVel;
+		btGpuDemo2dOCLWrap::m_dcPos = btGpuDemo2dOCLWrap::m_dpPos;
+		btGpuDemo2dOCLWrap::m_dcVel = btGpuDemo2dOCLWrap::m_dpVel;
+		btGpuDemo2dOCLWrap::m_dcRot = btGpuDemo2dOCLWrap::m_dpRot;
+		btGpuDemo2dOCLWrap::m_dcAngVel = btGpuDemo2dOCLWrap::m_dpAngVel;
 	}
 	else
 	{
-		m_dcPos = m_dPos;
-		m_dcVel = m_dVel;
-		m_dcRot = m_dRot;
-		m_dcAngVel = m_dAngVel;
+		btGpuDemo2dOCLWrap::m_dcPos = btGpuDemo2dOCLWrap::m_dPos;
+		btGpuDemo2dOCLWrap::m_dcVel = btGpuDemo2dOCLWrap::m_dVel;
+		btGpuDemo2dOCLWrap::m_dcRot = btGpuDemo2dOCLWrap::m_dRot;
+		btGpuDemo2dOCLWrap::m_dcAngVel = btGpuDemo2dOCLWrap::m_dAngVel;
 	}
-	btCuda_copyArrayToDevice(m_dcPos, m_hPos, (m_numObj + 1) * sizeof(float4)); 
-	btCuda_copyArrayToDevice(m_dcVel, m_hVel, (m_numObj + 1)  * sizeof(float4));
-	btCuda_copyArrayToDevice(m_dcRot, m_hRot, (m_numObj + 1)  * sizeof(float)); 
-	btCuda_copyArrayToDevice(m_dcAngVel, m_hAngVel, (m_numObj + 1)  * sizeof(float)); 
+//	btCuda_copyArrayToDevice(m_dcPos, m_hPos, (m_numObj + 1) * sizeof(float4)); 
+//	btCuda_copyArrayToDevice(m_dcVel, m_hVel, (m_numObj + 1)  * sizeof(float4));
+//	btCuda_copyArrayToDevice(m_dcRot, m_hRot, (m_numObj + 1)  * sizeof(float)); 
+//	btCuda_copyArrayToDevice(m_dcAngVel, m_hAngVel, (m_numObj + 1)  * sizeof(float)); 
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dcPos, m_hPos, (m_numObj + 1) * sizeof(float4)); 
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dcVel, m_hVel, (m_numObj + 1)  * sizeof(float4));
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dcRot, m_hRot, (m_numObj + 1)  * sizeof(float)); 
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dcAngVel, m_hAngVel, (m_numObj + 1)  * sizeof(float)); 
 	if(m_copyShapeDataToGPU)
 	{
-		btCuda_copyArrayToDevice(m_dShapeBuffer, m_hShapeBuffer, m_firstFreeShapeBufferOffset); 
-		btCuda_copyArrayToDevice(m_dShapeIds, m_hShapeIds, (m_numObj + 1) * sizeof(int2)); 
+//		btCuda_copyArrayToDevice(m_dShapeBuffer, m_hShapeBuffer, m_firstFreeShapeBufferOffset); 
+//		btCuda_copyArrayToDevice(m_dShapeIds, m_hShapeIds, (m_numObj + 1) * sizeof(int2)); 
+		btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dShapeBuffer, m_hShapeBuffer, m_firstFreeShapeBufferOffset); 
+		btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dShapeIds, m_hShapeIds, (m_numObj + 1) * sizeof(int2)); 
 		m_copyShapeDataToGPU = false;
 	}
 	if(m_copyMassDataToGPU)
 	{
-		btCuda_copyArrayToDevice(m_dInvMass, m_hInvMass, (m_numObj + 1) * sizeof(float)); 
+//		btCuda_copyArrayToDevice(m_dInvMass, m_hInvMass, (m_numObj + 1) * sizeof(float)); 
+		btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dInvMass, m_hInvMass, (m_numObj + 1) * sizeof(float)); 
 		m_copyMassDataToGPU = false;
 	}
 #endif //BT_USE_CUDA
@@ -349,12 +361,18 @@ void btGpuDemoDynamicsWorld::setConstraintData(btCudaPartProps& partProps)
 		partProps.m_mass = 1.0f;
 		partProps.m_diameter = m_objRad * 2.0f;
 		partProps.m_restCoeff = 1.0f;
-#ifdef BT_USE_CUDA
-		btCuda_clearAccumulationOfLambdaDt(m_dLambdaDtBox, m_totalNumConstraints, m_maxVtxPerObj * 2);
+//#ifdef BT_USE_CUDA
+#if 0
+
+//		btCuda_clearAccumulationOfLambdaDt(m_dLambdaDtBox, m_totalNumConstraints, m_maxVtxPerObj * 2);
+		btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO2D_KERNEL_CLEAR_ACCUM_IMPULSE, m_totalNumConstraints);
 		if(!m_useBulletNarrowphase)
 		{
-			btCuda_setConstraintData(m_dIds, m_totalNumConstraints - m_numNonContactConstraints, m_numObj + 1, m_dcPos, m_dcRot, m_dShapeBuffer, m_dShapeIds,
-									 partProps,	m_dContact);
+//			btCuda_setConstraintData(m_dIds, m_totalNumConstraints - m_numNonContactConstraints, m_numObj + 1, m_dcPos, m_dcRot, m_dShapeBuffer, m_dShapeIds,
+//									 partProps,	m_dContact);
+			btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 2, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcPos);
+			btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, 3, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcRot);
+			btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO2D_KERNEL_COMPUTE_CONSTRAINTS, m_totalNumConstraints - m_numNonContactConstraints);
 		}
 #endif //BT_USE_CUDA
 
@@ -365,9 +383,12 @@ void btGpuDemoDynamicsWorld::setConstraintData(btCudaPartProps& partProps)
 void btGpuDemoDynamicsWorld::copyDataFromGPU()
 {
 	BT_PROFILE("copy velocity data from device");
-#ifdef BT_USE_CUDA
-	btCuda_copyArrayFromDevice(m_hVel, m_dcVel, (m_numObj + 1) * sizeof(float4));
-	btCuda_copyArrayFromDevice(m_hAngVel, m_dcAngVel, (m_numObj + 1) * sizeof(float)); 
+//#ifdef BT_USE_CUDA
+#if 0
+//	btCuda_copyArrayFromDevice(m_hVel, m_dcVel, (m_numObj + 1) * sizeof(float4));
+//	btCuda_copyArrayFromDevice(m_hAngVel, m_dcAngVel, (m_numObj + 1) * sizeof(float)); 
+	btGpuDemo2dOCLWrap::copyArrayFromDevice(m_hVel, btGpuDemo2dOCLWrap::m_dcVel, (m_numObj + 1) * sizeof(float4));
+	btGpuDemo2dOCLWrap::copyArrayFromDevice(m_hAngVel, btGpuDemo2dOCLWrap::m_dcAngVel, (m_numObj + 1) * sizeof(float)); 
 #endif //BT_USE_CUDA
 } 
 
@@ -390,7 +411,8 @@ void btGpuDemoDynamicsWorld::solveConstraints(btContactSolverInfo& solverInfo)
 
 void btGpuDemoDynamicsWorld::solveConstraints2(btContactSolverInfo& solverInfo)
 {
-#ifdef BT_USE_CUDA
+//#ifdef BT_USE_CUDA
+#if 0
 	BT_PROFILE("solveConstraints");
 	grabData();
 	createBatches2();
@@ -404,6 +426,10 @@ void btGpuDemoDynamicsWorld::solveConstraints2(btContactSolverInfo& solverInfo)
 	boxProps.maxX = m_worldMax[0];
 	boxProps.minY = m_worldMin[1];
 	boxProps.maxY = m_worldMax[1];
+	btVector3 hParams[2];
+	hParams[0] = m_worldMin;
+	hParams[1] = m_worldMax;
+	btGpuDemo2dOCLWrap::copyArrayToDevice(btGpuDemo2dOCLWrap::m_dParams, hParams, sizeof(float) * 4 * 2); 
 	{
 		BT_PROFILE("btCuda_collisionBatchResolutionBox");
 		
@@ -411,21 +437,41 @@ void btGpuDemoDynamicsWorld::solveConstraints2(btContactSolverInfo& solverInfo)
 		btDispatcherInfo& dispatchInfo = getDispatchInfo();
 		btScalar timeStep = dispatchInfo.m_timeStep;
 
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 1, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcPos);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 2, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcVel);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 3, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcRot);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 4, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcAngVel);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, 9, sizeof(float),	(void*)&timeStep);
+
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 3, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcPos);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 4, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcVel);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 5, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcRot);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 6, sizeof(cl_mem),	(void*)&btGpuDemo2dOCLWrap::m_dcAngVel);
+	btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 12, sizeof(float),	(void*)&timeStep);
+
 		for(int i=0;i<nIter;i++)
 		{
-			btCuda_collisionWithWallBox(m_dcPos, m_dcVel, m_dcRot, m_dcAngVel,m_dShapeBuffer, m_dShapeIds, m_dInvMass,
-				partProps, boxProps, m_numObj + 1, timeStep);
-			int* pBatchIds = m_dBatchIds;
+//			btCuda_collisionWithWallBox(m_dcPos, m_dcVel, m_dcRot, m_dcAngVel,m_dShapeBuffer, m_dShapeIds, m_dInvMass,
+//				partProps, boxProps, m_numObj + 1, timeStep);
+			btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO2D_KERNEL_COLLISION_WITH_WALL, m_numObj + 1);
+//			int* pBatchIds = m_dBatchIds;
+			int batchOffs = 0;
 			for(int iBatch=0;iBatch < m_maxBatches;iBatch++)
 			{
 				int numConstraints = m_numInBatches[iBatch]; 
+/*
 				btCuda_collisionBatchResolutionBox( m_dIds, pBatchIds, numConstraints, m_numObj + 1,
 													m_dcPos, m_dcVel,
 													m_dcRot, m_dcAngVel,
 													m_dLambdaDtBox,
 													m_dContact, m_dInvMass,
 													partProps, iBatch, timeStep);
-				pBatchIds += numConstraints;
+*/
+				btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 10, sizeof(int),	(void*)&iBatch);
+				btGpuDemo2dOCLWrap::setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 11, sizeof(int),	(void*)&batchOffs);
+				btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, numConstraints);
+//				pBatchIds += numConstraints;
+				batchOffs += numConstraints;
 			}
 		}
 	}

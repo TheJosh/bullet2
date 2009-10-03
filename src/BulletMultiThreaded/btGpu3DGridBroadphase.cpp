@@ -94,6 +94,7 @@ void btGpu3DGridBroadphase::_initialize(	const btVector3& worldAabbMin,const btV
 	m_params.m_gridSizeY = gridSizeY;
 	m_params.m_gridSizeZ = gridSizeZ;
 	m_params.m_numCells = m_params.m_gridSizeX * m_params.m_gridSizeY * m_params.m_gridSizeZ;
+	m_numCells = m_params.m_numCells;
 	btVector3 w_org = worldAabbMin;
 	m_params.m_worldOriginX = w_org.getX();
 	m_params.m_worldOriginY = w_org.getY();
