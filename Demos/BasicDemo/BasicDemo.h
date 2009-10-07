@@ -41,6 +41,8 @@ class BasicDemo : public GlutDemoApplication
 
 	btDefaultCollisionConfiguration* m_collisionConfiguration;
 
+	class BasicBlendReader* m_blendReader;
+
 	public:
 
 	BasicDemo()
@@ -58,6 +60,8 @@ class BasicDemo : public GlutDemoApplication
 
 	virtual void displayCallback();
 	
+	virtual 	void renderme();
+
 	static DemoApplication* Create()
 	{
 		BasicDemo* demo = new BasicDemo;

@@ -683,7 +683,7 @@ void BasicDemo3D::DrawConstraintInfo()
 	glColor4f(1, 1, 1,1);
 	glDisable(GL_LIGHTING);
 	glRasterPos3f(xOffs-40.f, yOffs, 0);
-	sprintf(buf,"solver %2d on %s", gUseSolver2 ? 2 : 1, gUseCPUSolver ? "CPU" : "CUDA");
+	sprintf(buf,"solver %2d on %s", gUseSolver2 ? 2 : 1, gUseCPUSolver ? "CPU" : "OpenCL");
 	GLDebugDrawString(xOffs-140.f, yOffs,buf);
 	yOffs += 15.f;
 	btCudaDemoDynamicsWorld3D* cddw = (btCudaDemoDynamicsWorld3D*)m_dynamicsWorld;

@@ -357,7 +357,7 @@ void btCudaDemoDynamicsWorld3D::solveConstraints(btContactSolverInfo& solverInfo
 
 
 	{
-		BT_PROFILE("btCuda_collisionBatchResolutionBox");
+		BT_PROFILE("btOpenCL_collisionBatchResolutionBox");
 		
 		int nIter=getSolverInfo().m_numIterations;
 		btDispatcherInfo& dispatchInfo = getDispatchInfo();

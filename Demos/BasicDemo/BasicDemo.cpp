@@ -27,6 +27,20 @@ subject to the following restrictions:
 #define START_POS_X -5
 #define START_POS_Y -5
 #define START_POS_Z -3
+#include <stdio.h>
+#define XMD_H
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#include "jpeglib/jpeglib.h" // use included jpeglib
+
+#ifdef  __cplusplus
+}
+#endif
+
+
+#include <setjmp.h>
 
 #include "BulletCollision/CollisionDispatch/SphereTriangleDetector.h"
 
@@ -37,6 +51,15 @@ subject to the following restrictions:
 #include "btBulletDynamicsCommon.h"
 #include <stdio.h> //printf debugging
 #include "BulletCollision/CollisionShapes/btTriangleShape.h"
+
+///includes for reading .blend files
+#include "BulletBlendReader.h"
+#define FORCE_ZAXIS_UP 1
+#include "LinearMath/btHashMap.h"
+#include "readblend.h"
+#include "blendtype.h"
+
+
 
 void BasicDemo::clientMoveAndDisplay()
 {
@@ -79,6 +102,10 @@ static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisio
 	return true;
 }
 
+
+void BasicDemo::renderme()
+{
+}
 
 void BasicDemo::displayCallback(void) {
 
@@ -123,11 +150,298 @@ struct  btVoxelizationCallback : public btTriangleCallback
 		}
 	};
 
+// struct for handling jpeg errors
+struct my_jpeg_error_mgr
+{
+    // public jpeg error fields
+    struct jpeg_error_mgr pub;
+
+    // for longjmp, to return to caller on a fatal error
+    jmp_buf setjmp_buffer;
+
+};
 
 
+void error_exit (j_common_ptr cinfo)
+{
+	// unfortunately we need to use a goto rather than throwing an exception
+	// as gcc crashes under linux crashes when using throw from within
+	// extern c code
+
+	// Always display the message
+	(*cinfo->err->output_message) (cinfo);
+
+	// cinfo->err really points to a irr_error_mgr struct
+//	irr_jpeg_error_mgr *myerr = (irr_jpeg_error_mgr*) cinfo->err;
+//	longjmp(myerr->setjmp_buffer, 1);
+	exit(0);
+}
+
+void output_message(j_common_ptr cinfo)
+{
+	// display the error message.
+//	unsigned char temp1[JMSG_LENGTH_MAX];
+//	(*cinfo->err->format_message)(cinfo, temp1);
+	printf("JPEG FATAL ERROR");//,temp1, ELL_ERROR);
+}
+
+void init_source (j_decompress_ptr cinfo)
+{
+	// DO NOTHING
+}
+
+void skip_input_data (j_decompress_ptr cinfo, long count)
+{
+	jpeg_source_mgr * src = cinfo->src;
+	if(count > 0)
+	{
+		src->bytes_in_buffer -= count;
+		src->next_input_byte += count;
+	}
+}
+
+
+
+void term_source (j_decompress_ptr cinfo)
+{
+	// DO NOTHING
+}
+
+boolean fill_input_buffer (j_decompress_ptr cinfo)
+{
+	// DO NOTHING
+	return 1;
+}
+struct BasicTexture
+{
+	unsigned char*	m_jpgData;
+	int		m_jpgSize;
+
+	int				m_width;
+	int				m_height;
+
+	//contains the uncompressed R8G8B8 pixel data
+	unsigned char*	m_output;
+	
+
+	BasicTexture(unsigned char* jpgData,int jpgSize)
+		: m_jpgData(jpgData),
+		m_jpgSize(jpgSize),
+		m_output(0)
+	{
+
+	}
+
+	virtual ~BasicTexture()
+	{
+		delete[] m_output;
+	}
+
+	//returns true if szFilename has the szExt extension
+	bool checkExt(char const * szFilename, char const * szExt)
+	{
+		if (strlen(szFilename) > strlen(szExt))
+			 {
+				  char const * szExtension = &szFilename[strlen(szFilename) - strlen(szExt)];
+				  if (!stricmp(szExtension, szExt))
+					  return true;
+			 }
+		return false;
+	}
+
+	void	loadTextureMemory(const char* fileName)
+	{
+		if (checkExt(fileName,".JPG"))
+		{
+			loadJpgMemory();
+		}
+	}
+
+	void	loadJpgMemory()
+	{
+		unsigned char **rowPtr=0;
+		
+		
+
+		// allocate and initialize JPEG decompression object
+		struct jpeg_decompress_struct cinfo;
+		struct my_jpeg_error_mgr jerr;
+
+		//We have to set up the error handler first, in case the initialization
+		//step fails.  (Unlikely, but it could happen if you are out of memory.)
+		//This routine fills in the contents of struct jerr, and returns jerr's
+		//address which we place into the link field in cinfo.
+
+		cinfo.err = jpeg_std_error(&jerr.pub);
+		cinfo.err->error_exit = error_exit;
+		cinfo.err->output_message = output_message;
+
+		// compatibility fudge:
+		// we need to use setjmp/longjmp for error handling as gcc-linux
+		// crashes when throwing within external c code
+		if (setjmp(jerr.setjmp_buffer))
+		{
+			// If we get here, the JPEG code has signaled an error.
+			// We need to clean up the JPEG object and return.
+
+			jpeg_destroy_decompress(&cinfo);
+
+			
+			// if the row pointer was created, we delete it.
+			if (rowPtr)
+				delete [] rowPtr;
+
+			// return null pointer
+			return ;
+		}
+
+		// Now we can initialize the JPEG decompression object.
+		jpeg_create_decompress(&cinfo);
+
+		// specify data source
+		jpeg_source_mgr jsrc;
+
+		// Set up data pointer
+		jsrc.bytes_in_buffer = m_jpgSize;
+		jsrc.next_input_byte = (JOCTET*)m_jpgData;
+		cinfo.src = &jsrc;
+
+		jsrc.init_source = init_source;
+		jsrc.fill_input_buffer = fill_input_buffer;
+		jsrc.skip_input_data = skip_input_data;
+		jsrc.resync_to_restart = jpeg_resync_to_restart;
+		jsrc.term_source = term_source;
+
+		// Decodes JPG input from whatever source
+		// Does everything AFTER jpeg_create_decompress
+		// and BEFORE jpeg_destroy_decompress
+		// Caller is responsible for arranging these + setting up cinfo
+
+		// read file parameters with jpeg_read_header()
+		jpeg_read_header(&cinfo, TRUE);
+
+		cinfo.out_color_space=JCS_RGB;
+		cinfo.out_color_components=3;
+		cinfo.do_fancy_upsampling=FALSE;
+
+		// Start decompressor
+		jpeg_start_decompress(&cinfo);
+
+		// Get image data
+		unsigned short rowspan = cinfo.image_width * cinfo.out_color_components;
+		m_width = cinfo.image_width;
+		m_height = cinfo.image_height;
+
+		// Allocate memory for buffer
+		m_output = new unsigned char[rowspan * m_height];
+
+		// Here we use the library's state variable cinfo.output_scanline as the
+		// loop counter, so that we don't have to keep track ourselves.
+		// Create array of row pointers for lib
+		rowPtr = new unsigned char* [m_height];
+
+		for( unsigned int i = 0; i < m_height; i++ )
+			rowPtr[i] = &m_output[ i * rowspan ];
+
+		unsigned int rowsRead = 0;
+
+		while( cinfo.output_scanline < cinfo.output_height )
+			rowsRead += jpeg_read_scanlines( &cinfo, &rowPtr[rowsRead], cinfo.output_height - rowsRead );
+
+		delete [] rowPtr;
+		// Finish decompression
+
+		jpeg_finish_decompress(&cinfo);
+
+		// Release JPEG decompression object
+		// This is an important step since it will release a good deal of memory.
+		jpeg_destroy_decompress(&cinfo);
+
+//		// convert image
+//		IImage* image = new CImage(ECF_R8G8B8,
+//			core::dimension2d<s32>(width, height), output);
+//
+//
+//		return image;
+
+		
+	}
+
+};
+
+class BasicBlendReader : public BulletBlendReader
+{
+	BasicDemo*	m_basicDemo;
+
+	btHashMap<btHashString,BasicTexture*> m_textures;
+
+public:
+
+	BasicBlendReader(btDynamicsWorld* dynamicsWorld, BasicDemo* basicDemo)
+		:BulletBlendReader(dynamicsWorld),
+		m_basicDemo(basicDemo)
+	{
+	}
+
+	virtual ~BasicBlendReader()
+	{
+
+	}
+
+
+	void* findTexture(const char* fileName)
+	{
+		
+		BasicTexture** result = m_textures.find(fileName);
+		if (result)
+			return *result;
+
+		return 0;
+	}
+
+	//after each object is converter, including collision object, create a graphics object (and bind them)
+	virtual void createGraphicsObject(_bObj* tmpObject, class btCollisionObject* bulletObject)
+	{
+		if (tmpObject->data.mesh->face[0].m_image)
+		{
+			const char* fileName = tmpObject->data.mesh->face[0].m_image->m_imagePathName;
+			
+			void* texture0 = findTexture(fileName);
+
+			if (!texture0)
+			{
+				void* jpgData = tmpObject->data.mesh->face[0].m_image->m_packedImagePtr;
+				int jpgSize = tmpObject->data.mesh->face[0].m_image->m_sizePackedImage;
+				if (jpgSize)
+				{
+					BasicTexture* basicTexture = new BasicTexture((unsigned char*)jpgData,jpgSize);
+					printf("texture filename=%s\n",fileName);
+					basicTexture->loadTextureMemory(fileName);
+
+					m_textures.insert(fileName,basicTexture);
+					
+
+				}
+			}
+		}
+	}
+
+	virtual	void	addCamera(_bObj* tmpObject)
+	{
+	}
+	virtual	void	addLight(_bObj* tmpObject)
+	{
+	}
+		
+};
 
 void	BasicDemo::initPhysics()
 {
+
+#ifdef FORCE_ZAXIS_UP
+	m_cameraUp = btVector3(0,0,1);
+	m_forwardAxis = 1;
+#endif
 	
 	gContactAddedCallback = CustomMaterialCombinerCallback;
 
@@ -152,13 +466,32 @@ void	BasicDemo::initPhysics()
 
 	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
 
+#ifdef FORCE_ZAXIS_UP
+	m_dynamicsWorld->setGravity(btVector3(0,0,-10));
+#else
 	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
+#endif
 	m_dynamicsWorld->getSolverInfo().m_solverMode |= SOLVER_DISABLE_VELOCITY_DEPENDENT_FRICTION_DIRECTION+SOLVER_USE_2_FRICTION_DIRECTIONS;
 	m_dynamicsWorld->getSolverInfo().m_solverMode |= SOLVER_ENABLE_FRICTION_DIRECTION_CACHING;
 
+	m_blendReader = new BasicBlendReader(m_dynamicsWorld,this);
+
+	//const char* fileName = "../../PhysicsAnimationBakingDemo.blend";
+	const char* fileName = "../../clubsilo_packed.blend";
+	
+
+	m_blendReader->openFile(fileName);
+
+	if (m_blendReader)
+	{
+		m_blendReader->convertAllObjects();
+	} else
+	{
+		printf("file not found\n");
+	}
 
 	///create a few basic rigid bodies
-#if 1
+#if 0
 	btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(50.),btScalar(50.)));
 //	btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),50);
 	
@@ -167,6 +500,7 @@ void	BasicDemo::initPhysics()
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0,-60,0));
+
 
 	//We can also use DemoApplication::localCreateRigidBody, but for clarity it is provided here:
 	{
@@ -192,7 +526,7 @@ void	BasicDemo::initPhysics()
 	}
 #endif
 
-
+#if 0
 	{
 		//create a few dynamic rigidbodies
 		// Re-using the same collision is better for memory usage and performance
@@ -263,11 +597,28 @@ void	BasicDemo::initPhysics()
 	btCollisionObject* obj = new btCollisionObject();
 	btTransform tr;
 	tr.setIdentity();
-	tr.setOrigin(btVector3(0,2,-15));
+	tr.setOrigin(btVector3(0,2,-20));
 	obj ->setWorldTransform(tr);
 	obj->setCollisionShape(bunny);
 	m_dynamicsWorld->addCollisionObject(obj);
+#endif
 
+#if 0
+	btConvexTriangleMeshShape* convexBun = new btConvexTriangleMeshShape(meshInterface);
+	obj = new btCollisionObject();
+	tr.setOrigin(btVector3(0,2,-14));
+	obj ->setWorldTransform(tr);
+	obj->setCollisionShape(convexBun);
+	m_dynamicsWorld->addCollisionObject(obj);
+#endif
+
+#if 0
+	btConvexTriangleMeshShape* convexBun = new btConvexTriangleMeshShape(meshInterface);
+	obj = new btCollisionObject();
+	tr.setOrigin(btVector3(0,2,-14));
+	obj ->setWorldTransform(tr);
+	obj->setCollisionShape(convexBun);
+	m_dynamicsWorld->addCollisionObject(obj);
 
 
 	
@@ -334,6 +685,8 @@ void	BasicDemo::initPhysics()
 
 	#endif
 }
+#endif
+
 
 	clientResetScene();
 }
@@ -341,6 +694,7 @@ void	BasicDemo::initPhysics()
 
 void	BasicDemo::exitPhysics()
 {
+	delete m_blendReader;
 
 	//cleanup in the reverse order of creation/initialization
 
