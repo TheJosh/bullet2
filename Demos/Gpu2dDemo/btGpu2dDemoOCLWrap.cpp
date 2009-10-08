@@ -69,7 +69,7 @@ int	btGpuDemo2dOCLWrap::m_maxShapeBufferSize;
 cl_mem	btGpuDemo2dOCLWrap::m_dBodiesHash;
 cl_mem	btGpuDemo2dOCLWrap::m_dCellStart;
 cl_mem	btGpuDemo2dOCLWrap::m_dPairBuff; 
-cl_mem	btGpuDemo2dOCLWrap::m_dPairBuffStartCurr;
+cl_mem	btGpuDemo2dOCLWrap::m_dPairBuffStartCurr = NULL; // needed for resetPool()
 cl_mem	btGpuDemo2dOCLWrap::m_dAABB;
 cl_mem	btGpuDemo2dOCLWrap::m_dPairScan;
 cl_mem	btGpuDemo2dOCLWrap::m_dPairOut;
@@ -354,51 +354,51 @@ void btGpuDemo2dOCLWrap::initKernels()
 
 	if(m_broadphaseInited)
 	{
-		initKernel(GPUDEMO3D_KERNEL_CALC_HASH_AABB,	"kCalcHashAABB");
-		setKernelArg(GPUDEMO3D_KERNEL_CALC_HASH_AABB, 1, sizeof(cl_mem),(void*)&m_dAABB);
-		setKernelArg(GPUDEMO3D_KERNEL_CALC_HASH_AABB, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO3D_KERNEL_CALC_HASH_AABB, 3, sizeof(cl_mem),(void*)&m_dBpParams);
+		initKernel(GPUDEMO2D_KERNEL_CALC_HASH_AABB,	"kCalcHashAABB");
+		setKernelArg(GPUDEMO2D_KERNEL_CALC_HASH_AABB, 1, sizeof(cl_mem),(void*)&m_dAABB);
+		setKernelArg(GPUDEMO2D_KERNEL_CALC_HASH_AABB, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
+		setKernelArg(GPUDEMO2D_KERNEL_CALC_HASH_AABB, 3, sizeof(cl_mem),(void*)&m_dBpParams);
 
-		initKernel(GPUDEMO3D_KERNEL_CLEAR_CELL_START, "kClearCellStart");
-		setKernelArg(GPUDEMO3D_KERNEL_CLEAR_CELL_START, 1, sizeof(cl_mem),(void*)&m_dCellStart);
+		initKernel(GPUDEMO2D_KERNEL_CLEAR_CELL_START, "kClearCellStart");
+		setKernelArg(GPUDEMO2D_KERNEL_CLEAR_CELL_START, 1, sizeof(cl_mem),(void*)&m_dCellStart);
 
-		initKernel(GPUDEMO3D_KERNEL_FIND_CELL_START, "kFindCellStart");
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_CELL_START, 1, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_CELL_START, 2, sizeof(cl_mem),(void*)&m_dCellStart);
+		initKernel(GPUDEMO2D_KERNEL_FIND_CELL_START, "kFindCellStart");
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_CELL_START, 1, sizeof(cl_mem),(void*)&m_dBodiesHash);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_CELL_START, 2, sizeof(cl_mem),(void*)&m_dCellStart);
 
-		initKernel(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, "kFindOverlappingPairs");
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, 1, sizeof(cl_mem),(void*)&m_dAABB);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, 3, sizeof(cl_mem),(void*)&m_dCellStart);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, 4, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS, 6, sizeof(cl_mem),(void*)&m_dBpParams);
+		initKernel(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, "kFindOverlappingPairs");
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 1, sizeof(cl_mem),(void*)&m_dAABB);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 3, sizeof(cl_mem),(void*)&m_dCellStart);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 4, sizeof(cl_mem),(void*)&m_dPairBuff);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 6, sizeof(cl_mem),(void*)&m_dBpParams);
 
-		initKernel(GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE, "kFindPairsLarge");
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE, 1, sizeof(cl_mem),(void*)&m_dAABB);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE, 3, sizeof(cl_mem),(void*)&m_dCellStart);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE, 4, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
+		initKernel(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, "kFindPairsLarge");
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 1, sizeof(cl_mem),(void*)&m_dAABB);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 3, sizeof(cl_mem),(void*)&m_dCellStart);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 4, sizeof(cl_mem),(void*)&m_dPairBuff);
+		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
 
-		initKernel(GPUDEMO3D_KERNEL_COMPUTE_CACHE_CHANGES, "kComputePairCacheChanges");
-		setKernelArg(GPUDEMO3D_KERNEL_COMPUTE_CACHE_CHANGES, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO3D_KERNEL_COMPUTE_CACHE_CHANGES, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-		setKernelArg(GPUDEMO3D_KERNEL_COMPUTE_CACHE_CHANGES, 3, sizeof(cl_mem),(void*)&m_dPairScan);
-		setKernelArg(GPUDEMO3D_KERNEL_COMPUTE_CACHE_CHANGES, 4, sizeof(cl_mem),(void*)&m_dAABB);
+		initKernel(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, "kComputePairCacheChanges");
+		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
+		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
+		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 3, sizeof(cl_mem),(void*)&m_dPairScan);
+		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 4, sizeof(cl_mem),(void*)&m_dAABB);
 
-		initKernel(GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF, "kSqueezeOverlappingPairBuff");
-		setKernelArg(GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-		setKernelArg(GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF, 3, sizeof(cl_mem),(void*)&m_dPairScan);
-		setKernelArg(GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF, 4, sizeof(cl_mem),(void*)&m_dPairOut);
-		setKernelArg(GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF, 5, sizeof(cl_mem),(void*)&m_dAABB);
+		initKernel(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, "kSqueezeOverlappingPairBuff");
+		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
+		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
+		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 3, sizeof(cl_mem),(void*)&m_dPairScan);
+		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 4, sizeof(cl_mem),(void*)&m_dPairOut);
+		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 5, sizeof(cl_mem),(void*)&m_dAABB);
 
 
-		initKernel(GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL, "kBitonicSortCellIdLocal");
-		initKernel(GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1, "kBitonicSortCellIdLocal1");
-		initKernel(GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL, "kBitonicSortCellIdMergeGlobal");
-		initKernel(GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "kBitonicSortCellIdMergeLocal");
+		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL, "kBitonicSortCellIdLocal");
+		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1, "kBitonicSortCellIdLocal1");
+		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL, "kBitonicSortCellIdMergeGlobal");
+		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "kBitonicSortCellIdMergeLocal");
 	}
 }
 
@@ -458,7 +458,7 @@ void btGpuDemo2dOCLWrap::setBroadphaseBuffers(int maxHandles, int maxLargeHandle
 
 void btGpuDemo2dOCLWrap::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir)
 {
-	unsigned int localSizeLimit = m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_workgroupSize * 2;
+	unsigned int localSizeLimit = m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_workgroupSize * 2;
     if(arrayLength < 2)
         return;
     //Only power-of-two array lengths are supported so far
@@ -469,25 +469,25 @@ void btGpuDemo2dOCLWrap::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned
     {
         btAssert( (batch * arrayLength) % localSizeLimit == 0);
         //Launch bitonicSortLocal
-		ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 0,   sizeof(cl_mem), (void *)&pKey);
-        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1,  sizeof(cl_uint), (void *)&arrayLength);
-        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 2,  sizeof(cl_uint), (void *)&dir);
+		ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 0,   sizeof(cl_mem), (void *)&pKey);
+        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1,  sizeof(cl_uint), (void *)&arrayLength);
+        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 2,  sizeof(cl_uint), (void *)&dir);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
         localWorkSize  = localSizeLimit / 2;
         globalWorkSize = batch * arrayLength / 2;
-        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
     }
     else
     {
         //Launch bitonicSortLocal1
-        ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
+        ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
         localWorkSize  = localSizeLimit / 2;
         globalWorkSize = batch * arrayLength / 2;
-        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
         oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
         for(unsigned int size = 2 * localSizeLimit; size <= arrayLength; size <<= 1)
@@ -497,33 +497,33 @@ void btGpuDemo2dOCLWrap::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned
                 if(stride >= localSizeLimit)
                 {
                     //Launch bitonicMergeGlobal
-                    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 2, sizeof(cl_uint), (void *)&size);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 3, sizeof(cl_uint), (void *)&stride);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
+                    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 2, sizeof(cl_uint), (void *)&size);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 3, sizeof(cl_uint), (void *)&stride);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
                     localWorkSize  = localSizeLimit / 4;
                     globalWorkSize = batch * arrayLength / 2;
 
-                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
                 }
                 else
                 {
                     //Launch bitonicMergeLocal
-					ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 2, sizeof(cl_uint), (void *)&stride);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 3, sizeof(cl_uint), (void *)&size);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
+					ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 2, sizeof(cl_uint), (void *)&stride);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 3, sizeof(cl_uint), (void *)&size);
+                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
 
                     localWorkSize  = localSizeLimit / 2;
                     globalWorkSize = batch * arrayLength / 2;
 
-                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
+                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
 					oclCHECKERROR(ciErrNum, CL_SUCCESS);
                     break;
                 }

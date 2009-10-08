@@ -92,12 +92,14 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/btGpu3DGridBroadphase.h"
 #endif
 
+#include "btGpu2dGridBroadphaseOCL.h"
+
 btScalar gTimeStep = btScalar(1./60.);
 
 bool gbDrawBatches = false;
 int gSelectedBatch = CUDA_DEMO_DYNAMICS_WORLD_MAX_BATCHES;
 //#ifdef BT_USE_CUDA
-#if 0
+#if 1
 bool gUseCPUSolver = false;
 #else
 bool gUseCPUSolver = true;
@@ -234,9 +236,13 @@ void BasicDemo::displayCallback(void) {
 #define POS_OFFS_Y (ARRAY_SIZE_Y * SCALING + 10)
 #define POS_OFFS_Z (ARRAY_SIZE_Z * SCALING)
 
+
+#define CELL_SIZE (5.f)
 #if OECAKE_LOADER
-	btVector3 gWorldMin(-200,   0, 0);
-	btVector3 gWorldMax( 200, 200, 0);
+//	btVector3 gWorldMin(-200,   0, 0);
+//	btVector3 gWorldMax( 200, 200, 0);
+	btVector3 gWorldMin(-200,   0, -CELL_SIZE * 0.5f);
+	btVector3 gWorldMax( 200, 200,  CELL_SIZE * 0.5f);
 #else
 	btVector3 gWorldMin(-POS_OFFS_X, -POS_OFFS_Y, -POS_OFFS_Z);
 	btVector3 gWorldMax( POS_OFFS_X,  POS_OFFS_Y,  POS_OFFS_Z);
@@ -294,14 +300,19 @@ void	BasicDemo::initPhysics()
 #endif
 
 
-	btVector3 numOfCells = (gWorldMax - gWorldMin) / (2. * SCALING);
+//	btVector3 numOfCells = (gWorldMax - gWorldMin) / (2. * SCALING);
+	btVector3 numOfCells = (gWorldMax - gWorldMin) / CELL_SIZE;
 	int numOfCellsX = (int)numOfCells[0];
 	int numOfCellsY = (int)numOfCells[1];
 	int numOfCellsZ = (int)numOfCells[2];
+	if(!numOfCellsX) numOfCellsX = 1;
+	if(!numOfCellsY) numOfCellsY = 1;
+	if(!numOfCellsZ) numOfCellsZ = 1;
 
 //	m_broadphase = new btAxisSweep3(gWorldMin, gWorldMax, MAX_PROXIES,gPairCache);
-	m_broadphase = new btDbvtBroadphase(gPairCache);
-//	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,24,24);
+//	m_broadphase = new btDbvtBroadphase(gPairCache);
+//	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24, 1.0f/1.5f);
+	m_broadphase = new btGpu2dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24,1./1.5);
 //	m_broadphase = new btCudaBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,24,24);
 
 

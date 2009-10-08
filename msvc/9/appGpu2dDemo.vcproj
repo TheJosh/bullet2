@@ -640,6 +640,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Demos\Gpu2dDemo\btGpu2dGridBroadphaseOCL.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemo2dCpuFunc.cpp"
 				>
 			</File>
@@ -681,6 +685,10 @@
 			>
 			<File
 				RelativePath="..\..\Demos\Gpu2dDemo\BasicDemo.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Demos\Gpu2dDemo\btGpu2dGridBroadphaseOCL.h"
 				>
 			</File>
 			<File

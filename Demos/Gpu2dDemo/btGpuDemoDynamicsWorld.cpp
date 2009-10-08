@@ -298,7 +298,7 @@ void btGpuDemoDynamicsWorld::copyDataToGPU()
 	BT_PROFILE("copyDataToGPU");
 
 //#ifdef BT_USE_CUDA
-#if 0
+#if 1
 
 //	btCuda_copyArrayToDevice(m_dIds, m_hIds, sizeof(int2) * m_totalNumConstraints);
 //	btCuda_copyArrayToDevice(m_dBatchIds, m_hBatchIds, sizeof(int) * m_totalNumConstraints);
@@ -362,7 +362,7 @@ void btGpuDemoDynamicsWorld::setConstraintData(btCudaPartProps& partProps)
 		partProps.m_diameter = m_objRad * 2.0f;
 		partProps.m_restCoeff = 1.0f;
 //#ifdef BT_USE_CUDA
-#if 0
+#if 1
 
 //		btCuda_clearAccumulationOfLambdaDt(m_dLambdaDtBox, m_totalNumConstraints, m_maxVtxPerObj * 2);
 		btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(GPUDEMO2D_KERNEL_CLEAR_ACCUM_IMPULSE, m_totalNumConstraints);
@@ -384,7 +384,7 @@ void btGpuDemoDynamicsWorld::copyDataFromGPU()
 {
 	BT_PROFILE("copy velocity data from device");
 //#ifdef BT_USE_CUDA
-#if 0
+#if 1
 //	btCuda_copyArrayFromDevice(m_hVel, m_dcVel, (m_numObj + 1) * sizeof(float4));
 //	btCuda_copyArrayFromDevice(m_hAngVel, m_dcAngVel, (m_numObj + 1) * sizeof(float)); 
 	btGpuDemo2dOCLWrap::copyArrayFromDevice(m_hVel, btGpuDemo2dOCLWrap::m_dcVel, (m_numObj + 1) * sizeof(float4));
@@ -412,7 +412,7 @@ void btGpuDemoDynamicsWorld::solveConstraints(btContactSolverInfo& solverInfo)
 void btGpuDemoDynamicsWorld::solveConstraints2(btContactSolverInfo& solverInfo)
 {
 //#ifdef BT_USE_CUDA
-#if 0
+#if 1
 	BT_PROFILE("solveConstraints");
 	grabData();
 	createBatches2();

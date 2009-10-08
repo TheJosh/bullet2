@@ -120,9 +120,9 @@ __kernel void kComputeConstraints(int numConstraints,
 		float sinA = native_sin(aRot);
 		float cosB = native_cos(bRot);
 		float sinB = native_sin(bRot);
-		float4* shapeA = (float4*)(shapes + shapeIds[aId].x);
+		__global float4* shapeA = (__global float4*)(shapes + shapeIds[aId].x);
 		int numSphA = shapeIds[aId].y;
-		float4* shapeB = (float4*)(shapes + shapeIds[bId].x);
+		__global float4* shapeB = (__global float4*)(shapes + shapeIds[bId].x);
 		int numSphB = shapeIds[bId].y;
 		int i, j;
 		float4 ai = (float4)(cosA, sinA, 0.f, 0.f);
@@ -214,7 +214,7 @@ __kernel void kCollisionWithWallBox( int nParticles,
 		}
 		aPos=pos[idx];
 		aRot=rotation[idx];
-		float4* shape = (float4*)(shapes + shapeIds[idx].x);
+		__global float4* shape = (__global float4*)(shapes + shapeIds[idx].x);
 		int numSph = shapeIds[idx].y;
 		float cosA = native_cos(aRot);
 		float sinA = native_sin(aRot);
