@@ -47,6 +47,7 @@ class BasicDemo : public GlutDemoApplication
 
 	BasicDemo()
 	{
+		m_blendReader=0;
 	}
 	virtual ~BasicDemo()
 	{

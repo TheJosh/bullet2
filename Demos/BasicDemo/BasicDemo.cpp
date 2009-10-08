@@ -22,6 +22,19 @@ subject to the following restrictions:
 //maximum number of objects (and allow user to shoot additional boxes)
 #define MAX_PROXIES (ARRAY_SIZE_X*ARRAY_SIZE_Y*ARRAY_SIZE_Z + 1024)
 
+#define IRR_X 0
+#define IRR_Y 1
+#define IRR_Z 2
+#define IRR_X_M 1.f
+#define IRR_Y_M 1.f
+#define IRR_Z_M 1.f
+#define IRR_TRI_0_X 0
+#define IRR_TRI_0_Y 1
+#define IRR_TRI_0_Z 2
+#define IRR_TRI_1_X 0
+#define IRR_TRI_1_Y 2
+#define IRR_TRI_1_Z 3
+
 ///scaling of the objects (0.1 = 20 centimeter boxes )
 #define SCALING 1.
 #define START_POS_X -5
@@ -41,7 +54,7 @@ extern "C" {
 
 
 #include <setjmp.h>
-
+#include "GLDebugFont.h"
 #include "BulletCollision/CollisionDispatch/SphereTriangleDetector.h"
 
 #include "BunnyMesh.h"
@@ -63,6 +76,7 @@ extern "C" {
 
 void BasicDemo::clientMoveAndDisplay()
 {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
 
 	//simple dynamics world doesn't handle fixed-time-stepping
@@ -81,9 +95,12 @@ void BasicDemo::clientMoveAndDisplay()
 		
 	renderme(); 
 
+
 	glFlush();
 
+
 	glutSwapBuffers();
+	
 
 }
 
@@ -103,9 +120,7 @@ static bool CustomMaterialCombinerCallback(btManifoldPoint& cp,	const btCollisio
 }
 
 
-void BasicDemo::renderme()
-{
-}
+
 
 void BasicDemo::displayCallback(void) {
 
@@ -219,6 +234,8 @@ struct BasicTexture
 
 	int				m_width;
 	int				m_height;
+	GLuint			m_textureName;
+	bool			m_initialized;
 
 	//contains the uncompressed R8G8B8 pixel data
 	unsigned char*	m_output;
@@ -227,7 +244,9 @@ struct BasicTexture
 	BasicTexture(unsigned char* jpgData,int jpgSize)
 		: m_jpgData(jpgData),
 		m_jpgSize(jpgSize),
-		m_output(0)
+		m_output(0),
+		m_textureName(-1),
+		m_initialized(false)
 	{
 
 	}
@@ -254,7 +273,30 @@ struct BasicTexture
 		if (checkExt(fileName,".JPG"))
 		{
 			loadJpgMemory();
+
 		}
+	}
+
+	void	initOpenGLTexture()
+	{
+		if (m_initialized)
+		{
+			glBindTexture(GL_TEXTURE_2D,m_textureName);
+		} else
+		{
+			m_initialized = true;
+			
+
+			glGenTextures(1, &m_textureName);
+			glBindTexture(GL_TEXTURE_2D,m_textureName);
+			glTexEnvf(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE,GL_MODULATE);
+			glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+			glTexParameterf(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+			gluBuild2DMipmaps(GL_TEXTURE_2D,3,m_width,m_height,GL_RGB,GL_UNSIGNED_BYTE,m_output);
+		}
+			
 	}
 
 	void	loadJpgMemory()
@@ -369,13 +411,98 @@ struct BasicTexture
 
 };
 
-class BasicBlendReader : public BulletBlendReader
+struct btTexVert
+{
+	
+	btVector3		m_localxyz;	// 3*4 = 12
+	float			m_uv1[2];		// 2*4 =  8
+	float			m_uv2[2];		// 2*4 =  8
+	unsigned int	m_rgba;			//        4
+	float			m_tangent[4];   // 4*4 =  16
+	float			m_normal[3];	// 3*4 =  12
+	short			m_flag;			//        2
+	short			m_softBodyIndex;		//2
+	unsigned int	m_unit;			//		  4
+	unsigned int	m_origindex;		//    4
+									//---------
+};
+
+struct btRenderMesh
+{
+	BasicTexture* m_texture;
+	btAlignedObjectArray<btTexVert> m_vertices;
+	btAlignedObjectArray<int>	m_indices;
+	btCollisionObject* m_bulletObject;
+
+	void	render()
+	{
+	
+
+		
+		btScalar childMat[16];
+		m_bulletObject->getWorldTransform().getOpenGLMatrix(childMat);
+
+		if (m_texture)
+		{
+			m_texture->initOpenGLTexture();
+
+			glBindTexture(GL_TEXTURE_2D,m_texture->m_textureName);
+
+			glEnable(GL_TEXTURE_2D);
+			glDisable(GL_TEXTURE_GEN_S);
+			glDisable(GL_TEXTURE_GEN_T);
+			glDisable(GL_TEXTURE_GEN_R);
+			
+			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+			glDepthFunc (GL_LEQUAL);
+			glDisable(GL_BLEND);
+			glEnable (GL_DEPTH_TEST);
+
+			glMatrixMode(GL_TEXTURE);
+			
+			
+			glMatrixMode(GL_MODELVIEW);
+
+
+		} else
+		{
+			glDisable(GL_TEXTURE_2D);
+		}
+
+		glDisable(GL_LIGHTING);
+		glPushMatrix();
+		
+		
+		btglMultMatrix(childMat);
+		
+		//glColorMask(GL_FALSE,GL_FALSE,GL_FALSE,GL_FALSE);
+		
+		glBegin(GL_TRIANGLES);
+		
+		glColor4f(1, 1, 1,1);
+		
+		for (int i=0;i<m_indices.size();i++)
+		{
+			glNormal3f(1.f,0.f,0.f);
+			glTexCoord2f(m_vertices[m_indices[i]].m_uv1[0],m_vertices[m_indices[i]].m_uv1[1]);
+			glVertex3f(m_vertices[m_indices[i]].m_localxyz.getX(),m_vertices[m_indices[i]].m_localxyz.getY(),m_vertices[m_indices[i]].m_localxyz.getZ());
+			
+		}
+		glEnd();
+
+		glPopMatrix();
+		
+	}
+};
+
+struct BasicBlendReader : public BulletBlendReader
 {
 	BasicDemo*	m_basicDemo;
 
 	btHashMap<btHashString,BasicTexture*> m_textures;
 
-public:
+	btAlignedObjectArray<btRenderMesh*> m_renderMeshes;
+
 
 	BasicBlendReader(btDynamicsWorld* dynamicsWorld, BasicDemo* basicDemo)
 		:BulletBlendReader(dynamicsWorld),
@@ -389,7 +516,7 @@ public:
 	}
 
 
-	void* findTexture(const char* fileName)
+	BasicTexture* findTexture(const char* fileName)
 	{
 		
 		BasicTexture** result = m_textures.find(fileName);
@@ -399,14 +526,119 @@ public:
 		return 0;
 	}
 
+
+
 	//after each object is converter, including collision object, create a graphics object (and bind them)
 	virtual void createGraphicsObject(_bObj* tmpObject, class btCollisionObject* bulletObject)
 	{
+		btRigidBody* body = btRigidBody::upcast(bulletObject);
+
+		btRenderMesh* mesh = 0;
+		if (tmpObject->data.mesh && tmpObject->data.mesh->vert_count && tmpObject->data.mesh->face_count)
+		{
+			if (tmpObject->data.mesh->vert_count> 16300)
+			{
+				printf("tmpObject->data.mesh->vert_count = %d\n",tmpObject->data.mesh->vert_count);
+				
+			}
+
+
+			mesh = new btRenderMesh();
+			mesh->m_bulletObject = bulletObject;
+
+			btAlignedObjectArray<btVector3> originalVertices;
+			originalVertices.resize(tmpObject->data.mesh->vert_count);
+
+			for (int v=0;v<tmpObject->data.mesh->vert_count;v++)
+			{
+				float* vt3 = tmpObject->data.mesh->vert[v].xyz;
+				originalVertices[v].setValue( IRR_X_M*vt3[IRR_X],IRR_Y_M*vt3[IRR_Y],IRR_Z_M*vt3[IRR_Z]);
+			}
+			int numVertices = 0;
+			int numTriangles=0;
+			int currentIndex=0;
+			btTexVert* texVert = 0;
+			
+
+			for (int t=0;t<tmpObject->data.mesh->face_count;t++)
+			{
+				
+				int originalIndex = tmpObject->data.mesh->face[t].v[IRR_TRI_0_X];
+				mesh->m_indices.push_back(currentIndex);
+				texVert = &mesh->m_vertices.expand();
+				texVert->m_localxyz = originalVertices[originalIndex];
+				texVert->m_uv1[0] = tmpObject->data.mesh->face[t].uv[IRR_TRI_0_X][0];
+				texVert->m_uv1[1] = tmpObject->data.mesh->face[t].uv[IRR_TRI_0_X][1];
+				numVertices++;
+				currentIndex++;
+
+				originalIndex = tmpObject->data.mesh->face[t].v[IRR_TRI_0_Y];
+				mesh->m_indices.push_back(currentIndex);
+				texVert = &mesh->m_vertices.expand();
+				texVert->m_localxyz = originalVertices[originalIndex];
+				texVert->m_uv1[0] = tmpObject->data.mesh->face[t].uv[IRR_TRI_0_Y][0];
+				texVert->m_uv1[1] = tmpObject->data.mesh->face[t].uv[IRR_TRI_0_Y][1];
+				numVertices++;
+				currentIndex++;
+
+				originalIndex = tmpObject->data.mesh->face[t].v[IRR_TRI_0_Z];
+				mesh->m_indices.push_back(currentIndex);
+				texVert = &mesh->m_vertices.expand();
+				texVert->m_localxyz = originalVertices[originalIndex];
+				texVert->m_uv1[0] = tmpObject->data.mesh->face[t].uv[IRR_TRI_0_Z][0];
+				texVert->m_uv1[1] = tmpObject->data.mesh->face[t].uv[IRR_TRI_0_Z][1];
+				numVertices++;
+				currentIndex++;
+				numTriangles++;
+
+				if (tmpObject->data.mesh->face[t].v[3])
+				{
+					originalIndex = tmpObject->data.mesh->face[t].v[IRR_TRI_1_X];
+					mesh->m_indices.push_back(currentIndex);
+					texVert = &mesh->m_vertices.expand();
+					texVert->m_localxyz = originalVertices[originalIndex];
+					texVert->m_uv1[0] = tmpObject->data.mesh->face[t].uv[IRR_TRI_1_X][0];
+					texVert->m_uv1[1] = tmpObject->data.mesh->face[t].uv[IRR_TRI_1_X][1];
+					numVertices++;
+					currentIndex++;
+
+					originalIndex = tmpObject->data.mesh->face[t].v[IRR_TRI_1_Y];
+					mesh->m_indices.push_back(currentIndex);
+					texVert = &mesh->m_vertices.expand();
+					texVert->m_localxyz = originalVertices[originalIndex];
+					texVert->m_uv1[0] = tmpObject->data.mesh->face[t].uv[IRR_TRI_1_Y][0];
+					texVert->m_uv1[1] = tmpObject->data.mesh->face[t].uv[IRR_TRI_1_Y][1];
+					numVertices++;
+					currentIndex++;
+
+					originalIndex = tmpObject->data.mesh->face[t].v[IRR_TRI_1_Z];
+					mesh->m_indices.push_back(currentIndex);
+					texVert = &mesh->m_vertices.expand();
+					texVert->m_localxyz = originalVertices[originalIndex];
+					texVert->m_uv1[0] = tmpObject->data.mesh->face[t].uv[IRR_TRI_1_Z][0];
+					texVert->m_uv1[1] = tmpObject->data.mesh->face[t].uv[IRR_TRI_1_Z][1];
+					numVertices++;
+					numTriangles++;
+					currentIndex++;
+				}
+			}
+
+			if (numTriangles>0)
+			{
+				m_renderMeshes.push_back(mesh);
+				printf("numTris = %d\n",numTriangles);
+				//scene::ISceneNode* node = createMeshNode(mesh->m_vertices,numVertices,indices,numIndices,numTriangles,bulletObject,tmpObject);
+				//if (newMotionState && node)
+				//	newMotionState->addIrrlichtNode(node);
+
+			}
+		}
+
 		if (tmpObject->data.mesh->face[0].m_image)
 		{
 			const char* fileName = tmpObject->data.mesh->face[0].m_image->m_imagePathName;
 			
-			void* texture0 = findTexture(fileName);
+			BasicTexture* texture0 = findTexture(fileName);
 
 			if (!texture0)
 			{
@@ -414,14 +646,19 @@ public:
 				int jpgSize = tmpObject->data.mesh->face[0].m_image->m_sizePackedImage;
 				if (jpgSize)
 				{
-					BasicTexture* basicTexture = new BasicTexture((unsigned char*)jpgData,jpgSize);
+					texture0 = new BasicTexture((unsigned char*)jpgData,jpgSize);
 					printf("texture filename=%s\n",fileName);
-					basicTexture->loadTextureMemory(fileName);
+					texture0->loadTextureMemory(fileName);
 
-					m_textures.insert(fileName,basicTexture);
+					m_textures.insert(fileName,texture0);
 					
 
 				}
+			}
+
+			if (texture0 && mesh)
+			{
+				mesh->m_texture = texture0;
 			}
 		}
 	}
@@ -474,13 +711,22 @@ void	BasicDemo::initPhysics()
 	m_dynamicsWorld->getSolverInfo().m_solverMode |= SOLVER_DISABLE_VELOCITY_DEPENDENT_FRICTION_DIRECTION+SOLVER_USE_2_FRICTION_DIRECTIONS;
 	m_dynamicsWorld->getSolverInfo().m_solverMode |= SOLVER_ENABLE_FRICTION_DIRECTION_CACHING;
 
+#if 1
 	m_blendReader = new BasicBlendReader(m_dynamicsWorld,this);
 
-	//const char* fileName = "../../PhysicsAnimationBakingDemo.blend";
-	const char* fileName = "../../clubsilo_packed.blend";
-	
 
-	m_blendReader->openFile(fileName);
+	//const char* fileName = "clubsilo_packed.blend";
+	const char* fileName = "PhysicsAnimationBakingDemo.blend";
+	
+	char fullPath[512];
+	
+	if(!m_blendReader->openFile(fileName))
+	{
+
+		sprintf(fullPath,"../../%s",fileName);
+		m_blendReader->openFile(fullPath);
+		
+	}
 
 	if (m_blendReader)
 	{
@@ -489,6 +735,7 @@ void	BasicDemo::initPhysics()
 	{
 		printf("file not found\n");
 	}
+#endif
 
 	///create a few basic rigid bodies
 #if 0
@@ -735,3 +982,27 @@ void	BasicDemo::exitPhysics()
 
 
 
+
+void BasicDemo::renderme()
+{
+
+	
+	myinit();
+
+	updateCamera();
+	
+	glDisable(GL_LIGHTING);
+	//glDisable(GL_LIGHT0);
+	
+	
+	if (m_blendReader)
+	{
+		for (int i=0;i<m_blendReader->m_renderMeshes.size();i++)
+		{
+			m_blendReader->m_renderMeshes[i]->render();
+		}
+	}
+	
+	
+	
+}
