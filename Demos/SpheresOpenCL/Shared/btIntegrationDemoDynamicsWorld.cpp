@@ -376,7 +376,8 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 
 	// create the OpenCL context
     m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
-//    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
+    //m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
+	//m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
   
     // Get and log the device info
@@ -392,6 +393,9 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 //		m_cdDevice = oclGetMaxFlopsDev(m_cxMainContext);
 		m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
 	}
+
+	btOclPrintDevInfo(m_cdDevice);
+
 //	oclPrintDevInfo(LOGBOTH, m_cdDevice);
 
 	// create a command-queue
