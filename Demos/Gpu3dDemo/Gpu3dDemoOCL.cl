@@ -961,3 +961,4 @@ __kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength
     pKey[                   0] = l_key[get_local_id(0) +                    0];
     pKey[(localSizeLimit / 2)] = l_key[get_local_id(0) + (localSizeLimit / 2)];
 }
+

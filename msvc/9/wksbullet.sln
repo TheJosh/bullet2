@@ -1,5 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+# Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appMiniCL_VectorAdd_Mini", "appMiniCL_VectorAdd.vcproj", "{6D766893-676D-4222-6547-A75378F2CB60}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A} = {7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A}
@@ -63,6 +63,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appGpu3dDemoOCL_Nv", "appGpu3dDemoOCL_Nv.vcproj", "{13FD13A1-09DA-A501-3BA1-DF3696EC33A8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{6ADA430D-009C-2ED4-A787-2AC2D6FEB8CE} = {6ADA430D-009C-2ED4-A787-2AC2D6FEB8CE}
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A} = {ECF7A654-1D72-48FC-A552-E8AC7CD8948A}
 		{7C428E76-9271-6284-20F0-9B38ED6931E3} = {7C428E76-9271-6284-20F0-9B38ED6931E3}
 		{61BD1097-CF2E-B296-DAA9-73A6FE135319} = {61BD1097-CF2E-B296-DAA9-73A6FE135319}
 		{7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A} = {7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A}
@@ -77,6 +78,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "appGpu2dDemo", "appGpu2dDem
 		{7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A} = {7D6E339F-9C2C-31DA-FDB0-5EE50973CF2A}
 		{A24D77FD-D69A-75A0-A7DC-730894C9D0F7} = {A24D77FD-D69A-75A0-A7DC-730894C9D0F7}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbulletOCLbroadphase_Nv", "..\..\Extras\OpenCL\3dGridBroadphase\libbulletOCLbroadphase_Nv.vcproj", "{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -256,6 +259,18 @@ Global
 		{B30C20D9-460A-5221-0903-2A5A3CA8470F}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
 		{B30C20D9-460A-5221-0903-2A5A3CA8470F}.ReleaseDoublePrecision|Win32.ActiveCfg = ReleaseDoublePrecision|Win32
 		{B30C20D9-460A-5221-0903-2A5A3CA8470F}.ReleaseDoublePrecision|Win32.Build.0 = ReleaseDoublePrecision|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.Debug|Win32.Build.0 = Debug|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.DebugDll|Win32.ActiveCfg = DebugDll|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.DebugDll|Win32.Build.0 = DebugDll|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.DebugDoublePrecision|Win32.ActiveCfg = DebugDoublePrecision|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.DebugDoublePrecision|Win32.Build.0 = DebugDoublePrecision|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.Release|Win32.ActiveCfg = Release|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.Release|Win32.Build.0 = Release|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.ReleaseDll|Win32.ActiveCfg = ReleaseDll|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.ReleaseDll|Win32.Build.0 = ReleaseDll|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.ReleaseDoublePrecision|Win32.ActiveCfg = ReleaseDoublePrecision|Win32
+		{ECF7A654-1D72-48FC-A552-E8AC7CD8948A}.ReleaseDoublePrecision|Win32.Build.0 = ReleaseDoublePrecision|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

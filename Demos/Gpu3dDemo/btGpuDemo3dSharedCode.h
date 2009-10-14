@@ -13,7 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "LinearMath/btMinMax.h"
+//#include "LinearMath/btMinMax.h"
+#define mMin(a, b) (((a) < (b)) ? (a) : (b))
 
 //----------------------------------------------------------------------------------------
 
@@ -58,7 +59,8 @@ BT_GPU___device__ float computeImpulse3D(float4 rVel,
 	if(positionConstraint >= 0)
 		return lambdaDt;
 
-	positionConstraint = btMin(0.0f,positionConstraint+penetrationError);
+//	positionConstraint = btMin(0.0f,positionConstraint+penetrationError);
+	positionConstraint = mMin(0.0f,positionConstraint+penetrationError);
 	
 	lambdaDt	=	-(BT_GPU_dot(cNormal,rVel)*(collisionConstant));
 	lambdaDt	-=	(baumgarteConstant/dt*positionConstraint);

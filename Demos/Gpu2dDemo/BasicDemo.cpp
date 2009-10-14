@@ -699,7 +699,7 @@ void BasicDemo::DrawConstraintInfo()
 	float yOffs = fontH * 2;
 	glDisable(GL_LIGHTING);
 	glColor3f(1, 1, 1);
-	sprintf(buf,"solver on %s", gUseCPUSolver ? "CPU" : "CUDA");
+	sprintf(buf,"solver on %s", gUseCPUSolver ? "CPU" : "OpenCL");
 	xOffs = m_glutScreenWidth - (strlen(buf) + 1) * fontW;	
 	GLDebugDrawString(xOffs, yOffs,buf);
 	yOffs += fontH;
@@ -803,7 +803,7 @@ void BasicDemo::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 	yStart += yIncr;
 
 	
-	sprintf(buf,"u to toggle between CPU  and CUDA solvers");
+	sprintf(buf,"u to toggle between CPU  and OpenCL solvers");
 	GLDebugDrawString(xOffset,yStart,buf);
 	yStart += yIncr;
 

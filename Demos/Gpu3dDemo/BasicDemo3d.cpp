@@ -35,6 +35,8 @@ subject to the following restrictions:
 
 #include "btGpuDemo3dOCLWrap.h"
 
+#include "../../Extras/OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
+
 extern int gSkippedCol;
 extern int gProcessedCol;
 
@@ -252,7 +254,8 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 	int numOfCellsY = (int)numOfCells[1];
 	int numOfCellsZ = (int)numOfCells[2];
 
-	m_broadphase = new btGpu3DGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
+	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
+//	m_broadphase = new btGpu3DGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
 //	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
 //#define USE_CUDA_BROADPHASE 1
 #ifdef USE_CUDA_BROADPHASE
@@ -807,7 +810,7 @@ void BasicDemo3D::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 	yStart += yIncr;
 
 	glRasterPos3f(xOffset,yStart,0);
-	sprintf(buf,"u to toggle between CPU  and CUDA solvers");
+	sprintf(buf,"u to toggle between CPU  and OpenCL solvers");
 	GLDebugDrawString(xOffset,yStart,buf);
 	yStart += yIncr;
 
@@ -817,7 +820,7 @@ void BasicDemo3D::outputDebugInfo(int & xOffset,int & yStart, int  yIncr)
 	yStart += yIncr;
 
 	glRasterPos3f(xOffset,yStart,0);
-	sprintf(buf,"m to toggle between CUDA / CPU motion integrators");
+	sprintf(buf,"m to toggle between OpenCL / CPU motion integrators");
 	GLDebugDrawString(xOffset,yStart,buf);
 	yStart += yIncr;
 
