@@ -13,23 +13,26 @@ subject to the following restrictions:
 
 */
 
+#include <float.h>
+#include <math.h>
 
-#include "MiniCLTask.h"
-#include "BulletMultiThreaded/PlatformDefinitions.h"
-#include "BulletMultiThreaded/SpuFakeDma.h"
-#include "LinearMath/btMinMax.h"
-#include "MiniCLTask.h"
-
-#ifdef __SPU__
-#include <spu_printf.h>
-#else
-#include <stdio.h>
-#define spu_printf printf
-#endif
+#include "CL/cl.h"
 
 #define __kernel
 #define __global
-#define get_global_id(a) __guid_arg
+#define __local
+#define get_global_id(a)	__guid_arg
+#define get_local_id(a)		((__guid_arg) % gMiniCLNumOutstandingTasks)
+#define get_local_size(a)	(gMiniCLNumOutstandingTasks)
+#define get_group_id(a)		((__guid_arg) / gMiniCLNumOutstandingTasks)
+
+#define CLK_LOCAL_MEM_FENCE		0x01
+#define CLK_GLOBAL_MEM_FENCE	0x02
+
+void barrier(unsigned int a)
+{
+	// TODO : implement
+}
 
 struct float4
 {
@@ -65,6 +68,15 @@ struct float4
 		return *this;
 	}
 
+	float4& operator-=(const float4& other)
+	{
+		x -= other.x;
+		y -= other.y;
+		z -= other.z;
+		w -= other.w;
+		return *this;
+	}
+
 	float4& operator *=(float scalar)
 	{
 		x *= scalar;
@@ -73,8 +85,31 @@ struct float4
 		w *= scalar;
 		return (*this);
 	}
+
+	
+	
+	
 	
 };
+
+float4 fabs(const float4& a)
+{
+	float4 tmp;
+	tmp.x = a.x < 0.f ? 0.f  : a.x;
+	tmp.y = a.y < 0.f ? 0.f  : a.y;
+	tmp.z = a.z < 0.f ? 0.f  : a.z;
+	tmp.w = a.w < 0.f ? 0.f  : a.w;
+	return tmp;
+}
+float4 operator+(const float4& a,const float4& b)
+{
+	float4 tmp;
+	tmp.x = a.x + b.x;
+	tmp.y = a.y + b.y;
+	tmp.z = a.z + b.z;
+	tmp.w = a.w + b.w;
+	return tmp;
+}
 
 float4 operator-(const float4& a,const float4& b)
 {
@@ -96,6 +131,27 @@ float dot(const float4&a ,const float4& b)
 	return tmp.x+tmp.y+tmp.z+tmp.w;
 }
 
+float4 cross(const float4&a ,const float4& b)
+{
+	float4 tmp;
+	tmp.x =  a.y*b.z - a.z*b.y;
+	tmp.y = -a.x*b.z + a.z*b.x;
+	tmp.z =  a.x*b.y - a.y*b.x;
+	tmp.w = 0.f;
+	return tmp;
+}
+
+float max(float a, float b) 
+{
+	return (a >= b) ? a : b;
+}
+
+float min(float a, float b) 
+{
+	return (a <= b) ? a : b;
+}
+
+
 struct int2
 {
 	int x,y;
@@ -115,67 +171,46 @@ struct int4
 	int x,y,z,w;
 };
 
+struct uint4
+{
+	unsigned int x,y,z,w;
+	uint4() {}
+	uint4(uint val) { x = y = z = w = val; }
+	uint4& operator+=(const uint4& other)
+	{
+		x += other.x;
+		y += other.y;
+		z += other.z;
+		w += other.w;
+		return *this;
+	}
+};
+uint4 operator+(const uint4& a,const uint4& b)
+{
+	uint4 tmp;
+	tmp.x = a.x + b.x;
+	tmp.y = a.y + b.y;
+	tmp.z = a.z + b.z;
+	tmp.w = a.w + b.w;
+	return tmp;
+}
+uint4 operator-(const uint4& a,const uint4& b)
+{
+	uint4 tmp;
+	tmp.x = a.x - b.x;
+	tmp.y = a.y - b.y;
+	tmp.z = a.z - b.z;
+	tmp.w = a.w - b.w;
+	return tmp;
+}
+
 #define native_sqrt sqrtf
 #define native_sin sinf
 #define native_cos cosf
 
-struct MiniCLTask_LocalStoreMemory
-{
-	
-};
-
 #define GUID_ARG ,int __guid_arg
-
-#include "VectorAddKernels.cl"
-
+#define GUID_ARG_VAL ,__guid_arg
 
 
-//-- MAIN METHOD
-void processMiniCLTask(void* userPtr, void* lsMemory)
-{
-	//	BT_PROFILE("processSampleTask");
 
-	MiniCLTask_LocalStoreMemory* localMemory = (MiniCLTask_LocalStoreMemory*)lsMemory;
-
-	MiniCLTaskDesc* taskDescPtr = (MiniCLTaskDesc*)userPtr;
-	MiniCLTaskDesc& taskDesc = *taskDescPtr;
-
-	printf("Compute Unit[%d] executed kernel %d work items [%d..%d)\n",taskDesc.m_taskId,taskDesc.m_kernelProgramId,taskDesc.m_firstWorkUnit,taskDesc.m_lastWorkUnit);
-	
-	
-	switch (taskDesc.m_kernelProgramId)
-	{
-	case CMD_MINICL_ADDVECTOR:
-		{
-			for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
-			{
-				VectorAdd(*(const float8**)&taskDesc.m_argData[0][0],*(const float8**)&taskDesc.m_argData[1][0],*(float8**)&taskDesc.m_argData[2][0],i);
-			}
-			break;
-		}
-
-	default:
-		{
-			printf("error in processMiniCLTask: unknown command id: %d\n",taskDesc.m_kernelProgramId);
-
-		}
-	};
-
-}
-
-
-#if defined(__CELLOS_LV2__) || defined (LIBSPE2)
-
-ATTRIBUTE_ALIGNED16(MiniCLTask_LocalStoreMemory	gLocalStoreMemory);
-
-void* createMiniCLLocalStoreMemory()
-{
-	return &gLocalStoreMemory;
-}
-#else
-void* createMiniCLLocalStoreMemory()
-{
-	return new MiniCLTask_LocalStoreMemory;
-};
-
-#endif
+//	extern "C" void __kernel_func();											\

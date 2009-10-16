@@ -1,5 +1,5 @@
 
-#include <MiniCL/cl.h>
+#include "CL/cl.h"
 #define __PHYSICS_COMMON_H__ 1
 #ifdef WIN32
 #include "BulletMultiThreaded/Win32ThreadSupport.h"
@@ -47,11 +47,11 @@ CL_API_ENTRY cl_int CL_API_CALL clGetDeviceInfo(
 	case CL_DEVICE_NAME:
 		{
 			char deviceName[] = "CPU";
-			int nameLen = strlen(deviceName)+1;
+			unsigned int nameLen = strlen(deviceName)+1;
 			assert(param_value_size>strlen(deviceName));
 			if (nameLen < param_value_size)
 			{
-				sprintf((char*)param_value,"CPU");
+				sprintf_s((char*)param_value,param_value_size, "CPU");
 			} else
 			{
 				printf("error: param_value_size should be at least %d, but it is %d\n",nameLen,param_value_size);
@@ -217,7 +217,7 @@ CL_API_ENTRY cl_int CL_API_CALL clEnqueueNDRangeKernel(cl_command_queue /* comma
 
 	
 	MiniCLKernel* kernel = (MiniCLKernel*) clKernel;
-	for (int ii=0;ii<work_dim;ii++)
+	for (unsigned int ii=0;ii<work_dim;ii++)
 	{
 		int maxTask = kernel->m_scheduler->getMaxNumOutstandingTasks();
 		int numWorkItems = global_work_size[ii];
@@ -229,7 +229,7 @@ CL_API_ENTRY cl_int CL_API_CALL clEnqueueNDRangeKernel(cl_command_queue /* comma
 		{
 			//Performance Hint: tweak this number during benchmarking
 			int endIndex = (t+numWorkItemsPerTask) < numWorkItems ? t+numWorkItemsPerTask : numWorkItems;
-			kernel->m_scheduler->issueTask(t,endIndex,kernel->m_kernelProgramCommandId,(char*)&kernel->m_argData[0][0],kernel->m_argSizes);
+			kernel->m_scheduler->issueTask(t, endIndex, kernel);
 			t = endIndex;
 		}
 	}
@@ -272,27 +272,34 @@ CL_API_ENTRY cl_int CL_API_CALL clSetKernelArg(cl_kernel    clKernel ,
                const void *  arg_value ) CL_API_SUFFIX__VERSION_1_0
 {
 	MiniCLKernel* kernel = (MiniCLKernel* ) clKernel;
-	assert(arg_size < MINICL_MAX_ARGLENGTH);
+	btAssert(arg_size <= MINICL_MAX_ARGLENGTH);
 	if (arg_index>MINI_CL_MAX_ARG)
 	{
 		printf("error: clSetKernelArg arg_index (%d) exceeds %d\n",arg_index,MINI_CL_MAX_ARG);
 	} else
 	{
-		if (arg_size>=MINICL_MAX_ARGLENGTH)
+//		if (arg_size>=MINICL_MAX_ARGLENGTH)
+		if (arg_size != MINICL_MAX_ARGLENGTH)
 		{
 			printf("error: clSetKernelArg argdata too large: %d (maximum is %d)\n",arg_size,MINICL_MAX_ARGLENGTH);
-		} else
+		} 
+		else
 		{
 			if(arg_value == NULL)
 			{	// this is only for __local memory qualifier
 				void* ptr = localBufMalloc(arg_size);
-				memcpy(	kernel->m_argData[arg_index], &ptr, sizeof(void*));
+				kernel->m_argData[arg_index] = ptr;
 			}
 			else
 			{
-				memcpy(	kernel->m_argData[arg_index],arg_value,arg_size);
+				memcpy(&(kernel->m_argData[arg_index]), arg_value, arg_size);
 			}
 			kernel->m_argSizes[arg_index] = arg_size;
+			if(arg_index >= kernel->m_numArgs)
+			{
+				kernel->m_numArgs = arg_index + 1;
+				kernel->updateLauncher();
+			}
 		}
 	}
 	return 0;
@@ -305,16 +312,33 @@ CL_API_ENTRY cl_kernel CL_API_CALL clCreateKernel(cl_program       program ,
 {
 	MiniCLTaskScheduler* scheduler = (MiniCLTaskScheduler*) program;
 	MiniCLKernel* kernel = new MiniCLKernel();
-
-	kernel->m_kernelProgramCommandId = scheduler->findProgramCommandIdByName(kernel_name);
-	if (kernel->m_kernelProgramCommandId>=0)
-	{
-		*errcode_ret = CL_SUCCESS;
-	} else
+	int nameLen = strlen(kernel_name);
+	if(nameLen >= MINI_CL_MAX_KERNEL_NAME)
 	{
 		*errcode_ret = CL_INVALID_KERNEL_NAME;
+		return NULL;
 	}
+	strcpy_s(kernel->m_name, kernel_name);
+	kernel->m_numArgs = 0;
+
+	//kernel->m_kernelProgramCommandId = scheduler->findProgramCommandIdByName(kernel_name);
+	//if (kernel->m_kernelProgramCommandId>=0)
+	//{
+	//	*errcode_ret = CL_SUCCESS;
+	//} else
+	//{
+	//	*errcode_ret = CL_INVALID_KERNEL_NAME;
+	//}
 	kernel->m_scheduler = scheduler;
+	if(kernel->registerSelf() == NULL)
+	{
+		*errcode_ret = CL_INVALID_KERNEL_NAME;
+		return NULL;
+	}
+	else
+	{
+		*errcode_ret = CL_SUCCESS;
+	}
 
 	return (cl_kernel)kernel;
 
@@ -385,7 +409,7 @@ extern CL_API_ENTRY cl_int CL_API_CALL clGetContextInfo(cl_context         /* co
 				*param_value_size_ret = 13;
 			} else
 			{
-				sprintf((char*)param_value,"MiniCL_Test.");
+				sprintf_s((char*)param_value, param_value_size, "MiniCL_Test.");
 			}
 			break;
 		};

@@ -10,15 +10,11 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL ${BUL
 )
 
 LINK_LIBRARIES(
-OpenGLSupport  BulletMultiThreaded  BulletDynamics  BulletCollision LinearMath ${GLEW_glew_LIBRARY} ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+OpenGLSupport  BulletMultiThreaded  BulletDynamics  BulletCollision LinearMath MiniCL ${GLEW_glew_LIBRARY} ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
 )
 
 ADD_EXECUTABLE(AppSpheresMiniCL
-MiniCL.cpp
-MiniCLTask.cpp
-MiniCLTask.h
-MiniCLTaskScheduler.cpp
-MiniCLTaskScheduler.h
+MiniCLTaskWrap.cpp
 ../Shared/SpheresGridDemo.cpp
 ../Shared/SpheresGridDemo.h
 ../Shared/oecakeLoader.cpp

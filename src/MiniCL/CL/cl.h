@@ -25,9 +25,9 @@
 #define __OPENCL_CL_H
 
 #ifdef __APPLE__
-#include <MiniCL/cl_platform.h>
+#include <CL/cl_platform.h>
 #else
-#include <MiniCL/cl_platform.h>
+#include <CL/cl_platform.h>
 #endif	
 
 #ifdef __cplusplus

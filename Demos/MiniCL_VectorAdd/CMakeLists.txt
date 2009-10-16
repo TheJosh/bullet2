@@ -6,15 +6,10 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src }
 )
 
 LINK_LIBRARIES(
- BulletMultiThreaded LinearMath 
+ BulletMultiThreaded LinearMath MiniCL
 )
 
 ADD_EXECUTABLE(AppMiniCLVectorAdd
 MiniCL_VectorAdd.cpp
-MiniCLTaskScheduler.cpp
-MiniCLTaskScheduler.h
-MiniCLTask.cpp
-MiniCLTask.h
-MiniCL.cpp
 )
 

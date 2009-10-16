@@ -15,6 +15,7 @@ subject to the following restrictions:
 
 //#include "LinearMath/btMinMax.h"
 #define mMin(a, b) (((a) < (b)) ? (a) : (b))
+#define mMax(a, b) (((a) > (b)) ? (a) : (b))
 
 //----------------------------------------------------------------------------------------
 
@@ -231,7 +232,8 @@ BT_GPU___global__ void collisionBatchResolutionBox3DD(int2 *constraints,
 				{
 					float rLambdaDt=lambdaDtBox[idx * 4 + iVtx];
 					float pLambdaDt=rLambdaDt;
-					rLambdaDt=btMax(pLambdaDt+lambdaDt,0.0f);
+//					rLambdaDt=btMax(pLambdaDt+lambdaDt,0.0f);
+					rLambdaDt=mMax(pLambdaDt+lambdaDt,0.0f);
 					lambdaDt=rLambdaDt-pLambdaDt;
 					lambdaDtBox[idx * 4 + iVtx]=rLambdaDt;
 				}

@@ -26,6 +26,14 @@
 
 #define CL_PLATFORM_MINI_CL  0x12345
 
+struct MiniCLKernelDesc
+{
+	MiniCLKernelDesc(void* pCode, char* pName);
+};
+
+#define MINICL_REGISTER(__kernel_func) static MiniCLKernelDesc __kernel_func##Desc(__kernel_func, #__kernel_func);
+
+
 #ifdef __APPLE__
     /* Contains #defines for AVAILABLE_MAC_OS_X_VERSION_10_6_AND_LATER below */
     #include <AvailabilityMacros.h>
@@ -53,7 +61,8 @@ typedef unsigned __int16 uint16_t;
 typedef signed   __int32 int32_t;
 typedef unsigned __int32 uint32_t;
 typedef signed   __int64 int64_t;
-typedef unsigned __int64 uint64_t;
+//typedef unsigned __int64 uint64_t;
+typedef unsigned long int uint64_t;
 
 typedef int8_t          cl_char;
 typedef uint8_t         cl_uchar;

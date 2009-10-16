@@ -5,7 +5,7 @@
 ///Instead of #include <CL/cl.h> we include <MiniCL/cl.h>
 ///Apart from this include file, all other code should compile and work on OpenCL compliant implementation
 
-#include <MiniCL/cl.h>
+#include <CL/cl.h>
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -206,4 +206,33 @@ int main(int argc, char **argv)
     free(srcA); 
     free(srcB);
     free (dst);
+	printf("\nPress ENTER to quit\n");
+	getchar();
 }
+
+struct float8
+{
+	float s0;
+	float s1;
+	float s2;
+	float s3;
+	float s4;
+	float s5;
+	float s6;
+	float s7;
+
+	float8(float scalar)
+	{
+		s0=s1=s2=s3=s4=s5=s6=s7=scalar;
+	}
+};
+
+
+#include <CL/cl_MiniCL_Defs.h>
+
+extern "C"
+{
+	#include "VectorAddKernels.cl"
+}
+
+MINICL_REGISTER(VectorAdd)

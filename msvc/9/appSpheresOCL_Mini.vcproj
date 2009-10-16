@@ -354,7 +354,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/Yd"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\src\MiniCL"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\src\MiniCL;.\MiniCL"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -658,15 +658,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCL.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTask.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTaskScheduler.cpp"
+				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTaskWrap.cpp"
 				>
 			</File>
 			<File
@@ -726,14 +718,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTask.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\SpheresOpenCL\MiniCL\MiniCLTaskScheduler.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\oecakeLoader.h"
 				>
 			</File>
@@ -743,14 +727,6 @@
 			</File>
 			<File
 				RelativePath="..\..\Demos\SpheresOpenCL\Shared\SpheresGridDemo.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			>
-			<File
-				RelativePath="..\..\msvc\appSpheresOCL_Mini.rc"
 				>
 			</File>
 		</Filter>
