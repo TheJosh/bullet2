@@ -1,15 +1,6 @@
 
 MSTRINGIFY(
 
-int4 getGridPos(float4 worldPos, __global float4* pParams)
-{
-    int4 gridPos;
-    gridPos.x = (int)floor((worldPos.x - pParams[0].x) / pParams[1].x);
-    gridPos.y = (int)floor((worldPos.y - pParams[0].y) / pParams[1].y);
-    gridPos.z = (int)floor((worldPos.z - pParams[0].z) / pParams[1].z);
-    return gridPos;
-}
-
 int getPosHash(int4 gridPos, __global float4* pParams)
 {
 	int4 pGridDim = *((__global int4*)(pParams + 2));
@@ -22,6 +13,16 @@ int getPosHash(int4 gridPos, __global float4* pParams)
 	int hash = gridPos.z * pGridDim.y * pGridDim.x + gridPos.y * pGridDim.x + gridPos.x;
 	return hash;
 } 
+
+int4 getGridPos(float4 worldPos, __global float4* pParams)
+{
+    int4 gridPos;
+    gridPos.x = (int)floor((worldPos.x - pParams[0].x) / pParams[1].x);
+    gridPos.y = (int)floor((worldPos.y - pParams[0].y) / pParams[1].y);
+    gridPos.z = (int)floor((worldPos.z - pParams[0].z) / pParams[1].z);
+    return gridPos;
+}
+
 
 // calculate grid hash value for each body using its AABB
 __kernel void kCalcHashAABB(int numObjects, __global float4* pAABB, __global int2* pHash, __global float4* pParams GUID_ARG)
@@ -59,9 +60,9 @@ __kernel void kClearCellStart(	int numCells,
 	pCellStart[index] = -1;
 }
 
-__kernel void kFindCellStart(int numObjects, __global int2* pHash, __global int* cellStart)
+__kernel void kFindCellStart(int numObjects, __global int2* pHash, __global int* cellStart GUID_ARG)
 {
-	__local int2 sharedHash[513];
+	__local int sharedHash[513];
     int index = get_global_id(0);
 	int2 sortedData;
     if(index < numObjects)
@@ -74,13 +75,13 @@ __kernel void kFindCellStart(int numObjects, __global int2* pHash, __global int*
 		if((index > 0) && (get_local_id(0) == 0))
 		{
 			// first thread in block must load neighbor body hash
-			sharedHash[0] = pHash[index-1];
+			sharedHash[0] = pHash[index-1].x;
 		}
 	}
     barrier(CLK_LOCAL_MEM_FENCE);
     if(index < numObjects)
 	{
-		if((index == 0) || (sortedData.x != sharedHash[get_local_id(0)].x))
+		if((index == 0) || (sortedData.x != sharedHash[get_local_id(0)]))
 		{
 			cellStart[sortedData.x] = index;
 		}
@@ -107,7 +108,7 @@ void findPairsInCell(	int numObjects,
 						__global float4* pAABB, 
 						__global int*   pPairBuff,
 						__global int2*	pPairBuffStartCurr,
-						__global float4* pParams GUID_ARG)
+						__global float4* pParams)
 {
 	int4 pGridDim = *((__global int4*)(pParams + 2));
 
@@ -138,7 +139,7 @@ void findPairsInCell(	int numObjects,
 	int curr_max = start_curr_next.x - start - 1;
 	int bucketEnd = bucketStart + 8;
 	bucketEnd = (bucketEnd > numObjects) ? numObjects : bucketEnd;
-	for(uint index2 = bucketStart; index2 < bucketEnd; index2++) 
+	for(int index2 = bucketStart; index2 < bucketEnd; index2++) 
 	{
         int2 cellData = pHash[index2];
         if (cellData.x != gridHash)
@@ -250,7 +251,7 @@ __kernel void kFindPairsLarge(	int numObjects,
 	int curr = start_curr.y;
 	int2 start_curr_next = pPairBuffStartCurr[handleIndex+1];
 	int curr_max = start_curr_next.x - start - 1;
-    for(int i = 0; i < numLarge; i++)
+    for(uint i = 0; i < numLarge; i++)
     {
 		int indx2 = numObjects + i;
 		float4 min1 = pAABB[indx2*2 + 0];

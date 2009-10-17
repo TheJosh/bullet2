@@ -18,6 +18,7 @@ subject to the following restrictions:
 
 #include "CL/cl.h"
 
+
 #define __kernel
 #define __global
 #define __local
@@ -29,7 +30,7 @@ subject to the following restrictions:
 #define CLK_LOCAL_MEM_FENCE		0x01
 #define CLK_GLOBAL_MEM_FENCE	0x02
 
-void barrier(unsigned int a)
+static void barrier(unsigned int a)
 {
 	// TODO : implement
 }
@@ -37,6 +38,8 @@ void barrier(unsigned int a)
 struct float4
 {
 	float x,y,z,w;
+	float4() {}
+	float4(float v) { x = y = z = w = v; }
 	float4 operator*(const float4& other)
 	{
 		float4 tmp;
@@ -92,7 +95,7 @@ struct float4
 	
 };
 
-float4 fabs(const float4& a)
+static float4 fabs(const float4& a)
 {
 	float4 tmp;
 	tmp.x = a.x < 0.f ? 0.f  : a.x;
@@ -101,7 +104,7 @@ float4 fabs(const float4& a)
 	tmp.w = a.w < 0.f ? 0.f  : a.w;
 	return tmp;
 }
-float4 operator+(const float4& a,const float4& b)
+static float4 operator+(const float4& a,const float4& b)
 {
 	float4 tmp;
 	tmp.x = a.x + b.x;
@@ -111,7 +114,7 @@ float4 operator+(const float4& a,const float4& b)
 	return tmp;
 }
 
-float4 operator-(const float4& a,const float4& b)
+static float4 operator-(const float4& a,const float4& b)
 {
 	float4 tmp;
 	tmp.x = a.x - b.x;
@@ -121,7 +124,7 @@ float4 operator-(const float4& a,const float4& b)
 	return tmp;
 }
 
-float dot(const float4&a ,const float4& b)
+static float dot(const float4&a ,const float4& b)
 {
 	float4 tmp;
 	tmp.x = a.x*b.x;
@@ -131,7 +134,7 @@ float dot(const float4&a ,const float4& b)
 	return tmp.x+tmp.y+tmp.z+tmp.w;
 }
 
-float4 cross(const float4&a ,const float4& b)
+static float4 cross(const float4&a ,const float4& b)
 {
 	float4 tmp;
 	tmp.x =  a.y*b.z - a.z*b.y;
@@ -141,16 +144,26 @@ float4 cross(const float4&a ,const float4& b)
 	return tmp;
 }
 
-float max(float a, float b) 
+static float max(float a, float b) 
 {
 	return (a >= b) ? a : b;
 }
 
-float min(float a, float b) 
+
+static float min(float a, float b) 
 {
 	return (a <= b) ? a : b;
 }
 
+static float fmax(float a, float b) 
+{
+	return (a >= b) ? a : b;
+}
+
+static float fmin(float a, float b) 
+{
+	return (a <= b) ? a : b;
+}
 
 struct int2
 {
@@ -185,7 +198,7 @@ struct uint4
 		return *this;
 	}
 };
-uint4 operator+(const uint4& a,const uint4& b)
+static uint4 operator+(const uint4& a,const uint4& b)
 {
 	uint4 tmp;
 	tmp.x = a.x + b.x;
@@ -194,7 +207,7 @@ uint4 operator+(const uint4& a,const uint4& b)
 	tmp.w = a.w + b.w;
 	return tmp;
 }
-uint4 operator-(const uint4& a,const uint4& b)
+static uint4 operator-(const uint4& a,const uint4& b)
 {
 	uint4 tmp;
 	tmp.x = a.x - b.x;
@@ -207,10 +220,13 @@ uint4 operator-(const uint4& a,const uint4& b)
 #define native_sqrt sqrtf
 #define native_sin sinf
 #define native_cos cosf
+#define native_powr powf
 
 #define GUID_ARG ,int __guid_arg
 #define GUID_ARG_VAL ,__guid_arg
 
 
+#define as_int(a) (*((int*)&(a)))
 
+extern "C" int gMiniCLNumOutstandingTasks;
 //	extern "C" void __kernel_func();											\

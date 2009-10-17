@@ -484,6 +484,14 @@ static int sNumKernelDesc = 0;
 
 MiniCLKernelDesc::MiniCLKernelDesc(void* pCode, char* pName)
 {
+	for(int i = 0; i < sNumKernelDesc; i++)
+	{
+		if(!strcmp(pName, spKernelDesc[i].pName))
+		{	// already registered
+			btAssert(spKernelDesc[i].pCode == pCode);
+			return; 
+		}
+	}
 	spKernelDesc[sNumKernelDesc].pCode = pCode;
 	spKernelDesc[sNumKernelDesc].pName = pName;
 	sNumKernelDesc++;

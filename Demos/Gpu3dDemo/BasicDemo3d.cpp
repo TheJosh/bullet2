@@ -30,7 +30,6 @@ subject to the following restrictions:
 
 #include "BulletMultiThreaded/SpuGatheringCollisionDispatcher.h"
 #include "BulletMultiThreaded/Win32ThreadSupport.h"
-#include "btGpu3DGridBroadphaseOCL.h"
 #include "GLDebugFont.h"
 
 #include "btGpuDemo3dOCLWrap.h"

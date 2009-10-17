@@ -14,14 +14,17 @@ subject to the following restrictions:
 */
 
 
-
 #include "LinearMath/btAlignedAllocator.h"
 #include "LinearMath/btQuickprof.h"
 #include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 
 #include "bt3dGridBroadphaseOCL.h"
 
+
 #include <stdio.h>
+
+
+
 
 #define MSTRINGIFY(A) #A
 
@@ -51,11 +54,47 @@ bt3dGridBroadphaseOCL::~bt3dGridBroadphaseOCL()
 	assert(m_bInitialized);
 }
 
+#ifdef CL_PLATFORM_MINI_CL
+// there is a problem with MSVC9 : static constructors are not called if variables defined in library and are not used
+// looks like it is because of optimization
+// probably this will happen with other compilers as well
+// so to make it robust, register kernels again (it is safe)
+#define MINICL_DECLARE(a) extern "C" void a();
+MINICL_DECLARE(kCalcHashAABB)
+MINICL_DECLARE(kClearCellStart)
+MINICL_DECLARE(kFindCellStart)
+MINICL_DECLARE(kFindOverlappingPairs)
+MINICL_DECLARE(kFindPairsLarge)
+MINICL_DECLARE(kComputePairCacheChanges)
+MINICL_DECLARE(kSqueezeOverlappingPairBuff)
+MINICL_DECLARE(kBitonicSortCellIdLocal)
+MINICL_DECLARE(kBitonicSortCellIdLocal1)
+MINICL_DECLARE(kBitonicSortCellIdMergeGlobal)
+MINICL_DECLARE(kBitonicSortCellIdMergeLocal)
+#undef MINICL_DECLARE
+#endif
 
 
 void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_command_queue queue)
 {
-    cl_int ciErrNum;
+
+	#ifdef CL_PLATFORM_MINI_CL
+		// call constructors here
+		MINICL_REGISTER(kCalcHashAABB)
+		MINICL_REGISTER(kClearCellStart)
+		MINICL_REGISTER(kFindCellStart)
+		MINICL_REGISTER(kFindOverlappingPairs)
+		MINICL_REGISTER(kFindPairsLarge)
+		MINICL_REGISTER(kComputePairCacheChanges)
+		MINICL_REGISTER(kSqueezeOverlappingPairBuff)
+		MINICL_REGISTER(kBitonicSortCellIdLocal)
+		MINICL_REGISTER(kBitonicSortCellIdLocal1)
+		MINICL_REGISTER(kBitonicSortCellIdMergeGlobal)
+		MINICL_REGISTER(kBitonicSortCellIdMergeLocal)
+	#endif
+
+	cl_int ciErrNum;
+
 
 	if(context != NULL)
 	{
@@ -94,29 +133,12 @@ void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_c
 		m_cqCommandQue = clCreateCommandQueue(m_cxMainContext, m_cdDevice, 0, &ciErrNum);
 		GRID3DOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 	}
-#ifndef CL_PLATFORM_MINI_CL
 	// create the program
 	size_t programLength = strlen(spProgramSource);
-
+#ifndef CL_PLATFORM_MINI_CL
 	printf("OpenCL compiles bt3dGridBroadphaseOCL.cl ...");
+#endif
 	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, &spProgramSource, &programLength, &ciErrNum);
-///*
-//	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, &spProgramSource, &programLength, &ciErrNum);
-//	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, numEl, (const char**)spProgramSource, programLength, &ciErrNum);
-//	GRID3DOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
-//*/
-/*
-	char* progSrc;
-	FILE* fff = fopen("/Bullet/BulletOpenCLBranch/Extras/OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.cl", "rb");
-	fseek(fff, 0, SEEK_END);
-	programLength = ftell(fff); 
-	progSrc = (char*)malloc(programLength + 1);
-	fseek(fff, 0, SEEK_SET);
-	fread(progSrc, 1, programLength, fff);
-	progSrc[programLength] = 0;
-	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1,(const char**) &progSrc, &programLength, &ciErrNum);
-	GRID3DOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
-*/
 	// build the program
 	ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, "-DGUID_ARG=""""", NULL, NULL);
 	if(ciErrNum != CL_SUCCESS)
@@ -130,6 +152,7 @@ void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_c
 		getchar();
 		exit(-1); 
 	}
+#ifndef CL_PLATFORM_MINI_CL
 	printf("OK\n");
 #endif
 }
@@ -382,11 +405,13 @@ void bt3dGridBroadphaseOCL::calcHashAABB()
 void bt3dGridBroadphaseOCL::sortHash()
 {
 	BT_PROFILE("sortHash");
-#if 1
+#ifdef CL_PLATFORM_MINI_CL
+	copyArrayFromDevice(m_hBodiesHash, m_dBodiesHash, m_numHandles * 2 * sizeof(unsigned int));
+	btGpu3DGridBroadphase::sortHash();
+	copyArrayToDevice(m_dBodiesHash, m_hBodiesHash, m_numHandles * 2 * sizeof(unsigned int));
+#else
 	int dir = 1;
 	bitonicSort(m_dBodiesHash, m_hashSize, dir);
-#else
-	btGpu3DGridBroadphase::sortHash();
 #endif
 	return;
 }
@@ -398,7 +423,12 @@ void bt3dGridBroadphaseOCL::findCellStart()
 #if 1
 	BT_PROFILE("findCellStart");
 	runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_CLEAR_CELL_START, m_numCells);
-	runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_FIND_CELL_START, m_numHandles);
+	#ifndef CL_PLATFORM_MINI_CL
+		runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_FIND_CELL_START, m_numHandles);
+	#else
+		btGpu3DGridBroadphase::findCellStart();
+		copyArrayToDevice(m_dCellStart, m_hCellStart, m_numCells * sizeof(unsigned int));
+	#endif
 #else
 	btGpu3DGridBroadphase::findCellStart();
 #endif
@@ -409,8 +439,8 @@ void bt3dGridBroadphaseOCL::findCellStart()
 
 void bt3dGridBroadphaseOCL::findOverlappingPairs()
 {
-	BT_PROFILE("findOverlappingPairs");
 #if 1
+	BT_PROFILE("findOverlappingPairs");
 	runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_FIND_OVERLAPPING_PAIRS, m_numHandles);
 #else
 	btGpu3DGridBroadphase::findOverlappingPairs();

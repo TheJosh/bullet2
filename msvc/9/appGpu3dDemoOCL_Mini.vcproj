@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="appGpu2dDemo"
-	ProjectGUID="{B30C20D9-460A-5221-0903-2A5A3CA8470F}"
+	Name="appGpu3dDemoOCL_Mini"
+	ProjectGUID="{605DE81B-A9C8-43D5-9638-7EDA9F35F143}"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -16,8 +16,8 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="..\..\out\release8\build\appGpu2dDemoOCL_Nv\"
-			IntermediateDirectory="..\..\out\release8\build\appGpu2dDemoOCL_Nv\"
+			OutputDirectory="..\..\out\release8\build\appGpu3dDemoOCL_Mini\"
+			IntermediateDirectory="..\..\out\release8\build\appGpu3dDemoOCL_Mini\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -42,14 +42,14 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.tlb"
+				TypeLibraryName="..\..\out\release8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull;;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -59,10 +59,10 @@
 				EnableEnhancedInstructionSet="1"
 				FloatingPointModel="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.pch"
-				AssemblerListingLocation="..\..\out\release8\build\appGpu2dDemoOCL_Nv\"
-				ObjectFile="..\..\out\release8\build\appGpu2dDemoOCL_Nv\"
-				ProgramDataBaseFileName="..\..\out\release8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\release8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.pch"
+				AssemblerListingLocation="..\..\out\release8\build\appGpu3dDemoOCL_Mini\"
+				ObjectFile="..\..\out\release8\build\appGpu3dDemoOCL_Mini\"
+				ProgramDataBaseFileName="..\..\out\release8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="false"
@@ -76,7 +76,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -86,14 +86,14 @@
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
 				AdditionalDependencies="glut32.lib OpenCL.lib "
-				OutputFile="..\..\ReleaseGpu2dDemo.exe"
+				OutputFile="..\..\ReleaseGpu3dDemo.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/Win32&quot;"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile="..\..\out\release8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				ProgramDatabaseFile="..\..\out\release8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -125,8 +125,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseDll|Win32"
-			OutputDirectory="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\"
-			IntermediateDirectory="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\"
+			OutputDirectory="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\"
+			IntermediateDirectory="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -150,13 +150,13 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.tlb"
+				TypeLibraryName="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="2"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -165,10 +165,10 @@
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.pch"
-				AssemblerListingLocation="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\"
-				ObjectFile="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\"
-				ProgramDataBaseFileName="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.pch"
+				AssemblerListingLocation="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\"
+				ObjectFile="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\"
+				ProgramDataBaseFileName="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -182,7 +182,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -192,11 +192,11 @@
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
 				AdditionalDependencies="glut32.lib"
-				OutputFile="..\..\ReleaseDllGpu2dDemo.exe"
+				OutputFile="..\..\ReleaseDllGpu3dDemo.exe"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dll8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				ProgramDatabaseFile="..\..\out\release_dll8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -226,8 +226,8 @@
 		</Configuration>
 		<Configuration
 			Name="ReleaseDoublePrecision|Win32"
-			OutputDirectory="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\"
-			IntermediateDirectory="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\"
+			OutputDirectory="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\"
+			IntermediateDirectory="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -251,19 +251,19 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.tlb"
+				TypeLibraryName="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 				PreprocessorDefinitions="NDEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				ExceptionHandling="0"
 				TreatWChar_tAsBuiltInType="false"
-				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.pch"
-				AssemblerListingLocation="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\"
-				ObjectFile="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\"
-				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.pch"
+				AssemblerListingLocation="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\"
+				ObjectFile="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\"
+				ProgramDataBaseFileName="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -276,7 +276,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -286,11 +286,11 @@
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
 				AdditionalDependencies="glut32.lib"
-				OutputFile="..\..\ReleaseDblGpu2dDemo.exe"
+				OutputFile="..\..\ReleaseDblGpu3dDemo.exe"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
-				ProgramDatabaseFile="..\..\out\release_dbl8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				ProgramDatabaseFile="..\..\out\release_dbl8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -320,8 +320,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\"
-			IntermediateDirectory="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\"
+			OutputDirectory="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\"
+			IntermediateDirectory="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -345,23 +345,23 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.tlb"
+				TypeLibraryName="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull;&quot;$(NVSDKCOMPUTE_ROOT)\OpenCL\common\inc&quot;"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\src\MiniCL"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.pch"
-				AssemblerListingLocation="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\"
-				ObjectFile="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\"
-				ProgramDataBaseFileName="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.pch"
+				AssemblerListingLocation="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\"
+				ObjectFile="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\"
+				ProgramDataBaseFileName="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="false"
@@ -375,7 +375,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -384,15 +384,15 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
-				AdditionalDependencies="glut32.lib OpenCL.lib "
-				OutputFile="..\..\DebugGpu2dDemo.exe"
+				AdditionalDependencies="glut32.lib"
+				OutputFile="..\..\DebugGpu3dDemo.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\Glut;&quot;$(NVSDKCOMPUTE_ROOT)/OpenCL/common/lib/Win32&quot;"
+				AdditionalLibraryDirectories="..\..\Glut;"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\debug8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				ProgramDatabaseFile="..\..\out\debug8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -422,8 +422,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDll|Win32"
-			OutputDirectory="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\"
-			IntermediateDirectory="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\"
+			OutputDirectory="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\"
+			IntermediateDirectory="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -447,23 +447,23 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.tlb"
+				TypeLibraryName="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="3"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.pch"
-				AssemblerListingLocation="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\"
-				ObjectFile="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\"
-				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.pch"
+				AssemblerListingLocation="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\"
+				ObjectFile="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\"
+				ProgramDataBaseFileName="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -477,7 +477,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -487,14 +487,14 @@
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
 				AdditionalDependencies="glut32.lib"
-				OutputFile="..\..\DebugDllGpu2dDemo.exe"
+				OutputFile="..\..\DebugDllGpu3dDemo.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\debug_dll8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dll8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -524,8 +524,8 @@
 		</Configuration>
 		<Configuration
 			Name="DebugDoublePrecision|Win32"
-			OutputDirectory="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\"
-			IntermediateDirectory="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\"
+			OutputDirectory="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\"
+			IntermediateDirectory="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -549,23 +549,23 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.tlb"
+				TypeLibraryName="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" "
 				Optimization="0"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 				PreprocessorDefinitions="_DEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;WIN32"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="1"
 				TreatWChar_tAsBuiltInType="false"
 				RuntimeTypeInfo="false"
-				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\appGpu2dDemoOCL_Nv.pch"
-				AssemblerListingLocation="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\"
-				ObjectFile="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\"
-				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				PrecompiledHeaderFile="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\appGpu3dDemoOCL_Mini.pch"
+				AssemblerListingLocation="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\"
+				ObjectFile="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\"
+				ProgramDataBaseFileName="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				Detect64BitPortabilityProblems="true"
@@ -579,7 +579,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG;BT_USE_DOUBLE_PRECISION;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;PROJECTGEN_VERSION=8"
 				Culture="1033"
-				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL;..\..\Extras\ConvexHull"
+				AdditionalIncludeDirectories=".;..\..;..\..\src;..\..\Glut;..\..\Demos\OpenGL"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -589,14 +589,14 @@
 				IgnoreImportLibrary="true"
 				AdditionalOptions=" "
 				AdditionalDependencies="glut32.lib"
-				OutputFile="..\..\DebugDblGpu2dDemo.exe"
+				OutputFile="..\..\DebugDblGpu3dDemo.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\Glut"
 				GenerateManifest="false"
 				IgnoreDefaultLibraryNames="LIBC,LIBCD"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appGpu2dDemoOCL_Nv\Gpu2dDemo.pdb"
+				ProgramDatabaseFile="..\..\out\debug_dbl8\build\appGpu3dDemoOCL_Mini\Gpu3dDemo.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
@@ -632,38 +632,26 @@
 			Name="Source Files"
 			>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\BasicDemo.cpp"
+				RelativePath="..\..\Demos\Gpu3dDemo\BasicDemo3d.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpu2dDemoOCLWrap.cpp"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpu3dDemoOCLWrap.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpu2dGridBroadphaseOCL.cpp"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemoDynamicsWorld3D.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemo2dCpuFunc.cpp"
+				RelativePath="..\..\Demos\Gpu3dDemo\btOclUtils.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btOclUtils.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\Gpu2dDemoOCL.cl"
+				RelativePath="..\..\Demos\Gpu3dDemo\Gpu3dDemoOCL.cl"
 				>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -672,11 +660,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\oecakeLoader.cpp"
+				RelativePath="..\..\Demos\Gpu3dDemo\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -684,46 +668,38 @@
 			Name="Header Files"
 			>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\BasicDemo.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\BasicDemo3d.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpu2dGridBroadphaseOCL.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemo3dOCLWrap.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemo2dOCLWrap.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemo3dSharedCode.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedCode.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemo3dSharedDefs.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedDefs.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemo3dSharedTypes.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedTypes.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemoDynamicsWorld3D.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\btOclUtils.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Demos\Gpu2dDemo\oecakeLoader.h"
+				RelativePath="..\..\Demos\Gpu3dDemo\btOclUtils.h"
 				>
 			</File>
 		</Filter>
+		<File
+			RelativePath="..\..\Demos\Gpu3dDemo\btGpuDemo3dCpuFunc.cpp"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

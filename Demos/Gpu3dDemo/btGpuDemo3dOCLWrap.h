@@ -29,17 +29,6 @@ enum
 	GPUDEMO3D_KERNEL_SOLVE_CONSTRAINTS,
 	GPUDEMO3D_KERNEL_INTEGRATE_VELOCITIES,
 	GPUDEMO3D_KERNEL_INTEGRATE_TRANSFORMS,
-	GPUDEMO3D_KERNEL_CALC_HASH_AABB,
-	GPUDEMO3D_KERNEL_CLEAR_CELL_START,
-	GPUDEMO3D_KERNEL_FIND_CELL_START,
-	GPUDEMO3D_KERNEL_FIND_OVERLAPPING_PAIRS,
-	GPUDEMO3D_KERNEL_FIND_PAIRS_LARGE,
-	GPUDEMO3D_KERNEL_COMPUTE_CACHE_CHANGES,
-	GPUDEMO3D_KERNEL_SQUEEZE_PAIR_BUFF,
-	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL,
-	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1,
-	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL,
-	GPUDEMO3D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL,
 	GPUDEMO3D_KERNEL_TOTAL
 };
 
@@ -89,24 +78,6 @@ public:
 	static cl_mem	m_dInvInertiaMass;
 	static cl_mem	m_dParams;
 
-	// broadphase data
-	static cl_mem	m_dBodiesHash;
-	static cl_mem	m_dCellStart;
-	static cl_mem	m_dPairBuff; 
-	static cl_mem	m_dPairBuffStartCurr;
-	static cl_mem	m_dAABB;
-	static cl_mem	m_dPairScan;
-	static cl_mem	m_dPairOut;
-	static cl_mem	m_dBpParams;
-
-
-	static int m_maxHandles;
-	static int m_maxLargeHandles;
-	static int m_maxPairsPerBody;
-	static int m_numCells;
-	static int m_hashSize;
-
-
 
 	static void initCL(int argc, char** argv);
 	static void initKernels();
@@ -117,8 +88,4 @@ public:
 
 	static void copyArrayToDevice(cl_mem device, const void* host, unsigned int size, int devOffs = 0, int hostOffs = 0);
 	static void copyArrayFromDevice(void* host, const cl_mem device, unsigned int size, int hostOffs = 0, int devOffs = 0);
-
-	static void setBroadphaseBuffers(int maxHandles, int maxLargeHandles, int maxPairsPerBody, int numCells);
-	static void bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir);
-
 };
