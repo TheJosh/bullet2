@@ -202,6 +202,13 @@ CL_API_ENTRY cl_int CL_API_CALL clEnqueueWriteBuffer(cl_command_queue     comman
 	return 0;
 }
 
+CL_API_ENTRY cl_int CL_API_CALL clFlush(cl_command_queue  command_queue)
+{
+	MiniCLTaskScheduler* scheduler = (MiniCLTaskScheduler*) command_queue;
+	///wait for all work items to be completed
+	scheduler->flush();
+	return 0;
+}
 
 
 CL_API_ENTRY cl_int CL_API_CALL clEnqueueNDRangeKernel(cl_command_queue /* command_queue */,
@@ -428,10 +435,15 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
                         void *                  /* user_data */,
                         cl_int *                 errcode_ret ) CL_API_SUFFIX__VERSION_1_0
 {
-	
 	int maxNumOutstandingTasks = 4;
 //	int maxNumOutstandingTasks = 1;
 	gMiniCLNumOutstandingTasks = maxNumOutstandingTasks;
+	const int maxNumOfThreadSupports = 8;
+	static int sUniqueThreadSupportIndex = 0;
+	static char* sUniqueThreadSupportName[maxNumOfThreadSupports] = 
+	{
+		"MiniCL_0", "MiniCL_1", "MiniCL_2", "MiniCL_3", "MiniCL_4", "MiniCL_5", "MiniCL_6", "MiniCL_7" 
+	};
 
 #ifdef DEBUG_MINICL_KERNELS
 	SequentialThreadSupport::SequentialThreadConstructionInfo stc("MiniCL",processMiniCLTask,createMiniCLLocalStoreMemory);
@@ -439,8 +451,10 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
 #else
 
 #if WIN32
+	btAssert(sUniqueThreadSupportIndex < maxNumOfThreadSupports);
 	Win32ThreadSupport* threadSupport = new Win32ThreadSupport(Win32ThreadSupport::Win32ThreadConstructionInfo(
-								"MiniCL",
+//								"MiniCL",
+								sUniqueThreadSupportName[sUniqueThreadSupportIndex++],
 								processMiniCLTask, //processCollisionTask,
 								createMiniCLLocalStoreMemory,//createCollisionLocalStoreMemory,
 								maxNumOutstandingTasks));

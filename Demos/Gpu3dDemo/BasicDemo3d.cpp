@@ -63,6 +63,9 @@ extern int gProcessedCol;
 #define ARRAY_SIZE_X 8
 #define ARRAY_SIZE_Y 47
 #define ARRAY_SIZE_Z 8
+//#define ARRAY_SIZE_X 1
+//#define ARRAY_SIZE_Y 2
+//#define ARRAY_SIZE_Z 1
 #else
 	///create 125 (5x5x5) dynamic object
 	#define ARRAY_SIZE_X 45

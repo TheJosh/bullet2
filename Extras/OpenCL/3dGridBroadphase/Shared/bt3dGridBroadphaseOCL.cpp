@@ -135,9 +135,7 @@ void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_c
 	}
 	// create the program
 	size_t programLength = strlen(spProgramSource);
-#ifndef CL_PLATFORM_MINI_CL
 	printf("OpenCL compiles bt3dGridBroadphaseOCL.cl ...");
-#endif
 	m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, &spProgramSource, &programLength, &ciErrNum);
 	// build the program
 	ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, "-DGUID_ARG=""""", NULL, NULL);
@@ -152,9 +150,7 @@ void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_c
 		getchar();
 		exit(-1); 
 	}
-#ifndef CL_PLATFORM_MINI_CL
 	printf("OK\n");
-#endif
 }
 
 
@@ -321,6 +317,8 @@ void bt3dGridBroadphaseOCL::runKernelWithWorkgroupSize(int kernelId, int globalS
 		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
 	}
 	GRID3DOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
+	ciErrNum = clFlush(m_cqCommandQue);
+	GRID3DOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
 
@@ -372,6 +370,10 @@ void bt3dGridBroadphaseOCL::setParameters(bt3DGridBroadphaseParams* hostParams)
 		int   m_gridSize[4];
 	};
 	btParamsBpOCL hParams;
+	hParams.m_worldMin[0] = m_params.m_worldOriginX;
+	hParams.m_worldMin[1] = m_params.m_worldOriginY;
+	hParams.m_worldMin[2] = m_params.m_worldOriginZ;
+	hParams.m_worldMin[3] = 0.f;
 	hParams.m_cellSize[0] = m_params.m_cellSizeX;
 	hParams.m_cellSize[1] = m_params.m_cellSizeY;
 	hParams.m_cellSize[2] = m_params.m_cellSizeZ;
@@ -379,11 +381,7 @@ void bt3dGridBroadphaseOCL::setParameters(bt3DGridBroadphaseParams* hostParams)
 	hParams.m_gridSize[0] = m_params.m_gridSizeX;
 	hParams.m_gridSize[1] = m_params.m_gridSizeY;
 	hParams.m_gridSize[2] = m_params.m_gridSizeZ;
-	hParams.m_gridSize[3] = 0;
-	hParams.m_worldMin[0] = m_params.m_worldOriginX;
-	hParams.m_worldMin[1] = m_params.m_worldOriginY;
-	hParams.m_worldMin[2] = m_params.m_worldOriginZ;
-	hParams.m_worldMin[3] = 0.f;
+	hParams.m_gridSize[3] = m_params.m_maxBodiesPerCell;
 	copyArrayToDevice(m_dBpParams, &hParams, sizeof(btParamsBpOCL));
 	return;
 }

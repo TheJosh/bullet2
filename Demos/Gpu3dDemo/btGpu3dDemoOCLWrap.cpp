@@ -175,9 +175,6 @@ void btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize
 	}
 	else
 	{
-//		#if defined(CL_PLATFORM_MINI_CL)
-//			workgroupSize = 4;
-//		#endif
 		size_t localWorkSize[2], globalWorkSize[2];
 		workgroupSize = btMin(workgroupSize, globalSize);
 		int num_t = globalSize / workgroupSize;
@@ -192,6 +189,8 @@ void btGpuDemo3dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize
 		globalWorkSize[1] = 1;
 		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
 	}
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	ciErrNum = clFlush(m_cqCommandQue);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 

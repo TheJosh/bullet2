@@ -94,7 +94,7 @@ public:
 	}
 };
 
-typedef void (*kernelLauncherCB)(MiniCLKernel* kernel, int guid);
+typedef void (*kernelLauncherCB)(MiniCLTaskDesc* taskDesc, int guid);
 
 struct	MiniCLKernel
 {

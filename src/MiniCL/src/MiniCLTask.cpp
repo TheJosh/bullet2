@@ -49,7 +49,7 @@ void processMiniCLTask(void* userPtr, void* lsMemory)
 
 	for (unsigned int i=taskDesc.m_firstWorkUnit;i<taskDesc.m_lastWorkUnit;i++)
 	{
-		taskDesc.m_kernel->m_launcher(taskDesc.m_kernel, i);
+		taskDesc.m_kernel->m_launcher(&taskDesc, i);
 	}
 
 //	printf("Compute Unit[%d] executed kernel %d work items [%d..%d)\n",taskDesc.m_taskId,taskDesc.m_kernelProgramId,taskDesc.m_firstWorkUnit,taskDesc.m_lastWorkUnit);

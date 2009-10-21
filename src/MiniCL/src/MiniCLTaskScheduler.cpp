@@ -243,208 +243,208 @@ typedef void (*MiniCLKernelLauncher15)(void*, void*, void*, void*, void*, void*,
 typedef void (*MiniCLKernelLauncher16)(void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, void*, int);
 
 
-static void kernelLauncher0(MiniCLKernel* kernel, int guid)
+static void kernelLauncher0(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher0)(kernel->m_launcher))(guid);
+	((MiniCLKernelLauncher0)(taskDesc->m_kernel->m_launcher))(guid);
 }
-static void kernelLauncher1(MiniCLKernel* kernel, int guid)
+static void kernelLauncher1(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher1)(kernel->m_pCode))(	kernel->m_argData[0], 
+	((MiniCLKernelLauncher1)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
 												guid);
 }
-static void kernelLauncher2(MiniCLKernel* kernel, int guid)
+static void kernelLauncher2(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher2)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
+	((MiniCLKernelLauncher2)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
 												guid);
 }
-static void kernelLauncher3(MiniCLKernel* kernel, int guid)
+static void kernelLauncher3(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher3)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
+	((MiniCLKernelLauncher3)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
 												guid);
 }
-static void kernelLauncher4(MiniCLKernel* kernel, int guid)
+static void kernelLauncher4(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher4)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
+	((MiniCLKernelLauncher4)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
 												guid);
 }
-static void kernelLauncher5(MiniCLKernel* kernel, int guid)
+static void kernelLauncher5(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher5)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
+	((MiniCLKernelLauncher5)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
 												guid);
 }
-static void kernelLauncher6(MiniCLKernel* kernel, int guid)
+static void kernelLauncher6(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher6)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
+	((MiniCLKernelLauncher6)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
 												guid);
 }
-static void kernelLauncher7(MiniCLKernel* kernel, int guid)
+static void kernelLauncher7(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher7)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
+	((MiniCLKernelLauncher7)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
 												guid);
 }
-static void kernelLauncher8(MiniCLKernel* kernel, int guid)
+static void kernelLauncher8(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher8)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
+	((MiniCLKernelLauncher8)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
 												guid);
 }
-static void kernelLauncher9(MiniCLKernel* kernel, int guid)
+static void kernelLauncher9(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher9)(kernel->m_pCode))(	kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
+	((MiniCLKernelLauncher9)(taskDesc->m_kernel->m_pCode))(	taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
 												guid);
 }
-static void kernelLauncher10(MiniCLKernel* kernel, int guid)
+static void kernelLauncher10(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher10)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
+	((MiniCLKernelLauncher10)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
 												guid);
 }
-static void kernelLauncher11(MiniCLKernel* kernel, int guid)
+static void kernelLauncher11(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher11)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
-												kernel->m_argData[10], 
+	((MiniCLKernelLauncher11)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
+												taskDesc->m_argData[10], 
 												guid);
 }
-static void kernelLauncher12(MiniCLKernel* kernel, int guid)
+static void kernelLauncher12(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher12)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
-												kernel->m_argData[10], 
-												kernel->m_argData[11], 
+	((MiniCLKernelLauncher12)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
+												taskDesc->m_argData[10], 
+												taskDesc->m_argData[11], 
 												guid);
 }
-static void kernelLauncher13(MiniCLKernel* kernel, int guid)
+static void kernelLauncher13(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher13)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
-												kernel->m_argData[10], 
-												kernel->m_argData[11], 
-												kernel->m_argData[12], 
+	((MiniCLKernelLauncher13)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
+												taskDesc->m_argData[10], 
+												taskDesc->m_argData[11], 
+												taskDesc->m_argData[12], 
 												guid);
 }
-static void kernelLauncher14(MiniCLKernel* kernel, int guid)
+static void kernelLauncher14(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher14)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
-												kernel->m_argData[10], 
-												kernel->m_argData[11], 
-												kernel->m_argData[12], 
-												kernel->m_argData[13], 
+	((MiniCLKernelLauncher14)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
+												taskDesc->m_argData[10], 
+												taskDesc->m_argData[11], 
+												taskDesc->m_argData[12], 
+												taskDesc->m_argData[13], 
 												guid);
 }
-static void kernelLauncher15(MiniCLKernel* kernel, int guid)
+static void kernelLauncher15(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher15)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
-												kernel->m_argData[10], 
-												kernel->m_argData[11], 
-												kernel->m_argData[12], 
-												kernel->m_argData[13], 
-												kernel->m_argData[14], 
+	((MiniCLKernelLauncher15)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
+												taskDesc->m_argData[10], 
+												taskDesc->m_argData[11], 
+												taskDesc->m_argData[12], 
+												taskDesc->m_argData[13], 
+												taskDesc->m_argData[14], 
 												guid);
 }
-static void kernelLauncher16(MiniCLKernel* kernel, int guid)
+static void kernelLauncher16(MiniCLTaskDesc* taskDesc, int guid)
 {
-	((MiniCLKernelLauncher16)(kernel->m_pCode))(kernel->m_argData[0], 
-												kernel->m_argData[1], 
-												kernel->m_argData[2], 
-												kernel->m_argData[3], 
-												kernel->m_argData[4], 
-												kernel->m_argData[5], 
-												kernel->m_argData[6], 
-												kernel->m_argData[7], 
-												kernel->m_argData[8], 
-												kernel->m_argData[9], 
-												kernel->m_argData[10], 
-												kernel->m_argData[11], 
-												kernel->m_argData[12], 
-												kernel->m_argData[13], 
-												kernel->m_argData[14], 
-												kernel->m_argData[15], 
+	((MiniCLKernelLauncher16)(taskDesc->m_kernel->m_pCode))(taskDesc->m_argData[0], 
+												taskDesc->m_argData[1], 
+												taskDesc->m_argData[2], 
+												taskDesc->m_argData[3], 
+												taskDesc->m_argData[4], 
+												taskDesc->m_argData[5], 
+												taskDesc->m_argData[6], 
+												taskDesc->m_argData[7], 
+												taskDesc->m_argData[8], 
+												taskDesc->m_argData[9], 
+												taskDesc->m_argData[10], 
+												taskDesc->m_argData[11], 
+												taskDesc->m_argData[12], 
+												taskDesc->m_argData[13], 
+												taskDesc->m_argData[14], 
+												taskDesc->m_argData[15], 
 												guid);
 }
 

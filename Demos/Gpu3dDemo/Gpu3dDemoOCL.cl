@@ -98,7 +98,8 @@ __kernel void kCollisionWithWallBox(	int numObjects,
 				impulse	= (float4)(0.0f);
 				if(positionConstraint < 0)
 				{
-					float4 groundNormal = (float4)(0.f, 1.f, 0.f, 0.f);
+					// float4 groundNormal = (float4)(0.f, 1.f, 0.f, 0.f); // not compatible with MiniCL
+					 float4 groundNormal = (float4)(0.f);  groundNormal.y = 1.f;
 					impulse	= groundNormal * restitution * computeImpulse3D(vVel, positionConstraint, groundNormal, dt);
 #if USE_FRICTION	// only with ground for now
 					float4 lat_vel = vVel - groundNormal * dot(groundNormal, vVel);
@@ -119,7 +120,8 @@ __kernel void kCollisionWithWallBox(	int numObjects,
 				impulse	= (float4)(0.0f);
 				if(positionConstraint < 0)
 				{
-					float4 normal = (float4)(1.0f, 0.0f, 0.0f, 0.0f);
+					// float4 normal = (float4)(1.0f, 0.0f, 0.0f, 0.0f); // not compatible with MiniCL
+					float4 normal = (float4)(0.f); normal.x = 1.0f;
 					impulse	= normal * restitution * computeImpulse3D(vVel,positionConstraint,normal,dt);
 					vel[idx]	+=	impulse;
 					angVel[idx]	+=	cross(rerVertex, impulse);
@@ -130,7 +132,8 @@ __kernel void kCollisionWithWallBox(	int numObjects,
 				impulse	= (float4)(0.0f);
 				if(positionConstraint < 0)
 				{
-					float4 normal = (float4)(-1.0f, 0.0f, 0.0f, 0.0f);
+					// float4 normal = (float4)(-1.0f, 0.0f, 0.0f, 0.0f); // not compatible with MiniCL
+					float4 normal = (float4)0.f; normal.x = -1.0f;
 					impulse	= normal * restitution * computeImpulse3D(vVel,positionConstraint,normal,dt);
 					vel[idx]	+=	impulse;
 					angVel[idx]	+=	cross(rerVertex, impulse);
@@ -141,7 +144,8 @@ __kernel void kCollisionWithWallBox(	int numObjects,
 				impulse	= (float4)(0.0f);
 				if(positionConstraint < 0)
 				{
-					float4 normal = (float4)(0.0f, 0.0f, 1.0f, 0.0f);
+					// float4 normal = (float4)(0.0f, 0.0f, 1.0f, 0.0f); // not compatible with MiniCL
+					float4 normal = (float4)0.0f; normal.z = 1.0f;
 					impulse	= normal * restitution * computeImpulse3D(vVel,positionConstraint,normal,dt);
 					vel[idx]	+=	impulse;
 					angVel[idx]	+=	cross(rerVertex, impulse);
@@ -152,7 +156,8 @@ __kernel void kCollisionWithWallBox(	int numObjects,
 				impulse	= (float4)(0.0f);
 				if(positionConstraint < 0)
 				{
-					float4 normal = (float4)(0.0f, 0.0f, -1.0f, 0.0f);
+					// float4 normal = (float4)(0.0f, 0.0f, -1.0f, 0.0f); // not compatible with MiniCL
+					float4 normal = (float4)0.f; normal.z = -1.0f;
 					impulse	= normal * restitution * computeImpulse3D(vVel,positionConstraint,normal,dt);
 					vel[idx]	+=	impulse;
 					angVel[idx]	+=	cross(rerVertex, impulse);

@@ -39,7 +39,10 @@ struct float4
 {
 	float x,y,z,w;
 	float4() {}
-	float4(float v) { x = y = z = w = v; }
+	float4(float v) 
+	{
+		x = y = z = w = v; 
+	}
 	float4 operator*(const float4& other)
 	{
 		float4 tmp;
