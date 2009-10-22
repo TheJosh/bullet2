@@ -179,6 +179,8 @@ BT_GPU___device__ float computeImpulse1(float4 rVel,
 	if(positionConstraint > 0)
 		return lambdaDt;
 
+	cNormal.w = 0.f;
+
 //	positionConstraint = btMin(0.0f,positionConstraint+penetrationError);
 	positionConstraint = (positionConstraint+penetrationError) < 0.f ? (positionConstraint+penetrationError) : 0.0f;
 	
@@ -340,12 +342,12 @@ BT_GPU___device__ void collisionResolutionBox(	int constrId,
 				contactNormal,dt);
 
 			{
-				float rLambdaDt=lambdaDtBox[(MAX_VTX_PER_OBJ)*(2*constrId)+iVtx];
+				float rLambdaDt=lambdaDtBox[(MAX_VTX_PER_OBJ)*(constrId)+iVtx];
 				float pLambdaDt=rLambdaDt;
 //				rLambdaDt=btMax(pLambdaDt+lambdaDt,0.0f);
 				rLambdaDt=(pLambdaDt+lambdaDt) > 0.0f ? (pLambdaDt+lambdaDt) : 0.0f;
 				lambdaDt=rLambdaDt-pLambdaDt;
-				lambdaDtBox[(MAX_VTX_PER_OBJ)*(2*constrId)+iVtx]=rLambdaDt;
+				lambdaDtBox[(MAX_VTX_PER_OBJ)*(constrId)+iVtx]=rLambdaDt;
 			}
 			impulse=	contactNormal*lambdaDt*0.5f;
 #if USE_FRICTION

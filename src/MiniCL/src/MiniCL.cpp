@@ -186,7 +186,7 @@ clCreateProgramWithSource(cl_context         context ,
 CL_API_ENTRY cl_int CL_API_CALL clEnqueueWriteBuffer(cl_command_queue     command_queue ,
                     cl_mem               buffer ,
                     cl_bool             /* blocking_read */,
-                    size_t              /* offset */,
+                    size_t              offset,
                     size_t               cb , 
                     const void *         ptr ,
                     cl_uint             /* num_events_in_wait_list */,
@@ -198,7 +198,7 @@ CL_API_ENTRY cl_int CL_API_CALL clEnqueueWriteBuffer(cl_command_queue     comman
 	///wait for all work items to be completed
 	scheduler->flush();
 
-	memcpy(buffer, ptr,cb);
+	memcpy((char*)buffer + offset, ptr,cb);
 	return 0;
 }
 

@@ -65,28 +65,10 @@ int	btGpuDemo2dOCLWrap::m_maxVtxPerObj;
 int	btGpuDemo2dOCLWrap::m_maxBatches;
 int	btGpuDemo2dOCLWrap::m_maxShapeBufferSize;
 
-
-cl_mem	btGpuDemo2dOCLWrap::m_dBodiesHash;
-cl_mem	btGpuDemo2dOCLWrap::m_dCellStart;
-cl_mem	btGpuDemo2dOCLWrap::m_dPairBuff; 
-cl_mem	btGpuDemo2dOCLWrap::m_dPairBuffStartCurr = NULL; // needed for resetPool()
-cl_mem	btGpuDemo2dOCLWrap::m_dAABB;
-cl_mem	btGpuDemo2dOCLWrap::m_dPairScan;
-cl_mem	btGpuDemo2dOCLWrap::m_dPairOut;
-cl_mem	btGpuDemo2dOCLWrap::m_dBpParams;
-
-int btGpuDemo2dOCLWrap::m_maxHandles;
-int btGpuDemo2dOCLWrap::m_maxLargeHandles;
-int btGpuDemo2dOCLWrap::m_maxPairsPerBody;
-int btGpuDemo2dOCLWrap::m_numCells;
-int btGpuDemo2dOCLWrap::m_hashSize;
-bool btGpuDemo2dOCLWrap::m_broadphaseInited = false;
-
 void btGpuDemo2dOCLWrap::initCL(int argc, char** argv)
 {
     cl_int ciErrNum;
 
-#ifndef CL_PLATFORM_MINI_CL
     m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
  
@@ -159,23 +141,6 @@ void btGpuDemo2dOCLWrap::initCL(int argc, char** argv)
 		exit(-1); 
 	}
 	printf("OK\n");
-#elif defined(CL_PLATFORM_MINI_CL)
-	#if 0
-	///create kernels from binary
-		int numDevices = 1;
-		::size_t* lengths = (::size_t*) malloc(numDevices * sizeof(::size_t));
-		const unsigned char** images = (const unsigned char**) malloc(numDevices * sizeof(const void*));
-		for(int i = 0; i < numDevices; ++i) {
-			images[i] = 0;
-			lengths[i] = 0;
-		}
-		cl_device_id cdDevices[2];
-		cdDevices[0] = m_cdDevice;
-		m_cpProgram = clCreateProgramWithBinary(m_cxMainContext, 1, cdDevices,lengths, images, 0, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	#endif
-#endif
-
 }
 
 
@@ -215,9 +180,6 @@ void btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize
 	}
 	else
 	{
-//		#if defined(CL_PLATFORM_MINI_CL)
-//			workgroupSize = 4;
-//		#endif
 		size_t localWorkSize[2], globalWorkSize[2];
 		workgroupSize = btMin(workgroupSize, globalSize);
 		int num_t = globalSize / workgroupSize;
@@ -233,6 +195,8 @@ void btGpuDemo2dOCLWrap::runKernelWithWorkgroupSize(int kernelId, int globalSize
 		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, kernelFunc, 1, NULL, globalWorkSize, localWorkSize, 0,0,0 );
 	}
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	ciErrNum = clFlush(m_cqCommandQue);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
 
@@ -247,8 +211,6 @@ void btGpuDemo2dOCLWrap::allocateArray(cl_mem* ppBuf, int memSize)
 
 void btGpuDemo2dOCLWrap::allocateBuffers(int maxObjs, int maxNeighbors, int maxVtxPerObj, int maxBatches, int maxShapeBufferSize)
 {
-    cl_int ciErrNum;
-
 	m_maxObjs = maxObjs;
 	m_maxNeighbors = maxNeighbors;
 	m_maxVtxPerObj = maxVtxPerObj;
@@ -274,45 +236,6 @@ void btGpuDemo2dOCLWrap::allocateBuffers(int maxObjs, int maxNeighbors, int maxV
 	allocateArray(&m_dShapeBuffer, m_maxShapeBufferSize);
 	allocateArray(&m_dShapeIds, sizeof(int) * 2 * m_maxObjs);
 	allocateArray(&m_dParams, sizeof(float) * 4 * 2);
-
-	// broadphase
-	if(m_broadphaseInited)
-	{
-		int memSize;
-		memSize = m_hashSize * 2 * sizeof(unsigned int);
-		m_dBodiesHash = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-		memSize = m_numCells * sizeof(unsigned int);
-		m_dCellStart = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-		memSize = m_maxHandles * m_maxPairsPerBody * sizeof(unsigned int);
-		m_dPairBuff = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-		memSize = (m_maxHandles * 2 + 1) * sizeof(unsigned int);
-		m_dPairBuffStartCurr = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	//!!!!!!	btCuda_copyArrayToDevice(m_dPairBuffStartCurr, m_hPairBuffStartCurr, (m_maxHandles * 2 + 1) * sizeof(unsigned int)); 
-
-		unsigned int numAABB = m_maxHandles + m_maxLargeHandles;
-		memSize = numAABB * sizeof(float) * 4 * 2;
-		m_dAABB = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-		memSize = (m_maxHandles + 1) * sizeof(unsigned int);
-		m_dPairScan = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-		memSize = m_maxHandles * m_maxPairsPerBody * sizeof(unsigned int);
-		m_dPairOut = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-		memSize = 3 * 4 * sizeof(float);
-		m_dBpParams = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
-		oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	}
 }
 
 void btGpuDemo2dOCLWrap::initKernels()
@@ -352,54 +275,6 @@ void btGpuDemo2dOCLWrap::initKernels()
 	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 8, sizeof(cl_mem),	(void*)&m_dContact);
 	setKernelArg(GPUDEMO2D_KERNEL_SOLVE_CONSTRAINTS, 9, sizeof(cl_mem),	(void*)&m_dInvMass);
 
-	if(m_broadphaseInited)
-	{
-		initKernel(GPUDEMO2D_KERNEL_CALC_HASH_AABB,	"kCalcHashAABB");
-		setKernelArg(GPUDEMO2D_KERNEL_CALC_HASH_AABB, 1, sizeof(cl_mem),(void*)&m_dAABB);
-		setKernelArg(GPUDEMO2D_KERNEL_CALC_HASH_AABB, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO2D_KERNEL_CALC_HASH_AABB, 3, sizeof(cl_mem),(void*)&m_dBpParams);
-
-		initKernel(GPUDEMO2D_KERNEL_CLEAR_CELL_START, "kClearCellStart");
-		setKernelArg(GPUDEMO2D_KERNEL_CLEAR_CELL_START, 1, sizeof(cl_mem),(void*)&m_dCellStart);
-
-		initKernel(GPUDEMO2D_KERNEL_FIND_CELL_START, "kFindCellStart");
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_CELL_START, 1, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_CELL_START, 2, sizeof(cl_mem),(void*)&m_dCellStart);
-
-		initKernel(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, "kFindOverlappingPairs");
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 1, sizeof(cl_mem),(void*)&m_dAABB);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 3, sizeof(cl_mem),(void*)&m_dCellStart);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 4, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_OVERLAPPING_PAIRS, 6, sizeof(cl_mem),(void*)&m_dBpParams);
-
-		initKernel(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, "kFindPairsLarge");
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 1, sizeof(cl_mem),(void*)&m_dAABB);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 3, sizeof(cl_mem),(void*)&m_dCellStart);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 4, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO2D_KERNEL_FIND_PAIRS_LARGE, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-
-		initKernel(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, "kComputePairCacheChanges");
-		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 3, sizeof(cl_mem),(void*)&m_dPairScan);
-		setKernelArg(GPUDEMO2D_KERNEL_COMPUTE_CACHE_CHANGES, 4, sizeof(cl_mem),(void*)&m_dAABB);
-
-		initKernel(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, "kSqueezeOverlappingPairBuff");
-		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
-		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
-		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 3, sizeof(cl_mem),(void*)&m_dPairScan);
-		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 4, sizeof(cl_mem),(void*)&m_dPairOut);
-		setKernelArg(GPUDEMO2D_KERNEL_SQUEEZE_PAIR_BUFF, 5, sizeof(cl_mem),(void*)&m_dAABB);
-
-
-		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL, "kBitonicSortCellIdLocal");
-		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1, "kBitonicSortCellIdLocal1");
-		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL, "kBitonicSortCellIdMergeGlobal");
-		initKernel(GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "kBitonicSortCellIdMergeLocal");
-	}
 }
 
 void btGpuDemo2dOCLWrap::setKernelArg(int kernelId, int argNum, int argSize, void* argPtr)
@@ -427,108 +302,18 @@ void btGpuDemo2dOCLWrap::copyArrayFromDevice(void* host, const cl_mem device, un
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
+#ifdef CL_PLATFORM_MINI_CL
 
-static unsigned int getMaxPowOf2(unsigned int num)
+#include <CL/cl_MiniCL_Defs.h>
+
+extern "C"
 {
-	unsigned int maxPowOf2 = 1;
-	for(int bit = 1; bit < 32; bit++)
-	{
-		if(maxPowOf2 >= num)
-		{
-			break;
-		}
-		maxPowOf2 <<= 1;
-	}
-	return maxPowOf2;
+	#include "Gpu2dDemoOCL.cl"
 }
 
+MINICL_REGISTER(kClearAccumImpulse)
+MINICL_REGISTER(kComputeConstraints)
+MINICL_REGISTER(kCollisionWithWallBox)
+MINICL_REGISTER(kSolveConstraints)
 
-void btGpuDemo2dOCLWrap::setBroadphaseBuffers(int maxHandles, int maxLargeHandles, int maxPairsPerBody, int numCells)
-{
-	m_maxHandles = maxHandles;
-	m_maxLargeHandles = maxLargeHandles;
-	m_maxPairsPerBody = maxPairsPerBody;
-	m_numCells = numCells;
-	m_hashSize = getMaxPowOf2(m_maxHandles);
-	m_broadphaseInited = true;
-}
-
-
-//Note: logically shared with BitonicSort OpenCL code!
-
-void btGpuDemo2dOCLWrap::bitonicSortNv(cl_mem pKey, unsigned int batch, unsigned int arrayLength, unsigned int dir)
-{
-	unsigned int localSizeLimit = m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_workgroupSize * 2;
-    if(arrayLength < 2)
-        return;
-    //Only power-of-two array lengths are supported so far
-    dir = (dir != 0);
-    cl_int ciErrNum;
-    size_t localWorkSize, globalWorkSize;
-    if(arrayLength <= localSizeLimit)
-    {
-        btAssert( (batch * arrayLength) % localSizeLimit == 0);
-        //Launch bitonicSortLocal
-		ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 0,   sizeof(cl_mem), (void *)&pKey);
-        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1,  sizeof(cl_uint), (void *)&arrayLength);
-        ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 2,  sizeof(cl_uint), (void *)&dir);
-        oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-        localWorkSize  = localSizeLimit / 2;
-        globalWorkSize = batch * arrayLength / 2;
-        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
-        oclCHECKERROR(ciErrNum, CL_SUCCESS);
-    }
-    else
-    {
-        //Launch bitonicSortLocal1
-        ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
-        oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-        localWorkSize  = localSizeLimit / 2;
-        globalWorkSize = batch * arrayLength / 2;
-        ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
-        oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-        for(unsigned int size = 2 * localSizeLimit; size <= arrayLength; size <<= 1)
-        {
-            for(unsigned stride = size / 2; stride > 0; stride >>= 1)
-            {
-                if(stride >= localSizeLimit)
-                {
-                    //Launch bitonicMergeGlobal
-                    ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 2, sizeof(cl_uint), (void *)&size);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 3, sizeof(cl_uint), (void *)&stride);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
-					oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-                    localWorkSize  = localSizeLimit / 4;
-                    globalWorkSize = batch * arrayLength / 2;
-
-                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
-					oclCHECKERROR(ciErrNum, CL_SUCCESS);
-                }
-                else
-                {
-                    //Launch bitonicMergeLocal
-					ciErrNum  = clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 0,  sizeof(cl_mem), (void *)&pKey);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, sizeof(cl_uint), (void *)&arrayLength);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 2, sizeof(cl_uint), (void *)&stride);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 3, sizeof(cl_uint), (void *)&size);
-                    ciErrNum |= clSetKernelArg(m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 4, sizeof(cl_uint), (void *)&dir);
-					oclCHECKERROR(ciErrNum, CL_SUCCESS);
-
-                    localWorkSize  = localSizeLimit / 2;
-                    globalWorkSize = batch * arrayLength / 2;
-
-                    ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, m_kernels[GPUDEMO2D_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL].m_kernel, 1, NULL, &globalWorkSize, &localWorkSize, 0, NULL, NULL);
-					oclCHECKERROR(ciErrNum, CL_SUCCESS);
-                    break;
-                }
-            }
-        }
-    }
-}
-
+#endif

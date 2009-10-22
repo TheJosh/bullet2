@@ -92,7 +92,7 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/btGpu3DGridBroadphase.h"
 #endif
 
-#include "btGpu2dGridBroadphaseOCL.h"
+#include "../../Extras/OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
 
 btScalar gTimeStep = btScalar(1./60.);
 
@@ -312,8 +312,8 @@ void	BasicDemo::initPhysics()
 //	m_broadphase = new btAxisSweep3(gWorldMin, gWorldMax, MAX_PROXIES,gPairCache);
 //	m_broadphase = new btDbvtBroadphase(gPairCache);
 //	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24, 1.0f/1.5f);
-	m_broadphase = new btGpu2dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24,1./1.5);
 //	m_broadphase = new btCudaBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,24,24);
+	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24,1./1.5);
 
 
 	///the default constraint solver
