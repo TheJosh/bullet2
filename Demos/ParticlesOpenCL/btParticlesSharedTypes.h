@@ -40,5 +40,15 @@ struct btInt2
 	int y;
 };
 
+struct btInt4
+{
+	int x;
+	int y;
+	int z;
+	int w;
+};
+
+
+
 #endif
 

@@ -90,6 +90,8 @@ protected:
 public:
 	btAlignedObjectArray<btVector3>	m_hPos;
 	btAlignedObjectArray<btVector3>	m_hVel;
+	btAlignedObjectArray<btVector3>	m_hSortedPos;
+	btAlignedObjectArray<btVector3>	m_hSortedVel;
 protected:
 	btAlignedObjectArray<btInt2>	m_hPosHash;
 	btAlignedObjectArray<int>		m_hCellStart;

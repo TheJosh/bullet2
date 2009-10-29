@@ -146,6 +146,8 @@ void btParticlesDynamicsWorld::allocateBuffers()
 	// positions of spheres
 	m_hPos.resize(m_numParticles);
 	m_hVel.resize(m_numParticles);
+	m_hSortedPos.resize(m_numParticles);
+	m_hSortedVel.resize(m_numParticles);
 	m_hPosHash.resize(m_hashSize); 
 	for(int i = 0; i < m_hashSize; i++) { m_hPosHash[i].x = 0x7FFFFFFF; m_hPosHash[i].y = 0; }
     unsigned int memSize = sizeof(btVector3) *  m_numParticles;
@@ -413,9 +415,52 @@ void btParticlesDynamicsWorld::initCLKernels(int argc, char** argv)
 	initKernel(PARTICLES_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "kBitonicSortCellIdMergeLocal");
 }
 
+
+static btInt4 cpu_getGridPos(btVector3& worldPos, btSimParams* pParams)
+{
+    btInt4 gridPos;
+	gridPos.x = (int)floor((worldPos[0] - pParams->m_worldMin[0]) / pParams->m_cellSize[0]);
+	gridPos.y = (int)floor((worldPos[1] - pParams->m_worldMin[1]) / pParams->m_cellSize[1]);
+	gridPos.z = (int)floor((worldPos[2] - pParams->m_worldMin[2]) / pParams->m_cellSize[2]);
+    return gridPos;
+}
+
+static unsigned int cpu_getPosHash(btInt4& gridPos, btSimParams* pParams)
+{
+	btInt4 gridDim = *((btInt4*)(pParams->m_gridSize));
+	if(gridPos.x < 0) gridPos.x = 0;
+	if(gridPos.x >= gridDim.x) gridPos.x = gridDim.x - 1;
+	if(gridPos.y < 0) gridPos.y = 0;
+	if(gridPos.y >= gridDim.y) gridPos.y = gridDim.y - 1;
+	if(gridPos.z < 0) gridPos.z = 0;
+	if(gridPos.z >= gridDim.z) gridPos.z = gridDim.z - 1;
+	unsigned int hash = gridPos.z * gridDim.y * gridDim.x + gridPos.y * gridDim.x + gridPos.x;
+	return hash;
+} 
+
+
+
 void btParticlesDynamicsWorld::runComputeCellIdKernel()
 {
     cl_int ciErrNum;
+	if(m_useCpuControls[SIMSTAGE_COMPUTE_CELL_ID]->m_active)
+	{	// CPU version
+		unsigned int memSize = sizeof(btVector3) * m_numParticles;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		for(int index = 0; index < m_numParticles; index++)
+		{
+			btVector3 pos = m_hPos[index];
+			btInt4 gridPos = cpu_getGridPos(pos, &m_simParams);
+			unsigned int hash = cpu_getPosHash(gridPos, &m_simParams);
+			m_hPosHash[index].x = hash;
+			m_hPosHash[index].y = index;
+		}
+		memSize = sizeof(btInt2) * m_numParticles;
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
+	else
 	{
 		BT_PROFILE("ComputeCellId");
 		runKernelWithWorkgroupSize(PARTICLES_KERNEL_COMPUTE_CELL_ID, m_numParticles);
@@ -446,11 +491,129 @@ void btParticlesDynamicsWorld::runComputeCellIdKernel()
 	}
 }
 
+
+static btVector3 cpu_collideTwoParticles(
+    btVector3& posA,
+    btVector3& posB,
+    btVector3& velA,
+    btVector3& velB,
+    float radiusA,
+    float radiusB,
+    float spring,
+    float damping,
+    float shear,
+    float attraction
+)
+{
+    //Calculate relative position
+    btVector3  relPos = posB - posA; relPos[3] = 0.f;
+    float        dist = sqrt(relPos[0] * relPos[0] + relPos[1] * relPos[1] + relPos[2] * relPos[2]);
+    float collideDist = radiusA + radiusB;
+
+    btVector3 force = btVector3(0, 0, 0);
+    if(dist < collideDist)
+	{
+        btVector3 norm = relPos / dist;
+
+        //Relative velocity
+        btVector3 relVel = velB - velA; relVel[3] = 0.f;;
+
+        //Relative tangential velocity
+        float relVelDotNorm = relVel.dot(norm);
+		btVector3 tanVel = relVel - relVelDotNorm * norm; 
+        //Spring force (potential)
+        float springFactor = -spring * (collideDist - dist);
+		force = springFactor * norm + damping * relVel + shear * tanVel + attraction * relPos;
+    }
+    return force;
+}
+
+
 void btParticlesDynamicsWorld::runCollideParticlesKernel()
 {
-	runKernelWithWorkgroupSize(PARTICLES_KERNEL_COLLIDE_PARTICLES, m_numParticles);
-	cl_int ciErrNum = clFinish(m_cqCommandQue);
-	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	cl_int ciErrNum;
+	if(m_useCpuControls[SIMSTAGE_COLLIDE_PARTICLES]->m_active)
+	{	// CPU version
+		int memSize = sizeof(btVector3) * m_numParticles;
+		{
+			BT_PROFILE("Copy from GPU");
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dSortedPos, CL_TRUE, 0, memSize, &(m_hSortedPos[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dSortedVel, CL_TRUE, 0, memSize, &(m_hSortedVel[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+			memSize = sizeof(btInt2) * m_numParticles;
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
+			memSize = m_numGridCells * sizeof(int);
+			ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dCellStart, CL_TRUE, 0, memSize, &(m_hCellStart[0]), 0, NULL, NULL);
+			oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		}
+		for(int index = 0; index < m_numParticles; index++)
+		{
+			btVector3 posA = m_hSortedPos[index];
+			btVector3 velA = m_hSortedVel[index];
+			btVector3 force = btVector3(0, 0, 0);
+			float particleRad = m_simParams.m_particleRad;
+			float collisionDamping = m_simParams.m_collisionDamping;
+			float spring = m_simParams.m_spring;
+			float shear = m_simParams.m_shear;
+			float attraction = m_simParams.m_attraction;
+			int unsortedIndex = m_hPosHash[index].y;
+			//Get address in grid
+			btInt4 gridPosA = cpu_getGridPos(posA, &m_simParams);
+			//Accumulate surrounding cells
+			btInt4 gridPosB; 
+			for(int z = -1; z <= 1; z++)
+			{
+				gridPosB.z = gridPosA.z + z;
+				for(int y = -1; y <= 1; y++)
+				{
+					gridPosB.y = gridPosA.y + y;
+					for(int x = -1; x <= 1; x++)
+					{
+						gridPosB.x = gridPosA.x + x;
+						//Get start particle index for this cell
+						unsigned int hashB = cpu_getPosHash(gridPosB, &m_simParams);
+						int startI = m_hCellStart[hashB];
+						//Skip empty cell
+						if(startI < 0)
+						{
+							continue;
+						}
+						//Iterate over particles in this cell
+						int endI = startI + 8;
+						for(int j = startI; j < endI; j++)
+						{
+							unsigned int hashC = m_hPosHash[j].x;
+							if(hashC != hashB)
+							{
+								break;
+							}
+							if(j == index)
+							{
+								continue;
+							}
+							btVector3 posB = m_hSortedPos[j];
+							btVector3 velB = m_hSortedVel[j];
+							//Collide two spheres
+							force += cpu_collideTwoParticles(	posA, posB, velA, velB, particleRad, particleRad, 
+																spring, collisionDamping, shear, attraction);
+						}
+					}
+				}
+			}     
+			//Write new velocity back to original unsorted location
+			m_hVel[unsortedIndex] = velA + force;
+		}	
+		memSize = sizeof(btVector3) * m_numParticles;
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dVel, CL_TRUE, 0, memSize, &(m_hVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
+	else
+	{
+		runKernelWithWorkgroupSize(PARTICLES_KERNEL_COLLIDE_PARTICLES, m_numParticles);
+		cl_int ciErrNum = clFinish(m_cqCommandQue);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	}
 }
 
 
@@ -460,8 +623,51 @@ void btParticlesDynamicsWorld::runIntegrateMotionKernel()
 	if(m_useCpuControls[SIMSTAGE_INTEGRATE_MOTION]->m_active)
 	{
 		// CPU version
-		// write back to GPU
+#if 1
+		// read from GPU
 		unsigned int memSize = sizeof(btVector3) * m_numParticles;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dVel, CL_TRUE, 0, memSize, &(m_hVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		for(int index = 0; index < m_numParticles; index++)
+		{
+			btVector3 pos = m_hPos[index];
+			btVector3 vel = m_hVel[index];
+			pos[3] = 1.0f;
+			vel[3] = 0.0f;
+			// apply gravity
+			btVector3 gravity = *((btVector3*)(m_simParams.m_gravity));
+			float particleRad = m_simParams.m_particleRad;
+			float globalDamping = m_simParams.m_globalDamping;
+			float boundaryDamping = m_simParams.m_boundaryDamping;
+			vel += gravity * m_timeStep;
+			vel *= globalDamping;
+			// integrate position
+			pos += vel * m_timeStep;
+			// collide with world boundaries
+			btVector3 worldMin = *((btVector3*)(m_simParams.m_worldMin));
+			btVector3 worldMax = *((btVector3*)(m_simParams.m_worldMax));
+			for(int j = 0; j < 3; j++)
+			{
+				if(pos[j] < (worldMin[j] + particleRad))
+				{
+					pos[j] = worldMin[j] + particleRad;
+					vel[j] *= boundaryDamping;
+				}
+				if(pos[j] > (worldMax[j] - particleRad))
+				{
+					pos[j] = worldMax[j] - particleRad;
+					vel[j] *= boundaryDamping;
+				}
+			}
+			// write back position and velocity
+			m_hPos[index] = pos;
+			m_hVel[index] = vel;
+		}
+#endif
+		// write back to GPU
+		memSize = sizeof(btVector3) * m_numParticles;
 		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dVel, CL_TRUE, 0, memSize, &(m_hVel[0]), 0, NULL, NULL);
@@ -596,6 +802,11 @@ void btParticlesDynamicsWorld::runFindCellStartKernel()
 		int memSize = m_numParticles * sizeof(btInt2);
 		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPosHash, CL_TRUE, 0, memSize, &(m_hPosHash[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		memSize = sizeof(btVector3) * m_numParticles;
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dPos, CL_TRUE, 0, memSize, &(m_hPos[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueReadBuffer(m_cqCommandQue, m_dVel, CL_TRUE, 0, memSize, &(m_hVel[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		// clear cells
 		for(int i = 0; i < m_numGridCells; i++)
 		{
@@ -604,16 +815,31 @@ void btParticlesDynamicsWorld::runFindCellStartKernel()
 		// find start of each cell in sorted hash
 		btInt2 hash = m_hPosHash[0];
 		m_hCellStart[hash.x] = 0;
+		int unsortedIndex = hash.y;
+		btVector3 pos = m_hPos[unsortedIndex];
+		btVector3 vel = m_hVel[unsortedIndex];
+		m_hSortedPos[0] = pos;
+		m_hSortedVel[0] = vel;
 		for(int i = 1; i < m_numParticles; i++)
 		{
 			if(m_hPosHash[i-1].x != m_hPosHash[i].x)
 			{
 				m_hCellStart[m_hPosHash[i].x] = i;
 			}
+			unsortedIndex = m_hPosHash[i].y;
+			pos = m_hPos[unsortedIndex];
+			vel = m_hVel[unsortedIndex];
+			m_hSortedPos[i] = pos;
+			m_hSortedVel[i] = vel;
 		}
 		// write back to GPU
 		memSize = m_numGridCells * sizeof(int);
 		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dCellStart, CL_TRUE, 0, memSize, &(m_hCellStart[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		memSize = sizeof(btVector3) * m_numParticles;
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dSortedPos, CL_TRUE, 0, memSize, &(m_hSortedPos[0]), 0, NULL, NULL);
+		oclCHECKERROR(ciErrNum, CL_SUCCESS);
+		ciErrNum = clEnqueueWriteBuffer(m_cqCommandQue, m_dSortedVel, CL_TRUE, 0, memSize, &(m_hSortedVel[0]), 0, NULL, NULL);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 	else

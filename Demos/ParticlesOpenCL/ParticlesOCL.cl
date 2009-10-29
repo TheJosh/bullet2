@@ -32,14 +32,14 @@ int4 getGridPos(float4 worldPos, __global float4* pParams)
 
 unsigned int getPosHash(int4 gridPos, __global float4* pParams)
 {
-	int4 pGridDim = *((__global int4*)(pParams + 4));
+	int4 gridDim = *((__global int4*)(pParams + 4));
 	if(gridPos.x < 0) gridPos.x = 0;
-	if(gridPos.x >= pGridDim.x) gridPos.x = pGridDim.x - 1;
+	if(gridPos.x >= gridDim.x) gridPos.x = gridDim.x - 1;
 	if(gridPos.y < 0) gridPos.y = 0;
-	if(gridPos.y >= pGridDim.y) gridPos.y = pGridDim.y - 1;
+	if(gridPos.y >= gridDim.y) gridPos.y = gridDim.y - 1;
 	if(gridPos.z < 0) gridPos.z = 0;
-	if(gridPos.z >= pGridDim.z) gridPos.z = pGridDim.z - 1;
-	unsigned int hash = gridPos.z * pGridDim.y * pGridDim.x + gridPos.y * pGridDim.x + gridPos.x;
+	if(gridPos.z >= gridDim.z) gridPos.z = gridDim.z - 1;
+	unsigned int hash = gridPos.z * gridDim.y * gridDim.x + gridPos.y * gridDim.x + gridPos.x;
 	return hash;
 } 
 
@@ -291,7 +291,6 @@ __kernel void kCollideParticles(int numParticles,
 	}     
     //Write new velocity back to original unsorted location
     pVel[unsortedIndex] = velA + force;
-//    pVel[unsortedIndex] = force;
 }
 
 
