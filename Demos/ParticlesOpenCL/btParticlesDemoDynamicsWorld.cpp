@@ -174,8 +174,8 @@ void btParticlesDynamicsWorld::adjustGrid()
 	//btVector3 wmin( BT_LARGE_FLOAT,  BT_LARGE_FLOAT,  BT_LARGE_FLOAT);
 	//btVector3 wmax(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
 
-	btVector3 wmin( BT_LARGE_FLOAT,  0,-10);
-	btVector3 wmax(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, 10);
+	btVector3 wmin( BT_LARGE_FLOAT,  BT_LARGE_FLOAT, BT_LARGE_FLOAT);
+	btVector3 wmax(-BT_LARGE_FLOAT, -BT_LARGE_FLOAT, -BT_LARGE_FLOAT);
 	btVector3 boxDiag(m_particleRad, m_particleRad, m_particleRad);
 	for(int i = 0; i < m_numParticles; i++)
 	{
@@ -187,10 +187,27 @@ void btParticlesDynamicsWorld::adjustGrid()
 	}
 	m_worldMin = wmin;
 	m_worldMax = wmax;
-
 	btVector3 wsize = m_worldMax - m_worldMin;
-	m_worldMin -= wsize * 0.5f;
-	m_worldMax += wsize * 0.5f;
+	wsize[3] = 1.0f;
+
+	glBindBufferARB(GL_ARRAY_BUFFER, m_colVbo);
+    btVector3* color = (btVector3*)glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+    for(int i = 0; i < m_numParticles; i++, color++)
+	{
+		*color = (m_hPos[i] - m_worldMin) / wsize;
+		(*color)[3] = 1.f;
+	}
+    glUnmapBufferARB(GL_ARRAY_BUFFER);
+
+/*
+	wsize[0] *= 0.5f;
+	wsize[1] *= 0.1f;
+	wsize[2] *= 0.5f;
+	m_worldMin -= wsize;
+	m_worldMax += wsize;
+*/
+	m_worldMin.setValue(-1.f, -1.f, -1.f);
+	m_worldMax.setValue( 1.f,  1.f,  1.f);
 	wsize = m_worldMax - m_worldMin;
 
 	m_cellSize[0] = m_cellSize[1] = m_cellSize[2] = m_particleRad * btScalar(2.f);
@@ -222,13 +239,19 @@ void btParticlesDynamicsWorld::adjustGrid()
 
 void btParticlesDynamicsWorld::grabSimulationData()
 {
-	const btVector3& gravity = getGravity();
+//	const btVector3& gravity = getGravity();
+	btVector3 gravity(0., -0.06, 0.);
 	m_simParams.m_gravity[0] = gravity[0];
 	m_simParams.m_gravity[1] = gravity[1];
 	m_simParams.m_gravity[2] = gravity[2];
 	m_simParams.m_particleRad = m_particleRad;
 	m_simParams.m_globalDamping = 1.0f;
 	m_simParams.m_boundaryDamping = -0.5f;
+
+//	m_simParams.m_collisionDamping = 0.02f;
+//	m_simParams.m_spring = 0.5f;
+//	m_simParams.m_shear = 0.1f;
+//	m_simParams.m_attraction = 0.0f;
 	m_simParams.m_collisionDamping = 0.02f;
 	m_simParams.m_spring = 0.5f;
 	m_simParams.m_shear = 0.1f;
@@ -271,7 +294,8 @@ void btParticlesDynamicsWorld::createVBO()
     glBindBufferARB(GL_ARRAY_BUFFER, m_colVbo);
     float *data = (float*)glMapBufferARB(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
     float *ptr = data;
-    for(int i = 0; i < m_numParticles; i++) {
+    for(int i = 0; i < m_numParticles; i++) 
+	{
         float t = i / (float)m_numParticles;
 		ptr[0] = 0.f;
 		ptr[1] = 1.f;
@@ -861,8 +885,8 @@ void btParticlesDynamicsWorld::initKernel(int kernelId, char* pName)
 	size_t wgSize;
 	ciErrNum = clGetKernelWorkGroupInfo(kernel, m_cdDevice, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &wgSize, NULL);
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	if (wgSize > 64)
-		wgSize = 64;
+//	if (wgSize > 64)
+//		wgSize = 64;
 	m_kernels[kernelId].m_Id = kernelId;
 	m_kernels[kernelId].m_kernel = kernel;
 	m_kernels[kernelId].m_name = pName;

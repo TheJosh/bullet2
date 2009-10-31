@@ -126,6 +126,16 @@ static float4 operator-(const float4& a,const float4& b)
 	tmp.w = a.w - b.w;
 	return tmp;
 }
+static float4 operator*(float a,const float4& b)
+{
+	float4 tmp;
+	tmp.x = a * b.x;
+	tmp.y = a * b.y;
+	tmp.z = a * b.z;
+	tmp.w = a * b.w;
+	return tmp;
+}
+
 
 static float dot(const float4&a ,const float4& b)
 {

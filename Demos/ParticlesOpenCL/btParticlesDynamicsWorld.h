@@ -38,6 +38,7 @@ subject to the following restrictions:
 
 #define PARTICLES_MAX_PARTICLES (65536)
 #define PARTICLES_MAX_NEIGHBORS (32)
+#define DEF_PARTICLE_RADIUS (0.023f)
 
 enum
 {
@@ -134,7 +135,8 @@ public:
 	{ 
 		m_cxMainContext = 0;
 		m_usedDevice = 1;
-		m_particleRad = btScalar(0.5f);
+//		m_particleRad = btScalar(0.5f);
+		m_particleRad = DEF_PARTICLE_RADIUS;
 		m_simParams.m_gravity[0] = 0.f;
 		m_simParams.m_gravity[1] = -10.f;
 		m_simParams.m_gravity[2] = 0.f;

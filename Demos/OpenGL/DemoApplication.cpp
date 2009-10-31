@@ -81,7 +81,9 @@ m_ortho(0),
 m_mouseOldX(0),
 m_mouseOldY(0),
 m_mouseButtons(0),
-m_modifierKeys(0)
+m_modifierKeys(0),
+m_frustumZNear(1.f),
+m_frustumZFar(10000.f)
 {
 #ifndef BT_NO_PROFILE
 	m_profileIterator = CProfileManager::Get_Iterator();
@@ -241,10 +243,10 @@ void DemoApplication::updateCamera() {
 	{
 		if (m_glutScreenWidth > m_glutScreenHeight) 
 		{
-			glFrustum (-aspect, aspect, -1.0, 1.0, 1.0, 10000.0);
+			glFrustum (-aspect * m_frustumZNear, aspect * m_frustumZNear, -m_frustumZNear, m_frustumZNear, m_frustumZNear, m_frustumZFar);
 		} else 
 		{
-			glFrustum (-1.0, 1.0, -aspect, aspect, 1.0, 10000.0);
+			glFrustum (-m_frustumZNear, m_frustumZNear, -aspect * m_frustumZNear, aspect * m_frustumZNear, m_frustumZNear, m_frustumZFar);
 		}
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();

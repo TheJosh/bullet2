@@ -192,29 +192,25 @@ float4 collideTwoParticles(
 )
 {
     //Calculate relative position
-    float4     relPos = (float4)(posB.x - posA.x, posB.y - posA.y, posB.z - posA.z, 0);
+    float4     relPos = posB - posA; relPos.w = 0.f;
     float        dist = sqrt(relPos.x * relPos.x + relPos.y * relPos.y + relPos.z * relPos.z);
     float collideDist = radiusA + radiusB;
 
-    float4 force = (float4)(0, 0, 0, 0);
+    float4 force = (float4)0.f;
     if(dist < collideDist){
-        float4 norm = (float4)(relPos.x / dist, relPos.y / dist, relPos.z / dist, 0);
+        float4 norm = relPos * (1.f / dist); norm.w = 0.f;
 
         //Relative velocity
-        float4 relVel = (float4)(velB.x - velA.x, velB.y - velA.y, velB.z - velA.z, 0);
+        float4 relVel = velB - velA; relVel.w = 0.f;
 
         //Relative tangential velocity
         float relVelDotNorm = relVel.x * norm.x + relVel.y * norm.y + relVel.z * norm.z;
-        float4 tanVel = (float4)(relVel.x - relVelDotNorm * norm.x, relVel.y - relVelDotNorm * norm.y, relVel.z - relVelDotNorm * norm.z, 0);
+        float4 tanVel = relVel - norm * relVelDotNorm;  tanVel.w = 0.f;
 
         //Spring force (potential)
         float springFactor = -spring * (collideDist - dist);
-        force = (float4)(
-            springFactor * norm.x + damping * relVel.x + shear * tanVel.x + attraction * relPos.x,
-            springFactor * norm.y + damping * relVel.y + shear * tanVel.y + attraction * relPos.y,
-            springFactor * norm.z + damping * relVel.z + shear * tanVel.z + attraction * relPos.z,
-            0
-        );
+        force = springFactor * norm + damping * relVel + shear * tanVel + attraction * relPos;
+        force.w = 0.f;
     }
     return force;
 }
@@ -229,7 +225,7 @@ __kernel void kCollideParticles(int numParticles,
 								__global const int   *pCellStart,    //input: cell boundaries
 								__global float4* pParams GUID_ARG)
 {
-    uint index = get_global_id(0);
+    int index = get_global_id(0);
     if(index >= numParticles)
 	{
         return;
@@ -237,7 +233,7 @@ __kernel void kCollideParticles(int numParticles,
 
     float4   posA = pSortedPos[index];
     float4   velA = pSortedVel[index];
-    float4 force = (float4)(0, 0, 0, 0);
+    float4 force = (float4)0.f;
     float particleRad = pParams[5].x;
     float collisionDamping = pParams[5].w;
     float spring = pParams[6].x;

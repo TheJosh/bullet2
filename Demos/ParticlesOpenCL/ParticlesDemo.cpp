@@ -14,14 +14,19 @@ subject to the following restrictions:
 */
 
 #define START_POS_X btScalar(0.f)
-#define START_POS_Y btScalar(40.f)
-#define START_POS_Z btScalar(40.f)
-#define ARRAY_SIZE_X 40
-#define ARRAY_SIZE_Y 50
+#define START_POS_Y btScalar(0.f)
+#define START_POS_Z btScalar(0.f)
+//#define START_POS_Y btScalar(40.f)
+//#define START_POS_Z btScalar(40.f)
+//#define START_POS_Y btScalar(0.4f)
+//#define START_POS_Z btScalar(0.4f)
+#define ARRAY_SIZE_X 32
+#define ARRAY_SIZE_Y 32
 //#define ARRAY_SIZE_Y 5
-#define ARRAY_SIZE_Z 40
+#define ARRAY_SIZE_Z 16
 //#define ARRAY_SIZE_Z 1
-#define DIST btScalar(2.f)
+//#define DIST btScalar(2.f)
+#define DIST (DEF_PARTICLE_RADIUS * 2.f)
 
 #define STRESS_X  20
 //#define STRESS_Y  200
@@ -177,11 +182,15 @@ void	ParticlesDemo::initPhysics()
 	setTexturing(false);
 	setShadows(false);
 
-	setCameraDistance(80.);
+//	setCameraDistance(80.f);
+	setCameraDistance(3.0f);
 //	m_cameraTargetPosition.setValue(50, 10, 0);
 	m_cameraTargetPosition.setValue(0, 0, 0);
-	m_azi = btScalar(0.f);
-	m_ele = btScalar(0.f);
+//	m_azi = btScalar(0.f);
+//	m_ele = btScalar(0.f);
+	m_azi = btScalar(45.f);
+	m_ele = btScalar(30.f);
+	setFrustumZPlanes(0.1f, 10.f);
 
 	///collision configuration contains default setup for memory, collision setup
 
@@ -222,12 +231,10 @@ void	ParticlesDemo::initPhysics()
 		m_pWorld->m_useCpuControls[i]->m_active = false;
 	}
 #if defined(CL_PLATFORM_MINI_CL)
-	m_pWorld->m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active = true; 
 	m_pWorld->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; 
-	m_pWorld->m_useCpuControls[SIMSTAGE_COMPUTE_CONTACTS]->m_active = true; 
-	
-
+	m_pWorld->m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active = true; 
 #endif
+
 #if defined(CL_PLATFORM_AMD)
 	m_pWorld->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; // sloooow, incorrect, crashes application
 	m_pWorld->m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active = true; // run-time error "Unimplemented"
@@ -243,7 +250,8 @@ void	ParticlesDemo::initPhysics()
 	m_pWorld->getSolverInfo().m_numIterations = 4;
 
 	{
-		btCollisionShape* colShape = new btSphereShape(btScalar(1.0f));
+//		btCollisionShape* colShape = new btSphereShape(btScalar(1.0f));
+		btCollisionShape* colShape = new btSphereShape(DEF_PARTICLE_RADIUS);
 		m_collisionShapes.push_back(colShape);
 		btTransform startTransform;
 		startTransform.setIdentity();
@@ -282,7 +290,7 @@ void ParticlesDemo::init_scene_directly()
 			for(int j = 0;j<ARRAY_SIZE_Z;j++)
 			{
 				m_pWorld->m_hVel[total] = btVector3(0., 0., 0.);
-				btVector3 jitter = 0.01f * btVector3(frand(), frand(), frand());
+				btVector3 jitter = 0.01f * 0.03f * btVector3(frand(), frand(), frand());
 				m_pWorld->m_hPos[total] = btVector3(DIST*i + start_x, DIST*k + start_y, DIST*j + start_z) + jitter;
 				total++;
 			}
@@ -380,6 +388,8 @@ void ParticlesDemo::keyboardCallback(unsigned char key, int x, int y)
 void ParticlesDemo::renderme()
 {
 
+    glColor3f(1.0, 1.0, 1.0);
+    glutWireCube(2.0);
 
 	glPointSize(5.0f);
 	glEnable(GL_POINT_SPRITE_ARB);
