@@ -231,15 +231,15 @@ void	ParticlesDemo::initPhysics()
 		m_pWorld->m_useCpuControls[i]->m_active = false;
 	}
 #if defined(CL_PLATFORM_MINI_CL)
+	// these kernels use barrier()
 	m_pWorld->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; 
 	m_pWorld->m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active = true; 
 #endif
 
 #if defined(CL_PLATFORM_AMD)
-	m_pWorld->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; // sloooow, incorrect, crashes application
-	m_pWorld->m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active = true; // run-time error "Unimplemented"
-	m_pWorld->m_useCpuControls[SIMSTAGE_SCAN_PAIRS]->m_active = true; // works, but very slow (up to 100 times)
-	m_pWorld->m_useCpuControls[SIMSTAGE_COMPUTE_BATCHES]->m_active = true; // run-time error "Unimplemented"
+	// these kernels use barrier()
+	m_pWorld->m_useCpuControls[SIMSTAGE_SORT_CELL_ID]->m_active = true; 
+	m_pWorld->m_useCpuControls[SIMSTAGE_FIND_CELL_START]->m_active = true; 
 #endif
 
 
