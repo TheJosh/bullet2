@@ -403,7 +403,7 @@ void bt3dGridBroadphaseOCL::calcHashAABB()
 void bt3dGridBroadphaseOCL::sortHash()
 {
 	BT_PROFILE("sortHash");
-#ifdef CL_PLATFORM_MINI_CL
+#if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
 	copyArrayFromDevice(m_hBodiesHash, m_dBodiesHash, m_numHandles * 2 * sizeof(unsigned int));
 	btGpu3DGridBroadphase::sortHash();
 	copyArrayToDevice(m_dBodiesHash, m_hBodiesHash, m_numHandles * 2 * sizeof(unsigned int));
@@ -421,11 +421,11 @@ void bt3dGridBroadphaseOCL::findCellStart()
 #if 1
 	BT_PROFILE("findCellStart");
 	runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_CLEAR_CELL_START, m_numCells);
-	#ifndef CL_PLATFORM_MINI_CL
-		runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_FIND_CELL_START, m_numHandles);
-	#else
+	#if defined(CL_PLATFORM_MINI_CL) || defined(CL_PLATFORM_AMD)
 		btGpu3DGridBroadphase::findCellStart();
 		copyArrayToDevice(m_dCellStart, m_hCellStart, m_numCells * sizeof(unsigned int));
+	#else
+		runKernelWithWorkgroupSize(GRID3DOCL_KERNEL_FIND_CELL_START, m_numHandles);
 	#endif
 #else
 	btGpu3DGridBroadphase::findCellStart();

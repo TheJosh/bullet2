@@ -31,6 +31,8 @@ subject to the following restrictions:
 #include "BulletCollision/BroadphaseCollision/btDbvtBroadphase.h"
 #include "LinearMath/btQuickprof.h"
 
+#include "cl/cl_platform.h"
+
 #define NUM_SAP_BOXES 8192
 //#define NUM_SAP_BOXES 16384
 //#define NUM_SAP_BOXES 1024
@@ -315,7 +317,15 @@ int main(int argc, char** argv)
 			{TEST_DBVT_8192, "Bullet DBVT 8192"},
 			{TEST_BULLET_CUDA_8192, "Bullet CUDA 8192"},
 			{TEST_BULLET_3DGRID_8192, "Bullet 3D Grid 8192"},
-			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL 8192"},
+#if defined(CL_PLATFORM_MINI_CL)
+			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (MiniCL) 8192"},
+#elif defined(CL_PLATFORM_AMD)
+			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (AMD) 8192"},
+#elif defined(CL_PLATFORM_NVIDIA)
+			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (NVIDIA) 8192"},
+#else
+#error "OpenCL platform not supported"
+#endif
 			{TEST_OPCODE_ARRAY_SAP, "OPCODE ARRAY SAP"},
 		};
 		TwType testType = TwDefineEnum("CollisionTest", testEV, MAX_NB_TESTS);

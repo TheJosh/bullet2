@@ -453,7 +453,15 @@ BulletSAPCompleteBoxPruningTest::BulletSAPCompleteBoxPruningTest(int numBoxes,in
 
 	case 10:
 		m_broadphase = new bt3dGridBroadphaseOCL(NULL, aabbMin, aabbMax, 24, 24, 24,maxNumBoxes , maxNumBoxes, 64, 16);
-		methodname	=	"bt3dGridBroadphaseOCL";
+#if defined(CL_PLATFORM_MINI_CL)
+		methodname	=	"bt3dGridBroadphaseOCL(MiniCL)";
+#elif defined(CL_PLATFORM_AMD)
+		methodname	=	"bt3dGridBroadphaseOCL(AMD)";
+#elif defined(CL_PLATFORM_NVIDIA)
+		methodname	=	"bt3dGridBroadphaseOCL(NVIDIA)";
+#else
+#error "OpenCL platform not supported"
+#endif
 		break;
 
 	default:
