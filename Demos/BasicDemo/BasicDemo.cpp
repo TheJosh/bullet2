@@ -498,6 +498,7 @@ struct btRenderMesh
 struct BasicBlendReader : public BulletBlendReader
 {
 	BasicDemo*	m_basicDemo;
+	btTransform	m_cameraTrans;
 
 	btHashMap<btHashString,BasicTexture*> m_textures;
 
@@ -508,6 +509,7 @@ struct BasicBlendReader : public BulletBlendReader
 		:BulletBlendReader(dynamicsWorld),
 		m_basicDemo(basicDemo)
 	{
+		m_cameraTrans.setIdentity();
 	}
 
 	virtual ~BasicBlendReader()
@@ -665,6 +667,10 @@ struct BasicBlendReader : public BulletBlendReader
 
 	virtual	void	addCamera(_bObj* tmpObject)
 	{
+		m_cameraTrans.setOrigin(btVector3(tmpObject->location[IRR_X],tmpObject->location[IRR_Y],tmpObject->location[IRR_Z]));
+		btMatrix3x3 mat;
+		mat.setEulerZYX(tmpObject->rotphr[0],tmpObject->rotphr[1],tmpObject->rotphr[2]);
+		m_cameraTrans.setBasis(mat);
 	}
 	virtual	void	addLight(_bObj* tmpObject)
 	{
@@ -979,6 +985,94 @@ void	BasicDemo::exitPhysics()
 	
 }
 
+
+
+
+void BasicDemo::updateCamera() {
+
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	float rele = m_ele * 0.01745329251994329547;// rads per deg
+	float razi = m_azi * 0.01745329251994329547;// rads per deg
+
+
+	btQuaternion rot(m_cameraUp,razi);
+
+
+	btVector3 eyePos(0,0,0);
+	eyePos[m_forwardAxis] = -m_cameraDistance;
+
+	btVector3 forward(eyePos[0],eyePos[1],eyePos[2]);
+	if (forward.length2() < SIMD_EPSILON)
+	{
+		forward.setValue(1.f,0.f,0.f);
+	}
+	btVector3 right = m_cameraUp.cross(forward);
+	btQuaternion roll(right,-rele);
+
+	eyePos = btMatrix3x3(rot) * btMatrix3x3(roll) * eyePos;
+
+	m_cameraPosition[0] = eyePos.getX();
+	m_cameraPosition[1] = eyePos.getY();
+	m_cameraPosition[2] = eyePos.getZ();
+	m_cameraPosition += m_cameraTargetPosition;
+
+	if (m_glutScreenWidth == 0 && m_glutScreenHeight == 0)
+		return;
+
+	btScalar aspect;
+	btVector3 extents;
+
+	if (m_glutScreenWidth > m_glutScreenHeight) 
+	{
+		aspect = m_glutScreenWidth / (btScalar)m_glutScreenHeight;
+		extents.setValue(aspect * 1.0f, 1.0f,0);
+	} else 
+	{
+		aspect = m_glutScreenHeight / (btScalar)m_glutScreenWidth;
+		extents.setValue(1.0f, aspect*1.f,0);
+	}
+
+	
+	if (m_ortho)
+	{
+		// reset matrix
+		glLoadIdentity();
+		
+		
+		extents *= m_cameraDistance;
+		btVector3 lower = m_cameraTargetPosition - extents;
+		btVector3 upper = m_cameraTargetPosition + extents;
+		//gluOrtho2D(lower.x, upper.x, lower.y, upper.y);
+		glOrtho(lower.getX(), upper.getX(), lower.getY(), upper.getY(),-1000,1000);
+		
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+		//glTranslatef(100,210,0);
+	} else
+	{
+		if (m_glutScreenWidth > m_glutScreenHeight) 
+		{
+			glFrustum (-aspect, aspect, -1.0, 1.0, 1.0, 10000.0);
+		} else 
+		{
+			glFrustum (-1.0, 1.0, -aspect, aspect, 1.0, 10000.0);
+		}
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		btTransform invCam = m_blendReader->m_cameraTrans.inverse();
+		float m[16];
+		invCam.getOpenGLMatrix(m);
+		glMultMatrixf(m);
+
+		//gluLookAt(m_cameraPosition[0], m_cameraPosition[1], m_cameraPosition[2], 
+		//	m_cameraTargetPosition[0], m_cameraTargetPosition[1], m_cameraTargetPosition[2], 
+		//	m_cameraUp.getX(),m_cameraUp.getY(),m_cameraUp.getZ());
+	}
+
+}
 
 
 

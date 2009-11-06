@@ -43,6 +43,8 @@ class BasicDemo : public GlutDemoApplication
 
 	class BasicBlendReader* m_blendReader;
 
+	virtual void updateCamera();
+
 	public:
 
 	BasicDemo()
