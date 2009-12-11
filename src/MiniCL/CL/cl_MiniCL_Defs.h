@@ -15,6 +15,7 @@ subject to the following restrictions:
 
 #include <float.h>
 #include <math.h>
+#include "LinearMath/btScalar.h"
 
 #include "CL/cl.h"
 
@@ -35,7 +36,7 @@ static void barrier(unsigned int a)
 	// TODO : implement
 }
 
-struct float4
+ATTRIBUTE_ALIGNED16(struct) float4
 {
 	float x,y,z,w;
 	float4() {}

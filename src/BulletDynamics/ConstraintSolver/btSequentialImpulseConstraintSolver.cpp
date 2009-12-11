@@ -468,6 +468,8 @@ void	btSequentialImpulseConstraintSolver::convertContact(btPersistentManifold* m
 	btVector3 rel_pos2;
 	btScalar relaxation;
 
+	int firstFrictionIndex = m_tmpSolverContactFrictionConstraintPool.size();
+
 	for (int j=0;j<manifold->getNumContacts();j++)
 	{
 
@@ -493,6 +495,8 @@ void	btSequentialImpulseConstraintSolver::convertContact(btPersistentManifold* m
 				btSolverConstraint& solverConstraint = m_tmpSolverContactConstraintPool.expand();
 				btRigidBody* rb0 = btRigidBody::upcast(colObj0);
 				btRigidBody* rb1 = btRigidBody::upcast(colObj1);
+
+				solverConstraint.m_numConsecutiveRowsPerKernel = j ? 0 : manifold->getNumContacts();
 
 				solverConstraint.m_solverBodyIdA = solverBodyIdA;
 				solverConstraint.m_solverBodyIdB = solverBodyIdB;
@@ -705,6 +709,12 @@ void	btSequentialImpulseConstraintSolver::convertContact(btPersistentManifold* m
 
 		}
 	}
+
+	int currFrictionIndex = m_tmpSolverContactFrictionConstraintPool.size();
+	for(int j = firstFrictionIndex; j < currFrictionIndex; j++)
+	{
+		m_tmpSolverContactFrictionConstraintPool[j].m_numConsecutiveRowsPerKernel = (j > firstFrictionIndex) ? 0 : currFrictionIndex - firstFrictionIndex;
+	}
 }
 
 
@@ -789,6 +799,8 @@ btScalar btSequentialImpulseConstraintSolver::solveGroupCacheFriendlySetup(btCol
 						currentConstraintRow[j].m_appliedPushImpulse = 0.f;
 						currentConstraintRow[j].m_solverBodyIdA = solverBodyIdA;
 						currentConstraintRow[j].m_solverBodyIdB = solverBodyIdB;
+
+						currentConstraintRow[j].m_numConsecutiveRowsPerKernel = j ? 0 : info1.m_numConstraintRows;
 					}
 
 					bodyAPtr->m_deltaLinearVelocity.setValue(0.f,0.f,0.f);
