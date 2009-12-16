@@ -16,7 +16,7 @@ subject to the following restrictions:
 
 ///create 125 (5x5x5) dynamic object
 #define ARRAY_SIZE_X 10
-#define ARRAY_SIZE_Y 10
+#define ARRAY_SIZE_Y 20
 #define ARRAY_SIZE_Z 10
 //#define ARRAY_SIZE_X 5
 //#define ARRAY_SIZE_Y 5

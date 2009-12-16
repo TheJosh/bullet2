@@ -46,7 +46,6 @@ enum
 {
 	BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW = 0,
 	BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT,
-	BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM,
 	BCSOCL_KERNEL_TOTAL
 };
 
@@ -56,6 +55,36 @@ enum
 	BCSOCL_SOLVER_BULLET_SIMD,
 	BCSOCL_SOLVER_NUM_OF_MODES
 };
+
+struct btBCSOCLBody // 32 bytes
+{
+	btVector3	m_deltaLinVel_invMass;	//  m_invMass in w
+	btVector3	m_deltaAngVel_frict;	//  m_friction in w
+};
+
+
+struct btBCSOCLConstrRO	// read-only part of solver constraint (96 bytes)
+{
+	btVector3	m_relpos1CrossNormal_jacDiagABInv;
+	btVector3	m_contactNormal_friction;
+	btVector3	m_relpos2CrossNormal_rhs;
+	btVector3	m_angularComponentA_cfm;
+	btVector3	m_angularComponentB;
+	int			m_numConsecutiveRowsPerKernel;
+	int			m_frictionIndex;
+	int			m_solverBodyIdA;
+	int			m_solverBodyIdB;
+};
+
+
+struct btBCSOCLConstrRW	// read-write part of solver constraint (16 bytes)
+{
+	btScalar	m_appliedImpulse;
+	btScalar	m_lowerLimit;
+	btScalar	m_upperLimit;
+	void*		m_pOrigData;
+};
+
 
 
 class btBatchConstraintSolverOCL : public btSequentialImpulseConstraintSolver
@@ -77,12 +106,20 @@ protected:
 
 	btAlignedObjectArray<int> m_bodyMarkers;
 	btAlignedObjectArray<int> m_constrMarkers;
+	btAlignedObjectArray<int> m_contactReverseIndx;
+	btAlignedObjectArray<btBCSOCLBody> m_hBodies;
+	btAlignedObjectArray<btBCSOCLConstrRO> m_hConstraintsRO;
+	btAlignedObjectArray<btBCSOCLConstrRW> m_hConstraintsRW;
+	btAlignedObjectArray<int> m_hConstraintsIndx;
 
 	int m_maxBatchSize;
 	int m_numJointBatches;
 	int m_numContactBatches;
 	int m_numFrictionBatches;
 	int m_numMergedBatches;
+	int	m_frictionConstrStart;
+	int	m_frictionIndxStart;
+	int	m_currIndxOffs;
 
 // OpenCL stuff
 	cl_context			m_cxMainContext;
@@ -92,8 +129,9 @@ protected:
 	btBCSOCLKernelInfo	m_kernels[BCSOCL_KERNEL_TOTAL];
 // GPU data
 	cl_mem				m_dBodies;
-	cl_mem				m_dConstraints;
-	cl_mem				m_dConstraintIdx;
+	cl_mem				m_dConstraintsRO;
+	cl_mem				m_dConstraintsRW;
+	cl_mem				m_dConstraintsIndx;
 
 
 // internal methods

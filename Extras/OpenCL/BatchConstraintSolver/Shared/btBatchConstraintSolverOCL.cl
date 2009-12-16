@@ -1,57 +1,39 @@
 
 MSTRINGIFY(
 
-
-
 typedef struct 
 {
-	float4		m_deltaLinearVelocity;
-	float4		m_deltaAngularVelocity;
-	float4		m_angularFactor;
-	float4		m_invMass;
-	float		m_friction;
-	void*		m_originalBody;
-	float m_pad[2];  // alignment safety
-	float4		m_pushVelocity;
-	float4		m_turnVelocity;
-} btBCSOCLSolverBody;
+	float4	m_deltaLinVel_invMass;	//  m_invMass in w
+	float4	m_deltaAngVel_frict;	//  m_friction in w
+} BCSOCLBody;
 
-typedef struct
+
+typedef struct 	// read-only part of solver constraint (96 bytes)
 {
-	float4		m_relpos1CrossNormal;
-	float4		m_contactNormal;
+	float4	m_relpos1CrossNormal_jacDiagABInv;
+	float4	m_contactNormal_friction;
+	float4	m_relpos2CrossNormal_rhs;
+	float4	m_angularComponentA_cfm;
+	float4	m_angularComponentB;
+	int		m_numConsecutiveRowsPerKernel;
+	int		m_frictionIndex;
+	int		m_solverBodyIdA;
+	int		m_solverBodyIdB;
+} BCSOCLConstrRO;
 
-	float4		m_relpos2CrossNormal;
-	//btVector3		m_contactNormal2;//usually m_contactNormal2 == -m_contactNormal
 
-	float4		m_angularComponentA;
-	float4		m_angularComponentB;
-	
-	float4	m_appliedPushImpulse;
-	float4	m_appliedImpulse;
-	
-	
-	float	m_friction;
-	float	m_jacDiagABInv;
-	int	m_numConsecutiveRowsPerKernel;
-	int			m_frictionIndex;
-	int			m_solverBodyIdA;
-	int			m_solverBodyIdB;
-	void*		m_originalContactPoint;
+typedef struct // read-write part of solver constraint (16 bytes)
+{
+	float	m_appliedImpulse;
+	float	m_lowerLimit;
+	float	m_upperLimit;
+	void*	m_pOrigData;
+} BCSOCLConstrRW;
 
-	float		m_rhs;
-	float		m_cfm;
-	float		m_lowerLimit;
-	float		m_upperLimit;
-
-	float	m_rhsPenetration;
-
-} btBCSOCLSolverConstraint;
-
-///*
 __kernel void kSolveConstraintRow(	int numConstrInBatch, 
-									__global btBCSOCLSolverBody* pBodies, 
-									__global btBCSOCLSolverConstraint* pConstraints,
+									__global BCSOCLBody* pBodies, 
+									__global BCSOCLConstrRO* pConstrRO,
+									__global BCSOCLConstrRW* pConstrRW,
 									__global int*	pConstrIdx,
 									int				constrOffs GUID_ARG)
 {
@@ -65,215 +47,83 @@ __kernel void kSolveConstraintRow(	int numConstrInBatch,
 		return;
 	}
 	int lidx = get_local_id(0);
-	int currConstrIndex = pConstrIdx[constrOffs + index];
-	int numRows = pConstraints[currConstrIndex].m_numConsecutiveRowsPerKernel;
-	__global btBCSOCLSolverBody* pBody1 = pBodies + pConstraints[currConstrIndex].m_solverBodyIdA;
-	__global btBCSOCLSolverBody* pBody2 = pBodies + pConstraints[currConstrIndex].m_solverBodyIdB;
+	int constrStartRow = pConstrIdx[constrOffs + index];
+	__global BCSOCLConstrRO* pRO = pConstrRO + constrStartRow;
+	__global BCSOCLConstrRW* pRW = pConstrRW + constrStartRow;
+	int numRows = pRO->m_numConsecutiveRowsPerKernel;
+	__global BCSOCLBody* pBody1 = pBodies + pRO->m_solverBodyIdA;
+	__global BCSOCLBody* pBody2 = pBodies + pRO->m_solverBodyIdB;
 	
-	deltaLinearVelocity1[lidx] = pBody1->m_deltaLinearVelocity;
-	deltaAngularVelocity1[lidx] = pBody1->m_deltaAngularVelocity; 
-	deltaLinearVelocity2[lidx] = pBody2->m_deltaLinearVelocity;
-	deltaAngularVelocity2[lidx] = pBody2->m_deltaAngularVelocity; 
-	
-	for(int nRow = 0; nRow < numRows; nRow++)
+	deltaLinearVelocity1[lidx] = pBody1->m_deltaLinVel_invMass;
+	float invMass1 = deltaLinearVelocity1[lidx].w;
+	deltaLinearVelocity1[lidx].w = 0.f;
+	deltaAngularVelocity1[lidx] = pBody1->m_deltaAngVel_frict; 
+	deltaAngularVelocity1[lidx].w = 0.f;
+	deltaLinearVelocity2[lidx] = pBody2->m_deltaLinVel_invMass;
+	float invMass2 = deltaLinearVelocity2[lidx].w;
+	deltaLinearVelocity2[lidx].w = 0.f;
+	deltaAngularVelocity2[lidx] = pBody2->m_deltaAngVel_frict; 
+	deltaAngularVelocity2[lidx].w = 0.f;
+	for(int nRow = 0; nRow < numRows; nRow++, pRO++, pRW++)
 	{
-		__global btBCSOCLSolverConstraint* pCt = &pConstraints[currConstrIndex + nRow];
-		float4 contactNormal = pCt->m_contactNormal;
-		float4 relpos1CrossNormal = pCt->m_relpos1CrossNormal;
-		float4 relpos2CrossNormal = pCt->m_relpos2CrossNormal;
-		float jacDiagABInv = pCt->m_jacDiagABInv;
-		
-		float deltaImpulse = pCt->m_rhs - pCt->m_appliedImpulse.x * pCt->m_cfm;
-		float deltaVel1Dotn	=	contactNormal.x * deltaLinearVelocity1[lidx].x 
-							  + contactNormal.y * deltaLinearVelocity1[lidx].y 
-							  + contactNormal.z * deltaLinearVelocity1[lidx].z 
-							  + relpos1CrossNormal.x * deltaAngularVelocity1[lidx].x
-							  + relpos1CrossNormal.y * deltaAngularVelocity1[lidx].y
-							  + relpos1CrossNormal.z * deltaAngularVelocity1[lidx].z;
-		float deltaVel2Dotn	= - contactNormal.x * deltaLinearVelocity2[lidx].x 
-							  - contactNormal.y * deltaLinearVelocity2[lidx].y 
-							  - contactNormal.z * deltaLinearVelocity2[lidx].z 
-							  + relpos2CrossNormal.x * deltaAngularVelocity2[lidx].x
-							  + relpos2CrossNormal.y * deltaAngularVelocity2[lidx].y
-							  + relpos2CrossNormal.z * deltaAngularVelocity2[lidx].z;
-
+		float jacDiagABInv = pRO->m_relpos1CrossNormal_jacDiagABInv.w;
+		float deltaImpulse = pRO->m_relpos2CrossNormal_rhs.w - pRW->m_appliedImpulse * pRO->m_angularComponentA_cfm.w;
+		float deltaVel1Dotn	=  dot(pRO->m_contactNormal_friction, deltaLinearVelocity1[lidx])
+							 + dot(pRO->m_relpos1CrossNormal_jacDiagABInv, deltaAngularVelocity1[lidx]);
+		float deltaVel2Dotn	= -dot(pRO->m_contactNormal_friction, deltaLinearVelocity2[lidx])
+							 + dot(pRO->m_relpos2CrossNormal_rhs, deltaAngularVelocity2[lidx]);
 		deltaImpulse	-=	deltaVel1Dotn * jacDiagABInv;
 		deltaImpulse	-=	deltaVel2Dotn * jacDiagABInv;
-		float sum = pCt->m_appliedImpulse.x + deltaImpulse;
-		if (sum < pCt->m_lowerLimit)
+		float sum = pRW->m_appliedImpulse + deltaImpulse;
+		if(sum < pRW->m_lowerLimit)
 		{
-			deltaImpulse = pCt->m_lowerLimit - pCt->m_appliedImpulse.x;
-			pCt->m_appliedImpulse.x = pCt->m_lowerLimit;
+			deltaImpulse = pRW->m_lowerLimit - pRW->m_appliedImpulse;
+			pRW->m_appliedImpulse = pRW->m_lowerLimit;
 		}
-		else if (sum > pCt->m_upperLimit) 
+		else if(sum > pRW->m_upperLimit) 
 		{
-			deltaImpulse = pCt->m_upperLimit - pCt->m_appliedImpulse.x;
-			pCt->m_appliedImpulse.x = pCt->m_upperLimit;
-		}
-		else
-		{
-			pCt->m_appliedImpulse.x = sum;
-		}
-		deltaLinearVelocity1[lidx] +=  deltaImpulse * pCt->m_contactNormal * pBody1->m_invMass;
-		deltaAngularVelocity1[lidx] += pCt->m_angularComponentA * (deltaImpulse * pBody1->m_angularFactor);
-		deltaLinearVelocity2[lidx] += -1.0f * pCt->m_contactNormal * pBody2->m_invMass * deltaImpulse;
-		deltaAngularVelocity2[lidx] +=  pCt->m_angularComponentB * (deltaImpulse * pBody2->m_angularFactor);
-	}
-	pBody1->m_deltaLinearVelocity = deltaLinearVelocity1[lidx];
-	pBody1->m_deltaAngularVelocity = deltaAngularVelocity1[lidx];
-	pBody2->m_deltaLinearVelocity = deltaLinearVelocity2[lidx];
-	pBody2->m_deltaAngularVelocity = deltaAngularVelocity2[lidx];
-}
-//*/
-
-
-/*
-__kernel void kSolveConstraintRow(	int numConstrInBatch, 
-									__global btBCSOCLSolverBody* pBodies, 
-									__global btBCSOCLSolverConstraint* pConstraints,
-									__global int*	pConstrIdx,
-									int				constrOffs GUID_ARG)
-{
-	__local float4 locStore[65536];
-    int index = get_global_id(0);
-    if(index >= numConstrInBatch)
-	{
-		return;
-	}
-	int currConstrIndex = pConstrIdx[constrOffs + index];
-	int numRows = pConstraints[currConstrIndex].m_numConsecutiveRowsPerKernel;
-	for(int nRow = 0; nRow < numRows; nRow++)
-	{
-		__global btBCSOCLSolverConstraint* pCt = &pConstraints[currConstrIndex + nRow];
-		__global btBCSOCLSolverBody* pBody1 = pBodies + pCt->m_solverBodyIdA;
-		__global btBCSOCLSolverBody* pBody2 = pBodies + pCt->m_solverBodyIdB;
-		float deltaImpulse = pCt->m_rhs - pCt->m_appliedImpulse.x * pCt->m_cfm;
-		float deltaVel1Dotn	=	pCt->m_contactNormal.x * pBody1->m_deltaLinearVelocity.x 
-							  + pCt->m_contactNormal.y * pBody1->m_deltaLinearVelocity.y 
-							  + pCt->m_contactNormal.z * pBody1->m_deltaLinearVelocity.z 
-							  + pCt->m_relpos1CrossNormal.x * pBody1->m_deltaAngularVelocity.x
-							  + pCt->m_relpos1CrossNormal.y * pBody1->m_deltaAngularVelocity.y
-							  + pCt->m_relpos1CrossNormal.z * pBody1->m_deltaAngularVelocity.z;
-		float deltaVel2Dotn	= - pCt->m_contactNormal.x * pBody2->m_deltaLinearVelocity.x 
-							  - pCt->m_contactNormal.y * pBody2->m_deltaLinearVelocity.y 
-							  - pCt->m_contactNormal.z * pBody2->m_deltaLinearVelocity.z 
-							  + pCt->m_relpos2CrossNormal.x * pBody2->m_deltaAngularVelocity.x
-							  + pCt->m_relpos2CrossNormal.y * pBody2->m_deltaAngularVelocity.y
-							  + pCt->m_relpos2CrossNormal.z * pBody2->m_deltaAngularVelocity.z;
-
-		deltaImpulse	-=	deltaVel1Dotn * pCt->m_jacDiagABInv;
-		deltaImpulse	-=	deltaVel2Dotn * pCt->m_jacDiagABInv;
-		float sum = pCt->m_appliedImpulse.x + deltaImpulse;
-		if (sum < pCt->m_lowerLimit)
-		{
-			deltaImpulse = pCt->m_lowerLimit - pCt->m_appliedImpulse.x;
-			pCt->m_appliedImpulse.x = pCt->m_lowerLimit;
-		}
-		else if (sum > pCt->m_upperLimit) 
-		{
-			deltaImpulse = pCt->m_upperLimit - pCt->m_appliedImpulse.x;
-			pCt->m_appliedImpulse.x = pCt->m_upperLimit;
+			deltaImpulse = pRW->m_upperLimit - pRW->m_appliedImpulse;
+			pRW->m_appliedImpulse = pRW->m_upperLimit;
 		}
 		else
 		{
-			pCt->m_appliedImpulse.x = sum;
+			pRW->m_appliedImpulse = sum;
 		}
-		if (pBody1->m_invMass.x > 0.f)
-		{
-			pBody1->m_deltaLinearVelocity +=  deltaImpulse * pCt->m_contactNormal * pBody1->m_invMass;
-			pBody1->m_deltaAngularVelocity += pCt->m_angularComponentA * (deltaImpulse * pBody1->m_angularFactor);
-		}
-		if (pBody2->m_invMass.x > 0.f)
-		{
-			pBody2->m_deltaLinearVelocity += -1.0f * pCt->m_contactNormal * pBody2->m_invMass * deltaImpulse;
-			pBody2->m_deltaAngularVelocity +=  pCt->m_angularComponentB * (deltaImpulse * pBody2->m_angularFactor);
-		}
+		deltaLinearVelocity1[lidx] +=  deltaImpulse * pRO->m_contactNormal_friction * invMass1;
+		deltaAngularVelocity1[lidx] += pRO->m_angularComponentA_cfm * deltaImpulse;
+		deltaLinearVelocity2[lidx] += -1.0f * pRO->m_contactNormal_friction * invMass2 * deltaImpulse;
+		deltaAngularVelocity2[lidx] +=  pRO->m_angularComponentB * deltaImpulse;
 	}
+	deltaLinearVelocity1[lidx].w = invMass1;
+	deltaLinearVelocity2[lidx].w = invMass2;
+	pBody1->m_deltaLinVel_invMass = deltaLinearVelocity1[lidx];
+	pBody1->m_deltaAngVel_frict = deltaAngularVelocity1[lidx];
+	pBody2->m_deltaLinVel_invMass = deltaLinearVelocity2[lidx];
+	pBody2->m_deltaAngVel_frict = deltaAngularVelocity2[lidx];
 }
-*/	
+
 
 __kernel void kSetupFrictionConstraint(	int numFrictionConstr, 
-										__global btBCSOCLSolverConstraint* pConstraints,
-										int frictionConstrOffs,
-										int contactConstrOffs GUID_ARG)
+									__global BCSOCLConstrRO* pConstrRO,
+									__global BCSOCLConstrRW* pConstrRW,
+									int frictionConstrOffs GUID_ARG)
 {
     int index = get_global_id(0);
     if(index >= numFrictionConstr)
     {
 		return;
 	}
-	__global btBCSOCLSolverConstraint* pFrictCt = &pConstraints[frictionConstrOffs + index];
-	int contIndex = pFrictCt->m_frictionIndex;
-	__global btBCSOCLSolverConstraint* pContCt = &pConstraints[contactConstrOffs + contIndex];
-	float totalImpulse = pContCt->m_appliedImpulse.x;
+	__global BCSOCLConstrRO* pFrictCtRO = pConstrRO + frictionConstrOffs + index;
+	__global BCSOCLConstrRW* pFrictCtRW = pConstrRW + frictionConstrOffs + index;
+	int contIndex = pFrictCtRO->m_frictionIndex;
+	__global BCSOCLConstrRW* pContCt = pConstrRW + contIndex;
+	float totalImpulse = pContCt->m_appliedImpulse;
 	if (totalImpulse > 0.f)
 	{
-		pFrictCt->m_lowerLimit = -pFrictCt->m_friction * totalImpulse;
-		pFrictCt->m_upperLimit =  pFrictCt->m_friction * totalImpulse;
+		pFrictCtRW->m_lowerLimit = -pFrictCtRO->m_contactNormal_friction.w * totalImpulse;
+		pFrictCtRW->m_upperLimit =  pFrictCtRO->m_contactNormal_friction.w * totalImpulse;
 	}
 }
-
-
-__kernel void kSolveConstrRowLowLim(int numConstrInBatch, 
-									__global btBCSOCLSolverBody* pBodies, 
-									__global btBCSOCLSolverConstraint* pConstraints,
-									__global int*	pConstrIdx,
-									int				constrOffs GUID_ARG)
-{
-    int index = get_global_id(0);
-    if(index >= numConstrInBatch)
-	{
-		return;
-	}
-	int currConstrIndex = pConstrIdx[constrOffs + index];
-	int numRows = pConstraints[currConstrIndex].m_numConsecutiveRowsPerKernel;
-	for(int nRow = 0; nRow < numRows; nRow++)
-	{
-		__global btBCSOCLSolverConstraint* pCt = &pConstraints[currConstrIndex + nRow];
-		__global btBCSOCLSolverBody* pBody1 = pBodies + pCt->m_solverBodyIdA;
-		__global btBCSOCLSolverBody* pBody2 = pBodies + pCt->m_solverBodyIdB;
-	///*	
-		float deltaImpulse = pCt->m_rhs - pCt->m_appliedImpulse.x * pCt->m_cfm;
-		float deltaVel1Dotn	=	pCt->m_contactNormal.x * pBody1->m_deltaLinearVelocity.x 
-							  + pCt->m_contactNormal.y * pBody1->m_deltaLinearVelocity.y 
-							  + pCt->m_contactNormal.z * pBody1->m_deltaLinearVelocity.z 
-							  + pCt->m_relpos1CrossNormal.x * pBody1->m_deltaAngularVelocity.x
-							  + pCt->m_relpos1CrossNormal.y * pBody1->m_deltaAngularVelocity.y
-							  + pCt->m_relpos1CrossNormal.z * pBody1->m_deltaAngularVelocity.z;
-		float deltaVel2Dotn	= - pCt->m_contactNormal.x * pBody2->m_deltaLinearVelocity.x 
-							  - pCt->m_contactNormal.y * pBody2->m_deltaLinearVelocity.y 
-							  - pCt->m_contactNormal.z * pBody2->m_deltaLinearVelocity.z 
-							  + pCt->m_relpos2CrossNormal.x * pBody2->m_deltaAngularVelocity.x
-							  + pCt->m_relpos2CrossNormal.y * pBody2->m_deltaAngularVelocity.y
-							  + pCt->m_relpos2CrossNormal.z * pBody2->m_deltaAngularVelocity.z;
-
-		deltaImpulse	-=	deltaVel1Dotn * pCt->m_jacDiagABInv;
-		deltaImpulse	-=	deltaVel2Dotn * pCt->m_jacDiagABInv;
-		float sum = pCt->m_appliedImpulse.x + deltaImpulse;
-		if (sum < pCt->m_lowerLimit)
-		{
-			deltaImpulse = pCt->m_lowerLimit - pCt->m_appliedImpulse.x;
-			pCt->m_appliedImpulse.x = pCt->m_lowerLimit;
-		}
-		else
-		{
-			pCt->m_appliedImpulse.x = sum;
-		}
-		if (pBody1->m_invMass.x > 0.f)
-		{
-			pBody1->m_deltaLinearVelocity +=  deltaImpulse * pCt->m_contactNormal * pBody1->m_invMass;
-			pBody1->m_deltaAngularVelocity += pCt->m_angularComponentA * (deltaImpulse * pBody1->m_angularFactor);
-		}
-		if (pBody2->m_invMass.x > 0.f)
-		{
-			pBody2->m_deltaLinearVelocity += -1.0f * pCt->m_contactNormal * pBody2->m_invMass * deltaImpulse;
-			pBody2->m_deltaAngularVelocity +=  pCt->m_angularComponentB * (deltaImpulse * pBody2->m_angularFactor);
-		}
-	}
-//*/	
-}
-
-
 
 
 );

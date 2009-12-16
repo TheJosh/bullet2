@@ -50,10 +50,14 @@ btBatchConstraintSolverOCL::btBatchConstraintSolverOCL(int maxBodies, int maxCon
 	maxBatches = 128;
 
 	m_solverMode = BCSOCL_SOLVER_GPU;
-	m_hConstraintIdx.resize(maxConstraints, -1);
+	m_hConstraintsRO.resize(maxConstraints);
+	m_hConstraintsRW.resize(maxConstraints);
+	m_hConstraintsIndx.resize(maxConstraints);
 	m_batchData.resize(maxBatches * 2 * 2, -1);
 	m_bodyMarkers.resize(maxBodies, -1);
 	m_constrMarkers.resize(maxConstraints, -1);
+	m_contactReverseIndx.resize(maxConstraints);
+	m_hBodies.resize(maxBodies);
 	m_maxBodies = maxBodies;
 	m_maxConstraints = maxConstraints;
 	m_maxBatches = maxBatches;
@@ -76,7 +80,6 @@ btBatchConstraintSolverOCL::~btBatchConstraintSolverOCL()
 #define MINICL_DECLARE(a) extern "C" void a();
 MINICL_DECLARE(kSolveConstraintRow)
 MINICL_DECLARE(kSetupFrictionConstraint)
-MINICL_DECLARE(kSolveConstrRowLowLim)
 #undef MINICL_DECLARE
 #endif
 
@@ -88,7 +91,6 @@ void btBatchConstraintSolverOCL::initCL(cl_context context, cl_device_id device,
 		// call constructors here
 		MINICL_REGISTER(kSolveConstraintRow)
 		MINICL_REGISTER(kSetupFrictionConstraint)
-		MINICL_REGISTER(kSolveConstrRowLowLim)
 	#endif
 
 	cl_int ciErrNum;
@@ -144,7 +146,7 @@ void btBatchConstraintSolverOCL::initCL(cl_context context, cl_device_id device,
 	if(ciErrNum != CL_SUCCESS)
 	{
 		// write out standard error
-		char cBuildLog[65536];
+		char cBuildLog[655360];
 		clGetProgramBuildInfo(m_cpProgram, m_cdDevice, CL_PROGRAM_BUILD_LOG, 
 							  sizeof(cBuildLog), cBuildLog, NULL );
 		printf("\n\n%s\n\n\n", cBuildLog);
@@ -160,16 +162,13 @@ void btBatchConstraintSolverOCL::initKernels()
 {
 	initKernel(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW,	"kSolveConstraintRow");
 	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 1, sizeof(cl_mem),(void*)&m_dBodies);
-	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 2, sizeof(cl_mem),(void*)&m_dConstraints);
-	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 3, sizeof(cl_mem),(void*)&m_dConstraintIdx);
+	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 2, sizeof(cl_mem),(void*)&m_dConstraintsRO);
+	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 3, sizeof(cl_mem),(void*)&m_dConstraintsRW);
+	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 4, sizeof(cl_mem),(void*)&m_dConstraintsIndx);
 
 	initKernel(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT,	"kSetupFrictionConstraint");
-	setKernelArg(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, 1, sizeof(cl_mem),(void*)&m_dConstraints);
-
-	initKernel(BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM,	"kSolveConstrRowLowLim");
-	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM, 1, sizeof(cl_mem),(void*)&m_dBodies);
-	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM, 2, sizeof(cl_mem),(void*)&m_dConstraints);
-	setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM, 3, sizeof(cl_mem),(void*)&m_dConstraintIdx);
+	setKernelArg(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, 1, sizeof(cl_mem),(void*)&m_dConstraintsRO);
+	setKernelArg(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, 2, sizeof(cl_mem),(void*)&m_dConstraintsRW);
 }
 
 
@@ -178,16 +177,20 @@ void btBatchConstraintSolverOCL::allocateBuffers()
     cl_int ciErrNum;
     unsigned int memSize;
 
-	memSize = m_maxBodies * sizeof(btSolverBody);
+	memSize = m_maxBodies * sizeof(btBCSOCLBody);
 	m_dBodies = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
 	BCSOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 
-	memSize = m_maxConstraints * sizeof(btSolverConstraint);
-	m_dConstraints = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
+	memSize = m_maxConstraints * sizeof(btBCSOCLConstrRO);
+	m_dConstraintsRO = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
+	BCSOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
+
+	memSize = m_maxConstraints * sizeof(btBCSOCLConstrRW);
+	m_dConstraintsRW = clCreateBuffer(m_cxMainContext, CL_MEM_READ_WRITE, memSize, NULL, &ciErrNum);
 	BCSOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 
 	memSize = m_maxConstraints * sizeof(int);
-	m_dConstraintIdx = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
+	m_dConstraintsIndx = clCreateBuffer(m_cxMainContext, CL_MEM_READ_ONLY, memSize, NULL, &ciErrNum);
 	BCSOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
@@ -302,8 +305,17 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 	m_numFrictionConstraints = m_tmpSolverContactFrictionConstraintPool.size();
 	m_numConstraints = m_numJointConstraints + m_numContactConstraints + m_numFrictionConstraints;
 
+	for(int nBody = 0; nBody < m_numBodies; nBody++)
+	{
+		m_hBodies[nBody].m_deltaLinVel_invMass = m_tmpSolverBodyPool[nBody].m_deltaLinearVelocity;
+		m_hBodies[nBody].m_deltaLinVel_invMass[3] = m_tmpSolverBodyPool[nBody].m_invMass[0];
+		m_hBodies[nBody].m_deltaAngVel_frict = m_tmpSolverBodyPool[nBody].m_deltaAngularVelocity;
+		m_hBodies[nBody].m_deltaAngVel_frict[3] = m_tmpSolverBodyPool[nBody].m_friction;
+	}
+
 #if MERGE_JOINTS_AND_CONTACTS
 	int contOffs = m_numJointConstraints;
+	m_currIndxOffs = 0;
 	m_numMergedBatches = prepareBatches(m_tmpSolverNonContactConstraintPool, batchOffset, constraintOffset, &m_tmpSolverContactConstraintPool, contOffs);
 	batchOffset += m_numMergedBatches;
 	constraintOffset += m_numJointConstraints + m_numContactConstraints;
@@ -316,26 +328,23 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 	batchOffset += m_numContactBatches;
 	constraintOffset += m_numContactConstraints;
 #endif
-
+	m_frictionIndxStart = m_currIndxOffs;
+	m_frictionConstrStart = constraintOffset;
 	m_numFrictionBatches = prepareBatches(m_tmpSolverContactFrictionConstraintPool, batchOffset, constraintOffset);
 
 #if MERGE_JOINTS_AND_CONTACTS
-	printf("(%4d,%4d) ", m_numJointConstraints + m_numContactConstraints, m_numMergedBatches);
+//	printf("(%4d,%4d) ", m_numJointConstraints + m_numContactConstraints, m_numMergedBatches);
 #else
 //	printf("(%4d,%4d) ", m_tmpSolverNonContactConstraintPool.size(), m_numJointBatches);
 //	printf("(%4d,%4d) ", m_tmpSolverContactConstraintPool.size(), m_numContactBatches);
 #endif
-	printf("(%4d,%4d) ", m_tmpSolverContactFrictionConstraintPool.size(), m_numFrictionBatches);
-	printf("\n");
+//	printf("(%4d,%4d) ", m_tmpSolverContactFrictionConstraintPool.size(), m_numFrictionBatches);
+//	printf("\n");
 
-#if 0
-	solveGroupIterationsCPU(infoGlobal);
-#else
 	{
 		BT_PROFILE("btBatchConstraintSolverOCL::Iterations");
 		solveGroupIterationsGPU(infoGlobal);
 	}
-#endif
 
 	int numPoolConstraints = m_tmpSolverContactConstraintPool.size();
 	int j;
@@ -354,6 +363,12 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 		}
 
 		//do a callback here?
+	}
+
+	for(int nBody = 0; nBody < m_numBodies; nBody++)
+	{
+		m_tmpSolverBodyPool[nBody].m_deltaLinearVelocity = m_hBodies[nBody].m_deltaLinVel_invMass;
+		m_tmpSolverBodyPool[nBody].m_deltaAngularVelocity = m_hBodies[nBody].m_deltaAngVel_frict;
 	}
 
 	if (infoGlobal.m_splitImpulse)
@@ -403,6 +418,7 @@ int btBatchConstraintSolverOCL::prepareBatches(btConstraintArray& constraints, i
 	{
 		bool lastBatch = (nBatch == (m_maxBatches - 1));
 		int numInBatch = 0;
+		int numRowsInBatch = 0;
 		for(int nBody = 0; nBody < m_numBodies; nBody++)
 		{
 			if(m_tmpSolverBodyPool[nBody].m_invMass[0] > 0.f)
@@ -437,8 +453,38 @@ int btBatchConstraintSolverOCL::prepareBatches(btConstraintArray& constraints, i
 			{
 				continue;
 			}
-			m_constrMarkers[nConstr] = nBatch;
-			m_hConstraintIdx[currConstrOffset + numInBatch] = (nConstr < numConstrA) ? constraintOffset + nConstr : auxConstrOffs + nConstr - numConstrA;
+			m_hConstraintsIndx[m_currIndxOffs + numInBatch] = currConstrOffset + numRowsInBatch;
+
+			for(int nRow = 0; nRow < ct.m_numConsecutiveRowsPerKernel; nRow++)
+			{
+				btSolverConstraint& ct1 = (nConstr < numConstrA) ? constraints[nConstr + nRow] : (*pAuxConstr)[nConstr + nRow - numConstrA];
+				m_constrMarkers[nConstr] = nBatch;
+				if(nConstr >= numConstrA)
+				{
+					m_contactReverseIndx[nConstr - numConstrA] = currConstrOffset + numRowsInBatch;
+				}
+				btBCSOCLConstrRO& ctro =  m_hConstraintsRO[currConstrOffset + numRowsInBatch + nRow];
+				ctro.m_relpos1CrossNormal_jacDiagABInv = ct1.m_relpos1CrossNormal;
+				ctro.m_relpos1CrossNormal_jacDiagABInv[3] = ct1.m_jacDiagABInv;
+				ctro.m_contactNormal_friction = ct1.m_contactNormal;
+				ctro.m_contactNormal_friction[3] = ct1.m_friction;
+				ctro.m_relpos2CrossNormal_rhs = ct1.m_relpos2CrossNormal;
+				ctro.m_relpos2CrossNormal_rhs[3] = ct1.m_rhs;
+				ctro.m_angularComponentA_cfm = ct1.m_angularComponentA;
+				ctro.m_angularComponentA_cfm[3] = ct1.m_cfm;
+				ctro.m_angularComponentB = ct1.m_angularComponentB;
+				ctro.m_numConsecutiveRowsPerKernel = ct1.m_numConsecutiveRowsPerKernel;
+				ctro.m_frictionIndex = ct1.m_frictionIndex;
+				ctro.m_solverBodyIdA = ct1.m_solverBodyIdA;
+				ctro.m_solverBodyIdB = ct1.m_solverBodyIdB;
+
+				btBCSOCLConstrRW& ctrw =  m_hConstraintsRW[currConstrOffset + numRowsInBatch + nRow];
+				ctrw.m_appliedImpulse = ct1.m_appliedImpulse;
+				ctrw.m_lowerLimit = ct1.m_lowerLimit;
+				ctrw.m_upperLimit = ct1.m_upperLimit;
+				ctrw.m_pOrigData = &ct1;
+			}
+			numRowsInBatch += ct.m_numConsecutiveRowsPerKernel;
 			numInBatch++;
 			if(m_bodyMarkers[bodyIdA] == -1)
 			{
@@ -453,87 +499,14 @@ int btBatchConstraintSolverOCL::prepareBatches(btConstraintArray& constraints, i
 		{
 			break;
 		}
-		m_batchData[(batchOffset + nBatch) * 2 + 0] = currConstrOffset;
+		m_batchData[(batchOffset + nBatch) * 2 + 0] = m_currIndxOffs;
 		m_batchData[(batchOffset + nBatch) * 2 + 1] = numInBatch;
-		currConstrOffset += numInBatch;
+		currConstrOffset += numRowsInBatch;
+		m_currIndxOffs += numInBatch;
 		totalBatches++;
 	} // for nBatch
 	return totalBatches;
 }
-
-
-
-void btBatchConstraintSolverOCL::solveGroupIterationsCPU(const btContactSolverInfo& infoGlobal)
-{
-	BT_PROFILE("btBatchConstraintSolverOCL::solveGroupIterations");
-	for(int iteration = 0; iteration < infoGlobal.m_numIterations; iteration++)
-	{			
-		// solve all joint constraints
-		int batchOffs = 0;
-		int indexOffs = 0;
-		solveBatchesCPU(m_tmpSolverNonContactConstraintPool, m_numJointBatches, batchOffs, indexOffs);
-		batchOffs += m_numJointBatches;
-		indexOffs += m_numJointConstraints;
-		// solve contact constraints
-		solveBatchesCPU(m_tmpSolverContactConstraintPool, m_numContactBatches, batchOffs, indexOffs);
-		batchOffs += m_numContactBatches;
-		indexOffs += m_numContactConstraints;
-		// set limits for friction constraints
-		int numFrictionPoolConstraints = m_tmpSolverContactFrictionConstraintPool.size();
-		for(int j = 0; j < numFrictionPoolConstraints; j++)
-		{
-			btSolverConstraint& solveManifold = m_tmpSolverContactFrictionConstraintPool[m_orderFrictionConstraintPool[j]];
-			btScalar totalImpulse = m_tmpSolverContactConstraintPool[solveManifold.m_frictionIndex].m_appliedImpulse;
-			if (totalImpulse>btScalar(0))
-			{
-				solveManifold.m_lowerLimit = -(solveManifold.m_friction*totalImpulse);
-				solveManifold.m_upperLimit = solveManifold.m_friction*totalImpulse;
-			}
-		}
-		// solve all friction constraints
-		solveBatchesLowLimCPU(m_tmpSolverContactFrictionConstraintPool, m_numFrictionBatches, batchOffs, indexOffs);
-	}
-	return;
-}
-
-void btBatchConstraintSolverOCL::solveBatchesCPU(btConstraintArray& constraints, int numBatches, int batchOffs, int indexOffs)
-{
-	for(int nBatch = 0; nBatch < numBatches; nBatch++)
-	{
-		int constrOffs = m_batchData[(batchOffs + nBatch) * 2 + 0];
-		int numConstr  = m_batchData[(batchOffs + nBatch) * 2 + 1];
-		for(int nConstr = 0; nConstr < numConstr; nConstr++)
-		{
-			int constrIdx = m_hConstraintIdx[constrOffs + nConstr] - indexOffs;
-			int numRows = constraints[constrIdx].m_numConsecutiveRowsPerKernel;
-			for(int nRow = 0; nRow < numRows; nRow++)
-			{
-				btSolverConstraint& ct = constraints[constrIdx + nRow];
-				resolveSingleConstraintRowGeneric(m_tmpSolverBodyPool[ct.m_solverBodyIdA], m_tmpSolverBodyPool[ct.m_solverBodyIdB], ct);
-			}
-		}
-	}
-}
-
-void btBatchConstraintSolverOCL::solveBatchesLowLimCPU(btConstraintArray& constraints, int numBatches, int batchOffs, int indexOffs)
-{
-	for(int nBatch = 0; nBatch < numBatches; nBatch++)
-	{
-		int constrOffs = m_batchData[(batchOffs + nBatch) * 2 + 0];
-		int numConstr  = m_batchData[(batchOffs + nBatch) * 2 + 1];
-		for(int nConstr = 0; nConstr < numConstr; nConstr++)
-		{
-			int constrIdx = m_hConstraintIdx[constrOffs + nConstr] - indexOffs;
-			int numRows = constraints[constrIdx].m_numConsecutiveRowsPerKernel;
-			for(int nRow = 0; nRow < numRows; nRow++)
-			{
-				btSolverConstraint& ct = constraints[constrIdx + nRow];
-				resolveSingleConstraintRowLowerLimit(m_tmpSolverBodyPool[ct.m_solverBodyIdA], m_tmpSolverBodyPool[ct.m_solverBodyIdB], ct);
-			}
-		}
-	}
-}
-
 
 void btBatchConstraintSolverOCL::solveBatchesGPU(int numBatches, int batchOffs)
 {
@@ -541,41 +514,30 @@ void btBatchConstraintSolverOCL::solveBatchesGPU(int numBatches, int batchOffs)
 	{
 		int constrOffs = m_batchData[(batchOffs + nBatch) * 2 + 0];
 		int numConstr  = m_batchData[(batchOffs + nBatch) * 2 + 1];
-		setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 4, sizeof(int),(void*)&constrOffs);
+		setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, 5, sizeof(int),(void*)&constrOffs);
 		runKernelWithWorkgroupSize(BCSOCL_KERNEL_SOLVE_CONSTRAINT_ROW, numConstr);
 	}
 }
 
-void btBatchConstraintSolverOCL::solveBatchesLowLimGPU(int numBatches, int batchOffs)
-{
-	for(int nBatch = 0; nBatch < numBatches; nBatch++)
-	{
-		int constrOffs = m_batchData[(batchOffs + nBatch) * 2 + 0];
-		int numConstr  = m_batchData[(batchOffs + nBatch) * 2 + 1];
-		setKernelArg(BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM, 4, sizeof(int),(void*)&constrOffs);
-		runKernelWithWorkgroupSize(BCSOCL_KERNEL_SOLVE_CONSTR_ROW_LOW_LIM, numConstr);
-	}
-}
-
-
 void btBatchConstraintSolverOCL::solveGroupIterationsGPU(const btContactSolverInfo& infoGlobal)
 {
-	int memSize = m_numBodies * sizeof(btSolverBody);
-	int devOffset;
+	// fix the friction indices
+	for(int nFrict = 0; nFrict < m_numFrictionConstraints; nFrict++)
+	{
+		int oldIndex = m_hConstraintsRO[m_frictionConstrStart + nFrict].m_frictionIndex;
+		int newIndex = m_contactReverseIndx[oldIndex];
+		m_hConstraintsRO[m_frictionConstrStart + nFrict].m_frictionIndex = newIndex;
+	}
+	int memSize = m_numBodies * sizeof(btBCSOCLBody);
 	{
 		BT_PROFILE("btBatchConstraintSolverOCL::Copying to GPU");
-		copyArrayToDevice(m_dBodies, &(m_tmpSolverBodyPool[0]), memSize);
-		memSize = m_numJointConstraints * sizeof(btSolverConstraint);
-		copyArrayToDevice(m_dConstraints, &(m_tmpSolverNonContactConstraintPool[0]), memSize);
-		devOffset = memSize;
-		memSize = m_numContactConstraints * sizeof(btSolverConstraint);
-		copyArrayToDevice(m_dConstraints, &(m_tmpSolverContactConstraintPool[0]), memSize, devOffset, 0);
-		devOffset += memSize;
-		memSize = m_numFrictionConstraints * sizeof(btSolverConstraint);
-		copyArrayToDevice(m_dConstraints, &(m_tmpSolverContactFrictionConstraintPool[0]), memSize, devOffset, 0);
-		int totalNumConstraints = m_numJointConstraints + m_numContactConstraints + m_numFrictionConstraints;
-		memSize = totalNumConstraints * sizeof(int);
-		copyArrayToDevice(m_dConstraintIdx, &(m_hConstraintIdx[0]), memSize);
+		copyArrayToDevice(m_dBodies, &(m_hBodies[0]), memSize);
+		memSize = m_numConstraints * sizeof(btBCSOCLConstrRO);
+		copyArrayToDevice(m_dConstraintsRO, &(m_hConstraintsRO[0]), memSize);
+		memSize = m_numConstraints * sizeof(btBCSOCLConstrRW);
+		copyArrayToDevice(m_dConstraintsRW, &(m_hConstraintsRW[0]), memSize);
+		memSize = m_currIndxOffs * sizeof(int);
+		copyArrayToDevice(m_dConstraintsIndx, &(m_hConstraintsIndx[0]), memSize);
 	}
 	for(int iteration = 0; iteration < infoGlobal.m_numIterations; iteration++)
 	{
@@ -597,9 +559,7 @@ void btBatchConstraintSolverOCL::solveGroupIterationsGPU(const btContactSolverIn
 		{
 			BT_PROFILE("btBatchConstraintSolverOCL::setup friction");
 			int frictOffs = m_numJointConstraints + m_numContactConstraints;
-			setKernelArg(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, 2, sizeof(int),(void*)&frictOffs);
-			int contOffs = m_numJointConstraints;
-			setKernelArg(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, 3, sizeof(int),(void*)&contOffs);
+			setKernelArg(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, 3, sizeof(int),(void*)&frictOffs);
 			runKernelWithWorkgroupSize(BCSOCL_KERNEL_SETUP_FRICTION_CONSTRAINT, m_numFrictionConstraints);
 		}
 /*
@@ -619,66 +579,20 @@ void btBatchConstraintSolverOCL::solveGroupIterationsGPU(const btContactSolverIn
 		{
 			BT_PROFILE("btBatchConstraintSolverOCL::Solve friction");
 			solveBatchesGPU(m_numFrictionBatches, batchOffs);
-//			solveBatchesLowLimGPU(m_numFrictionBatches, batchOffs);
 		}
 	}
 	{
 		BT_PROFILE("btBatchConstraintSolverOCL::Copying from GPU");
-		memSize = m_numBodies * sizeof(btSolverBody);
-		copyArrayFromDevice(&(m_tmpSolverBodyPool[0]), m_dBodies, memSize);
+		memSize = m_numBodies * sizeof(btBCSOCLBody);
+		copyArrayFromDevice(&(m_hBodies[0]), m_dBodies, memSize);
 		// read solver constraints back (needed for warmstarting)
-		memSize = m_numJointConstraints * sizeof(btSolverConstraint);
-		if(memSize)
+		memSize = m_numConstraints * sizeof(btBCSOCLConstrRW);
+		copyArrayFromDevice(&(m_hConstraintsRW[0]), m_dConstraintsRW, memSize);
+		for(int nConstr = 0; nConstr < m_numConstraints; nConstr++)
 		{
-			copyArrayFromDevice(&(m_tmpSolverNonContactConstraintPool[0]), m_dConstraints, memSize);
+			btSolverConstraint* pCt = (btSolverConstraint*)m_hConstraintsRW[nConstr].m_pOrigData;
+			pCt->m_appliedImpulse = m_hConstraintsRW[nConstr].m_appliedImpulse;
 		}
-		devOffset = memSize;
-		memSize = m_numContactConstraints * sizeof(btSolverConstraint);
-		copyArrayFromDevice(&(m_tmpSolverContactConstraintPool[0]), m_dConstraints, memSize, 0, devOffset);
 	}
 }
 
-#if 0
-void btBatchConstraintSolverOCL::solveGroupIterationsCPU(const btContactSolverInfo& infoGlobal)
-{
-	BT_PROFILE("btBatchConstraintSolverOCL::solveGroupIterations");
-//	int j;
-	int numConstr;
-	for(int iteration = 0; iteration < infoGlobal.m_numIterations; iteration++)
-	{			
-		// solve all joint constraints
-		numConstr = m_tmpSolverNonContactConstraintPool.size();
-		for(int i = 0; i < numConstr; i++)
-		{
-			btSolverConstraint& ct = m_tmpSolverNonContactConstraintPool[i];
-			resolveSingleConstraintRowGeneric(m_tmpSolverBodyPool[ct.m_solverBodyIdA], m_tmpSolverBodyPool[ct.m_solverBodyIdB], ct);
-		}
-		numConstr = m_tmpSolverContactConstraintPool.size();
-		for(int i = 0; i < numConstr; i++)
-		{
-			btSolverConstraint& ct = m_tmpSolverContactConstraintPool[i];
-			resolveSingleConstraintRowGeneric(m_tmpSolverBodyPool[ct.m_solverBodyIdA], m_tmpSolverBodyPool[ct.m_solverBodyIdB], ct);
-		}
-		// set limits for friction constraints
-		int numFrictionPoolConstraints = m_tmpSolverContactFrictionConstraintPool.size();
-		for(int j = 0; j < numFrictionPoolConstraints; j++)
-		{
-			btSolverConstraint& solveManifold = m_tmpSolverContactFrictionConstraintPool[m_orderFrictionConstraintPool[j]];
-			btScalar totalImpulse = m_tmpSolverContactConstraintPool[solveManifold.m_frictionIndex].m_appliedImpulse;
-			if (totalImpulse>btScalar(0))
-			{
-				solveManifold.m_lowerLimit = -(solveManifold.m_friction*totalImpulse);
-				solveManifold.m_upperLimit = solveManifold.m_friction*totalImpulse;
-			}
-		}
-		// solve all friction constraints
-		numConstr = m_tmpSolverContactFrictionConstraintPool.size();
-		for(int i = 0; i < numConstr; i++)
-		{
-			btSolverConstraint& ct = m_tmpSolverContactFrictionConstraintPool[i];
-			resolveSingleConstraintRowLowerLimit(m_tmpSolverBodyPool[ct.m_solverBodyIdA], m_tmpSolverBodyPool[ct.m_solverBodyIdB], ct);
-		}
-	}
-	return;
-}
-#endif
