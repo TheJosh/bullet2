@@ -5,11 +5,17 @@
 ///Instead of #include <CL/cl.h> we include <MiniCL/cl.h>
 ///Apart from this include file, all other code should compile and work on OpenCL compliant implementation
 
+#define USE_MINICL 1
+#ifdef USE_MINICL
+#include "MiniCL/cl.h"
+#else //USE_MINICL
 #include <CL/cl.h>
+#endif//USE_MINICL
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include <assert.h>
+
 
 void printDevInfo(cl_device_id device)
 {
@@ -64,7 +70,7 @@ int main(int argc, char **argv)
 
     // set Global and Local work size dimensions
     szGlobalWorkSize[0] = iTestN >> 3;  // do 8 computations per work item
-    szLocalWorkSize[0]= 16;
+    szLocalWorkSize[0]= iTestN>>3;
 
 
     // Allocate and initialize host arrays
@@ -83,9 +89,8 @@ int main(int argc, char **argv)
 	}
 
     // Create OpenCL context & context
-    //cxGPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErr1); //could also be CL_DEVICE_TYPE_GPU
-	cxGPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErr1); //could also be CL_DEVICE_TYPE_GPU
-	assert(cxGPUContext);
+    cxGPUContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErr1); //could also be CL_DEVICE_TYPE_GPU
+	
     // Query all devices available to the context
     ciErr1 |= clGetContextInfo(cxGPUContext, CL_CONTEXT_DEVICES, 0, NULL, &szParmDataBytes);
     cdDevices = (cl_device_id*)malloc(szParmDataBytes);
@@ -118,44 +123,10 @@ int main(int argc, char **argv)
 		lengths[i] = 0;
 	}
 
-
-#define KERNEL_FROM_BINARY 1
-#if KERNEL_FROM_BINARY
 	cpProgram = clCreateProgramWithBinary(cxGPUContext, numDevices,cdDevices,lengths, images, 0, &err);
-#else
-
-	// Program Setup
-	size_t program_length;
-	char* sourceMemoryBuffer = 0;
-
-	char* kernelfilename = "../../Demos/SpheresGrid/SpheresGrid.cl";
-	FILE* file = fopen(kernelfilename,"rb");
-	int size=0;
-	if (fseek(file, 0, SEEK_END) || (size = ftell(file)) == EOF || fseek(file, 0, SEEK_SET)) {        
-		/* File operations denied? ok, just close and return failure */
-		printf("Error: cannot get filesize from %s\n", kernelfilename);
-	} else
-	{
-		//how to detect file size?
-		sourceMemoryBuffer = (char*)malloc(size+1);
-		fread(sourceMemoryBuffer,1,size,file);
-		fclose(file);
-	}
-
-	program_length = size;
-	assert (sourceMemoryBuffer);
-
-	// create the program
-	cpProgram = clCreateProgramWithSource(cxGPUContext, 1, (const char**)&sourceMemoryBuffer, &program_length, &err);
-	assert( err ==  CL_SUCCESS);
-	free(sourceMemoryBuffer);
-#endif
-
-
 
 	// Build the executable program from a binary
 	ciErr1 |= clBuildProgram(cpProgram, 0, NULL, NULL, NULL, NULL);
-	assert(ciErr1 == CL_SUCCESS);
 
     // Create the kernel
     ckKernel = clCreateKernel(cpProgram, "VectorAdd", &ciErr1);
@@ -167,12 +138,10 @@ int main(int argc, char **argv)
 
     // Copy input data from host to GPU and launch kernel 
     ciErr1 |= clEnqueueNDRangeKernel(cqCommandQue, ckKernel, 1, NULL, szGlobalWorkSize, szLocalWorkSize, 0, NULL, NULL);
-	assert(ciErr1 == CL_SUCCESS);
 
     // Read back results and check accumulated errors
     ciErr1 |= clEnqueueReadBuffer(cqCommandQue, cmMemObjs[2], CL_TRUE, 0, sizeof(cl_float8) * szGlobalWorkSize[0], dst, 0, NULL, NULL);
-	assert(ciErr1==CL_SUCCESS);
-		
+
     // Release kernel, program, and memory objects
 	// NOTE:  Most properly this should be done at any of the exit points above, but it is omitted elsewhere for clarity.
     free(cdDevices);
@@ -206,33 +175,14 @@ int main(int argc, char **argv)
     free(srcA); 
     free(srcB);
     free (dst);
-	printf("\nPress ENTER to quit\n");
-	getchar();
 }
 
-struct float8
-{
-	float s0;
-	float s1;
-	float s2;
-	float s3;
-	float s4;
-	float s5;
-	float s6;
-	float s7;
 
-	float8(float scalar)
-	{
-		s0=s1=s2=s3=s4=s5=s6=s7=scalar;
-	}
-};
-
-
-#include <CL/cl_MiniCL_Defs.h>
-
+#ifdef USE_MINICL
+#include "MiniCL/cl_MiniCL_Defs.h"
 extern "C"
 {
 	#include "VectorAddKernels.cl"
 }
-
 MINICL_REGISTER(VectorAdd)
+#endif//USE_MINICL

@@ -2,14 +2,19 @@
 
 
 INCLUDE_DIRECTORIES(
-${BULLET_PHYSICS_SOURCE_DIR}/src }
+${BULLET_PHYSICS_SOURCE_DIR}/src 
 )
 
 LINK_LIBRARIES(
- BulletMultiThreaded LinearMath MiniCL
+ BulletMultiThreaded LinearMath 
 )
 
 ADD_EXECUTABLE(AppMiniCLVectorAdd
 MiniCL_VectorAdd.cpp
+VectorAddKernels.cl
 )
+
+IF (UNIX)
+  TARGET_LINK_LIBRARIES(AppMiniCLVectorAdd pthread)
+ENDIF(UNIX)
 

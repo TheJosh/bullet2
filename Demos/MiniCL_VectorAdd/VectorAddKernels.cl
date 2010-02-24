@@ -30,6 +30,7 @@ __kernel void VectorAdd(__global const float8* a, __global const float8* b, __gl
     float8 f8InB = b[iGID];
     float8 f8Out = (float8)0.0f;
     
+    
     // add the vector elements
     f8Out.s0 = f8InA.s0 + f8InB.s0;
     f8Out.s1 = f8InA.s1 + f8InB.s1;

@@ -1,8 +1,39 @@
 Bullet Continuous Collision Detection and Physics Library
 Primary author and maintainer: Erwin Coumans
 
-Todo: update changelog from April - July 2008
-See http://code.google.com/p/bullet/source/list for more complete log in Subversion
+This ChangeLog is incomplete, for an up-to-date list of all fixed issues see http://bullet.googlecode.com
+using http://tinyurl.com/yabmjjj
+
+
+2010 February
+	- Bullet 2.76 release, revision 2010
+	- support for the .bullet binary file format
+	- btInternalEdgeUtility to adjust unwanted collisions against internal triangle edges
+	- Improved Maya Dynamica plugin with better constraint authoring and .bullet file export
+
+
+2009 September 17
+	- Minor update to Bullet 2.75 release, revision 1776
+	- Support for btConvex2dShape, check out Bullet/Demos/Box2dDemo
+	- Fixes in build systems
+	- Minor fix in btGjkPairDetector
+	- Initialize world transform for btCollisionShape in constructor
+
+
+2009 September 6
+	- Bullet 2.75 release
+	- Added SPH fluid simulation in Extras, not integrated with rigid body / soft body yet
+	Thanks to Rama Hoetzlein to make this contribution available under the ZLib license
+	- add special capsule-capsule collider code in btConvexConvexCollisionAlgorithm, to speed up capsule-ragdolls
+	- soft body improvement: faster building of bending constraints
+	- soft body improvement: allow to disable/enable cluster self-collision
+	- soft body fix: 'exploding' soft bodies when using cluster collision
+	- fix some degenerate cases in continuous convex cast, could impact ray cast/convex cast
+	Thanks to Jacob Langford for the report and reproduction cases, see http://code.google.com/p/bullet/issues/detail?id=250&can=1&start=200
+	- re-enabled split impulse
+	- added btHinge2Constraint, btUniversalConstraint, btGeneric6DofSpringConstraint
+	- demonstrate 2D physics with 2D/3D object interaction
+	
 
 2008 December 2
 	- Fix contact refresh issues with btCompoundShape, introduced with btDbvt acceleration structure in btCompoundCollisionAlgorithm
