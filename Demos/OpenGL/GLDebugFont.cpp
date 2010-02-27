@@ -16,14 +16,14 @@ subject to the following restrictions:
 #include "GLDebugFont.h"
 
 
-#ifdef WIN32//for glut.h
+#ifdef _WIN32//for glut.h
 #include <windows.h>
 #endif
 
 //think different
 #if defined(__APPLE__) && !defined (VMDMESA)
-#include "TargetConditionals.h"
-#if defined (TARGET_OS_IPHONE) || defined (TARGET_IPHONE_SIMULATOR)
+#include <TargetConditionals.h>
+#if (defined (TARGET_OS_IPHONE) && TARGET_OS_IPHONE) || (defined (TARGET_IPHONE_SIMULATOR) && TARGET_IPHONE_SIMULATOR)
 #import <OpenGLES/ES1/gl.h>
 #define glOrtho glOrthof
 #else
@@ -33,11 +33,14 @@ subject to the following restrictions:
 #endif
 #else
 
-#include <GL/glut.h>
+
+
 #ifdef _WINDOWS
 #include <windows.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#else
+#include <GL/glut.h>
 #endif
 #endif
 
@@ -45,6 +48,8 @@ subject to the following restrictions:
 #include <string.h> //for memset
 
 extern unsigned char sFontData[];
+static bool sTexturesInitialized = false;
+
 static GLuint sTexture = -1;
 static int sScreenWidth = -1;
 static int sScreenHeight = -1;
@@ -59,8 +64,9 @@ void GLDebugResetFont(int screenWidth,int screenHeight)
 	sScreenWidth = screenWidth;
 	sScreenHeight = screenHeight;
 
-	if (sTexture==-1)
+	if (!sTexturesInitialized)
 	{
+		sTexturesInitialized = true;
 		glGenTextures(1, &sTexture);
 		glBindTexture(GL_TEXTURE_2D, sTexture);
 		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
@@ -68,8 +74,6 @@ void GLDebugResetFont(int screenWidth,int screenHeight)
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, 256 , 256 , 0, GL_RGB, GL_UNSIGNED_BYTE, &sFontData[0]);
 	}
 
-	int windowWidth=screenWidth;
-	int windowHeight = screenHeight;
 	printf("generating font at resolution %d,%d\n",screenWidth,screenHeight);
 
 }
@@ -79,9 +83,7 @@ void GLDebugResetFont(int screenWidth,int screenHeight)
 void	GLDebugDrawStringInternal(int x,int y,const char* string, const btVector3& rgb)
 {
 
-	
-	const char* string2 = "test";
-	if (sTexture==-1)
+	if (!sTexturesInitialized)
 	{
 		GLDebugResetFont(sScreenWidth,sScreenHeight);
 	}
@@ -115,7 +117,7 @@ void	GLDebugDrawStringInternal(int x,int y,const char* string, const btVector3& 
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
-		glTranslatef(x,sScreenHeight - y,0);
+		glTranslatef(btScalar(x),btScalar(sScreenHeight - y),btScalar(0));
 
 #if USE_ARRAYS
 		
@@ -148,13 +150,13 @@ void	GLDebugDrawStringInternal(int x,int y,const char* string, const btVector3& 
 			char ch = string[i]-32;
 			if (ch>=0)
 			{
-				cx=float(ch%16) * 1./16.f;
-				cy=float(ch/16) * 1./16.f;
+				cx=float(ch%16) * btScalar(1./16.f);
+				cy=float(ch/16) * btScalar(1./16.f);
 
-				uv_texcoords[0] = cx;			uv_texcoords[1] = 1-cy-1./16.f;
-				uv_texcoords[2] = cx+1./16.f;	uv_texcoords[3] = 1-cy-1./16.f;
-				uv_texcoords[4] = cx+1./16.f;	uv_texcoords[5] = 1-cy;
-				uv_texcoords[6] = cx;			uv_texcoords[7] = 1-cy;
+				uv_texcoords[0] = cx;			uv_texcoords[1] = btScalar(1-cy-1./16.f);
+				uv_texcoords[2] = btScalar(cx+1./16.f);	uv_texcoords[3] = btScalar(1-cy-1./16.f);
+				uv_texcoords[4] = btScalar(cx+1./16.f);	uv_texcoords[5] = btScalar(1-cy);
+				uv_texcoords[6] = cx;			uv_texcoords[7] = btScalar(1-cy);
 #if USE_ARRAYS
 				glTexCoordPointer(2,GL_FLOAT,0,uv_texcoords);
 				glVertexPointer(3, GL_FLOAT, 0, verts);
@@ -193,7 +195,7 @@ void	GLDebugDrawStringInternal(int x,int y,const char* string, const btVector3& 
 
 		glMatrixMode(GL_TEXTURE);
 		glLoadIdentity();
-		glScalef(0.025,0.025,0.025);
+		glScalef(btScalar(0.025),btScalar(0.025),btScalar(0.025));
 #endif
 		glMatrixMode(GL_MODELVIEW);
 #if USE_ARRAYS

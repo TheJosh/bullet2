@@ -14,7 +14,7 @@ subject to the following restrictions:
 */
 
 
-#include <CL/cl_MiniCL_Defs.h>
+#include <MiniCL/cl_MiniCL_Defs.h>
 
 extern "C"
 {

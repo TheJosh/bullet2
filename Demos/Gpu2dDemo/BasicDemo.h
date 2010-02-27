@@ -52,7 +52,7 @@ class BasicDemo : public GlutDemoApplication
 
 	btGpuDemoDynamicsWorld* m_pWorld;
 
-	int m_mouseButtons;
+//	int m_mouseButtons;
 	int m_mouseOldX;
 	int m_mouseOldY;
 	int m_argc;

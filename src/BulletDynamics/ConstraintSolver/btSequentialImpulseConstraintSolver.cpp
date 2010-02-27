@@ -650,6 +650,8 @@ void	btSequentialImpulseConstraintSolver::convertContact(btPersistentManifold* m
 	if ((!solverBodyA || !solverBodyA->getInvMass()) && (!solverBodyB || !solverBodyB->getInvMass()))
 		return;
 
+	int firstFrictionIndex = m_tmpSolverContactFrictionConstraintPool.size();
+
 	for (int j=0;j<manifold->getNumContacts();j++)
 	{
 
@@ -670,6 +672,8 @@ void	btSequentialImpulseConstraintSolver::convertContact(btPersistentManifold* m
 			solverConstraint.m_solverBodyA = rb0? rb0 : &getFixedBody();
 			solverConstraint.m_solverBodyB = rb1? rb1 : &getFixedBody();
 			solverConstraint.m_originalContactPoint = &cp;
+
+			solverConstraint.m_numConsecutiveRowsPerKernel = j ? 0 : manifold->getNumContacts();
 
 			setupContactConstraint(solverConstraint, colObj0, colObj1, cp, infoGlobal, vel, rel_vel, relaxation, rel_pos1, rel_pos2);
 
@@ -728,6 +732,12 @@ void	btSequentialImpulseConstraintSolver::convertContact(btPersistentManifold* m
 			setFrictionConstraintImpulse( solverConstraint, rb0, rb1, cp, infoGlobal);
 
 		}
+	}
+
+	int currFrictionIndex = m_tmpSolverContactFrictionConstraintPool.size();
+	for(int j = firstFrictionIndex; j < currFrictionIndex; j++)
+	{
+		m_tmpSolverContactFrictionConstraintPool[j].m_numConsecutiveRowsPerKernel = (j > firstFrictionIndex) ? 0 : currFrictionIndex - firstFrictionIndex;
 	}
 }
 
@@ -835,6 +845,7 @@ btScalar btSequentialImpulseConstraintSolver::solveGroupCacheFriendlySetup(btCol
 					for ( j=0;j<info1.m_numConstraintRows;j++)
 					{
 						btSolverConstraint& solverConstraint = currentConstraintRow[j];
+						solverConstraint.m_numConsecutiveRowsPerKernel = j ? 0 : info1.m_numConstraintRows;
 						solverConstraint.m_originalContactPoint = constraint;
 
 						{

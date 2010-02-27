@@ -19,7 +19,11 @@ subject to the following restrictions:
 //CL_PLATFORM_MINI_CL could be defined in build system
 #else
 #include <GL/glew.h>
-#include <CL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+#ifdef USE_MINICL
+#include <MiniCL/cl_platform.h>
+#else
+#include <CL/cl_platform.h>
+#endif
 #endif //__APPLE__
 
 #include "btOclUtils.h"

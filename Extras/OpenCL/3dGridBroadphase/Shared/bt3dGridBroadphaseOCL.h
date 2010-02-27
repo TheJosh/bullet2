@@ -23,15 +23,19 @@ subject to the following restrictions:
 #else
 //#include <GL/glew.h>
 // standard utility and system includes
-#include <CL/cl.h>
+#ifdef USE_MINICL
+	#include <MiniCL/cl.h>
+#else
+	#include <CL/cl.h>
+#endif
 // Extra CL/GL include
 //#include <CL/cl_gl.h>
 #endif //__APPLE__
 
 
 #include "BulletCollision/BroadphaseCollision/btSimpleBroadphase.h"
-#include "../../src/BulletMultiThreaded/btGpu3DGridBroadphaseSharedTypes.h"
-#include "../../src/BulletMultiThreaded/btGpu3DGridBroadphase.h"
+#include "BulletMultiThreaded/btGpu3DGridBroadphaseSharedTypes.h"
+#include "BulletMultiThreaded/btGpu3DGridBroadphase.h"
 
 
 #define GRID3DOCL_CHECKERROR(a, b) if((a)!=(b)) { printf("3D GRID OCL Error : %d\n", (a)); btAssert((a) == (b)); }

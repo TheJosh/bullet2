@@ -36,7 +36,8 @@ static void barrier(unsigned int a)
 	// TODO : implement
 }
 
-ATTRIBUTE_ALIGNED16(struct) float8
+//ATTRIBUTE_ALIGNED16(struct) float8
+struct float8
 {
 	float s0;
 	float s1;
@@ -53,7 +54,8 @@ ATTRIBUTE_ALIGNED16(struct) float8
 	}
 };
 
-ATTRIBUTE_ALIGNED16(struct) float4
+//ATTRIBUTE_ALIGNED16(struct) float4
+struct float4
 {
 	float x,y,z,w;
 	float4() {}

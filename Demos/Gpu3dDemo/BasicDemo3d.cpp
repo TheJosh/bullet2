@@ -17,12 +17,14 @@ subject to the following restrictions:
 ///The 3 following lines include the CPU implementation of the kernels, keep them in this order.
 #include "BulletMultiThreaded/btGpuDefines.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
-#include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
+//#include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
 #ifndef __APPLE__
 #include <GL/glew.h>
 #endif
 
 
+
+#define __BT_SKIP_UINT64_H 1
 #include "BulletMultiThreaded/SpuNarrowPhaseCollisionTask/SpuGatheringCollisionTask.h"
 #include "BulletMultiThreaded/SpuContactManifoldCollisionAlgorithm.h"
 
@@ -32,9 +34,9 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/Win32ThreadSupport.h"
 #include "GLDebugFont.h"
 
-#include "btGpuDemo3dOCLWrap.h"
 
 #include "../../Extras/OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
+#include "btGpuDemo3dOCLWrap.h"
 
 extern int gSkippedCol;
 extern int gProcessedCol;

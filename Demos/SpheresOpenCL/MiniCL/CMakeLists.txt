@@ -1,36 +1,68 @@
-# AppMiniCLSpheres is a testbed to run OpenCL kernels on CPU platforms lacking OpenCL implementation.
-# MiniCL is a rudimentary subset of the OpenCL implementation
-
-
-ADD_DEFINITIONS(-DCL_PLATFORM_MINI_CL=123)
 
 
 INCLUDE_DIRECTORIES(
-${BULLET_PHYSICS_SOURCE_DIR}/src ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL ${BULLET_PHYSICS_SOURCE_DIR}/src/MiniCL }
+${BULLET_PHYSICS_SOURCE_DIR}/src 
+${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared
+${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL
 )
 
-LINK_LIBRARIES(
-OpenGLSupport  BulletMultiThreaded  BulletDynamics  BulletCollision LinearMath MiniCL ${GLEW_glew_LIBRARY} ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
-)
+ADD_DEFINITIONS(-DUSE_MINICL)
 
-ADD_EXECUTABLE(AppSpheresMiniCL
-MiniCLTaskWrap.cpp
-../Shared/SpheresGridDemo.cpp
-../Shared/SpheresGridDemo.h
-../Shared/oecakeLoader.cpp
-../Shared/oecakeLoader.h
-../Shared/main.cpp
-../Shared/btSpheresGridDemoDynamicsWorld.cpp
-../Shared/btSpheresGridDemoDynamicsWorld.h
-../Shared/btSpheresGridDemoSharedDefs.h
-../Shared/btIntegrationDemoDynamicsWorld.cpp
-../Shared/btIntegrationDemoDynamicsWorld.h
-../Shared/btOclUtils.cpp
-../Shared/btOclUtils.h
-../Shared/btSpheresGridDemoSharedTypes.h
-../Shared/cutil_gl_error.h
-../Shared/cutil_math.h
-../Shared/shaders.cpp
-../Shared/shaders.h
-)
+
+IF (CMAKE_CL_64)
+	SET(CMAK_GLEW_LIBRARY
+		${BULLET_PHYSICS_SOURCE_DIR}/Glut/glew64.lib
+		)
+ELSE(CMAKE_CL_64)
+	SET(CMAK_GLEW_LIBRARY
+		${BULLET_PHYSICS_SOURCE_DIR}/Glut/glew32.lib
+		)
+ENDIF(CMAKE_CL_64)
+
+
+IF (USE_GLUT)
+	LINK_LIBRARIES(
+		OpenGLSupport 
+		BulletDynamics  
+		BulletCollision 
+		BulletMultiThreaded 
+		LinearMath 
+		${GLUT_glut_LIBRARY} 
+		${OPENGL_gl_LIBRARY} 
+		${OPENGL_glu_LIBRARY}
+		${CMAK_GLEW_LIBRARY}
+	)
+
+
+	ADD_EXECUTABLE(AppSpheresOCL_Mini
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/cutil_gl_error.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btOclUtils.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/cutil_math.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/SpheresGridDemo.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btSpheresGridDemoDynamicsWorld.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btSpheresGridDemoSharedDefs.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btSpheresGridDemoSharedTypes.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btIntegrationDemoDynamicsWorld.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btIntegrationDemoDynamicsWorld.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/oecakeLoader.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/shaders.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared/btOclCommon.h
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btOclUtils.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/btSpheresGridDemoDynamicsWorld.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/main.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/oecakeLoader.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/shaders.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/SpheresGridDemo.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/MiniCL/MiniCLTaskWrap.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared/btOclCommon.cpp
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/SpheresGrid.cl
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/Integration.cl
+					${BULLET_PHYSICS_SOURCE_DIR}/Demos/SpheresOpenCL/Shared/Integration.cu
+	)
+ELSE (USE_GLUT)
+ENDIF (USE_GLUT)
+
+IF (UNIX)
+  TARGET_LINK_LIBRARIES(AppSpheresOCL_Mini pthread)
+ENDIF(UNIX)
 

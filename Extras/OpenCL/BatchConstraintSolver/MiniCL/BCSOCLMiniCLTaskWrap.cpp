@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <CL/cl_MiniCL_Defs.h>
+#include <MiniCL/cl_MiniCL_Defs.h>
 
 extern "C"
 {

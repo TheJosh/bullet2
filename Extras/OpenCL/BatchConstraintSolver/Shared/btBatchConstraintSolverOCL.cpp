@@ -31,6 +31,7 @@ subject to the following restrictions:
 //#include "btSolverBody.h"
 //#include "btSolverConstraint.h"
 #include "LinearMath/btAlignedObjectArray.h"
+#include "btOclCommon.h"
 #include "btBatchConstraintSolverOCL.h"
 
 
@@ -102,7 +103,8 @@ void btBatchConstraintSolverOCL::initCL(cl_context context, cl_device_id device,
 	else
 	{
 		// create a context 
-		m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+		//m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+		m_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
 		BCSOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 	if(device != NULL)
@@ -276,6 +278,63 @@ void btBatchConstraintSolverOCL::copyArrayFromDevice(void* host, const cl_mem de
 	BCSOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 }
 
+int btBatchConstraintSolverOCL::getOrInitSolverBody(btRigidBody* pBody)
+{
+	int id = pBody->getCompanionId();
+	if(id >= 0)
+	{
+		return id;
+	}
+	btScalar invMass = pBody->getInvMass();
+	if(invMass > btScalar(0))
+	{
+		id = m_numBodies;
+		m_numBodies++;
+		m_hBodies[id].m_deltaLinVel_invMass = pBody->internalGetDeltaLinearVelocity();
+		m_hBodies[id].m_deltaLinVel_invMass[3] = invMass;
+		m_hBodies[id].m_deltaAngVel_frict = pBody->internalGetDeltaAngularVelocity();
+		m_hBodies[id].m_deltaAngVel_frict[3] = pBody->getFriction();
+	}
+	else
+	{
+		id = 0;
+	}
+	pBody->setCompanionId(id);
+	m_solverBodies[id] = pBody;
+	return id;
+}
+
+void btBatchConstraintSolverOCL::prepareSolverBodies(btPersistentManifold** manifoldPtr,int numManifolds,btTypedConstraint** constraints,int numConstraints)
+{
+	m_hBodies[0].m_deltaLinVel_invMass = btVector3(0, 0, 0);
+	m_hBodies[0].m_deltaLinVel_invMass[3] = btScalar(0);
+	m_hBodies[0].m_deltaAngVel_frict = btVector3(0, 0, 0);
+	m_hBodies[0].m_deltaAngVel_frict[3] = btScalar(0);
+	m_solverBodies[0] = &getFixedBody();
+	m_numBodies = 1; // the first one is fixed body
+	btPersistentManifold* manifold = 0;
+	for(int i=0; i < numManifolds; i++)
+	{
+		manifold = manifoldPtr[i];
+		btCollisionObject* colObj0=0,*colObj1=0;
+		colObj0 = (btCollisionObject*)manifold->getBody0();
+		colObj1 = (btCollisionObject*)manifold->getBody1();
+		btRigidBody* bodyA = btRigidBody::upcast(colObj0);
+		btRigidBody* bodyB = btRigidBody::upcast(colObj1);
+		getOrInitSolverBody(bodyA);
+		getOrInitSolverBody(bodyB);
+	}
+	btTypedConstraint* constraint = 0;
+	for(int i=0; i < numConstraints; i++)
+	{
+		constraint = constraints[i];
+		btRigidBody& bodyA = constraint->getRigidBodyA();
+		btRigidBody& bodyB = constraint->getRigidBodyB();
+		getOrInitSolverBody(&bodyA);
+		getOrInitSolverBody(&bodyB);
+	}
+}
+
 
 
 btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int numBodies,btPersistentManifold** manifoldPtr, int numManifolds,btTypedConstraint** constraints,int numConstraints,const btContactSolverInfo& infoGlobal,btIDebugDraw* debugDrawer,btStackAlloc* stackAlloc,btDispatcher* dispatcher)
@@ -290,8 +349,7 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 																constraints, numConstraints,
 																infoGlobal, debugDrawer, stackAlloc, dispatcher);
 	}
-	int i;
-
+	
 	{
 		BT_PROFILE("btBatchConstraintSolverOCL::Setup");
 		solveGroupCacheFriendlySetup( bodies, numBodies, manifoldPtr,  numManifolds,constraints, numConstraints,infoGlobal,debugDrawer, stackAlloc);
@@ -299,18 +357,25 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 	int batchOffset = 0;
 	int constraintOffset = 0;
 
-	m_numBodies = m_tmpSolverBodyPool.size();
+//	m_numBodies = m_tmpSolverBodyPool.size();
 	m_numJointConstraints = m_tmpSolverNonContactConstraintPool.size();
 	m_numContactConstraints = m_tmpSolverContactConstraintPool.size();
 	m_numFrictionConstraints = m_tmpSolverContactFrictionConstraintPool.size();
 	m_numConstraints = m_numJointConstraints + m_numContactConstraints + m_numFrictionConstraints;
 
+/*
 	for(int nBody = 0; nBody < m_numBodies; nBody++)
 	{
 		m_hBodies[nBody].m_deltaLinVel_invMass = m_tmpSolverBodyPool[nBody].m_deltaLinearVelocity;
 		m_hBodies[nBody].m_deltaLinVel_invMass[3] = m_tmpSolverBodyPool[nBody].m_invMass[0];
 		m_hBodies[nBody].m_deltaAngVel_frict = m_tmpSolverBodyPool[nBody].m_deltaAngularVelocity;
 		m_hBodies[nBody].m_deltaAngVel_frict[3] = m_tmpSolverBodyPool[nBody].m_friction;
+	}
+*/
+	{
+		BT_PROFILE("btBatchConstraintSolverOCL::prepareSolverBodies");
+		m_solverBodies.resize(numBodies);
+		prepareSolverBodies(manifoldPtr, numManifolds, constraints, numConstraints);
 	}
 
 #if MERGE_JOINTS_AND_CONTACTS
@@ -346,6 +411,16 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 		solveGroupIterationsGPU(infoGlobal);
 	}
 
+	for(int nBody = 0; nBody < m_numBodies; nBody++)
+	{
+		m_solverBodies[nBody]->internalGetDeltaLinearVelocity() = m_hBodies[nBody].m_deltaLinVel_invMass;
+		m_solverBodies[nBody]->internalGetDeltaAngularVelocity() = m_hBodies[nBody].m_deltaAngVel_frict;
+	}
+	m_solverBodies.resize(0);
+
+	solveGroupCacheFriendlyFinish(bodies, numBodies, manifoldPtr,  numManifolds,constraints, numConstraints,infoGlobal,debugDrawer, stackAlloc);
+
+#if 0
 	int numPoolConstraints = m_tmpSolverContactConstraintPool.size();
 	int j;
 
@@ -365,11 +440,13 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 		//do a callback here?
 	}
 
+
 	for(int nBody = 0; nBody < m_numBodies; nBody++)
 	{
 		m_tmpSolverBodyPool[nBody].m_deltaLinearVelocity = m_hBodies[nBody].m_deltaLinVel_invMass;
 		m_tmpSolverBodyPool[nBody].m_deltaAngularVelocity = m_hBodies[nBody].m_deltaAngVel_frict;
 	}
+
 
 	if (infoGlobal.m_splitImpulse)
 	{		
@@ -394,6 +471,7 @@ btScalar btBatchConstraintSolverOCL::solveGroup(btCollisionObject** bodies,int n
 //	m_hJointIdx.resize(0);
 //	m_hContactIdx.resize(0);
 //	m_hFrictionIdx.resize(0);
+#endif
 
 	return 0.f;
 } 
@@ -421,7 +499,8 @@ int btBatchConstraintSolverOCL::prepareBatches(btConstraintArray& constraints, i
 		int numRowsInBatch = 0;
 		for(int nBody = 0; nBody < m_numBodies; nBody++)
 		{
-			if(m_tmpSolverBodyPool[nBody].m_invMass[0] > 0.f)
+//			if(m_tmpSolverBodyPool[nBody].m_invMass[0] > 0.f)
+			if(m_solverBodies[nBody]->getInvMass() > 0.f)
 			{
 				m_bodyMarkers[nBody] = -1;
 			}
@@ -443,12 +522,14 @@ int btBatchConstraintSolverOCL::prepareBatches(btConstraintArray& constraints, i
 				continue;
 			}
 
-			int bodyIdA = ct.m_solverBodyIdA;
+//			int bodyIdA = ct.m_solverBodyIdA;
+			int bodyIdA = ct.m_solverBodyA->getCompanionId();
 			if((m_bodyMarkers[bodyIdA] >= 0) && (!lastBatch))
 			{
 				continue;
 			}
-			int bodyIdB = ct.m_solverBodyIdB;
+//			int bodyIdB = ct.m_solverBodyIdB;
+			int bodyIdB = ct.m_solverBodyB->getCompanionId();
 			if((m_bodyMarkers[bodyIdB] >= 0) && (!lastBatch))
 			{
 				continue;
@@ -475,8 +556,10 @@ int btBatchConstraintSolverOCL::prepareBatches(btConstraintArray& constraints, i
 				ctro.m_angularComponentB = ct1.m_angularComponentB;
 				ctro.m_numConsecutiveRowsPerKernel = ct1.m_numConsecutiveRowsPerKernel;
 				ctro.m_frictionIndex = ct1.m_frictionIndex;
-				ctro.m_solverBodyIdA = ct1.m_solverBodyIdA;
-				ctro.m_solverBodyIdB = ct1.m_solverBodyIdB;
+//				ctro.m_solverBodyIdA = ct1.m_solverBodyIdA;
+				ctro.m_solverBodyIdA = ct1.m_solverBodyA->getCompanionId();
+//				ctro.m_solverBodyIdB = ct1.m_solverBodyIdB;
+				ctro.m_solverBodyIdB = ct1.m_solverBodyB->getCompanionId();
 
 				btBCSOCLConstrRW& ctrw =  m_hConstraintsRW[currConstrOffset + numRowsInBatch + nRow];
 				ctrw.m_appliedImpulse = ct1.m_appliedImpulse;

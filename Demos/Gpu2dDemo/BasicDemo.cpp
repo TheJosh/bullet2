@@ -16,7 +16,7 @@ subject to the following restrictions:
 ///The 3 following lines include the CPU implementation of the kernels, keep them in this order.
 #include "btGpuDefines.h"
 #include "BulletMultiThreaded/btGpuUtilsSharedDefs.h"
-#include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
+//#include "BulletMultiThreaded/btGpuUtilsSharedCode.h"
 #ifndef __APPLE__
 #include <GL/glew.h>
 #endif
@@ -383,7 +383,7 @@ void	BasicDemo::initPhysics()
 	BasicDemoOecakeLoader	loader(this);
 	if (!loader.processFile("Gpu2dDemo.oec"))
 	{
-		loader.processFile("../../Gpu2dDemo.oec");
+		loader.processFile("../../../../../Demos/Gpu2dDemo/Gpu2dDemo.oec");
 	}
 #if 0 // perfomance test : work-in-progress
 	{ // add more object, but share their shapes

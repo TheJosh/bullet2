@@ -1,1 +1,2 @@
-SUBDIRS( Shared MiniCL  )
+SUBDIRS( AMD NVidia MiniCL )
+

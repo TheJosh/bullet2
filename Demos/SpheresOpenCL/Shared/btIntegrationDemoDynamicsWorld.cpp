@@ -16,9 +16,14 @@ subject to the following restrictions:
 #include <stdio.h>
 #ifndef __APPLE__
 #include <GL/glew.h>
+#ifdef USE_MINICL
+#include <MiniCL/cl_platform.h>
+#else
 #include <CL/cl_platform.h>
+#endif
 #endif //__APPLE__
 
+#include "btOclCommon.h"
 #include "btOclUtils.h"
 
 #include "btBulletDynamicsCommon.h"
@@ -375,7 +380,8 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
     cl_int ciErrNum;
 
 	// create the OpenCL context
-    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+	m_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
+//    m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
     //m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_CPU, NULL, NULL, &ciErrNum);
 	//m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_GPU, NULL, NULL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -428,7 +434,7 @@ void btIntegrationDemoDynamicsWorld::initCLKernels(int argc, char** argv)
 	}
 	if (fp == NULL)
 	{
-		sprintf(newFileName,"..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
+		sprintf(newFileName,"..//..//..//..//..//Demos//SpheresOpenCL//Shared//%s",fileName);
 		fp = fopen(newFileName, "rb");
 		if (fp)
 			fileName = newFileName;

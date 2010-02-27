@@ -44,7 +44,7 @@ class BasicDemo3D : public GlutDemoApplication
 
 	btDefaultCollisionConfiguration* m_collisionConfiguration;
 
-	int m_mouseButtons;
+//	int m_mouseButtons;
 	int m_mouseOldX;
 	int m_mouseOldY;
 

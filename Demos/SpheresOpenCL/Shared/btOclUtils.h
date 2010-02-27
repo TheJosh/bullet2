@@ -6,7 +6,11 @@
 #include <OpenCL/cl.h>
 
 #else
+#ifdef USE_MINICL
+#include <MiniCL/cl.h>
+#else
 #include <CL/cl.h>
+#endif
 #endif
 
 //#define oclCHECKERROR(a, b) btAssert((a) == (b))

@@ -237,6 +237,9 @@ public:
 	virtual void	printStats()
 	{
 	}
+	virtual void	aabbTest(const btVector3& aabbMin, const btVector3& aabbMax, btBroadphaseAabbCallback& callback)
+	{
+	}
 };
 
 

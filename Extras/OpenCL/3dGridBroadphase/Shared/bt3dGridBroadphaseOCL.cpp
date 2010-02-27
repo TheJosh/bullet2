@@ -18,8 +18,8 @@ subject to the following restrictions:
 #include "LinearMath/btQuickprof.h"
 #include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 
+#include "btOclCommon.h"
 #include "bt3dGridBroadphaseOCL.h"
-
 
 #include <stdio.h>
 
@@ -103,7 +103,8 @@ void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_c
 	else
 	{
 		// create a context 
-		m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+		//m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+		m_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
 		GRID3DOCL_CHECKERROR(ciErrNum, CL_SUCCESS);
 	}
 	if(device != NULL)

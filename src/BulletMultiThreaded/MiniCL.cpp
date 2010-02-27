@@ -28,6 +28,60 @@ subject to the following restrictions:
 
 //#define DEBUG_MINICL_KERNELS 1
 
+static char* spPlatformID = "MiniCL, SCEA";
+
+CL_API_ENTRY cl_int CL_API_CALL clGetPlatformIDs(
+	cl_uint           num_entries,
+    cl_platform_id *  platforms,
+    cl_uint *         num_platforms ) CL_API_SUFFIX__VERSION_1_0
+{
+	if(platforms != NULL)
+	{
+		if(num_entries <= 0)
+		{
+			return CL_INVALID_VALUE; 
+		}
+		*((char**)platforms) = spPlatformID;
+	}
+	if(num_platforms != NULL)
+	{
+		*num_platforms = 1;
+	}
+	return CL_SUCCESS;
+}
+
+
+CL_API_ENTRY cl_int CL_API_CALL clGetPlatformInfo(
+	cl_platform_id   platform, 
+	cl_platform_info param_name,
+	size_t           param_value_size, 
+	void *           param_value,
+	size_t *         param_value_size_ret) CL_API_SUFFIX__VERSION_1_0
+{
+	char* pId = (char*)platform;
+	if(strcmp(pId, spPlatformID))
+	{
+			return CL_INVALID_PLATFORM; 
+	}
+	switch(param_name)
+	{
+		case CL_PLATFORM_VENDOR	:
+			if(param_value_size < (strlen(spPlatformID) + 1))
+			{
+				return CL_INVALID_VALUE; 
+			}
+			strcpy((char*)param_value, spPlatformID);
+			if(param_value_size_ret != NULL)
+			{
+				*param_value_size_ret = strlen(spPlatformID) + 1;
+			}
+			break;
+		default : 
+			return CL_INVALID_VALUE; 
+	}
+	return CL_SUCCESS;
+}
+
 
 
 

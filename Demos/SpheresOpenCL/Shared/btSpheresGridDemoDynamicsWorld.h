@@ -20,10 +20,13 @@ subject to the following restrictions:
 #ifdef __APPLE__
 #include <OpenCL/cl.h>
 #else
-// standard utility and system includes
-#include <CL/cl.h>
-// Extra CL/GL include
-#include <CL/cl_gl.h>
+#ifdef USE_MINICL
+	#include <MiniCL/cl.h>
+	#include <MiniCL/cl_gl.h>
+#else
+	#include <CL/cl.h>
+	#include <CL/cl_gl.h>
+#endif
 #endif
 
 

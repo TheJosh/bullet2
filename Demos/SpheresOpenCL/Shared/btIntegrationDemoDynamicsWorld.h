@@ -21,9 +21,15 @@ subject to the following restrictions:
 #include <OpenCL/cl.h>
 #else
 // standard utility and system includes
+#ifdef USE_MINICL
+#include <MiniCL/cl.h>
+// Extra CL/GL include
+#include <MiniCL/cl_gl.h>
+#else
 #include <CL/cl.h>
 // Extra CL/GL include
 #include <CL/cl_gl.h>
+#endif
 #endif
 
 

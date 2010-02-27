@@ -15,7 +15,7 @@ subject to the following restrictions:
 #ifndef GLUT_STUFF_H
 #define GLUT_STUFF_H
 
-#ifdef WIN32//for glut.h
+#ifdef _WIN32//for glut.h
 #include <windows.h>
 #endif
 
@@ -25,30 +25,19 @@ subject to the following restrictions:
 #include <OpenGL/glu.h>
 #include <GLUT/glut.h>
 #else
-#ifdef WIN32
+
+
+#ifdef _WINDOWS
 #include <windows.h>
-#endif
-#include <GL/glut.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
-#endif
+#else
+#include <GL/glut.h>
+#endif //_WINDOWS
+#endif //APPLE
 
-#ifdef _NO_GLUT
-#define BT_KEY_K 'K'
-#define BT_KEY_LEFT			VK_LEFT
-#define BT_KEY_RIGHT		VK_RIGHT
-#define BT_KEY_UP			VK_UP
-#define BT_KEY_DOWN			VK_DOWN
-#define	BT_KEY_F1			VK_F1
-#define	BT_KEY_F2			VK_F2
-#define	BT_KEY_F3			VK_F3
-#define	BT_KEY_F4			VK_F4
-#define	BT_KEY_F5			VK_F5
-#define BT_KEY_PAGEUP		VK_PRIOR
-#define BT_KEY_PAGEDOWN		VK_NEXT
-#define BT_KEY_END			VK_END
-#define BT_KEY_HOME			VK_HOME
-
+#ifdef _WINDOWS
+#define BT_ACTIVE_ALT   VK_LMENU
 
 #else
 #define BT_KEY_K 'k'
@@ -68,9 +57,7 @@ subject to the following restrictions:
 #define BT_ACTIVE_ALT		GLUT_ACTIVE_ALT
 #define	BT_ACTIVE_CTRL		GLUT_ACTIVE_ALT
 #define BT_ACTIVE_SHIFT		GLUT_ACTIVE_SHIFT
-
 #endif
-
 
 #if BT_USE_FREEGLUT
 #include "GL/freeglut_ext.h" //to be able to return from glutMainLoop()

@@ -1,7 +1,7 @@
 #ifdef _WINDOWS
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2009 Erwin Coumans  http://bulletphysics.org
+Copyright (c) 2003-2010 Erwin Coumans  http://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -32,14 +32,15 @@ DemoApplication* gDemoApplication = 0;
 DemoApplication*	createDemo();
 
 
-
 // Function Declarations
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void EnableOpenGL(HWND hWnd, HDC * hDC, HGLRC * hRC);
 void DisableOpenGL(HWND hWnd, HDC hDC, HGLRC hRC);
-
-
+static bool sOpenGLInitialized = false;
+static int sWidth = 0;
+static int sHeight =0;
+static int quitRequest = 0;
 
 // WinMain
 
@@ -86,8 +87,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	gDemoApplication->myinit();
 	//gDemoApplication->reshape(1024, 768);
 	gDemoApplication->initPhysics();
-	gDemoApplication->getDynamicsWorld()->setDebugDrawer(&debugDraw);
+	if (gDemoApplication->getDynamicsWorld())
+		gDemoApplication->getDynamicsWorld()->setDebugDrawer(&debugDraw);
 	
+	gDemoApplication->reshape(sWidth,sHeight);
 
 	// program main loop
 	while ( !quit )
@@ -146,21 +149,56 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	
+	
+
 	switch (message)
 	{
+
+	case WM_SYSKEYDOWN:
+		{
+			if (lParam & 1<<29)
+			{
+				gDemoApplication->m_modifierKeys = VK_LMENU;
+			}
+			break;
+		}
+	case WM_SYSKEYUP:
+		{
+			if (lParam & 1<<29)
+			{
+				gDemoApplication->m_modifierKeys = VK_LMENU;
+			} else
+			{
+				gDemoApplication->m_modifierKeys = 0;
+			}
+			
+			break;
+		}
+
 		
 		case WM_SIZE:													// Size Action Has Taken Place
+
 			switch (wParam)												// Evaluate Size Action
 			{
 				case SIZE_MINIMIZED:									// Was Window Minimized?
 				return 0;												// Return
 
 				case SIZE_MAXIMIZED:									// Was Window Maximized?
-						gDemoApplication->reshape(LOWORD (lParam), HIWORD (lParam));
+					sWidth = LOWORD (lParam);
+					sHeight = HIWORD (lParam);
+					if (sOpenGLInitialized)
+					{
+						gDemoApplication->reshape(sWidth,sHeight);
+					}
 				return 0;												// Return
 
 				case SIZE_RESTORED:										// Was Window Restored?
-						gDemoApplication->reshape(LOWORD (lParam), HIWORD (lParam));
+					sWidth = LOWORD (lParam);
+					sHeight = HIWORD (lParam);
+					if (sOpenGLInitialized)
+					{
+						gDemoApplication->reshape(sWidth,sHeight);
+					}
 				return 0;												// Return
 			}
 		break;	
@@ -272,8 +310,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 
 	case WM_KEYDOWN:
+		printf("bla\n");
 		switch ( wParam )
 		{
+		case VK_CONTROL:
 		case VK_PRIOR:
 		case VK_NEXT:
 		case VK_END:
@@ -296,14 +336,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 		case 'Q':
 		case VK_ESCAPE:
-			PostQuitMessage(0);
+			{
+				quitRequest = 1;
+				PostQuitMessage(0);
+			}
 			return 0;
 			
 		}
 		return 0;
 		
 	case WM_CHAR:
-		gDemoApplication->keyboardCallback(wParam,0,0);
+		if (!quitRequest)
+			gDemoApplication->keyboardCallback(wParam,0,0);
 		break;
 	
 	default:
@@ -339,6 +383,8 @@ void EnableOpenGL(HWND hWnd, HDC * hDC, HGLRC * hRC)
 	// create and enable the render context (RC)
 	*hRC = wglCreateContext( *hDC );
 	wglMakeCurrent( *hDC, *hRC );
+	sOpenGLInitialized = true;
+	
 	
 }
 
@@ -346,6 +392,8 @@ void EnableOpenGL(HWND hWnd, HDC * hDC, HGLRC * hRC)
 
 void DisableOpenGL(HWND hWnd, HDC hDC, HGLRC hRC)
 {
+	sOpenGLInitialized = false;
+
 	wglMakeCurrent( NULL, NULL );
 	wglDeleteContext( hRC );
 	ReleaseDC( hWnd, hDC );

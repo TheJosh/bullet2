@@ -13,6 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+#ifndef _WINDOWS
 
 #include "DemoApplication.h"
 
@@ -70,7 +71,7 @@ static void glutDisplayCallback(void)
 	gDemoApplication->displayCallback();
 }
 
-#ifndef _NO_GLUT
+
 int glutmain(int argc, char **argv,int width,int height,const char* title,DemoApplication* demoApp) {
     
 	gDemoApplication = demoApp;
@@ -95,6 +96,7 @@ int glutmain(int argc, char **argv,int width,int height,const char* title,DemoAp
     //createMenu();
 	glutIdleFunc(glutMoveAndDisplayCallback);
 	glutMouseFunc(glutMouseFuncCallback);
+	glutPassiveMotionFunc(glutMotionFuncCallback);
 	glutMotionFunc(glutMotionFuncCallback);
 	glutDisplayFunc( glutDisplayCallback );
 
@@ -104,4 +106,5 @@ int glutmain(int argc, char **argv,int width,int height,const char* title,DemoAp
     return 0;
 }
 
-#endif //_NO_GLUT
+
+#endif //_WINDOWS

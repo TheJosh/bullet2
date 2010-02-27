@@ -20,11 +20,16 @@ subject to the following restrictions:
 //CL_PLATFORM_MINI_CL could be defined in build system
 #else
 #include <GL/glew.h>
+#ifdef USE_MINICL
+#include <MiniCL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+#else
 #include <CL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+#endif
 #endif //__APPLE__
 
 #include "LinearMath/btScalar.h"
 #include "LinearMath/btMinMax.h"
+#include "btOclCommon.h"
 #include "btOclUtils.h"
 
 #include "btGpuDemo3dOCLWrap.h"
@@ -63,7 +68,8 @@ void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
 {
     cl_int ciErrNum;
 
-	m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+//	m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+	m_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
     oclCHECKERROR(ciErrNum, CL_SUCCESS);
  
 	m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
@@ -97,7 +103,7 @@ void btGpuDemo3dOCLWrap::initCL(int argc, char** argv)
 
 	if (fp == NULL)
 	{
-		sprintf(newFileName,"..//..//Demos//Gpu3dDemo//%s",fileName);
+		sprintf(newFileName,"..//..//..//..//..//Demos//Gpu3dDemo//%s",fileName);
 		fp = fopen(newFileName, "rb");
 		if (fp)
 			fileName = newFileName;
@@ -313,7 +319,7 @@ void btGpuDemo3dOCLWrap::copyArrayFromDevice(void* host, const cl_mem device, un
 
 #ifdef CL_PLATFORM_MINI_CL
 
-#include <CL/cl_MiniCL_Defs.h>
+#include <MiniCL/cl_MiniCL_Defs.h>
 
 extern "C"
 {

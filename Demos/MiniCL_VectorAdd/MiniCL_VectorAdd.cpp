@@ -175,6 +175,8 @@ int main(int argc, char **argv)
     free(srcA); 
     free(srcB);
     free (dst);
+	printf("Press ENTER to quit\n");
+	getchar();
 }
 
 

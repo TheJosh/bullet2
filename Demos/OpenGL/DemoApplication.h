@@ -61,14 +61,15 @@ class DemoApplication
 	
 	float m_ele;
 	float m_azi;
-public:
 	btVector3 m_cameraPosition;
 	btVector3 m_cameraTargetPosition;//look at
-protected:
+
 	int	m_mouseOldX;
 	int	m_mouseOldY;
 	int	m_mouseButtons;
+public:
 	int	m_modifierKeys;
+protected:
 
 	float m_scaleBottom;
 	float m_scaleFactor;
@@ -96,6 +97,7 @@ protected:
 	GL_ShapeDrawer*	m_shapeDrawer;
 	bool			m_enableshadows;
 	btVector3		m_sundirection;
+	btScalar		m_defaultContactProcessingThreshold;
 
 public:
 		
@@ -171,7 +173,7 @@ public:
 	btScalar	getDeltaTimeMicroseconds()
 	{
 #ifdef USE_BT_CLOCK
-		btScalar dt = m_clock.getTimeMicroseconds();
+		btScalar dt = (btScalar)m_clock.getTimeMicroseconds();
 		m_clock.reset();
 		return dt;
 #else

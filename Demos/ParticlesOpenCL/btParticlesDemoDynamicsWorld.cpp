@@ -18,10 +18,15 @@ subject to the following restrictions:
 //CL_PLATFORM_MINI_CL could be defined in build system
 #else
 #include <GL/glew.h>
+#ifdef USE_MINICL
+#include <MiniCL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+#else
 #include <CL/cl_platform.h> //for CL_PLATFORM_MINI_CL definition
+#endif
 #endif //__APPLE__
 
 
+#include "btOclCommon.h"
 #include "btOclUtils.h"
 
 #include "btBulletDynamicsCommon.h"
@@ -315,7 +320,8 @@ void btParticlesDynamicsWorld::initCLKernels(int argc, char** argv)
 
 	if (!m_cxMainContext)
 	{
-		m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+//		m_cxMainContext = clCreateContextFromType(0, CL_DEVICE_TYPE_ALL, NULL, NULL, &ciErrNum);
+		m_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
 		// create a command-queue
@@ -346,7 +352,7 @@ void btParticlesDynamicsWorld::initCLKernels(int argc, char** argv)
 
 	if (fp == NULL)
 	{
-		sprintf(newFileName,"..//..//Demos//ParticlesOpenCL//%s",fileName);
+		sprintf(newFileName,"..//..//..//..//..//Demos//ParticlesOpenCL//%s",fileName);
 		fp = fopen(newFileName, "rb");
 		if (fp)
 			fileName = newFileName;

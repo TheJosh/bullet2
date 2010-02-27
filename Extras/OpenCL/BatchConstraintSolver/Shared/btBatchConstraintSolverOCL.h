@@ -20,7 +20,11 @@ subject to the following restrictions:
 #include <OpenCL/cl.h>
 #else
 // standard utility and system includes
-#include <CL/cl.h>
+#ifdef USE_MINICL
+	#include <MiniCL/cl.h>
+#else
+	#include <CL/cl.h>
+#endif
 // Extra CL/GL include
 //#include <CL/cl_gl.h>
 #endif
@@ -95,6 +99,7 @@ protected:
 	int m_maxBatches;
 	btAlignedObjectArray<int> m_hConstraintIdx;
 	btAlignedObjectArray<int> m_batchData;
+	btAlignedObjectArray<btRigidBody*> m_solverBodies;
 
 	int m_numBodies;
 	int m_numJointConstraints;
@@ -135,6 +140,8 @@ protected:
 
 
 // internal methods
+	int getOrInitSolverBody(btRigidBody* pBody);
+	void prepareSolverBodies(btPersistentManifold** manifoldPtr,int numManifolds,btTypedConstraint** constraints,int numConstraints);
 	int prepareBatches(btConstraintArray& constraints, int batchOffset, int constraintOffset, btConstraintArray* auxConstraints = NULL, int auxConstrOffs = 0);
 	void solveGroupIterationsCPU(const btContactSolverInfo& infoGlobal);
 	void solveGroupIterationsGPU(const btContactSolverInfo& infoGlobal);
