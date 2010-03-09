@@ -953,8 +953,8 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		{
 			btVector3 hor = getRayTo(0,0)-getRayTo(1,0);
 			btVector3 vert = getRayTo(0,0)-getRayTo(0,1);
-			btScalar multiplierX = btScalar(0.01);
-			btScalar multiplierY = btScalar(0.01);
+			btScalar multiplierX = btScalar(0.0001);
+			btScalar multiplierY = btScalar(0.0001);
 			if (m_ortho)
 			{
 				multiplierX = 1;
@@ -978,7 +978,7 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		} 
 		else if(m_mouseButtons & 4) 
 		{
-			m_cameraDistance -= dy * btScalar(0.2f);
+			m_cameraDistance -= dy * btScalar(0.002f);
 			if (m_cameraDistance<btScalar(0.1))
 				m_cameraDistance = btScalar(0.1);
 
