@@ -151,6 +151,7 @@
 				OutputFile="./Bin/CDTestFramework_AMD.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=".\AntTweakBar\lib;../../Glut;&quot;$(CUDA_LIB_PATH)&quot;;&quot;$(ATISTREAMSDKROOT)/lib/x86&quot;"
+				IgnoreDefaultLibraryNames="LIBCMT.LIB"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

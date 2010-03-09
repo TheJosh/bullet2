@@ -146,6 +146,8 @@ public:
 	///reset broadphase internal structures, to ensure determinism/reproducability
 	virtual void resetPool(btDispatcher* dispatcher);
 
+	virtual void	aabbTest(const btVector3& aabbMin, const btVector3& aabbMax, btBroadphaseAabbCallback& callback);
+
 };
 
 #endif //BT_MULTI_SAP_BROADPHASE

@@ -487,3 +487,9 @@ void btMultiSapBroadphase::resetPool(btDispatcher* dispatcher)
 {
 	// not yet
 }
+
+
+ void btMultiSapBroadphase::aabbTest(const btVector3& aabbMin, const btVector3& aabbMax, btBroadphaseAabbCallback& callback)
+ {
+	 btVector3 tmpBB = aabbMin;
+ }

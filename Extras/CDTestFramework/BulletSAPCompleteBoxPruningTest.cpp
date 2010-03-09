@@ -29,12 +29,12 @@ subject to the following restrictions:
 #include "Camera.h"
 #include "BulletMultiThreaded/btGpu3DGridBroadphase.h"
 
-#define USE_CUDA_BROADPHASE 1
+//#define USE_CUDA_BROADPHASE 1
 
 #ifdef USE_CUDA_BROADPHASE
 #include "../CUDA/btCudaBroadphase.h"
-#include "../OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
 #endif
+#include "../OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
 #include "LinearMath/btQuickprof.h"
 
 int numParts =2;
