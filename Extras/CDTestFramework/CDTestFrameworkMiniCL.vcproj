@@ -68,6 +68,7 @@
 				OutputFile="./Bin/CDTestFrameworkMiniCLDEBUG.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=".\AntTweakBar\lib;../../Glut;&quot;$(CUDA_LIB_PATH)&quot;"
+				IgnoreDefaultLibraryNames="libcmtd.lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/CDTestFrameworkMiniCL.pdb"
 				SubSystem="1"
