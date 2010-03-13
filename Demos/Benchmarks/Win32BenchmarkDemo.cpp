@@ -1,6 +1,7 @@
+#ifdef _WINDOWS
 /*
 Bullet Continuous Collision Detection and Physics Library
-Copyright (c) 2003-2007 Erwin Coumans  http://bulletphysics.com
+Copyright (c) 2003-2009 Erwin Coumans  http://bulletphysics.org
 
 This software is provided 'as-is', without any express or implied warranty.
 In no event will the authors be held liable for any damages arising from the use of this software.
@@ -13,11 +14,12 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include <MiniCL/cl_MiniCL_Defs.h>
+#include "BenchmarkDemo.h"
 
-extern "C"
+///The 'createDemo' function is called from Bullet/Demos/OpenGL/Win32AppMain.cpp to instantiate this particular demo
+DemoApplication*	createDemo()
 {
-	#define MSTRINGIFY(A) A
-	#include "bt3dGridBroadphaseOCL.cl"
-	#undef MSTRINGIFY
+	return new BenchmarkDemo(1);
 }
+
+#endif

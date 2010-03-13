@@ -88,10 +88,12 @@ enum TestIndex
 	MAX_NB_TESTS
 };
 
-static int gTest = TEST_DBVT_8192;//TEST_BULLET_MULTISAP_8192;
-static int gSelectedTest = TEST_DBVT_8192;//TEST_BULLET_MULTISAP_8192;
+//static int gTest = TEST_DBVT_8192;//TEST_BULLET_MULTISAP_8192;
+//static int gSelectedTest = TEST_DBVT_8192;//TEST_BULLET_MULTISAP_8192;
 //static int gTest = TEST_BULLET_CUDA_8192;
 //static int gSelectedTest = TEST_BULLET_CUDA_8192;
+static int gTest = TEST_BULLET_3DGRIDOCL_8192;
+static int gSelectedTest = TEST_BULLET_3DGRIDOCL_8192;
 static CollisionTest* gCollisionTests[MAX_NB_TESTS];
 
 static GLFontRenderer gFnt;

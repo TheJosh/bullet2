@@ -301,19 +301,26 @@ void	BasicDemo::initPhysics()
 
 
 //	btVector3 numOfCells = (gWorldMax - gWorldMin) / (2. * SCALING);
-	btVector3 numOfCells = (gWorldMax - gWorldMin) / CELL_SIZE;
-	int numOfCellsX = (int)numOfCells[0];
-	int numOfCellsY = (int)numOfCells[1];
-	int numOfCellsZ = (int)numOfCells[2];
-	if(!numOfCellsX) numOfCellsX = 1;
-	if(!numOfCellsY) numOfCellsY = 1;
-	if(!numOfCellsZ) numOfCellsZ = 1;
+//	btVector3 numOfCells = (gWorldMax - gWorldMin) / CELL_SIZE;
+//	int numOfCellsX = (int)numOfCells[0];
+//	int numOfCellsY = (int)numOfCells[1];
+//	int numOfCellsZ = (int)numOfCells[2];
+//	if(!numOfCellsX) numOfCellsX = 1;
+//	if(!numOfCellsY) numOfCellsY = 1;
+//	if(!numOfCellsZ) numOfCellsZ = 1;
+	btScalar maxDiam = 2.0f * SCALING;  
+	btVector3 cellSize(maxDiam, maxDiam, maxDiam);
+	btVector3 numOfCells = (gWorldMax - gWorldMin) / cellSize;
+	int numOfCellsX = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[0]);
+	int numOfCellsY = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[1]);
+	int numOfCellsZ = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[2]);
 
 //	m_broadphase = new btAxisSweep3(gWorldMin, gWorldMax, MAX_PROXIES,gPairCache);
 //	m_broadphase = new btDbvtBroadphase(gPairCache);
 //	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24, 1.0f/1.5f);
 //	m_broadphase = new btCudaBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,24,24);
-	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24,1./1.5);
+//	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,24,1./1.5);
+	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,20,24,10.f, 24);
 
 
 	///the default constraint solver

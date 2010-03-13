@@ -31,9 +31,9 @@ subject to the following restrictions:
 BT_GPU___device__ int3 bt3DGrid_calcGridPos(float4 p)
 {
     int3 gridPos;
-    gridPos.x = (int)floor((p.x - BT_GPU_params.m_worldOriginX) / BT_GPU_params.m_cellSizeX);
-    gridPos.y = (int)floor((p.y - BT_GPU_params.m_worldOriginY) / BT_GPU_params.m_cellSizeY);
-    gridPos.z = (int)floor((p.z - BT_GPU_params.m_worldOriginZ) / BT_GPU_params.m_cellSizeZ);
+    gridPos.x = (int)floor(p.x * BT_GPU_params.m_invCellSizeX) & (BT_GPU_params.m_gridSizeX - 1);
+    gridPos.y = (int)floor(p.y * BT_GPU_params.m_invCellSizeY) & (BT_GPU_params.m_gridSizeY - 1);
+    gridPos.z = (int)floor(p.z * BT_GPU_params.m_invCellSizeZ) & (BT_GPU_params.m_gridSizeZ - 1);
     return gridPos;
 } // bt3DGrid_calcGridPos()
 
@@ -42,9 +42,9 @@ BT_GPU___device__ int3 bt3DGrid_calcGridPos(float4 p)
 // calculate address in grid from position (clamping to edges)
 BT_GPU___device__ uint bt3DGrid_calcGridHash(int3 gridPos)
 {
-    gridPos.x = BT_GPU_max(0, BT_GPU_min(gridPos.x, (int)BT_GPU_params.m_gridSizeX - 1));
-    gridPos.y = BT_GPU_max(0, BT_GPU_min(gridPos.y, (int)BT_GPU_params.m_gridSizeY - 1));
-    gridPos.z = BT_GPU_max(0, BT_GPU_min(gridPos.z, (int)BT_GPU_params.m_gridSizeZ - 1));
+	gridPos.x &= (BT_GPU_params.m_gridSizeX - 1);
+	gridPos.y &= (BT_GPU_params.m_gridSizeY - 1);
+	gridPos.z &= (BT_GPU_params.m_gridSizeZ - 1);
     return BT_GPU___mul24(BT_GPU___mul24(gridPos.z, BT_GPU_params.m_gridSizeY), BT_GPU_params.m_gridSizeX) + BT_GPU___mul24(gridPos.y, BT_GPU_params.m_gridSizeX) + gridPos.x;
 } // bt3DGrid_calcGridHash()
 
@@ -119,12 +119,6 @@ BT_GPU___device__ void findPairsInCell(	int3	gridPos,
 										uint2*	pPairBuffStartCurr,
 										uint	numBodies)
 {
-    if (	(gridPos.x < 0) || (gridPos.x > (int)BT_GPU_params.m_gridSizeX - 1)
-		||	(gridPos.y < 0) || (gridPos.y > (int)BT_GPU_params.m_gridSizeY - 1)
-		||  (gridPos.z < 0) || (gridPos.z > (int)BT_GPU_params.m_gridSizeZ - 1)) 
-    {
-		return;
-	}
     uint gridHash = bt3DGrid_calcGridHash(gridPos);
     // get start of bucket for this cell
     uint bucketStart = pCellStart[gridHash];

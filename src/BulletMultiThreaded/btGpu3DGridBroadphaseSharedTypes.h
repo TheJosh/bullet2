@@ -41,12 +41,9 @@ struct bt3DGridBroadphaseParams
 	unsigned int	m_gridSizeY;
 	unsigned int	m_gridSizeZ;
 	unsigned int	m_numCells;
-	float			m_worldOriginX;
-	float			m_worldOriginY;
-	float			m_worldOriginZ;
-	float			m_cellSizeX;
-	float			m_cellSizeY;
-	float			m_cellSizeZ;
+	float			m_invCellSizeX;
+	float			m_invCellSizeY;
+	float			m_invCellSizeZ;
 	unsigned int	m_numBodies;
 	unsigned int	m_maxBodiesPerCell;
 };

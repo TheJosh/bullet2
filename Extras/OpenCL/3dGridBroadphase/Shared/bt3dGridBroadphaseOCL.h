@@ -87,11 +87,13 @@ protected:
 	cl_mem					m_dBpParams;
 
 public:
+
 	bt3dGridBroadphaseOCL(	btOverlappingPairCache* overlappingPairCache,
-							const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+							const btVector3& cellSize, 
 							int gridSizeX, int gridSizeY, int gridSizeZ, 
 							int maxSmallProxies, int maxLargeProxies, int maxPairsPerSmallProxy,
-							int maxSmallProxiesPerCell = 8, btScalar cellFactorAABB = btScalar(1.0f),
+							btScalar maxSmallProxySize,
+							int maxSmallProxiesPerCell = 8,
 							cl_context context = NULL,
 							cl_device_id device = NULL,
 							cl_command_queue queue = NULL);

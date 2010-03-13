@@ -13,6 +13,7 @@ else (CMAKE_SIZEOF_VOID_P MATCHES "8")
 			ParticlesOpenCL
 			SpheresOpenCL
 			OpenGL
+			Benchmarks
 			)
 endif (CMAKE_SIZEOF_VOID_P MATCHES "8")
 

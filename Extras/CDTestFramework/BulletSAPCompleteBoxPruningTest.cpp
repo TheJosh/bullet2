@@ -47,6 +47,8 @@ bool	showOcclusion	=	true;
 int		visiblecount	=	0;
 
 static bool sBulletProfilerToggle = false;
+static bool sBulletSingleStepMode = false;
+static bool sBulletSingleStepDoStep = false;
 
 struct OcclusionBuffer
 {
@@ -447,12 +449,12 @@ BulletSAPCompleteBoxPruningTest::BulletSAPCompleteBoxPruningTest(int numBoxes,in
 #endif //USE_CUDA_BROADPHASE
 
 	case 9:
-		m_broadphase = new btGpu3DGridBroadphase(aabbMin, aabbMax, 24, 24, 24,maxNumBoxes , maxNumBoxes, 64, 16);
+		m_broadphase = new btGpu3DGridBroadphase(btVector3(10.f, 10.f, 10.f), 32, 32, 32,maxNumBoxes , maxNumBoxes, 64, 100.f, 16);
 		methodname	=	"bt3DGridBroadphase";
 		break;
 
 	case 10:
-		m_broadphase = new bt3dGridBroadphaseOCL(NULL, aabbMin, aabbMax, 24, 24, 24,maxNumBoxes , maxNumBoxes, 64, 16);
+		m_broadphase = new bt3dGridBroadphaseOCL(NULL, btVector3(10.f, 10.f, 10.f), 32, 32, 32,maxNumBoxes , maxNumBoxes, 64, 100.f, 16);
 #if defined(CL_PLATFORM_MINI_CL)
 		methodname	=	"bt3dGridBroadphaseOCL(MiniCL)";
 #elif defined(CL_PLATFORM_AMD)
@@ -618,7 +620,18 @@ void BulletSAPCompleteBoxPruningTest::PerformTest()
 		numUpdatedBoxes = mNbBoxes;
 	}
 	mProfiler.Start();
-	UpdateBoxes(numUpdatedBoxes);
+	if(sBulletSingleStepMode)
+	{
+		if(sBulletSingleStepDoStep)
+		{
+			UpdateBoxes(numUpdatedBoxes);
+			sBulletSingleStepDoStep = false;
+		}
+	}
+	else
+	{
+		UpdateBoxes(numUpdatedBoxes);
+	}
 	
 
 	mPairs.ResetPairs();
@@ -1075,6 +1088,18 @@ void BulletSAPCompleteBoxPruningTest::KeyboardCallback(unsigned char key, int x,
 		case 'p':
 		case 'P':
 			sBulletProfilerToggle = !sBulletProfilerToggle;
+			break;
+		case 'i':
+		case 'I':
+			sBulletSingleStepMode = !sBulletSingleStepMode;
+			sBulletSingleStepDoStep = false;
+			break;
+		case 's':
+		case 'S':
+			if(sBulletSingleStepMode)
+			{
+				sBulletSingleStepDoStep = true;
+			}
 			break;
 		default : break;
 	}

@@ -43,37 +43,37 @@ static bt3DGridBroadphaseParams s3DGridBroadphaseParams;
 
 
 
-btGpu3DGridBroadphase::btGpu3DGridBroadphase(	const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+btGpu3DGridBroadphase::btGpu3DGridBroadphase(	const btVector3& cellSize, 
 										int gridSizeX, int gridSizeY, int gridSizeZ, 
 										int maxSmallProxies, int maxLargeProxies, int maxPairsPerBody,
-										int maxBodiesPerCell,
-										btScalar cellFactorAABB) :
+										btScalar maxSmallProxySize,
+										int maxBodiesPerCell) :
 	btSimpleBroadphase(maxSmallProxies,
 //				     new (btAlignedAlloc(sizeof(btSortedOverlappingPairCache),16)) btSortedOverlappingPairCache),
 				     new (btAlignedAlloc(sizeof(btHashedOverlappingPairCache),16)) btHashedOverlappingPairCache),
 	m_bInitialized(false),
     m_numBodies(0)
 {
-	_initialize(worldAabbMin, worldAabbMax, gridSizeX, gridSizeY, gridSizeZ, 
+	_initialize(cellSize, gridSizeX, gridSizeY, gridSizeZ, 
 				maxSmallProxies, maxLargeProxies, maxPairsPerBody,
-				maxBodiesPerCell, cellFactorAABB);
+				maxSmallProxySize, maxBodiesPerCell);
 }
 
 
 
 btGpu3DGridBroadphase::btGpu3DGridBroadphase(	btOverlappingPairCache* overlappingPairCache,
-										const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+										const btVector3& cellSize, 
 										int gridSizeX, int gridSizeY, int gridSizeZ, 
 										int maxSmallProxies, int maxLargeProxies, int maxPairsPerBody,
-										int maxBodiesPerCell,
-										btScalar cellFactorAABB) :
+										btScalar maxSmallProxySize,
+										int maxBodiesPerCell) :
 	btSimpleBroadphase(maxSmallProxies, overlappingPairCache),
 	m_bInitialized(false),
     m_numBodies(0)
 {
-	_initialize(worldAabbMin, worldAabbMax, gridSizeX, gridSizeY, gridSizeZ, 
+	_initialize(cellSize, gridSizeX, gridSizeY, gridSizeZ, 
 				maxSmallProxies, maxLargeProxies, maxPairsPerBody,
-				maxBodiesPerCell, cellFactorAABB);
+				maxSmallProxySize, maxBodiesPerCell);
 }
 
 
@@ -85,31 +85,39 @@ btGpu3DGridBroadphase::~btGpu3DGridBroadphase()
 	_finalize();
 }
 
+// returns 2^n : 2^(n+1) > val >= 2^n
+int btGpu3DGridBroadphase::getFloorPowOfTwo(int val)
+{
+	int mask = 0x40000000;
+	for(int k = 0; k < 30; k++, mask >>= 1)
+	{
+		if(mask & val)
+		{
+			break;
+		}
+	}
+	return mask;
+}
 
 
-void btGpu3DGridBroadphase::_initialize(	const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+
+void btGpu3DGridBroadphase::_initialize(	const btVector3& cellSize,
 										int gridSizeX, int gridSizeY, int gridSizeZ, 
 										int maxSmallProxies, int maxLargeProxies, int maxPairsPerBody,
-										int maxBodiesPerCell,
-										btScalar cellFactorAABB)
+										btScalar maxSmallProxySize,
+										int maxBodiesPerCell)
 {
 	// set various paramerers
 	m_ownsPairCache = true;
-	m_params.m_gridSizeX = gridSizeX;
-	m_params.m_gridSizeY = gridSizeY;
-	m_params.m_gridSizeZ = gridSizeZ;
+	m_params.m_gridSizeX = getFloorPowOfTwo(gridSizeX);
+	m_params.m_gridSizeY = getFloorPowOfTwo(gridSizeY);
+	m_params.m_gridSizeZ = getFloorPowOfTwo(gridSizeZ);
 	m_params.m_numCells = m_params.m_gridSizeX * m_params.m_gridSizeY * m_params.m_gridSizeZ;
 	m_numCells = m_params.m_numCells;
-	btVector3 w_org = worldAabbMin;
-	m_params.m_worldOriginX = w_org.getX();
-	m_params.m_worldOriginY = w_org.getY();
-	m_params.m_worldOriginZ = w_org.getZ();
-	btVector3 w_size = worldAabbMax - worldAabbMin;
-	m_params.m_cellSizeX = w_size.getX() / m_params.m_gridSizeX;
-	m_params.m_cellSizeY = w_size.getY() / m_params.m_gridSizeY;
-	m_params.m_cellSizeZ = w_size.getZ() / m_params.m_gridSizeZ;
-	m_maxRadius = btMin(btMin(m_params.m_cellSizeX, m_params.m_cellSizeY), m_params.m_cellSizeZ);
-	m_maxRadius *= btScalar(0.5f);
+	m_params.m_invCellSizeX = btScalar(1.f) / cellSize[0];
+	m_params.m_invCellSizeY = btScalar(1.f) / cellSize[1];
+	m_params.m_invCellSizeZ = btScalar(1.f) / cellSize[2];
+	m_maxRadius = maxSmallProxySize * btScalar(0.5f);
 	m_params.m_numBodies = m_numBodies;
 	m_params.m_maxBodiesPerCell = maxBodiesPerCell;
 
@@ -117,8 +125,6 @@ void btGpu3DGridBroadphase::_initialize(	const btVector3& worldAabbMin,const btV
 	m_maxLargeHandles = maxLargeProxies;
 
 	m_maxPairsPerBody = maxPairsPerBody;
-
-	m_cellFactorAABB = cellFactorAABB;
 
 	m_LastLargeHandleIndex = -1;
 
@@ -329,11 +335,8 @@ void btGpu3DGridBroadphase::resetPool(btDispatcher* dispatcher)
 bool btGpu3DGridBroadphase::isLargeProxy(const btVector3& aabbMin,  const btVector3& aabbMax)
 {
 	btVector3 diag = aabbMax - aabbMin;
-	
 	///use the bounding sphere radius of this bounding box, to include rotation
 	btScalar radius = diag.length() * btScalar(0.5f);
-	radius *= m_cellFactorAABB; // user-defined factor
-
 	return (radius > m_maxRadius);
 }
 

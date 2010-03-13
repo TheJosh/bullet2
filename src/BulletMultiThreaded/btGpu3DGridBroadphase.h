@@ -35,7 +35,6 @@ protected:
     unsigned int	m_numBodies;
     unsigned int	m_numCells;
 	unsigned int	m_maxPairsPerBody;
-	btScalar		m_cellFactorAABB;
     unsigned int	m_maxBodiesPerCell;
 	bt3DGridBroadphaseParams m_params;
 	btScalar		m_maxRadius;
@@ -43,7 +42,7 @@ protected:
     unsigned int*	m_hBodiesHash;
     unsigned int*	m_hCellStart;
 	unsigned int*	m_hPairBuffStartCurr;
-	bt3DGrid3F1U*		m_hAABB;
+	bt3DGrid3F1U*	m_hAABB;
 	unsigned int*	m_hPairBuff;
 	unsigned int*	m_hPairScan;
 	unsigned int*	m_hPairOut;
@@ -87,17 +86,18 @@ protected:
 	unsigned int	m_numOverflows;
 // 
 public:
-	btGpu3DGridBroadphase(const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+	// NOTE : for better results gridSizeX, gridSizeY and gridSizeZ should be powers of 2 
+	btGpu3DGridBroadphase(const btVector3& cellSize, 
 					   int gridSizeX, int gridSizeY, int gridSizeZ, 
 					   int maxSmallProxies, int maxLargeProxies, int maxPairsPerBody,
-					   int maxBodiesPerCell = 8,
-					   btScalar cellFactorAABB = btScalar(1.0f));
+						btScalar maxSmallProxySize,
+					   int maxBodiesPerCell = 8);
 	btGpu3DGridBroadphase(	btOverlappingPairCache* overlappingPairCache,
-						const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+						const btVector3& cellSize, 
 						int gridSizeX, int gridSizeY, int gridSizeZ, 
 						int maxSmallProxies, int maxLargeProxies, int maxPairsPerBody,
-						int maxBodiesPerCell = 8,
-						btScalar cellFactorAABB = btScalar(1.0f));
+						btScalar maxSmallProxySize,
+						int maxBodiesPerCell = 8);
 	virtual ~btGpu3DGridBroadphase();
 	virtual void	calculateOverlappingPairs(btDispatcher* dispatcher);
 
@@ -106,12 +106,14 @@ public:
 	virtual void	rayTest(const btVector3& rayFrom,const btVector3& rayTo, btBroadphaseRayCallback& rayCallback);
 	virtual void	resetPool(btDispatcher* dispatcher);
 
+	static int		getFloorPowOfTwo(int val); // returns 2^n : 2^(n+1) > val >= 2^n
+
 protected:
-	void _initialize(	const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+	void _initialize(	const btVector3& cellSize, 
 						int gridSizeX, int gridSizeY, int gridSizeZ, 
 						int maxSmallProxies, int maxLargeProxies, int maxPairsPerBody,
-						int maxBodiesPerCell = 8,
-						btScalar cellFactorAABB = btScalar(1.0f));
+						btScalar maxSmallProxySize,
+						int maxBodiesPerCell);
 	void _finalize();
 	void addPairsToCache(btDispatcher* dispatcher);
 	void addLarge2LargePairsToCache(btDispatcher* dispatcher);

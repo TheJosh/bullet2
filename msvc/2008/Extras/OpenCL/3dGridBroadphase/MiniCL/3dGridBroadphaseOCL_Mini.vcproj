@@ -1,19 +1,14 @@
-<?xml version="1.0" encoding="Windows-1252"?>
+<?xml version="1.0" encoding = "Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="3dGridBroadphaseOCL_Mini"
 	ProjectGUID="{2D826ABD-0902-4D36-87FC-0D3F2D513E50}"
-	Keyword="Win32Proj"
-	TargetFrameworkVersion="0"
-	>
+	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
-			Name="Win32"
-		/>
+			Name="Win32"/>
 	</Platforms>
-	<ToolFiles>
-	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
@@ -21,83 +16,54 @@
 			IntermediateDirectory="3dGridBroadphaseOCL_Mini.dir\Debug"
 			ConfigurationType="4"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
-				Name="VCPreBuildEventTool"
-			/>
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000 /fp:fast"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				BasicRuntimeChecks="3"
+				CompileAs="2"
+				DebugInformationFormat="3"
+				EnableEnhancedInstructionSet="1"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="0"
+				Optimization="0"
+				RuntimeLibrary="3"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="3"
+				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
+				AssemblerListingLocation="Debug"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/Debug/3dGridBroadphaseOCL_Mini.pdb"
+/>
 			<Tool
-				Name="VCCustomBuildTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
-				MkTypLibCompatible="false"
+				MkTypLibCompatible="FALSE"
 				TargetEnvironment="1"
-				GenerateStublessProxies="true"
+				GenerateStublessProxies="TRUE"
 				TypeLibraryName="$(InputName).tlb"
 				OutputDirectory="$(IntDir)"
 				HeaderFileName="$(InputName).h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="$(InputName)_i.c"
-				ProxyFileName="$(InputName)_p.c"
-			/>
+				ProxyFileName="$(InputName)_p.c"/>
 			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions=" /Zm1000 /fp:fast"
-				Optimization="0"
-				InlineFunctionExpansion="0"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
-				ExceptionHandling="1"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				EnableEnhancedInstructionSet="1"
-				RuntimeTypeInfo="true"
-				AssemblerListingLocation="Debug"
-				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/Debug/3dGridBroadphaseOCL_Mini.pdb"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-				CompileAs="2"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\..\lib\Debug\3dGridBroadphaseOCL_Mini.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				OutputFile="..\..\..\..\lib\Debug\3dGridBroadphaseOCL_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -105,81 +71,52 @@
 			IntermediateDirectory="3dGridBroadphaseOCL_Mini.dir\Release"
 			ConfigurationType="4"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
-				Name="VCPreBuildEventTool"
-			/>
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000 /fp:fast"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				CompileAs="2"
+				EnableEnhancedInstructionSet="1"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="2"
+				Optimization="2"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="3"
+				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"
+				AssemblerListingLocation="Release"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/Release/3dGridBroadphaseOCL_Mini.pdb"
+/>
 			<Tool
-				Name="VCCustomBuildTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"
-				MkTypLibCompatible="false"
+				MkTypLibCompatible="FALSE"
 				TargetEnvironment="1"
-				GenerateStublessProxies="true"
+				GenerateStublessProxies="TRUE"
 				TypeLibraryName="$(InputName).tlb"
 				OutputDirectory="$(IntDir)"
 				HeaderFileName="$(InputName).h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="$(InputName)_i.c"
-				ProxyFileName="$(InputName)_p.c"
-			/>
+				ProxyFileName="$(InputName)_p.c"/>
 			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions=" /Zm1000 /fp:fast"
-				Optimization="2"
-				InlineFunctionExpansion="2"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-				PreprocessorDefinitions="WIN32;NDEBUG;USE_GRAPHICAL_BENCHMARK;_IRR_STATIC_LIB_;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;USE_MINICL;CMAKE_INTDIR=\&quot;Release\&quot;"
-				ExceptionHandling="1"
-				RuntimeLibrary="2"
-				EnableEnhancedInstructionSet="1"
-				RuntimeTypeInfo="true"
-				AssemblerListingLocation="Release"
-				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/Release/3dGridBroadphaseOCL_Mini.pdb"
-				WarningLevel="3"
-				CompileAs="2"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\..\lib\Release\3dGridBroadphaseOCL_Mini.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				OutputFile="..\..\..\..\lib\Release\3dGridBroadphaseOCL_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="MinSizeRel|Win32"
@@ -187,81 +124,52 @@
 			IntermediateDirectory="3dGridBroadphaseOCL_Mini.dir\MinSizeRel"
 			ConfigurationType="4"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
-				Name="VCPreBuildEventTool"
-			/>
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000 /fp:fast"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				CompileAs="2"
+				EnableEnhancedInstructionSet="1"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="1"
+				Optimization="1"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="3"
+				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
+				AssemblerListingLocation="MinSizeRel"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/MinSizeRel/3dGridBroadphaseOCL_Mini.pdb"
+/>
 			<Tool
-				Name="VCCustomBuildTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
-				MkTypLibCompatible="false"
+				MkTypLibCompatible="FALSE"
 				TargetEnvironment="1"
-				GenerateStublessProxies="true"
+				GenerateStublessProxies="TRUE"
 				TypeLibraryName="$(InputName).tlb"
 				OutputDirectory="$(IntDir)"
 				HeaderFileName="$(InputName).h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="$(InputName)_i.c"
-				ProxyFileName="$(InputName)_p.c"
-			/>
+				ProxyFileName="$(InputName)_p.c"/>
 			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions=" /Zm1000 /fp:fast"
-				Optimization="1"
-				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
-				ExceptionHandling="1"
-				RuntimeLibrary="2"
-				EnableEnhancedInstructionSet="1"
-				RuntimeTypeInfo="true"
-				AssemblerListingLocation="MinSizeRel"
-				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/MinSizeRel/3dGridBroadphaseOCL_Mini.pdb"
-				WarningLevel="3"
-				CompileAs="2"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Mini.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				OutputFile="..\..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="RelWithDebInfo|Win32"
@@ -269,119 +177,82 @@
 			IntermediateDirectory="3dGridBroadphaseOCL_Mini.dir\RelWithDebInfo"
 			ConfigurationType="4"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
+			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			CharacterSet="2">
 			<Tool
-				Name="VCPreBuildEventTool"
-			/>
+				Name="VCCLCompilerTool"
+				AdditionalOptions=" /Zm1000 /fp:fast"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				CompileAs="2"
+				DebugInformationFormat="3"
+				EnableEnhancedInstructionSet="1"
+				ExceptionHandling="1"
+				InlineFunctionExpansion="1"
+				Optimization="2"
+				RuntimeLibrary="2"
+				RuntimeTypeInfo="TRUE"
+				WarningLevel="3"
+				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
+				AssemblerListingLocation="RelWithDebInfo"
+				ObjectFile="$(IntDir)\"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/RelWithDebInfo/3dGridBroadphaseOCL_Mini.pdb"
+/>
 			<Tool
-				Name="VCCustomBuildTool"
-			/>
+				Name="VCCustomBuildTool"/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
+				Name="VCResourceCompilerTool"
+				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
+				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
-				MkTypLibCompatible="false"
+				MkTypLibCompatible="FALSE"
 				TargetEnvironment="1"
-				GenerateStublessProxies="true"
+				GenerateStublessProxies="TRUE"
 				TypeLibraryName="$(InputName).tlb"
 				OutputDirectory="$(IntDir)"
 				HeaderFileName="$(InputName).h"
 				DLLDataFileName=""
 				InterfaceIdentifierFileName="$(InputName)_i.c"
-				ProxyFileName="$(InputName)_p.c"
-			/>
+				ProxyFileName="$(InputName)_p.c"/>
 			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalOptions=" /Zm1000 /fp:fast"
-				Optimization="2"
-				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
-				ExceptionHandling="1"
-				RuntimeLibrary="2"
-				EnableEnhancedInstructionSet="1"
-				RuntimeTypeInfo="true"
-				AssemblerListingLocation="RelWithDebInfo"
-				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/lib/RelWithDebInfo/3dGridBroadphaseOCL_Mini.pdb"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-				CompileAs="2"
-			/>
+				Name="VCPreBuildEventTool"/>
 			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
+				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
-				AdditionalIncludeDirectories="..\..\..\..\..\..\Glut;..\..\..\..\..\..\src;..\..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared;"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
+				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Mini.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
+				OutputFile="..\..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Mini.lib"/>
 		</Configuration>
 	</Configurations>
-	<References>
-	</References>
 	<Files>
+			<File
+				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared\bt3dGridBroadphaseOCL.cl">
+			</File>
 		<Filter
 			Name="Source Files"
-			>
+			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared\bt3dGridBroadphaseOCL.cpp"
-				>
+				RelativePath="..\..\..\..\..\..\Extras\OpenCL\Shared\btOclCommon.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\Extras\OpenCL\Shared\btOclCommon.cpp"
-				>
+				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared\bt3dGridBroadphaseOCL.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\MiniCL\MiniCLTaskWrap.cpp"
-				>
+				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\MiniCL\MiniCLTaskWrap.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
-			>
+			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared\bt3dGridBroadphaseOCL.h"
-				>
+				RelativePath="..\..\..\..\..\..\Extras\OpenCL\Shared\btOclCommon.h">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\..\Extras\OpenCL\Shared\btOclCommon.h"
-				>
+				RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared\bt3dGridBroadphaseOCL.h">
 			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\..\..\..\..\Extras\OpenCL\3dGridBroadphase\Shared\bt3dGridBroadphaseOCL.cl"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>

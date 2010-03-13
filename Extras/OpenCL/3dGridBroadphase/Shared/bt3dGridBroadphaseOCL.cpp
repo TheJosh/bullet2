@@ -33,12 +33,13 @@ static const char* spProgramSource =
 
 
 bt3dGridBroadphaseOCL::bt3dGridBroadphaseOCL(	btOverlappingPairCache* overlappingPairCache,
-												const btVector3& worldAabbMin,const btVector3& worldAabbMax, 
+												const btVector3& cellSize, 
 												int gridSizeX, int gridSizeY, int gridSizeZ, 
 												int maxSmallProxies, int maxLargeProxies, int maxPairsPerSmallProxy,
-												int maxSmallProxiesPerCell, btScalar cellFactorAABB,
+												btScalar maxSmallProxySize,
+												int maxSmallProxiesPerCell,
 												cl_context context, cl_device_id device, cl_command_queue queue) : 
-	btGpu3DGridBroadphase(overlappingPairCache, worldAabbMin, worldAabbMax, gridSizeX, gridSizeY, gridSizeZ, maxSmallProxies, maxLargeProxies, maxPairsPerSmallProxy, maxSmallProxiesPerCell, cellFactorAABB)
+	btGpu3DGridBroadphase(overlappingPairCache, cellSize, gridSizeX, gridSizeY, gridSizeZ, maxSmallProxies, maxLargeProxies, maxPairsPerSmallProxy, maxSmallProxySize, maxSmallProxiesPerCell)
 {
 	initCL(context, device, queue);
 	allocateBuffers();
@@ -74,7 +75,6 @@ MINICL_DECLARE(kBitonicSortCellIdMergeLocal)
 #undef MINICL_DECLARE
 #endif
 
-
 void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_command_queue queue)
 {
 
@@ -94,7 +94,6 @@ void bt3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, cl_c
 	#endif
 
 	cl_int ciErrNum;
-
 
 	if(context != NULL)
 	{
@@ -366,19 +365,14 @@ void bt3dGridBroadphaseOCL::setParameters(bt3DGridBroadphaseParams* hostParams)
 	btGpu3DGridBroadphase::setParameters(hostParams);
 	struct btParamsBpOCL
 	{
-		float m_worldMin[4];
-		float m_cellSize[4];
+		float m_invCellSize[4];
 		int   m_gridSize[4];
 	};
 	btParamsBpOCL hParams;
-	hParams.m_worldMin[0] = m_params.m_worldOriginX;
-	hParams.m_worldMin[1] = m_params.m_worldOriginY;
-	hParams.m_worldMin[2] = m_params.m_worldOriginZ;
-	hParams.m_worldMin[3] = 0.f;
-	hParams.m_cellSize[0] = m_params.m_cellSizeX;
-	hParams.m_cellSize[1] = m_params.m_cellSizeY;
-	hParams.m_cellSize[2] = m_params.m_cellSizeZ;
-	hParams.m_cellSize[3] = 0.f;
+	hParams.m_invCellSize[0] = m_params.m_invCellSizeX;
+	hParams.m_invCellSize[1] = m_params.m_invCellSizeY;
+	hParams.m_invCellSize[2] = m_params.m_invCellSizeZ;
+	hParams.m_invCellSize[3] = 0.f;
 	hParams.m_gridSize[0] = m_params.m_gridSizeX;
 	hParams.m_gridSize[1] = m_params.m_gridSizeY;
 	hParams.m_gridSize[2] = m_params.m_gridSizeZ;

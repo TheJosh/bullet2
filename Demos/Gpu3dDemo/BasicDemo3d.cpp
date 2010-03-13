@@ -252,13 +252,15 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 									int maxBodiesPerCell,
 									btScalar cellFactorAABB)
 */
-//	btVector3 numOfCells = (gWorldMax - gWorldMin) / (2. * SCALING * 0.7);
-	btVector3 numOfCells = (gWorldMax - gWorldMin) / (2. * SCALING);
-	int numOfCellsX = (int)numOfCells[0];
-	int numOfCellsY = (int)numOfCells[1];
-	int numOfCellsZ = (int)numOfCells[2];
+	btScalar maxDiam = 1.76f * 2.0f * SCALING;  
+	btVector3 cellSize(maxDiam, maxDiam, maxDiam);
+	btVector3 numOfCells = (gWorldMax - gWorldMin) / cellSize;
+	int numOfCellsX = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[0]);
+	int numOfCellsY = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[1]);
+	int numOfCellsZ = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[2]);
+	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,32,10.f, 32);
 
-	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
+//	m_broadphase = new bt3dGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
 //	m_broadphase = new btGpu3DGridBroadphaseOCL(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
 //	m_broadphase = new btGpu3DGridBroadphase(gPairCache, gWorldMin, gWorldMax,numOfCellsX, numOfCellsY, numOfCellsZ,MAX_SMALL_PROXIES,10,8,8,1./1.5);
 //#define USE_CUDA_BROADPHASE 1

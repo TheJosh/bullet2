@@ -3,23 +3,21 @@ MSTRINGIFY(
 
 int getPosHash(int4 gridPos, __global float4* pParams)
 {
-	int4 pGridDim = *((__global int4*)(pParams + 2));
-	if(gridPos.x < 0) gridPos.x = 0;
-	if(gridPos.x >= pGridDim.x) gridPos.x = pGridDim.x - 1;
-	if(gridPos.y < 0) gridPos.y = 0;
-	if(gridPos.y >= pGridDim.y) gridPos.y = pGridDim.y - 1;
-	if(gridPos.z < 0) gridPos.z = 0;
-	if(gridPos.z >= pGridDim.z) gridPos.z = pGridDim.z - 1;
-	int hash = gridPos.z * pGridDim.y * pGridDim.x + gridPos.y * pGridDim.x + gridPos.x;
+	int4 gridDim = *((__global int4*)(pParams + 1));
+	gridPos.x &= gridDim.x - 1;
+	gridPos.y &= gridDim.y - 1;
+	gridPos.z &= gridDim.z - 1;
+	int hash = gridPos.z * gridDim.y * gridDim.x + gridPos.y * gridDim.x + gridPos.x;
 	return hash;
 } 
 
 int4 getGridPos(float4 worldPos, __global float4* pParams)
 {
     int4 gridPos;
-    gridPos.x = (int)floor((worldPos.x - pParams[0].x) / pParams[1].x);
-    gridPos.y = (int)floor((worldPos.y - pParams[0].y) / pParams[1].y);
-    gridPos.z = (int)floor((worldPos.z - pParams[0].z) / pParams[1].z);
+	int4 gridDim = *((__global int4*)(pParams + 1));
+    gridPos.x = (int)floor(worldPos.x * pParams[0].x) & (gridDim.x - 1);
+    gridPos.y = (int)floor(worldPos.y * pParams[0].y) & (gridDim.y - 1);
+    gridPos.z = (int)floor(worldPos.z * pParams[0].z) & (gridDim.z - 1);
     return gridPos;
 }
 
@@ -111,16 +109,8 @@ void findPairsInCell(	int numObjects,
 						__global int2*	pPairBuffStartCurr,
 						__global float4* pParams)
 {
-	int4 pGridDim = *((__global int4*)(pParams + 2));
+	int4 pGridDim = *((__global int4*)(pParams + 1));
 	int maxBodiesPerCell = pGridDim.w;
-
-
-    if (	(gridPos.x < 0) || (gridPos.x > pGridDim.x - 1)
-		||	(gridPos.y < 0) || (gridPos.y > pGridDim.y - 1)
-		||  (gridPos.z < 0) || (gridPos.z > pGridDim.z - 1)) 
-    {
-		return;
-	}
     int gridHash = getPosHash(gridPos, pParams);
     // get start of bucket for this cell
     int bucketStart = pCellStart[gridHash];
