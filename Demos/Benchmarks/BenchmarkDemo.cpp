@@ -320,11 +320,7 @@ void	BenchmarkDemo::initPhysics()
 //	btVector3 worldAabbMin(-30,-30,-30);
 //	btVector3 worldAabbMax(30,30,30);
 	
-//	btHashedOverlappingPairCache* pairCache = new btHashedOverlappingPairCache();
-//	m_overlappingPairCache = new btAxisSweep3(worldAabbMin,worldAabbMax,3500,pairCache);
-//	m_overlappingPairCache = new btSimpleBroadphase();
-//	m_overlappingPairCache = new btDbvtBroadphase();
-
+#ifdef USE_PARALLEL_DISPATCHER_BENCHMARK
 	btHashedOverlappingPairCache* pairCache = new (btAlignedAlloc(sizeof(btHashedOverlappingPairCache),16)) btHashedOverlappingPairCache(); 
 	btVector3 cellSize(3.5f, 3.5f, 3.5f); // 2 * sqrt(3)
 	btVector3 numOfCells = (worldAabbMax - worldAabbMin) / cellSize;
@@ -334,7 +330,12 @@ void	BenchmarkDemo::initPhysics()
 
 //	m_overlappingPairCache = new bt3dGridBroadphaseOCL(pairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ, 4096,10, 32, 10.f, 64);
 	m_overlappingPairCache = new btGpu3DGridBroadphase(pairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ, 4096,10, 32, 10.f, 64);
-
+#else
+//	btHashedOverlappingPairCache* pairCache = new btHashedOverlappingPairCache();
+//	m_overlappingPairCache = new btAxisSweep3(worldAabbMin,worldAabbMax,3500,pairCache);
+//	m_overlappingPairCache = new btSimpleBroadphase();
+	m_overlappingPairCache = new btDbvtBroadphase();
+#endif //USE_PARALLEL_DISPATCHER_BENCHMARK
 
 
 

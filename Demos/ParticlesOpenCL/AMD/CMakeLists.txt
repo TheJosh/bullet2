@@ -38,7 +38,7 @@ IF (USE_GLUT)
 	)
 
 
-	ADD_EXECUTABLE(AppPaticlesOCL_AMD
+	ADD_EXECUTABLE(AppParticlesOCL_AMD
 					${BULLET_PHYSICS_SOURCE_DIR}/Demos/ParticlesOpenCL/btParticlesDynamicsWorld.h
 					${BULLET_PHYSICS_SOURCE_DIR}/Demos/ParticlesOpenCL/btParticlesSharedDefs.h
 					${BULLET_PHYSICS_SOURCE_DIR}/Demos/ParticlesOpenCL/btParticlesSharedTypes.h
@@ -58,6 +58,6 @@ ELSE (USE_GLUT)
 ENDIF (USE_GLUT)
 
 IF (UNIX)
-  TARGET_LINK_LIBRARIES(AppPaticlesOCL_AMD pthread)
+  TARGET_LINK_LIBRARIES(AppParticlesOCL_AMD pthread)
 ENDIF(UNIX)
 
