@@ -1,2 +1,5 @@
-SUBDIRS( MiniCL NVidia AMD )
+SUBDIRS( MiniCL )
+IF (WIN32)
+	SUBDIRS(NVidia AMD)
+ENDIF()
 

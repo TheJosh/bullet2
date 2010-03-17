@@ -19,6 +19,11 @@ subject to the following restrictions:
 #define BT3DGRIDBROADPHASEOCL_H
 
 #ifdef __APPLE__
+#ifdef USE_MINICL
+	#include <MiniCL/cl.h>
+#else
+	#include <MiniCL/cl.h>
+#endif
 //CL_PLATFORM_MINI_CL could be defined in build system
 #else
 //#include <GL/glew.h>

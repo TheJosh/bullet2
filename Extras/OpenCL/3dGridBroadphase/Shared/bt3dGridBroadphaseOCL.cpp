@@ -22,6 +22,8 @@ subject to the following restrictions:
 #include "bt3dGridBroadphaseOCL.h"
 
 #include <stdio.h>
+#include <string.h>
+
 
 
 

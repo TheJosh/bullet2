@@ -17,6 +17,11 @@ subject to the following restrictions:
 #define BTOCLCOMMON_H
 
 #ifdef __APPLE__
+#ifdef USE_MINICL
+	#include <MiniCL/cl.h>
+#else
+	#include <MiniCL/cl.h>
+#endif
 #else
 	#ifdef USE_MINICL
 		#include <MiniCL/cl.h>
