@@ -265,6 +265,7 @@ __kernel void kCollideParticles(int numParticles,
                 }
                //Iterate over particles in this cell
                 int endI = startI + 8;
+                if(endI >= numParticles) endI = numParticles - 1;
                 for(int j = startI; j < endI; j++)
                 {
 					uint hashC = pPosHash[j].x;
