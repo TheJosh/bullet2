@@ -396,9 +396,11 @@ void ParticlesDemo::renderme()
 
 	glPointSize(5.0f);
 	glEnable(GL_POINT_SPRITE_ARB);
+
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 #ifndef __APPLE__
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+//	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_NV);
+	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif //__APPLE__
 	
 	glDepthMask(GL_TRUE);
