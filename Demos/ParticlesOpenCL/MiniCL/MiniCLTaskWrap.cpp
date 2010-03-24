@@ -16,10 +16,7 @@ subject to the following restrictions:
 
 #include <MiniCL/cl_MiniCL_Defs.h>
 
-extern "C"
-{
-	#include "../ParticlesOCL.cl"
-}
+#include "../ParticlesOCL.cl"
 
 MINICL_REGISTER(kComputeCellId)
 MINICL_REGISTER(kClearCellStart)

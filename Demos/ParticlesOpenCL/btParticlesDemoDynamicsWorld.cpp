@@ -324,6 +324,9 @@ void btParticlesDynamicsWorld::initCLKernels(int argc, char** argv)
 		m_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		m_cdDevice = btOclGetMaxFlopsDev(m_cxMainContext);
+		
+		btOclPrintDevInfo(m_cdDevice);
+
 		// create a command-queue
 		m_cqCommandQue = clCreateCommandQueue(m_cxMainContext, m_cdDevice, 0, &ciErrNum);
 		oclCHECKERROR(ciErrNum, CL_SUCCESS);
