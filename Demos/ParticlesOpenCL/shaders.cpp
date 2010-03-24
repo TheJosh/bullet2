@@ -15,7 +15,7 @@ void main()
     gl_PointSize = pointRadius * (pointScale / dist);
 //    gl_PointSize = 4.0;
 
-    gl_TexCoord = gl_MultiTexCoord0;
+    gl_TexCoord[0] = gl_MultiTexCoord0;
     gl_Position = gl_ModelViewProjectionMatrix * vec4(gl_Vertex.xyz, 1.0);
 
     gl_FrontColor = gl_Color;
