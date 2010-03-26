@@ -35,6 +35,7 @@ subject to the following restrictions:
 #include "../CUDA/btCudaBroadphase.h"
 #endif
 #include "../OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
+#include "../OpenCL/Hier3dGridBroadphase/Shared/btHier3dGridBroadphaseOCL.h"
 #include "LinearMath/btQuickprof.h"
 
 int numParts =2;
@@ -461,6 +462,20 @@ BulletSAPCompleteBoxPruningTest::BulletSAPCompleteBoxPruningTest(int numBoxes,in
 		methodname	=	"bt3dGridBroadphaseOCL(AMD)";
 #elif defined(CL_PLATFORM_NVIDIA)
 		methodname	=	"bt3dGridBroadphaseOCL(NVIDIA)";
+#else
+#error "OpenCL platform not supported"
+#endif
+		break;
+
+	case 11:
+//		m_broadphase = new btHier3dGridBroadphaseOCL(NULL, btVector3(10.f, 10.f, 10.f), 32, 32, 32, maxNumBoxes, 64);
+		m_broadphase = new btHier3dGridBroadphaseOCL(NULL, btVector3(8.f, 8.f, 8.f), 32, 32, 32, maxNumBoxes, 64);
+#if defined(CL_PLATFORM_MINI_CL)
+		methodname	=	"btHier3dGridBroadphaseOCL(MiniCL)";
+#elif defined(CL_PLATFORM_AMD)
+		methodname	=	"btHier3dGridBroadphaseOCL(AMD)";
+#elif defined(CL_PLATFORM_NVIDIA)
+		methodname	=	"btHier3dGridBroadphaseOCL(NVIDIA)";
 #else
 #error "OpenCL platform not supported"
 #endif

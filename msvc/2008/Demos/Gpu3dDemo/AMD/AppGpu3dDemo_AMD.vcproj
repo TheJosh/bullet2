@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				BasicRuntimeChecks="3"
 				CompileAs="2"
 				DebugInformationFormat="3"
@@ -41,7 +41,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Debug\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -64,7 +64,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_AMD.lib \lib\x86\OpenCL.lib "
 				OutputFile="..\..\..\..\..\Debug\AppGpu3dDemo_AMD.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
@@ -86,7 +86,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				CompileAs="2"
 				EnableEnhancedInstructionSet="1"
 				ExceptionHandling="1"
@@ -104,7 +104,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Release\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -127,7 +127,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_AMD.lib \lib\x86\OpenCL.lib "
 				OutputFile="..\..\..\..\..\Release\AppGpu3dDemo_AMD.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
@@ -148,7 +148,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				CompileAs="2"
 				EnableEnhancedInstructionSet="1"
 				ExceptionHandling="1"
@@ -166,7 +166,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -189,7 +189,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_AMD.lib \lib\x86\OpenCL.lib "
 				OutputFile="..\..\..\..\..\MinSizeRel\AppGpu3dDemo_AMD.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
@@ -210,7 +210,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				CompileAs="2"
 				DebugInformationFormat="3"
 				EnableEnhancedInstructionSet="1"
@@ -229,7 +229,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;\include;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -252,7 +252,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_AMD.lib \lib\x86\OpenCL.lib "
 				OutputFile="..\..\..\..\..\RelWithDebInfo\AppGpu3dDemo_AMD.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"

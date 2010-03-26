@@ -50,6 +50,7 @@ subject to the following restrictions:
 #endif
 
 #include "../../Extras/OpenCL/3dGridBroadphase/Shared/bt3dGridBroadphaseOCL.h"
+#include "../../Extras/OpenCL/Hier3dGridBroadphase/Shared/btHier3dGridBroadphaseOCL.h"
 
 class btRaycastBar2
 {
@@ -285,6 +286,22 @@ void BenchmarkDemo::displayCallback(void)
 #endif //USE_GRAPHICAL_BENCHMARK
 }
 
+
+// returns 2^n : 2^(n+1) > val >= 2^n
+int getFloorPowOfTwo(int val)
+{
+	int mask = 0x40000000;
+	for(int k = 0; k < 30; k++, mask >>= 1)
+	{
+		if(mask & val)
+		{
+			break;
+		}
+	}
+	return mask;
+}
+
+
 void	BenchmarkDemo::initPhysics()
 {
 
@@ -320,16 +337,18 @@ void	BenchmarkDemo::initPhysics()
 //	btVector3 worldAabbMin(-30,-30,-30);
 //	btVector3 worldAabbMax(30,30,30);
 	
-#ifdef USE_PARALLEL_DISPATCHER_BENCHMARK
+#if 1 // def USE_PARALLEL_DISPATCHER_BENCHMARK
 	btHashedOverlappingPairCache* pairCache = new (btAlignedAlloc(sizeof(btHashedOverlappingPairCache),16)) btHashedOverlappingPairCache(); 
-	btVector3 cellSize(3.5f, 3.5f, 3.5f); // 2 * sqrt(3)
+//	btVector3 cellSize(3.5f, 3.5f, 3.5f); // 2 * sqrt(3)
+	btVector3 cellSize(2.5f, 2.5f, 2.5f); // 2 * sqrt(3)
 	btVector3 numOfCells = (worldAabbMax - worldAabbMin) / cellSize;
-	int numOfCellsX = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[0]);
-	int numOfCellsY = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[1]);
-	int numOfCellsZ = btGpu3DGridBroadphase::getFloorPowOfTwo((int)numOfCells[2]);
+	int numOfCellsX = getFloorPowOfTwo((int)numOfCells[0]);
+	int numOfCellsY = getFloorPowOfTwo((int)numOfCells[1]);
+	int numOfCellsZ = getFloorPowOfTwo((int)numOfCells[2]);
 
 //	m_overlappingPairCache = new bt3dGridBroadphaseOCL(pairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ, 4096,10, 32, 10.f, 64);
-	m_overlappingPairCache = new btGpu3DGridBroadphase(pairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ, 4096,10, 32, 10.f, 64);
+//	m_overlappingPairCache = new btGpu3DGridBroadphase(pairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ, 4096,10, 32, 10.f, 64);
+	m_overlappingPairCache = new btHier3dGridBroadphaseOCL(pairCache, cellSize,numOfCellsX, numOfCellsY, numOfCellsZ, 4096, 32);
 #else
 //	btHashedOverlappingPairCache* pairCache = new btHashedOverlappingPairCache();
 //	m_overlappingPairCache = new btAxisSweep3(worldAabbMin,worldAabbMax,3500,pairCache);
@@ -589,6 +608,7 @@ void BenchmarkDemo::createTowerCircle(const btVector3& offsetPosition,int stackS
 	for(int i=0;i<stackSize;i++) {
 		for(int j=0;j<rotSize;j++) {
 		
+//			rotY *= btQuaternion(btVector3(0,1,0),SIMD_PI/(rotSize*btScalar(0.75)));
 
 			trans.setOrigin(offsetPosition+  rotate(rotY,btVector3(0.0f , posY, radius)));
 			trans.setRotation(rotY);
@@ -614,7 +634,8 @@ void	BenchmarkDemo::createTest2()
 	createWall(btVector3(10.0f,0.0f,0.0f),12,btVector3(cubeSize,cubeSize,cubeSize));
 	createTowerCircle(btVector3(25.0f,0.0f,0.0f),8,24,btVector3(cubeSize,cubeSize,cubeSize));
 //*/	
-//	createWall(btVector3(8.0f,0.0f,8.0f),2,btVector3(cubeSize,cubeSize,cubeSize));
+//	createTowerCircle(btVector3(25.0f,0.0f,0.0f),2,24,btVector3(cubeSize,cubeSize,cubeSize));
+//	createWall(btVector3(8.0f,0.0f,8.0f),1,btVector3(cubeSize,cubeSize,cubeSize));
 }
 
 

@@ -84,6 +84,7 @@ enum TestIndex
 //	TEST_BULLET_CUDA_8192,
 	TEST_BULLET_3DGRID_8192,
 	TEST_BULLET_3DGRIDOCL_8192,
+	TEST_BULLET_HIER3DGRIDOCL_8192,
  	TEST_OPCODE_ARRAY_SAP,
 	MAX_NB_TESTS
 };
@@ -92,8 +93,8 @@ enum TestIndex
 //static int gSelectedTest = TEST_DBVT_8192;//TEST_BULLET_MULTISAP_8192;
 //static int gTest = TEST_BULLET_CUDA_8192;
 //static int gSelectedTest = TEST_BULLET_CUDA_8192;
-static int gTest = TEST_BULLET_3DGRIDOCL_8192;
-static int gSelectedTest = TEST_BULLET_3DGRIDOCL_8192;
+static int gTest = TEST_BULLET_HIER3DGRIDOCL_8192;
+static int gSelectedTest = TEST_BULLET_HIER3DGRIDOCL_8192;
 static CollisionTest* gCollisionTests[MAX_NB_TESTS];
 
 static GLFontRenderer gFnt;
@@ -329,6 +330,7 @@ int main(int argc, char** argv)
 			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (AMD) 8192"},
 #elif defined(CL_PLATFORM_NVIDIA)
 			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (NVIDIA) 8192"},
+			{TEST_BULLET_HIER3DGRIDOCL_8192, "Bullet HierOCL(NVIDIA) 8192"},
 #else
 #error "OpenCL platform not supported"
 #endif
@@ -358,6 +360,7 @@ int main(int argc, char** argv)
 //	gCollisionTests[TEST_BULLET_CUDA_8192]	= new BulletSAPCompleteBoxPruningTest(NUM_SAP_BOXES,8);
 	gCollisionTests[TEST_BULLET_3DGRID_8192]	= new BulletSAPCompleteBoxPruningTest(NUM_SAP_BOXES,9);
 	gCollisionTests[TEST_BULLET_3DGRIDOCL_8192]	= new BulletSAPCompleteBoxPruningTest(NUM_SAP_BOXES,10);
+	gCollisionTests[TEST_BULLET_HIER3DGRIDOCL_8192]	= new BulletSAPCompleteBoxPruningTest(NUM_SAP_BOXES,11);
 	gCollisionTests[TEST_OPCODE_ARRAY_SAP]	= new OpcodeArraySAPTest(NUM_SAP_BOXES);
 
 	for(int i=0;i<MAX_NB_TESTS;i++)

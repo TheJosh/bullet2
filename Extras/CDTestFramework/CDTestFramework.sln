@@ -2,6 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CDTestFramework", "CDTestFramework.vcproj", "{0565DB39-45CC-416E-B549-BFC24F2666D1}"
 	ProjectSection(ProjectDependencies) = postProject
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1} = {3D0AE411-4DAA-4A39-9C51-B089849796D1}
 		{251D5315-4691-43F0-927C-F4A7B2CE51D6} = {251D5315-4691-43F0-927C-F4A7B2CE51D6}
 		{61544C2F-91B2-4BDD-8404-EC24C0282DE7} = {61544C2F-91B2-4BDD-8404-EC24C0282DE7}
 		{1CE18A8B-BC22-4394-8FFD-429375B0548A} = {1CE18A8B-BC22-4394-8FFD-429375B0548A}
@@ -42,6 +43,10 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3dGridBroadphaseOCL_Mini", "..\..\msvc\2008\Extras\OpenCL\3dGridBroadphase\MiniCL\3dGridBroadphaseOCL_Mini.vcproj", "{2D826ABD-0902-4D36-87FC-0D3F2D513E50}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "3dGridBroadphaseOCL_Nv", "..\..\msvc\2008\Extras\OpenCL\3dGridBroadphase\NVidia\3dGridBroadphaseOCL_Nv.vcproj", "{251D5315-4691-43F0-927C-F4A7B2CE51D6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hier3dGridBroadphaseOCL_Nv", "..\..\msvc\2008\Extras\OpenCL\Hier3dGridBroadphase\NVidia\Hier3dGridBroadphaseOCL_Nv.vcproj", "{3D0AE411-4DAA-4A39-9C51-B089849796D1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hier3dGridBroadphaseOCL_Mini", "..\..\msvc\2008\Extras\OpenCL\Hier3dGridBroadphase\MiniCL\Hier3dGridBroadphaseOCL_Mini.vcproj", "{FD8EC068-8E5D-478B-9F9F-23805C071D5F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -231,6 +236,38 @@ Global
 		{251D5315-4691-43F0-927C-F4A7B2CE51D6}.ReleaseDoublePrecision|Win32.Build.0 = Release|Win32
 		{251D5315-4691-43F0-927C-F4A7B2CE51D6}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
 		{251D5315-4691-43F0-927C-F4A7B2CE51D6}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.Debug|Win32.Build.0 = Debug|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.DebugDll|Win32.ActiveCfg = Debug|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.DebugDll|Win32.Build.0 = Debug|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.DebugDoublePrecision|Win32.ActiveCfg = Debug|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.DebugDoublePrecision|Win32.Build.0 = Debug|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.Release|Win32.ActiveCfg = Release|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.Release|Win32.Build.0 = Release|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.ReleaseDll|Win32.ActiveCfg = Release|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.ReleaseDll|Win32.Build.0 = Release|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.ReleaseDoublePrecision|Win32.ActiveCfg = Release|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.ReleaseDoublePrecision|Win32.Build.0 = Release|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{3D0AE411-4DAA-4A39-9C51-B089849796D1}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.Debug|Win32.Build.0 = Debug|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.DebugDll|Win32.ActiveCfg = Debug|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.DebugDll|Win32.Build.0 = Debug|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.DebugDoublePrecision|Win32.ActiveCfg = Debug|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.DebugDoublePrecision|Win32.Build.0 = Debug|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.MinSizeRel|Win32.ActiveCfg = MinSizeRel|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.MinSizeRel|Win32.Build.0 = MinSizeRel|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.Release|Win32.ActiveCfg = Release|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.Release|Win32.Build.0 = Release|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.ReleaseDll|Win32.ActiveCfg = Release|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.ReleaseDll|Win32.Build.0 = Release|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.ReleaseDoublePrecision|Win32.ActiveCfg = Release|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.ReleaseDoublePrecision|Win32.Build.0 = Release|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.RelWithDebInfo|Win32.ActiveCfg = RelWithDebInfo|Win32
+		{FD8EC068-8E5D-478B-9F9F-23805C071D5F}.RelWithDebInfo|Win32.Build.0 = RelWithDebInfo|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

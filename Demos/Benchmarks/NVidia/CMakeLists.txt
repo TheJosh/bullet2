@@ -8,32 +8,42 @@
 # You shouldn't have to modify anything below this line 
 ########################################################
 
-IF (USE_GRAPHICAL_BENCHMARK)
+IF (CMAKE_CL_64)
+	SET(CMAK_NVSDKCOMPUTE_LIBPATH
+		)
+ELSE(CMAKE_CL_64)
+	SET(CMAK_NVSDKCOMPUTE_LIBPATH
+		$ENV{NVSDKCOMPUTE_ROOT}/OpenCL/common/lib/Win32
+		)
+ENDIF(CMAKE_CL_64)
 
-ADD_DEFINITIONS(-DUSE_MINICL)
+
+IF (USE_GRAPHICAL_BENCHMARK)
 
 IF (USE_GLUT)
 	INCLUDE_DIRECTORIES(
 	${BULLET_PHYSICS_SOURCE_DIR}/src 
 	${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL 
+	${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared
+	$ENV{NVSDKCOMPUTE_ROOT}/OpenCL/common/inc	
 	)
 
 
 	IF (USE_MULTITHREADED_BENCHMARK)
-		LINK_LIBRARIES(	OpenGLSupport BulletMultiThreaded BulletDynamics  BulletCollision LinearMath ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Mini Hier3dGridBroadphaseOCL_Mini)
+		LINK_LIBRARIES(	OpenGLSupport BulletMultiThreaded BulletDynamics  BulletCollision LinearMath ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Nv Hier3dGridBroadphaseOCL_Nv ${CMAK_NVSDKCOMPUTE_LIBPATH}/OpenCL.lib)
 	ELSE()
-		LINK_LIBRARIES(	OpenGLSupport BulletMultiThreaded BulletDynamics  BulletCollision LinearMath ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Mini Hier3dGridBroadphaseOCL_Mini)
+		LINK_LIBRARIES(	OpenGLSupport BulletDynamics  BulletCollision LinearMath ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Nv Hier3dGridBroadphaseOCL_Nv ${CMAK_NVSDKCOMPUTE_LIBPATH}/OpenCL.lib)
 	ENDIF(USE_MULTITHREADED_BENCHMARK)
 	
 	IF (WIN32)
-		ADD_EXECUTABLE(AppBenchmarks_Mini
+		ADD_EXECUTABLE(AppBenchmarks_Nv
 			../main.cpp
 			../BenchmarkDemo.cpp 
 			../BenchmarkDemo.h
 			${BULLET_PHYSICS_SOURCE_DIR}/msvc/bullet.rc
 		)
 	ELSE()
-		ADD_EXECUTABLE(AppBenchmarks_Mini
+		ADD_EXECUTABLE(AppBenchmarks_Nv
 			../main.cpp
 			../BenchmarkDemo.cpp 
 			../BenchmarkDemo.h
@@ -43,13 +53,13 @@ IF (USE_GLUT)
 		IF (NOT INTERNAL_CREATE_MSVC_RELATIVE_PATH_PROJECTFILES)
 			IF (CMAKE_CL_64)
 				ADD_CUSTOM_COMMAND(
-					TARGET AppBenchmarks_Mini
+					TARGET AppBenchmarks_Nv
 					POST_BUILD
 					COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/glut64.dll ${CMAKE_CURRENT_BINARY_DIR}
 				)
 			ELSE(CMAKE_CL_64)
 				ADD_CUSTOM_COMMAND(
-					TARGET AppBenchmarks_Mini
+					TARGET AppBenchmarks_Nv
 					POST_BUILD
 					COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/GLUT32.DLL ${CMAKE_CURRENT_BINARY_DIR}
 				)
@@ -66,18 +76,21 @@ ELSE (USE_GLUT)
 	INCLUDE_DIRECTORIES(
 	${BULLET_PHYSICS_SOURCE_DIR}/src 
 	${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL 
+	${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared
+	$ENV{NVSDKCOMPUTE_ROOT}/OpenCL/common/inc	
 	)
 
 	IF (USE_MULTITHREADED_BENCHMARK)
 		LINK_LIBRARIES(
-		OpenGLSupport BulletMultiThreaded BulletDynamics  BulletCollision LinearMath ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Mini Hier3dGridBroadphaseOCL_Mini)
+		OpenGLSupport BulletMultiThreaded BulletDynamics  BulletCollision LinearMath ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Nv Hier3dGridBroadphaseOCL_Nv ${CMAK_NVSDKCOMPUTE_LIBPATH}/OpenCL.lib)
 	ELSE()
 		LINK_LIBRARIES(
-		OpenGLSupport BulletMultiThreaded BulletDynamics  BulletCollision LinearMath ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Mini Hier3dGridBroadphaseOCL_Mini)
+		OpenGLSupport BulletDynamics  BulletCollision LinearMath ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 3dGridBroadphaseOCL_Nv Hier3dGridBroadphaseOCL_Nv ${CMAK_NVSDKCOMPUTE_LIBPATH}/OpenCL.lib
+		)
 	
 	ENDIF()
 	
-	ADD_EXECUTABLE(AppBenchmarks_Mini
+	ADD_EXECUTABLE(AppBenchmarks_Nv
 		WIN32
 		../OpenGL/Win32AppMain.cpp
 		../BenchmarkDemo.cpp 
@@ -91,16 +104,18 @@ ELSE (USE_GRAPHICAL_BENCHMARK)
 	INCLUDE_DIRECTORIES(
 	${BULLET_PHYSICS_SOURCE_DIR}/src 
 	${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL 
+	${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared
+	$ENV{NVSDKCOMPUTE_ROOT}/OpenCL/common/inc	
 	)
 
 	IF (USE_MULTITHREADED_BENCHMARK)
-		LINK_LIBRARIES(		BulletMultiThreaded BulletDynamics  BulletCollision LinearMath	3dGridBroadphaseOCL_Mini Hier3dGridBroadphaseOCL_Mini)
+		LINK_LIBRARIES(		BulletMultiThreaded BulletDynamics  BulletCollision LinearMath	3dGridBroadphaseOCL_Nv Hier3dGridBroadphaseOCL_Nv ${CMAK_NVSDKCOMPUTE_LIBPATH}/OpenCL.lib)
 	ELSE()
-		LINK_LIBRARIES(		BulletMultiThreaded BulletDynamics  BulletCollision LinearMath	3dGridBroadphaseOCL_Mini Hier3dGridBroadphaseOCL_Mini)
+		LINK_LIBRARIES(		BulletDynamics  BulletCollision LinearMath	3dGridBroadphaseOCL_Nv Hier3dGridBroadphaseOCL_Nv ${CMAK_NVSDKCOMPUTE_LIBPATH}/OpenCL.lib)
 	ENDIF()
 	
 	
-	ADD_EXECUTABLE(AppBenchmarks_Mini
+	ADD_EXECUTABLE(AppBenchmarks_Nv
 		../main.cpp
 		../BenchmarkDemo.cpp 
 	)
