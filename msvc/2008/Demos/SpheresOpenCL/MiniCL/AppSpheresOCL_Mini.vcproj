@@ -35,7 +35,7 @@
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
 				AssemblerListingLocation="Debug"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/Debug/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/Debug/AppSpheresOCL_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -65,12 +65,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib "
-				OutputFile="..\..\..\..\..\Debug\AppSpheresOCL_Mini.exe"
+				OutputFile="Debug\AppSpheresOCL_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/Debug/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/Debug/AppSpheresOCL_Mini.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				ImportLibrary="Debug\AppSpheresOCL_Mini.lib"/>
@@ -98,7 +98,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"
 				AssemblerListingLocation="Release"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/Release/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/Release/AppSpheresOCL_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -128,12 +128,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib "
-				OutputFile="..\..\..\..\..\Release\AppSpheresOCL_Mini.exe"
+				OutputFile="Release\AppSpheresOCL_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/Release/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/Release/AppSpheresOCL_Mini.pdb"
 				SubSystem="1"
 				ImportLibrary="Release\AppSpheresOCL_Mini.lib"/>
 		</Configuration>
@@ -160,7 +160,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
 				AssemblerListingLocation="MinSizeRel"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/MinSizeRel/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/MinSizeRel/AppSpheresOCL_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -190,12 +190,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib "
-				OutputFile="..\..\..\..\..\MinSizeRel\AppSpheresOCL_Mini.exe"
+				OutputFile="MinSizeRel\AppSpheresOCL_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/MinSizeRel/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/MinSizeRel/AppSpheresOCL_Mini.pdb"
 				SubSystem="1"
 				ImportLibrary="MinSizeRel\AppSpheresOCL_Mini.lib"/>
 		</Configuration>
@@ -223,7 +223,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
 				AssemblerListingLocation="RelWithDebInfo"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/RelWithDebInfo/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/RelWithDebInfo/AppSpheresOCL_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -253,12 +253,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib "
-				OutputFile="..\..\..\..\..\RelWithDebInfo\AppSpheresOCL_Mini.exe"
+				OutputFile="RelWithDebInfo\AppSpheresOCL_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/RelWithDebInfo/AppSpheresOCL_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/SpheresOpenCL/MiniCL/RelWithDebInfo/AppSpheresOCL_Mini.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				ImportLibrary="RelWithDebInfo\AppSpheresOCL_Mini.lib"/>

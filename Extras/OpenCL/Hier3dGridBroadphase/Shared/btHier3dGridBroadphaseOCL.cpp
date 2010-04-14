@@ -74,16 +74,16 @@ btHier3dGridBroadphaseOCL::~btHier3dGridBroadphaseOCL()
 // probably this will happen with other compilers as well
 // so to make it robust, register kernels again (it is safe)
 #define MINICL_DECLARE(a) extern "C" void a();
-MINICL_DECLARE(kCalcHashAABB)
-MINICL_DECLARE(kClearCellStart)
-MINICL_DECLARE(kFindCellStart)
-MINICL_DECLARE(kFindOverlappingPairs)
-MINICL_DECLARE(kComputePairCacheChanges)
-MINICL_DECLARE(kSqueezeOverlappingPairBuff)
-MINICL_DECLARE(kBitonicSortCellIdLocal)
-MINICL_DECLARE(kBitonicSortCellIdLocal1)
-MINICL_DECLARE(kBitonicSortCellIdMergeGlobal)
-MINICL_DECLARE(kBitonicSortCellIdMergeLocal)
+MINICL_DECLARE(kHierCalcHashAABB)
+MINICL_DECLARE(kHierClearCellStart)
+MINICL_DECLARE(kHierFindCellStart)
+MINICL_DECLARE(kHierFindOverlappingPairs)
+MINICL_DECLARE(kHierComputePairCacheChanges)
+MINICL_DECLARE(kHierSqueezeOverlappingPairBuff)
+MINICL_DECLARE(kHierBitonicSortCellIdLocal)
+MINICL_DECLARE(kHierBitonicSortCellIdLocal1)
+MINICL_DECLARE(kHierBitonicSortCellIdMergeGlobal)
+MINICL_DECLARE(kHierBitonicSortCellIdMergeLocal)
 #undef MINICL_DECLARE
 #endif
 
@@ -92,16 +92,16 @@ void btHier3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, 
 
 	#ifdef CL_PLATFORM_MINI_CL
 		// call constructors here
-		MINICL_REGISTER(kCalcHashAABB)
-		MINICL_REGISTER(kClearCellStart)
-		MINICL_REGISTER(kFindCellStart)
-		MINICL_REGISTER(kFindOverlappingPairs)
-		MINICL_REGISTER(kComputePairCacheChanges)
-		MINICL_REGISTER(kSqueezeOverlappingPairBuff)
-		MINICL_REGISTER(kBitonicSortCellIdLocal)
-		MINICL_REGISTER(kBitonicSortCellIdLocal1)
-		MINICL_REGISTER(kBitonicSortCellIdMergeGlobal)
-		MINICL_REGISTER(kBitonicSortCellIdMergeLocal)
+		MINICL_REGISTER(kHierCalcHashAABB)
+		MINICL_REGISTER(kHierClearCellStart)
+		MINICL_REGISTER(kHierFindCellStart)
+		MINICL_REGISTER(kHierFindOverlappingPairs)
+		MINICL_REGISTER(kHierComputePairCacheChanges)
+		MINICL_REGISTER(kHierSqueezeOverlappingPairBuff)
+		MINICL_REGISTER(kHierBitonicSortCellIdLocal)
+		MINICL_REGISTER(kHierBitonicSortCellIdLocal1)
+		MINICL_REGISTER(kHierBitonicSortCellIdMergeGlobal)
+		MINICL_REGISTER(kHierBitonicSortCellIdMergeLocal)
 	#endif
 
 	cl_int ciErrNum;
@@ -166,19 +166,19 @@ void btHier3dGridBroadphaseOCL::initCL(cl_context context, cl_device_id device, 
 
 void btHier3dGridBroadphaseOCL::initKernels()
 {
-	initKernel(HIER3DGRIDOCL_KERNEL_CALC_HASH_AABB,	"kCalcHashAABB");
+	initKernel(HIER3DGRIDOCL_KERNEL_CALC_HASH_AABB,	"kHierCalcHashAABB");
 	setKernelArg(HIER3DGRIDOCL_KERNEL_CALC_HASH_AABB, 1, sizeof(cl_mem),(void*)&m_dAABB);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_CALC_HASH_AABB, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_CALC_HASH_AABB, 3, sizeof(cl_mem),(void*)&m_dParams);
 
-	initKernel(HIER3DGRIDOCL_KERNEL_CLEAR_CELL_START, "kClearCellStart");
+	initKernel(HIER3DGRIDOCL_KERNEL_CLEAR_CELL_START, "kHierClearCellStart");
 	setKernelArg(HIER3DGRIDOCL_KERNEL_CLEAR_CELL_START, 1, sizeof(cl_mem),(void*)&m_dCellStart);
 
-	initKernel(HIER3DGRIDOCL_KERNEL_FIND_CELL_START, "kFindCellStart");
+	initKernel(HIER3DGRIDOCL_KERNEL_FIND_CELL_START, "kHierFindCellStart");
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_CELL_START, 1, sizeof(cl_mem),(void*)&m_dBodiesHash);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_CELL_START, 2, sizeof(cl_mem),(void*)&m_dCellStart);
 
-	initKernel(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, "kFindOverlappingPairs");
+	initKernel(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, "kHierFindOverlappingPairs");
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, 1, sizeof(cl_mem),(void*)&m_dAABB);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, 2, sizeof(cl_mem),(void*)&m_dBodiesHash);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, 3, sizeof(cl_mem),(void*)&m_dCellStart);
@@ -186,23 +186,23 @@ void btHier3dGridBroadphaseOCL::initKernels()
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, 5, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_FIND_OVERLAPPING_PAIRS, 6, sizeof(cl_mem),(void*)&m_dParams);
 
-	initKernel(HIER3DGRIDOCL_KERNEL_COMPUTE_CACHE_CHANGES, "kComputePairCacheChanges");
+	initKernel(HIER3DGRIDOCL_KERNEL_COMPUTE_CACHE_CHANGES, "kHierComputePairCacheChanges");
 	setKernelArg(HIER3DGRIDOCL_KERNEL_COMPUTE_CACHE_CHANGES, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_COMPUTE_CACHE_CHANGES, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_COMPUTE_CACHE_CHANGES, 3, sizeof(cl_mem),(void*)&m_dPairScan);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_COMPUTE_CACHE_CHANGES, 4, sizeof(cl_mem),(void*)&m_dAABB);
 
-	initKernel(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, "kSqueezeOverlappingPairBuff");
+	initKernel(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, "kHierSqueezeOverlappingPairBuff");
 	setKernelArg(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, 1, sizeof(cl_mem),(void*)&m_dPairBuff);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, 2, sizeof(cl_mem),(void*)&m_dPairBuffStartCurr);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, 3, sizeof(cl_mem),(void*)&m_dPairScan);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, 4, sizeof(cl_mem),(void*)&m_dPairOut);
 	setKernelArg(HIER3DGRIDOCL_KERNEL_SQUEEZE_PAIR_BUFF, 5, sizeof(cl_mem),(void*)&m_dAABB);
 
-	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_LOCAL, "kBitonicSortCellIdLocal");
-	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1, "kBitonicSortCellIdLocal1");
-	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL, "kBitonicSortCellIdMergeGlobal");
-	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "kBitonicSortCellIdMergeLocal");
+	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_LOCAL, "kHierBitonicSortCellIdLocal");
+	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_LOCAL_1, "kHierBitonicSortCellIdLocal1");
+	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_MERGE_GLOBAL, "kHierBitonicSortCellIdMergeGlobal");
+	initKernel(HIER3DGRIDOCL_KERNEL_BITONIC_SORT_CELL_ID_MERGE_LOCAL, "kHierBitonicSortCellIdMergeLocal");
 }
 
 

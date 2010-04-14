@@ -1,7 +1,7 @@
 
 MSTRINGIFY(
 
-int getPosHash(int4 gridPos, int mask, __global float4* pParams)
+int getPosHashHier(int4 gridPos, int mask, __global float4* pParams)
 {
 	int4 gridDim = *((__global int4*)(pParams + 1));
 	gridPos.x &= mask;
@@ -11,7 +11,7 @@ int getPosHash(int4 gridPos, int mask, __global float4* pParams)
 	return hash;
 } 
 
-int4 getGridPos(float4 worldPos, __global float4* pParams)
+int4 getGridPosHier(float4 worldPos, __global float4* pParams)
 {
     int4 gridPos;
 	int4 gridDim = *((__global int4*)(pParams + 1));
@@ -23,7 +23,7 @@ int4 getGridPos(float4 worldPos, __global float4* pParams)
 
 
 // calculate grid hash value for each body using its AABB
-__kernel void kCalcHashAABB(int numObjects, __global float4* pAABB, __global int2* pHash, __global float4* pParams GUID_ARG)
+__kernel void kHierCalcHashAABB(int numObjects, __global float4* pAABB, __global int2* pHash, __global float4* pParams GUID_ARG)
 {
     int index = get_global_id(0);
     if(index >= numObjects)
@@ -39,8 +39,8 @@ __kernel void kCalcHashAABB(int numObjects, __global float4* pAABB, __global int
 	pos.w = 0.f;
 	int mask = as_uint(bbMin.w);
     // get address in grid
-    int4 gridPos = getGridPos(pos, pParams);
-    int gridHash = getPosHash(gridPos, mask, pParams);
+    int4 gridPos = getGridPosHier(pos, pParams);
+    int gridHash = getPosHashHier(gridPos, mask, pParams);
     // store grid hash and body index
     int2 hashVal;
     hashVal.x = gridHash;
@@ -48,7 +48,7 @@ __kernel void kCalcHashAABB(int numObjects, __global float4* pAABB, __global int
     pHash[index] = hashVal;
 }
 
-__kernel void kClearCellStart(	int numCells, 
+__kernel void kHierClearCellStart(	int numCells, 
 								__global int* pCellStart GUID_ARG)
 {
     int index = get_global_id(0);
@@ -59,7 +59,7 @@ __kernel void kClearCellStart(	int numCells,
 	pCellStart[index] = -1;
 }
 
-__kernel void kFindCellStart(int numObjects, __global int2* pHash, __global int* cellStart GUID_ARG)
+__kernel void kHierFindCellStart(int numObjects, __global int2* pHash, __global int* cellStart GUID_ARG)
 {
 	__local int sharedHash[513];
     int index = get_global_id(0);
@@ -87,7 +87,7 @@ __kernel void kFindCellStart(int numObjects, __global int2* pHash, __global int*
 	}
 }
 
-int testAABBOverlap(float4 min0, float4 max0, float4 min1, float4 max1)
+int testAABBOverlapHier(float4 min0, float4 max0, float4 min1, float4 max1)
 {
 	return	(min0.x <= max1.x)&& (min1.x <= max0.x) && 
 			(min0.y <= max1.y)&& (min1.y <= max0.y) && 
@@ -100,7 +100,7 @@ const int BT_3DGRID_PAIR_NEW_FLG  = 0x20000000;
 const int BT_3DGRID_PAIR_ANY_FLG  =  0x60000000; 
 // (BT_3DGRID_PAIR_FOUND_FLG | BT_3DGRID_PAIR_NEW_FLG) // expression is not supported by NVidia, build failed without error message
 
-void findPairsInCell(	int numObjects,
+void findPairsInCellHier(	int numObjects,
 						int4	gridPos,
 						int		myMask,
 						int		currMask,
@@ -114,7 +114,7 @@ void findPairsInCell(	int numObjects,
 {
 	int4 pGridDim = *((__global int4*)(pParams + 1));
 //	int maxBodiesPerCell = pGridDim.w;
-    int gridHash = getPosHash(gridPos, currMask, pParams); //@@@@@@@@@@@
+    int gridHash = getPosHashHier(gridPos, currMask, pParams); //@@@@@@@@@@@
     // get start of bucket for this cell
     int bucketStart = pCellStart[gridHash];
     if (bucketStart == -1)
@@ -145,7 +145,7 @@ void findPairsInCell(	int numObjects,
 		if((otherMask == currMask)&&(((myMask == currMask)&&(unsorted_indx2 > unsorted_indx))||(myMask > currMask)))
         {   
 			float4 max1 = pAABB[unsorted_indx2*2 + 1];
-			if(testAABBOverlap(min0, max0, min1, max1))
+			if(testAABBOverlapHier(min0, max0, min1, max1))
 			{
 				int handleIndex2 = as_int(max1.w);
 				int k;
@@ -177,7 +177,7 @@ void findPairsInCell(	int numObjects,
     return;
 }
 
-__kernel void kFindOverlappingPairs(	int numObjects,
+__kernel void kHierFindOverlappingPairs(	int numObjects,
 										__global float4* pAABB, 
 										__global int2* pHash, 
 										__global int* pCellStart, 
@@ -200,7 +200,7 @@ __kernel void kFindOverlappingPairs(	int numObjects,
 	pos.y = (bbMin.y + bbMax.y) * 0.5f;
 	pos.z = (bbMin.z + bbMax.z) * 0.5f;
     // get address in grid
-    int4 gridPosA = getGridPos(pos, pParams);
+    int4 gridPosA = getGridPosHier(pos, pParams);
     int4 gridPosB; 
 	int4 gridDim = *((__global int4*)(pParams + 1));
     int depth = gridDim.w;
@@ -222,7 +222,7 @@ __kernel void kFindOverlappingPairs(	int numObjects,
 				for(int x=-1; x<=cmax; x++) 
 				{
 					gridPosB.x = (gridPosA.x + x * delta_xyz) & mask;
-					findPairsInCell(numObjects, gridPosB, myMask, mask, index, pHash, pCellStart, pAABB, pPairBuff, pPairBuffStartCurr, pParams);
+					findPairsInCellHier(numObjects, gridPosB, myMask, mask, index, pHash, pCellStart, pAABB, pPairBuff, pPairBuffStartCurr, pParams);
 				}
 			}
 		}
@@ -231,7 +231,7 @@ __kernel void kFindOverlappingPairs(	int numObjects,
 	} while(cmax > -1);
 }
 
-__kernel void kComputePairCacheChanges(	int numObjects,
+__kernel void kHierComputePairCacheChanges(	int numObjects,
 										__global int* pPairBuff, 
 										__global int2* pPairBuffStartCurr, 
 										__global int* pPairScan, 
@@ -259,7 +259,7 @@ __kernel void kComputePairCacheChanges(	int numObjects,
 	pPairScan[index+1] = num_changes;
 } 
 
-__kernel void kSqueezeOverlappingPairBuff(	int numObjects,
+__kernel void kHierSqueezeOverlappingPairBuff(	int numObjects,
 											__global int* pPairBuff, 
 											__global int2* pPairBuffStartCurr, 
 											__global int* pPairScan,
@@ -318,7 +318,7 @@ __kernel void kSqueezeOverlappingPairBuff(	int numObjects,
 
 //#define LOCAL_SIZE_MAX 1024U
 
-inline void ComparatorPrivate(int2* keyA, int2* keyB, uint dir)
+inline void ComparatorPrivateHier(int2* keyA, int2* keyB, uint dir)
 {
     if((keyA[0].x > keyB[0].x) == dir)
     {
@@ -328,7 +328,7 @@ inline void ComparatorPrivate(int2* keyA, int2* keyB, uint dir)
     }
 }
 
-inline void ComparatorLocal(__local int2* keyA, __local int2* keyB, uint dir)
+inline void ComparatorLocalHier(__local int2* keyA, __local int2* keyB, uint dir)
 {
     if((keyA[0].x > keyB[0].x) == dir)
     {
@@ -342,7 +342,7 @@ inline void ComparatorLocal(__local int2* keyA, __local int2* keyB, uint dir)
 // Monolithic bitonic sort kernel for short arrays fitting into local memory
 ////////////////////////////////////////////////////////////////////////////////
 
-__kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uint dir GUID_ARG)
+__kernel void kHierBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uint dir GUID_ARG)
 {
 //    __local int2 l_key[LOCAL_SIZE_MAX];
     __local int2 l_key[1024];
@@ -361,7 +361,7 @@ __kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uin
         {
             barrier(CLK_LOCAL_MEM_FENCE);
             uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-            ComparatorLocal(&l_key[pos +      0], &l_key[pos + stride], ddd);
+            ComparatorLocalHier(&l_key[pos +      0], &l_key[pos + stride], ddd);
         }
     }
 
@@ -371,7 +371,7 @@ __kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uin
         {
             barrier(CLK_LOCAL_MEM_FENCE);
             uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-            ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], dir);
+            ComparatorLocalHier(&l_key[pos + 0], &l_key[pos + stride], dir);
         }
     }
 
@@ -389,7 +389,7 @@ __kernel void kBitonicSortCellIdLocal(__global int2* pKey, uint arrayLength, uin
 //of even / odd subarrays (of LOCAL_SIZE_LIMIT points) being
 //sorted in opposite directions
 
-__kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
+__kernel void kHierBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
 {
 //    __local int2 l_key[LOCAL_SIZE_MAX];
     __local int2 l_key[1024];
@@ -410,7 +410,7 @@ __kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
         {
             barrier(CLK_LOCAL_MEM_FENCE);
             uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-            ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], ddd);
+            ComparatorLocalHier(&l_key[pos + 0], &l_key[pos + stride], ddd);
         }
     }
 
@@ -422,7 +422,7 @@ __kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
         {
             barrier(CLK_LOCAL_MEM_FENCE);
             uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-            ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], ddd);
+            ComparatorLocalHier(&l_key[pos + 0], &l_key[pos + stride], ddd);
         }
     }
 
@@ -433,7 +433,7 @@ __kernel void kBitonicSortCellIdLocal1(__global int2* pKey GUID_ARG)
 
 //Bitonic merge iteration for 'stride' >= LOCAL_SIZE_LIMIT
 
-__kernel void kBitonicSortCellIdMergeGlobal(__global int2* pKey, uint arrayLength, uint size, uint stride, uint dir GUID_ARG)
+__kernel void kHierBitonicSortCellIdMergeGlobal(__global int2* pKey, uint arrayLength, uint size, uint stride, uint dir GUID_ARG)
 {
     uint global_comparatorI = get_global_id(0);
     uint        comparatorI = global_comparatorI & (arrayLength / 2 - 1);
@@ -445,7 +445,7 @@ __kernel void kBitonicSortCellIdMergeGlobal(__global int2* pKey, uint arrayLengt
     int2 keyA = pKey[pos +      0];
     int2 keyB = pKey[pos + stride];
 
-    ComparatorPrivate(&keyA, &keyB, ddd);
+    ComparatorPrivateHier(&keyA, &keyB, ddd);
 
     pKey[pos +      0] = keyA;
     pKey[pos + stride] = keyB;
@@ -453,7 +453,7 @@ __kernel void kBitonicSortCellIdMergeGlobal(__global int2* pKey, uint arrayLengt
 
 //Combined bitonic merge steps for
 //'size' > LOCAL_SIZE_LIMIT and 'stride' = [1 .. LOCAL_SIZE_LIMIT / 2]
-__kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength, uint stride, uint size, uint dir GUID_ARG)
+__kernel void kHierBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength, uint stride, uint size, uint dir GUID_ARG)
 {
 //    __local int2 l_key[LOCAL_SIZE_MAX];
     __local int2 l_key[1024];
@@ -470,7 +470,7 @@ __kernel void kBitonicSortCellIdMergeLocal(__global int2* pKey, uint arrayLength
     {
         barrier(CLK_LOCAL_MEM_FENCE);
         uint pos = 2 * get_local_id(0) - (get_local_id(0) & (stride - 1));
-        ComparatorLocal(&l_key[pos + 0], &l_key[pos + stride], ddd);
+        ComparatorLocalHier(&l_key[pos + 0], &l_key[pos + stride], ddd);
     }
 
     barrier(CLK_LOCAL_MEM_FENCE);

@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="AppGpu2dDemo_AMD"
-	ProjectGUID="{6E27F60B-F296-41D5-9D33-3D6C22818195}"
+	Name="AppCDTestDemo_Nv"
+	ProjectGUID="{C0CEB977-14E1-49CA-9BEA-FFE389FBF2D8}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -13,7 +13,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
-			IntermediateDirectory="AppGpu2dDemo_AMD.dir\Debug"
+			IntermediateDirectory="AppCDTestDemo_Nv.dir\Debug"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				BasicRuntimeChecks="3"
 				CompileAs="2"
 				DebugInformationFormat="3"
@@ -35,13 +35,13 @@
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Debug\&quot;"
 				AssemblerListingLocation="Debug"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/Debug/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/Debug/AppCDTestDemo_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Debug\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -60,25 +60,26 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
-				OutputFile="Debug\AppGpu2dDemo_AMD.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\Debug\Hier3dGridBroadphaseOCL_Nv.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
+				OutputFile="Debug\AppCDTestDemo_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/Debug/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/Debug/AppCDTestDemo_Nv.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				ImportLibrary="Debug\AppGpu2dDemo_AMD.lib"/>
+				ImportLibrary="Debug\AppCDTestDemo_Nv.lib"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
-			IntermediateDirectory="AppGpu2dDemo_AMD.dir\Release"
+			IntermediateDirectory="AppCDTestDemo_Nv.dir\Release"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -86,7 +87,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				CompileAs="2"
 				EnableEnhancedInstructionSet="1"
 				ExceptionHandling="1"
@@ -98,13 +99,13 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Release\&quot;"
 				AssemblerListingLocation="Release"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/Release/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/Release/AppCDTestDemo_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Release\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -123,24 +124,25 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
-				OutputFile="Release\AppGpu2dDemo_AMD.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\Release\Hier3dGridBroadphaseOCL_Nv.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
+				OutputFile="Release\AppCDTestDemo_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/Release/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/Release/AppCDTestDemo_Nv.pdb"
 				SubSystem="1"
-				ImportLibrary="Release\AppGpu2dDemo_AMD.lib"/>
+				ImportLibrary="Release\AppCDTestDemo_Nv.lib"/>
 		</Configuration>
 		<Configuration
 			Name="MinSizeRel|Win32"
 			OutputDirectory="MinSizeRel"
-			IntermediateDirectory="AppGpu2dDemo_AMD.dir\MinSizeRel"
+			IntermediateDirectory="AppCDTestDemo_Nv.dir\MinSizeRel"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -148,7 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				CompileAs="2"
 				EnableEnhancedInstructionSet="1"
 				ExceptionHandling="1"
@@ -160,13 +162,13 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
 				AssemblerListingLocation="MinSizeRel"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/MinSizeRel/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/MinSizeRel/AppCDTestDemo_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -185,24 +187,25 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
-				OutputFile="MinSizeRel\AppGpu2dDemo_AMD.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\MinSizeRel\Hier3dGridBroadphaseOCL_Nv.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
+				OutputFile="MinSizeRel\AppCDTestDemo_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/MinSizeRel/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/MinSizeRel/AppCDTestDemo_Nv.pdb"
 				SubSystem="1"
-				ImportLibrary="MinSizeRel\AppGpu2dDemo_AMD.lib"/>
+				ImportLibrary="MinSizeRel\AppCDTestDemo_Nv.lib"/>
 		</Configuration>
 		<Configuration
 			Name="RelWithDebInfo|Win32"
 			OutputDirectory="RelWithDebInfo"
-			IntermediateDirectory="AppGpu2dDemo_AMD.dir\RelWithDebInfo"
+			IntermediateDirectory="AppCDTestDemo_Nv.dir\RelWithDebInfo"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -210,7 +213,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				CompileAs="2"
 				DebugInformationFormat="3"
 				EnableEnhancedInstructionSet="1"
@@ -223,13 +226,13 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
 				AssemblerListingLocation="RelWithDebInfo"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/RelWithDebInfo/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/RelWithDebInfo/AppCDTestDemo_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;&quot;C:\Program Files\ATI Stream\\include&quot;;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;C:\NvidiaGPU\OpenCL\common\inc;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -248,86 +251,39 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_AMD.lib &quot;C:\Program Files\ATI Stream\\lib\x86\OpenCL.lib&quot; "
-				OutputFile="RelWithDebInfo\AppGpu2dDemo_AMD.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\RelWithDebInfo\Hier3dGridBroadphaseOCL_Nv.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
+				OutputFile="RelWithDebInfo\AppCDTestDemo_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/AMD/RelWithDebInfo/AppGpu2dDemo_AMD.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/NVidia/RelWithDebInfo/AppCDTestDemo_Nv.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				ImportLibrary="RelWithDebInfo\AppGpu2dDemo_AMD.lib"/>
+				ImportLibrary="RelWithDebInfo\AppCDTestDemo_Nv.lib"/>
 		</Configuration>
 	</Configurations>
 	<Files>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\Gpu2dDemoOCL.cl">
-			</File>
 		<Filter
 			Name="Source Files"
 			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\BasicDemo.cpp">
+				RelativePath="..\..\..\..\..\Demos\CDTest\CDTestDemo.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpu2dDemoOCLWrap.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dCpuFunc.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btOclUtils.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\main.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\oecakeLoader.cpp">
+				RelativePath="..\..\..\..\..\Demos\CDTest\main.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\BasicDemo.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDefines.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dOCLWrap.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedCode.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedDefs.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedTypes.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btOclUtils.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\oecakeLoader.h">
+				RelativePath="..\..\..\..\..\Demos\CDTest\CDTestDemo.h">
 			</File>
 		</Filter>
 	</Files>

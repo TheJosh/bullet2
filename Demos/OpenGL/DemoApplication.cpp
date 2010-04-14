@@ -381,6 +381,7 @@ void DemoApplication::keyboardCallback(unsigned char key, int x, int y)
 		{
 			int maxSerializeBufferSize = 1024*1024*5;
 			btDefaultSerializer*	serializer = new btDefaultSerializer(maxSerializeBufferSize);
+			//serializer->setSerializationFlags(BT_SERIALIZE_NO_DUPLICATE_ASSERT);
 			m_dynamicsWorld->serialize(serializer);
 			FILE* f2 = fopen("testFile.bullet","wb");
 			fwrite(serializer->getBufferPointer(),serializer->getCurrentBufferSize(),1,f2);
@@ -953,8 +954,8 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		{
 			btVector3 hor = getRayTo(0,0)-getRayTo(1,0);
 			btVector3 vert = getRayTo(0,0)-getRayTo(0,1);
-			btScalar multiplierX = btScalar(0.0001);
-			btScalar multiplierY = btScalar(0.0001);
+			btScalar multiplierX = btScalar(0.01);
+			btScalar multiplierY = btScalar(0.01);
 			if (m_ortho)
 			{
 				multiplierX = 1;
@@ -978,7 +979,7 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		} 
 		else if(m_mouseButtons & 4) 
 		{
-			m_cameraDistance -= dy * btScalar(0.002f);
+			m_cameraDistance -= dy * btScalar(0.2f);
 			if (m_cameraDistance<btScalar(0.1))
 				m_cameraDistance = btScalar(0.1);
 

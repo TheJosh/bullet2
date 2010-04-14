@@ -35,7 +35,7 @@
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Debug\&quot;"
 				AssemblerListingLocation="Debug"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/Debug/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/Debug/AppBasicDemoOpenCL_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -65,12 +65,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\Debug\BatchConstraintSolverOCL_Nv.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
-				OutputFile="..\..\..\..\..\Debug\AppBasicDemoOpenCL_Nv.exe"
+				OutputFile="Debug\AppBasicDemoOpenCL_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/Debug/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/Debug/AppBasicDemoOpenCL_Nv.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				ImportLibrary="Debug\AppBasicDemoOpenCL_Nv.lib"/>
@@ -98,7 +98,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;Release\&quot;"
 				AssemblerListingLocation="Release"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/Release/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/Release/AppBasicDemoOpenCL_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -128,12 +128,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\Release\BatchConstraintSolverOCL_Nv.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
-				OutputFile="..\..\..\..\..\Release\AppBasicDemoOpenCL_Nv.exe"
+				OutputFile="Release\AppBasicDemoOpenCL_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/Release/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/Release/AppBasicDemoOpenCL_Nv.pdb"
 				SubSystem="1"
 				ImportLibrary="Release\AppBasicDemoOpenCL_Nv.lib"/>
 		</Configuration>
@@ -160,7 +160,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
 				AssemblerListingLocation="MinSizeRel"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/MinSizeRel/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/MinSizeRel/AppBasicDemoOpenCL_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -190,12 +190,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\MinSizeRel\BatchConstraintSolverOCL_Nv.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
-				OutputFile="..\..\..\..\..\MinSizeRel\AppBasicDemoOpenCL_Nv.exe"
+				OutputFile="MinSizeRel\AppBasicDemoOpenCL_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/MinSizeRel/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/MinSizeRel/AppBasicDemoOpenCL_Nv.pdb"
 				SubSystem="1"
 				ImportLibrary="MinSizeRel\AppBasicDemoOpenCL_Nv.lib"/>
 		</Configuration>
@@ -223,7 +223,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
 				AssemblerListingLocation="RelWithDebInfo"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/RelWithDebInfo/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/RelWithDebInfo/AppBasicDemoOpenCL_Nv.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -253,12 +253,12 @@
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
 				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Nv.lib ..\..\..\lib\RelWithDebInfo\BatchConstraintSolverOCL_Nv.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib C:\NvidiaGPU\OpenCL\common\lib\Win32\OpenCL.lib "
-				OutputFile="..\..\..\..\..\RelWithDebInfo\AppBasicDemoOpenCL_Nv.exe"
+				OutputFile="RelWithDebInfo\AppBasicDemoOpenCL_Nv.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/RelWithDebInfo/AppBasicDemoOpenCL_Nv.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/BasicDemoOpenCL/NVidia/RelWithDebInfo/AppBasicDemoOpenCL_Nv.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
 				ImportLibrary="RelWithDebInfo\AppBasicDemoOpenCL_Nv.lib"/>

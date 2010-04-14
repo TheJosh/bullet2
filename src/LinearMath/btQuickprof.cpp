@@ -19,6 +19,7 @@
 #ifdef USE_BT_CLOCK
 
 static btClock gProfileClock;
+bool CProfileManager::m_profilerEnabled = true;
 
 inline void Profile_Get_Ticks(unsigned long int * ticks)
 {
@@ -223,6 +224,7 @@ unsigned long int			CProfileManager::ResetTime = 0;
  *=============================================================================================*/
 void	CProfileManager::Start_Profile( const char * name )
 {
+	if(!m_profilerEnabled) return;
 	if (name != CurrentNode->Get_Name()) {
 		CurrentNode = CurrentNode->Get_Sub_Node( name );
 	} 
@@ -238,6 +240,7 @@ void	CProfileManager::Stop_Profile( void )
 {
 	// Return will indicate whether we should back up to our parent (we may
 	// be profiling a recursive function)
+	if(!m_profilerEnabled) return;
 	if (CurrentNode->Return()) {
 		CurrentNode = CurrentNode->Get_Parent();
 	}
@@ -251,6 +254,7 @@ void	CProfileManager::Stop_Profile( void )
  *=============================================================================================*/
 void	CProfileManager::Reset( void )
 { 
+	if(!m_profilerEnabled) return;
 	gProfileClock.reset();
 	Root.Reset();
     Root.Call();
@@ -264,6 +268,7 @@ void	CProfileManager::Reset( void )
  *=============================================================================================*/
 void CProfileManager::Increment_Frame_Counter( void )
 {
+	if(!m_profilerEnabled) return;
 	FrameCounter++;
 }
 

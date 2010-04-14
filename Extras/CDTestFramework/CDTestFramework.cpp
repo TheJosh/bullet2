@@ -326,6 +326,7 @@ int main(int argc, char** argv)
 			{TEST_BULLET_3DGRID_8192, "Bullet 3D Grid 8192"},
 #if defined(CL_PLATFORM_MINI_CL)
 			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (MiniCL) 8192"},
+			{TEST_BULLET_HIER3DGRIDOCL_8192, "Bullet HierOCL(MiniCL) 8192"},
 #elif defined(CL_PLATFORM_AMD)
 			{TEST_BULLET_3DGRIDOCL_8192, "Bullet OpenCL (AMD) 8192"},
 #elif defined(CL_PLATFORM_NVIDIA)

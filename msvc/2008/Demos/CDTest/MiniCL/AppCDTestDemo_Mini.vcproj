@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="AppGpu2dDemo_Mini"
-	ProjectGUID="{250A12A8-C72C-4374-AEA7-C9B6DDE16985}"
+	Name="AppCDTestDemo_Mini"
+	ProjectGUID="{AB673C6E-ED2D-48E6-ABE2-41C0EC535093}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -13,7 +13,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\Debug"
+			IntermediateDirectory="AppCDTestDemo_Mini.dir\Debug"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -35,7 +35,7 @@
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
 				AssemblerListingLocation="Debug"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Debug/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/Debug/AppCDTestDemo_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -60,25 +60,26 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="Debug\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\Debug\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="Debug\AppCDTestDemo_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Debug/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/Debug/AppCDTestDemo_Mini.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				ImportLibrary="Debug\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="Debug\AppCDTestDemo_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\Release"
+			IntermediateDirectory="AppCDTestDemo_Mini.dir\Release"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -98,7 +99,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"
 				AssemblerListingLocation="Release"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Release/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/Release/AppCDTestDemo_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -123,24 +124,25 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="Release\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\Release\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="Release\AppCDTestDemo_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Release/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/Release/AppCDTestDemo_Mini.pdb"
 				SubSystem="1"
-				ImportLibrary="Release\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="Release\AppCDTestDemo_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="MinSizeRel|Win32"
 			OutputDirectory="MinSizeRel"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\MinSizeRel"
+			IntermediateDirectory="AppCDTestDemo_Mini.dir\MinSizeRel"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -160,7 +162,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
 				AssemblerListingLocation="MinSizeRel"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/MinSizeRel/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/MinSizeRel/AppCDTestDemo_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -185,24 +187,25 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="MinSizeRel\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\MinSizeRel\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="MinSizeRel\AppCDTestDemo_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/MinSizeRel/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/MinSizeRel/AppCDTestDemo_Mini.pdb"
 				SubSystem="1"
-				ImportLibrary="MinSizeRel\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="MinSizeRel\AppCDTestDemo_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="RelWithDebInfo|Win32"
 			OutputDirectory="RelWithDebInfo"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\RelWithDebInfo"
+			IntermediateDirectory="AppCDTestDemo_Mini.dir\RelWithDebInfo"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -223,7 +226,7 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
 				AssemblerListingLocation="RelWithDebInfo"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/RelWithDebInfo/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/RelWithDebInfo/AppCDTestDemo_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
@@ -248,86 +251,39 @@
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCPostBuildEventTool"
+CommandLine="&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLUT32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL&#x0D;&#x0A;&quot;C:\Program Files\CMake 2.6\bin\cmake.exe&quot; -E copy_if_different C:/Bullet/OpenCLBranch/GLEW32.DLL C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL"/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="RelWithDebInfo\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\..\..\Glut\glew32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\RelWithDebInfo\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="RelWithDebInfo\AppCDTestDemo_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/RelWithDebInfo/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/CDTest/MiniCL/RelWithDebInfo/AppCDTestDemo_Mini.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				ImportLibrary="RelWithDebInfo\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="RelWithDebInfo\AppCDTestDemo_Mini.lib"/>
 		</Configuration>
 	</Configurations>
 	<Files>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\Gpu2dDemoOCL.cl">
-			</File>
 		<Filter
 			Name="Source Files"
 			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\BasicDemo.cpp">
+				RelativePath="..\..\..\..\..\Demos\CDTest\CDTestDemo.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpu2dDemoOCLWrap.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dCpuFunc.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btOclUtils.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\main.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\oecakeLoader.cpp">
+				RelativePath="..\..\..\..\..\Demos\CDTest\main.cpp">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\BasicDemo.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDefines.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dOCLWrap.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedCode.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedDefs.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedTypes.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btOclUtils.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\oecakeLoader.h">
+				RelativePath="..\..\..\..\..\Demos\CDTest\CDTestDemo.h">
 			</File>
 		</Filter>
 	</Files>

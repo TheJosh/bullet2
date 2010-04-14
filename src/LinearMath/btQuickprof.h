@@ -306,9 +306,12 @@ protected:
 
 ///The Manager for the Profile system
 class	CProfileManager {
+private:
+	static bool m_profilerEnabled;
 public:
 	static	void						Start_Profile( const char * name );
 	static	void						Stop_Profile( void );
+	static void EnableProfiler(bool profilerEnabled) { m_profilerEnabled = profilerEnabled; }
 
 	static	void						CleanupMemory(void)
 	{

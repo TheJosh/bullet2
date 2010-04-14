@@ -2,8 +2,8 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="AppGpu2dDemo_Mini"
-	ProjectGUID="{250A12A8-C72C-4374-AEA7-C9B6DDE16985}"
+	Name="AppBenchmarks_Mini"
+	ProjectGUID="{AB9B8579-BA41-4196-ACAB-3CF34B273E07}"
 	Keyword="Win32Proj">
 	<Platforms>
 		<Platform
@@ -13,7 +13,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="Debug"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\Debug"
+			IntermediateDirectory="AppBenchmarks_Mini.dir\Debug"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -21,7 +21,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				BasicRuntimeChecks="3"
 				CompileAs="2"
 				DebugInformationFormat="3"
@@ -35,13 +35,13 @@
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"
 				AssemblerListingLocation="Debug"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Debug/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/Debug/AppBenchmarks_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				PreprocessorDefinitions="WIN32,_DEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Debug\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -64,21 +64,21 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="Debug\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Debug\OpenGLSupport.lib ..\..\..\lib\Debug\BulletMultiThreaded.lib ..\..\..\lib\Debug\BulletDynamics.lib ..\..\..\lib\Debug\BulletCollision.lib ..\..\..\lib\Debug\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Debug\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\Debug\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="Debug\AppBenchmarks_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Debug/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/Debug/AppBenchmarks_Mini.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				ImportLibrary="Debug\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="Debug\AppBenchmarks_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="Release"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\Release"
+			IntermediateDirectory="AppBenchmarks_Mini.dir\Release"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -86,7 +86,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				CompileAs="2"
 				EnableEnhancedInstructionSet="1"
 				ExceptionHandling="1"
@@ -98,13 +98,13 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"
 				AssemblerListingLocation="Release"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Release/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/Release/AppBenchmarks_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;Release\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -127,20 +127,20 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="Release\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\Release\OpenGLSupport.lib ..\..\..\lib\Release\BulletMultiThreaded.lib ..\..\..\lib\Release\BulletDynamics.lib ..\..\..\lib\Release\BulletCollision.lib ..\..\..\lib\Release\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\Release\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\Release\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="Release\AppBenchmarks_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/Release/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/Release/AppBenchmarks_Mini.pdb"
 				SubSystem="1"
-				ImportLibrary="Release\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="Release\AppBenchmarks_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="MinSizeRel|Win32"
 			OutputDirectory="MinSizeRel"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\MinSizeRel"
+			IntermediateDirectory="AppBenchmarks_Mini.dir\MinSizeRel"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -148,7 +148,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				CompileAs="2"
 				EnableEnhancedInstructionSet="1"
 				ExceptionHandling="1"
@@ -160,13 +160,13 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"
 				AssemblerListingLocation="MinSizeRel"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/MinSizeRel/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/MinSizeRel/AppBenchmarks_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;MinSizeRel\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -189,20 +189,20 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="MinSizeRel\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\MinSizeRel\OpenGLSupport.lib ..\..\..\lib\MinSizeRel\BulletMultiThreaded.lib ..\..\..\lib\MinSizeRel\BulletDynamics.lib ..\..\..\lib\MinSizeRel\BulletCollision.lib ..\..\..\lib\MinSizeRel\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\MinSizeRel\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\MinSizeRel\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="MinSizeRel\AppBenchmarks_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/MinSizeRel/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/MinSizeRel/AppBenchmarks_Mini.pdb"
 				SubSystem="1"
-				ImportLibrary="MinSizeRel\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="MinSizeRel\AppBenchmarks_Mini.lib"/>
 		</Configuration>
 		<Configuration
 			Name="RelWithDebInfo|Win32"
 			OutputDirectory="RelWithDebInfo"
-			IntermediateDirectory="AppGpu2dDemo_Mini.dir\RelWithDebInfo"
+			IntermediateDirectory="AppBenchmarks_Mini.dir\RelWithDebInfo"
 			ConfigurationType="1"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
@@ -210,7 +210,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions=" /Zm1000 /fp:fast"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				CompileAs="2"
 				DebugInformationFormat="3"
 				EnableEnhancedInstructionSet="1"
@@ -223,13 +223,13 @@
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"
 				AssemblerListingLocation="RelWithDebInfo"
 				ObjectFile="$(IntDir)\"
-				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/RelWithDebInfo/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFileName="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/RelWithDebInfo/AppBenchmarks_Mini.pdb"
 />
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCResourceCompilerTool"
-				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Extras\OpenCL\Shared;..\..\..\..\..\Demos\OpenGL;"
+				AdditionalIncludeDirectories="..\..\..\..\..\Glut;..\..\..\..\..\src;..\..\..\..\..\Demos\OpenGL;"
 				PreprocessorDefinitions="WIN32,NDEBUG,USE_GRAPHICAL_BENCHMARK,_IRR_STATIC_LIB_,_CRT_SECURE_NO_WARNINGS,_CRT_SECURE_NO_DEPRECATE,_SCL_SECURE_NO_WARNINGS,USE_MINICL,CMAKE_INTDIR=\&quot;RelWithDebInfo\&quot;"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -252,82 +252,37 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions=" /STACK:10000000 /machine:I386 /debug"
-				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Mini.lib "
-				OutputFile="RelWithDebInfo\AppGpu2dDemo_Mini.exe"
+				AdditionalDependencies="$(NOINHERIT) kernel32.lib user32.lib gdi32.lib winspool.lib shell32.lib ole32.lib oleaut32.lib uuid.lib comdlg32.lib advapi32.lib  ..\..\..\lib\RelWithDebInfo\OpenGLSupport.lib ..\..\..\lib\RelWithDebInfo\BulletMultiThreaded.lib ..\..\..\lib\RelWithDebInfo\BulletDynamics.lib ..\..\..\lib\RelWithDebInfo\BulletCollision.lib ..\..\..\lib\RelWithDebInfo\LinearMath.lib ..\..\..\..\..\Glut\glut32.lib opengl32.lib glu32.lib ..\..\..\lib\RelWithDebInfo\3dGridBroadphaseOCL_Mini.lib ..\..\..\lib\RelWithDebInfo\Hier3dGridBroadphaseOCL_Mini.lib "
+				OutputFile="RelWithDebInfo\AppBenchmarks_Mini.exe"
 				Version="0.0"
 				GenerateManifest="TRUE"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
-				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Gpu2dDemo/MiniCL/RelWithDebInfo/AppGpu2dDemo_Mini.pdb"
+				ProgramDataBaseFile="C:/Bullet/OpenCLBranch/msvc/2008/Demos/Benchmarks/MiniCL/RelWithDebInfo/AppBenchmarks_Mini.pdb"
 				GenerateDebugInformation="TRUE"
 				SubSystem="1"
-				ImportLibrary="RelWithDebInfo\AppGpu2dDemo_Mini.lib"/>
+				ImportLibrary="RelWithDebInfo\AppBenchmarks_Mini.lib"/>
 		</Configuration>
 	</Configurations>
 	<Files>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\Gpu2dDemoOCL.cl">
-			</File>
 		<Filter
 			Name="Source Files"
 			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\BasicDemo.cpp">
+				RelativePath="..\..\..\..\..\Demos\Benchmarks\main.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpu2dDemoOCLWrap.cpp">
+				RelativePath="..\..\..\..\..\Demos\Benchmarks\BenchmarkDemo.cpp">
 			</File>
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dCpuFunc.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btOclUtils.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\main.cpp">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\oecakeLoader.cpp">
+				RelativePath="..\..\..\..\bullet.rc">
 			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="">
 			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\BasicDemo.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDefines.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dOCLWrap.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedCode.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedDefs.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemo2dSharedTypes.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoDynamicsWorld.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btGpuDemoPairCache.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\btOclUtils.h">
-			</File>
-			<File
-				RelativePath="..\..\..\..\..\Demos\Gpu2dDemo\oecakeLoader.h">
+				RelativePath="..\..\..\..\..\Demos\Benchmarks\BenchmarkDemo.h">
 			</File>
 		</Filter>
 	</Files>
