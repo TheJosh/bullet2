@@ -264,6 +264,9 @@ GL_SliderControl* GL_DialogDynamicsWorld::createSlider(GL_DialogWindow* dialog, 
 	btScalar lowerLimit = 141.f;
 	btScalar upperLimit = 227.f;
 
+	btScalar actualLimit = lowerLimit+initialFraction*(upperLimit-lowerLimit);
+
+
 #if 0 
 	bool useFrameA = false;
 
@@ -272,15 +275,19 @@ GL_SliderControl* GL_DialogDynamicsWorld::createSlider(GL_DialogWindow* dialog, 
 	constraint->setLimit(0,lowerLimit,upperLimit);
 #else
 	btSliderConstraint* sliderConstraint = new btSliderConstraint(*dialogBody,*body,frameInA,frameInB,true);//useFrameA);
-	sliderConstraint->setLowerLinLimit(lowerLimit);
-	sliderConstraint->setUpperLinLimit(upperLimit);
+	sliderConstraint->setLowerLinLimit(actualLimit);
+	sliderConstraint->setUpperLinLimit(actualLimit);
 	m_dynamicsWorld->addConstraint(sliderConstraint,true);
 
 #endif
 
+	
 	GL_SliderControl* slider = new GL_SliderControl(sliderText, body,dialog,lowerLimit,upperLimit, sliderConstraint);
 	body->setUserPointer(slider);
 	dialog->addControl(slider);
+
+	slider->m_fraction = initialFraction;
+
 	return slider;
 }
 

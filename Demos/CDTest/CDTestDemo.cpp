@@ -325,7 +325,8 @@ void CDTestDemo::mouseFunc(int button, int state, int x, int y)
 
 void	CDTestDemo::mouseMotionFunc(int x,int y)
 {
-	m_dialogDynamicsWorld->mouseMotionFunc(x,y);
+	if (m_dialogDynamicsWorld)
+		m_dialogDynamicsWorld->mouseMotionFunc(x,y);
 	DemoApplication::mouseMotionFunc(x,y);
 }
 
@@ -360,9 +361,9 @@ if(bFirstCall)
 	m_testSelector[m_selectedTestIndex]->m_active = true;
 	m_selectedTestIndex = -1;
 
-	m_amplitudeSlider = m_dialogDynamicsWorld->createSlider(settings, "Amplitude");
-	m_objSpeedSlider = m_dialogDynamicsWorld->createSlider(settings, "Speed");
-	m_pctUpdateSlider = m_dialogDynamicsWorld->createSlider(settings, "Update pct");
+	m_amplitudeSlider = m_dialogDynamicsWorld->createSlider(settings, "Amplitude",1.0);
+	m_objSpeedSlider = m_dialogDynamicsWorld->createSlider(settings, "Speed",0.1);
+	m_pctUpdateSlider = m_dialogDynamicsWorld->createSlider(settings, "Update pct",0.1);
 
 	m_renderEnabledToggle = m_dialogDynamicsWorld->createToggle(settings,"Rendering");
 	m_renderEnabledToggle->m_active = true;
@@ -386,17 +387,22 @@ void CDTest::initBoxes(int numBoxes)
 	m_boxCenter.resize(m_numBoxes);
 	m_boxExtents.resize(m_numBoxes);
 
-//	m_amplitude = 100.f;
-//	m_objectSpeed = 0.01f;
-//	m_percentUpdate = 100;
+	m_amplitude = 100.f;
+	m_objectSpeed = 0.01f;
+	m_percentUpdate = 100;
 
 	for(int i = 0; i < m_numBoxes; i++)
 	{
 		btVector3 center, extents;
 
-		center[0] = (frand()-0.5f) * 100.0f;
-		center[1] = (frand()-0.5f) * 10.0f;
-		center[2] = (frand()-0.5f) * 100.0f;
+		//center[0] = (frand()-0.5f) * 100.0f;
+		//center[1] = (frand()-0.5f) * 100.0f;
+		//center[2] = (frand()-0.5f) * 100.0f;
+
+		center[0] = (frand()-0.5f) * 2*m_amplitude;
+		center[1] = (frand()-0.5f) * 2*m_amplitude;
+		center[2] = (frand()-0.5f) * 2*m_amplitude;
+
 		extents[0] = 2.0f + frand() * 2.0f;
 		extents[1] = 2.0f + frand() * 2.0f;
 		extents[2] = 2.0f + frand() * 2.0f;
