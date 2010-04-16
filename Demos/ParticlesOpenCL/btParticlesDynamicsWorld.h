@@ -17,20 +17,20 @@ subject to the following restrictions:
 #ifndef BT_PARTICLES_DYNAMICS_WORLD_H
 #define BT_PARTICLES_DYNAMICS_WORLD_H
 
-#ifdef __APPLE__
-#include <OpenCL/cl.h>
-#else
-// standard utility and system includes
+
 #ifdef USE_MINICL
 #include <MiniCL/cl.h>
-// Extra CL/GL include
 #include <MiniCL/cl_gl.h>
 #else
-#include <CL/cl.h>
-// Extra CL/GL include
-#include <CL/cl_gl.h>
+#ifdef __APPLE__
+	#include <OpenCL/cl.h>
+#else
+	#include <CL/cl.h>
+	#include <CL/cl_gl.h>
+#endif __APPLE__
 #endif
-#endif
+
+
 
 
 
