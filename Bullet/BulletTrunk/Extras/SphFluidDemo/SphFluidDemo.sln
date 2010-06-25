@@ -1,0 +1,66 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphFluidDemoDirectCompute", "SphFluidDemoDirectCompute\SphFluidDemoDirectCompute.vcproj", "{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphFluidDemoDirectComputeDX", "SphFluidDemoDirectComputeDX\SphFluidDemoDirectComputeDX.vcproj", "{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphFluidDemoOpenCL", "SphFluidDemoOpenCL\SphFluidDemoOpenCL.vcproj", "{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphFluidDemoOpenCLDX", "SphFluidDemoOpenCLDX\SphFluidDemoOpenCLDX.vcproj", "{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_DirectCompute|Win32 = Debug_DirectCompute|Win32
+		Debug_OpenCL|Win32 = Debug_OpenCL|Win32
+		Debug|Win32 = Debug|Win32
+		Release_DirectCompute|Win32 = Release_DirectCompute|Win32
+		Release_OpenCL|Win32 = Release_OpenCL|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Debug_DirectCompute|Win32.ActiveCfg = Debug_DirectCompute|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Debug_DirectCompute|Win32.Build.0 = Debug_DirectCompute|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Debug_OpenCL|Win32.ActiveCfg = Debug_OpenCL|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Debug|Win32.Build.0 = Debug|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Release_DirectCompute|Win32.ActiveCfg = Release_DirectCompute|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Release_DirectCompute|Win32.Build.0 = Release_DirectCompute|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Release_OpenCL|Win32.ActiveCfg = Release_OpenCL|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Release|Win32.ActiveCfg = Release|Win32
+		{1EFA2701-EDBD-4376-A5EF-AF5DC4CB2E2B}.Release|Win32.Build.0 = Release|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Debug_DirectCompute|Win32.ActiveCfg = Debug_DirectCompute|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Debug_DirectCompute|Win32.Build.0 = Debug_DirectCompute|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Debug_OpenCL|Win32.ActiveCfg = Debug_OpenCL|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Debug|Win32.ActiveCfg = Debug|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Debug|Win32.Build.0 = Debug|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Release_DirectCompute|Win32.ActiveCfg = Release_DirectCompute|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Release_DirectCompute|Win32.Build.0 = Release_DirectCompute|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Release_OpenCL|Win32.ActiveCfg = Release_OpenCL|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Release|Win32.ActiveCfg = Release|Win32
+		{34C6AAA2-6391-4BBE-A94A-8A6100B7D782}.Release|Win32.Build.0 = Release|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Debug_DirectCompute|Win32.ActiveCfg = Debug_DirectCompute|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Debug_OpenCL|Win32.ActiveCfg = Debug_OpenCL|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Debug_OpenCL|Win32.Build.0 = Debug_OpenCL|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Debug|Win32.Build.0 = Debug|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Release_DirectCompute|Win32.ActiveCfg = Release_DirectCompute|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Release_OpenCL|Win32.ActiveCfg = Release_OpenCL|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Release_OpenCL|Win32.Build.0 = Release_OpenCL|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Release|Win32.ActiveCfg = Release|Win32
+		{B2D58FA5-6340-4C26-8247-6A1216A3BAA4}.Release|Win32.Build.0 = Release|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Debug_DirectCompute|Win32.ActiveCfg = Debug_DirectCompute|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Debug_OpenCL|Win32.ActiveCfg = Debug_OpenCL|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Debug_OpenCL|Win32.Build.0 = Debug_OpenCL|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Debug|Win32.Build.0 = Debug|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Release_DirectCompute|Win32.ActiveCfg = Release_DirectCompute|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Release_OpenCL|Win32.ActiveCfg = Release_OpenCL|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Release_OpenCL|Win32.Build.0 = Release_OpenCL|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Release|Win32.ActiveCfg = Release|Win32
+		{F569EC7E-C9F9-4FB8-85D0-A77E40AAAB71}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
