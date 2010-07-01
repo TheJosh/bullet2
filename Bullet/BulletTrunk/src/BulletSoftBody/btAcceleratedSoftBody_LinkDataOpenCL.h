@@ -15,17 +15,12 @@ subject to the following restrictions:
 
 #include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
 
-#ifdef BULLET_USE_DX11
-
 #include "BulletSoftBody/btAcceleratedSoftBodyData.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_OpenCLBuffer.h"
 
 
 #ifndef BT_ACCELERATED_SOFT_BODY_LINK_DATA_OPENCL_H
 #define BT_ACCELERATED_SOFT_BODY_LINK_DATA_OPENCL_H
-
-struct ID3D11Device;
-struct ID3D11DeviceContext;
 
 
 class btSoftBodyLinkDataOpenCL : public btSoftBodyLinkData
@@ -84,6 +79,3 @@ public:
 
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_LINK_DATA_OPENCL_H
-
-
-#endif // #ifdef BULLET_USE_DX11

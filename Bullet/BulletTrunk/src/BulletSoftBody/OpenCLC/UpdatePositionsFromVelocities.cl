@@ -1,3 +1,5 @@
+MSTRINGIFY(
+
 //#define float3 float4
 
 __kernel void 
@@ -20,3 +22,5 @@ UpdatePositionsFromVelocitiesKernel(
 		g_vertexPreviousPositions[vertexID] = (float4)(newPosition, 0.f);
 	}
 }
+
+);

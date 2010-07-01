@@ -648,11 +648,10 @@ public:
 
 
 	/** 
-	 * Solver object that will be used to accelerate soft body solving. 
+	 * Accelerated version of the soft body, lives and solved within a solver class.
 	 * When NULL the btSoftBody class will be used. When non-null that solver
 	 * will be used to perform simulation.
 	 */
-	btSoftBodySolver *m_acceleratedSolver;
 	btAcceleratedSoftBodyInterface *m_acceleratedSoftBody;
 
 
@@ -861,16 +860,6 @@ public:
 	 * data structures in this class.
 	 */
 	void moveFromSolver();
-
-	/**
-	 * Add a collision object.
-	 * This allows us to specify a limited list of collision objects that
-	 * an accelerated soft body can collide with.
-	 * While not running in an accelerated solver any collision object will
-	 * work. While in an accelerated solver we restrict the options to reduce
-	 * the data structure set we have to construct on the accelerator.
-	 */
-	void addCollisionObject( btCollisionObject* collisionObject );
 
 	/** 
 	 * Optimize allows arbitrary CPU-intensive activies to be performed to 

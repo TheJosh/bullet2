@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer SolvePositionsFromLinksKernelCB : register( b0 )
 {
@@ -50,3 +51,5 @@ SolvePositionsFromLinksKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchT
 		}
 	}
 }
+
+);

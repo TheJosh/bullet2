@@ -21,29 +21,25 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
-#include <utility>
-#include <iostream>
-
 class btSoftBodyTriangleData;
 class btSoftBodyLinkData;
 class btSoftBodyVertexData;
 class btVertexBufferDescriptor;
 class btAcceleratedSoftBodyInterface;
+class btCollisionObject;
 
 
 class btSoftBodySolver
 {
 
 protected:
-	int m_numberOfVelocityIterations;
 	int m_numberOfPositionIterations;
 	// Simulation timescale
 	float m_timeScale;
 
 public:
 	btSoftBodySolver() :
-	  	m_numberOfVelocityIterations( 0 ),
-		m_numberOfPositionIterations( 5 ),
+		m_numberOfPositionIterations( 10 ),
 		m_timeScale( 1 )
 
 	{
@@ -121,18 +117,6 @@ public:
 	virtual void solveConstraints( float solverdt ) = 0;
 
 	/** Set the number of velocity constraint solver iterations this solver uses. */
-	virtual void setNumberOfVelocityIterations( int iterations )
-	{
-		m_numberOfVelocityIterations = iterations;
-	}
-
-	/** Get the number of velocity constraint solver iterations this solver uses. */
-	virtual int getNumberOfVelocityIterations()
-	{
-		return m_numberOfVelocityIterations;
-	}
-
-	/** Set the number of velocity constraint solver iterations this solver uses. */
 	virtual void setNumberOfPositionIterations( int iterations )
 	{
 		m_numberOfPositionIterations = iterations;
@@ -152,6 +136,11 @@ public:
 
 	/** Return the softbody object represented by softBodyIndex */
 	virtual btAcceleratedSoftBodyInterface *getSoftBody( int softBodyIndex ) = 0;
+
+	/**
+	 * Add a collision object to be used by the indicated softbody.
+	 */
+	virtual void addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject ) = 0;
 };
 
 
@@ -355,6 +344,14 @@ public:
 	btVertexBufferDescriptor *getVertexBufferTarget()
 	{
 		return m_vertexBuffer;
+	}
+
+	/**
+	 * Add a collision object to this soft body.
+	 */
+	void addCollisionObject( btCollisionObject *collisionObject )
+	{
+		m_currentSolver->addCollisionObjectForSoftBody( m_clothIdentifier, collisionObject );
 	}
 };
 

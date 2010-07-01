@@ -25,21 +25,30 @@ subject to the following restrictions:
 #include "BulletSoftBody/btAcceleratedSoftBody_DX11Solver.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_DXVertexBuffers.h"
 
-#include <utility>
-
 
 // Generated HLSL includes
-#include "VSolveLinksHLSL.h"
-#include "PrepareLinksHLSL.h"
-#include "UpdatePositionsFromVelocitiesHLSL.h"
-#include "SolvePositionsHLSL.h"
-#include "UpdateNodesHLSL.h"
-#include "UpdatePositionsHLSL.h"
-#include "UpdateConstantsHLSL.h"
-#include "IntegrateHLSL.h"
-#include "ApplyForcesHLSL.h"
-#include "UpdateNormalsHLSL.h"
-#include "OutputToVertexArrayHLSL.h"
+
+#define MSTRINGIFY(A) #A
+static char* PrepareLinksHLSLString = 
+#include "HLSL/PrepareLinks.hlsl"
+static char* UpdatePositionsFromVelocitiesHLSLString = 
+#include "HLSL/UpdatePositionsFromVelocities.hlsl"
+static char* SolvePositionsHLSLString = 
+#include "HLSL/SolvePositions.hlsl"
+static char* UpdateNodesHLSLString = 
+#include "HLSL/UpdateNodes.hlsl"
+static char* UpdatePositionsHLSLString = 
+#include "HLSL/UpdatePositions.hlsl"
+static char* UpdateConstantsHLSLString = 
+#include "HLSL/UpdateConstants.hlsl"
+static char* IntegrateHLSLString = 
+#include "HLSL/Integrate.hlsl"
+static char* ApplyForcesHLSLString = 
+#include "HLSL/ApplyForces.hlsl"
+static char* UpdateNormalsHLSLString = 
+#include "HLSL/UpdateNormals.hlsl"
+static char* OutputToVertexArrayHLSLString = 
+#include "HLSL/OutputToVertexArray.hlsl"
 
 
 btSoftBodyLinkDataDX11::btSoftBodyLinkDataDX11( ID3D11Device *d3dDevice, ID3D11DeviceContext *d3dDeviceContext ) : 
@@ -188,14 +197,17 @@ void btSoftBodyLinkDataDX11::generateBatches()
 	}
 
 	m_batchStartLengths.resize(batchCounts.size());
-	m_batchStartLengths[0] = std::pair< int, int >( 0, 0 );
-
-	int sum = 0;
-	for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
+	if( m_batchStartLengths.size() > 0 )
 	{
-		m_batchStartLengths[batchIndex].first = sum;
-		m_batchStartLengths[batchIndex].second = batchCounts[batchIndex];
-		sum += batchCounts[batchIndex];
+		m_batchStartLengths[0] = BatchPair( 0, 0 );
+
+		int sum = 0;
+		for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
+		{
+			m_batchStartLengths[batchIndex].start = sum;
+			m_batchStartLengths[batchIndex].length = batchCounts[batchIndex];
+			sum += batchCounts[batchIndex];
+		}
 	}
 
 	/////////////////////////////
@@ -228,7 +240,7 @@ void btSoftBodyLinkDataDX11::generateBatches()
 		// next element in that batch, incrementing the batch counter
 		// afterwards
 		int batch = batchValues[linkIndex];
-		int newLocation = m_batchStartLengths[batch].first + batchCounts[batch];
+		int newLocation = m_batchStartLengths[batch].start + batchCounts[batch];
 
 		batchCounts[batch] = batchCounts[batch] + 1;
 		m_links[newLocation] = m_links_Backup[linkLocation];
@@ -471,14 +483,14 @@ void btSoftBodyTriangleDataDX11::generateBatches()
 
 
 	m_batchStartLengths.resize(batchCounts.size());
-	m_batchStartLengths[0] = std::pair< int, int >( 0, 0 );
+	m_batchStartLengths[0] = BatchPair( 0, 0 );
 
 
 	int sum = 0;
 	for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
 	{
-		m_batchStartLengths[batchIndex].first = sum;
-		m_batchStartLengths[batchIndex].second = batchCounts[batchIndex];
+		m_batchStartLengths[batchIndex].start = sum;
+		m_batchStartLengths[batchIndex].length = batchCounts[batchIndex];
 		sum += batchCounts[batchIndex];
 	}
 	
@@ -507,7 +519,7 @@ void btSoftBodyTriangleDataDX11::generateBatches()
 		// next element in that batch, incrementing the batch counter
 		// afterwards
 		int batch = batchValues[triangleIndex];
-		int newLocation = m_batchStartLengths[batch].first + batchCounts[batch];
+		int newLocation = m_batchStartLengths[batch].start + batchCounts[batch];
 
 		batchCounts[batch] = batchCounts[batch] + 1;
 		m_vertexIndices[newLocation] = m_vertexIndices_Backup[triangleLocation];
@@ -568,8 +580,6 @@ btDX11SoftBodySolver::~btDX11SoftBodySolver()
 	SAFE_RELEASE( updateVelocitiesFromPositionsWithoutVelocitiesKernel.kernel );
 	SAFE_RELEASE( updateVelocitiesFromPositionsWithVelocitiesKernel.constBuffer );
 	SAFE_RELEASE( updateVelocitiesFromPositionsWithVelocitiesKernel.kernel );
-	SAFE_RELEASE( vSolveLinksKernel.constBuffer );
-	SAFE_RELEASE( vSolveLinksKernel.kernel );
 	SAFE_RELEASE( resetNormalsAndAreasKernel.constBuffer );
 	SAFE_RELEASE( resetNormalsAndAreasKernel.kernel );
 	SAFE_RELEASE( normalizeNormalsAndAreasKernel.constBuffer );
@@ -631,8 +641,7 @@ int btDX11SoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
 
 void btDX11SoftBodySolver::removeCloth( btAcceleratedSoftBodyInterface *cloth )
 {
-	std::cerr << "You can't remove cloths yet.\n";
-	exit(1);
+	btAssert("Cannot remove cloths yet.");
 }
 
 btSoftBodyLinkData &btDX11SoftBodySolver::getLinkData()
@@ -854,8 +863,8 @@ void btDX11SoftBodySolver::updateSoftBodies()
 	for( int batchIndex = 0; batchIndex < m_triangleData.m_batchStartLengths.size(); ++batchIndex )
 	{
 
-		int startTriangle = m_triangleData.m_batchStartLengths[batchIndex].first;
-		int numTriangles = m_triangleData.m_batchStartLengths[batchIndex].second;
+		int startTriangle = m_triangleData.m_batchStartLengths[batchIndex].start;
+		int numTriangles = m_triangleData.m_batchStartLengths[batchIndex].length;
 
 		executeUpdateSoftBodies( startTriangle, numTriangles );
 	}
@@ -1113,66 +1122,20 @@ void btDX11SoftBodySolver::solveConstraints( float solverdt )
 	prepareLinks();	
 
 
-
-	// Prepare anchors
-	/*for(i=0,ni=m_anchors.size();i<ni;++i)
-	{
-		Anchor&			a=m_anchors[i];
-		const btVector3	ra=a.m_body->getWorldTransform().getBasis()*a.m_local;
-		a.m_c0	=	ImpulseMatrix(	m_sst.sdt,
-			a.m_node->m_im,
-			a.m_body->getInvMass(),
-			a.m_body->getInvInertiaTensorWorld(),
-			ra);
-		a.m_c1	=	ra;
-		a.m_c2	=	m_sst.sdt*a.m_node->m_im;
-		a.m_body->activate();
-	}*/
-
-	// Really want to combine these into a single loop, don't we? No update in the middle?
-
-	// TODO: Double check what kst is meant to mean - passed in as 1 in the bullet code
-		
-	for( int iteration = 0; iteration < m_numberOfVelocityIterations ; ++iteration )
-	{
-		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
-		{
-			int startLink = m_linkData.m_batchStartLengths[i].first;
-			int numLinks = m_linkData.m_batchStartLengths[i].second;
-
-			solveLinksForVelocity( startLink, numLinks, kst );
-		}
-	}
-
-	// Compute new positions from velocity
-	// Also update the previous position so that our position computation is now based on the new position from the velocity solution
-	// rather than based directly on the original positions
-	if( m_numberOfVelocityIterations > 0 )
-	{
-		updatePositionsFromVelocities( solverdt );				
-
-	}
-
 	// Solve drift
 	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 	{
 		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
 		{
-			int startLink = m_linkData.m_batchStartLengths[i].first;
-			int numLinks = m_linkData.m_batchStartLengths[i].second;
+			int startLink = m_linkData.m_batchStartLengths[i].start;
+			int numLinks = m_linkData.m_batchStartLengths[i].length;
 
 			solveLinksForPosition( startLink, numLinks, kst, ti );
 		}
 		
 	} // for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 
-
-	if( m_numberOfVelocityIterations > 0 )
-	{
-		updateVelocitiesFromPositionsWithVelocities( 1.f/solverdt );
-	} else {
-		updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
-	}
+	updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
 } // btDX11SoftBodySolver::solveConstraints
 
 
@@ -1224,53 +1187,6 @@ void btDX11SoftBodySolver::prepareLinks()
 	}
 } // btDX11SoftBodySolver::prepareLinks
 
-void btDX11SoftBodySolver::solveLinksForVelocity( int startLink, int numLinks, float kst )
-{
-	// Copy kernel parameters to GPU
-	VSolveLinksCB constBuffer;
-
-	// Set the first link of the batch
-	// and the batch size
-
-	constBuffer.startLink = startLink;
-	constBuffer.numLinks = numLinks;
-	constBuffer.kst = kst;
-	
-	D3D11_MAPPED_SUBRESOURCE MappedResource = {0};
-	m_dx11Context->Map( vSolveLinksKernel.constBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource );
-	memcpy( MappedResource.pData, &constBuffer, sizeof(VSolveLinksCB) );	
-	m_dx11Context->Unmap( vSolveLinksKernel.constBuffer, 0 );
-	m_dx11Context->CSSetConstantBuffers( 0, 1, &vSolveLinksKernel.constBuffer );
-
-	// Set resources and dispatch
-	m_dx11Context->CSSetShaderResources( 0, 1, &(m_linkData.m_dx11Links.getSRV()) );
-	m_dx11Context->CSSetShaderResources( 1, 1, &(m_linkData.m_dx11LinksLengthRatio.getSRV()) );
-	m_dx11Context->CSSetShaderResources( 2, 1, &(m_linkData.m_dx11LinksCLength.getSRV()) );
-	m_dx11Context->CSSetShaderResources( 3, 1, &(m_vertexData.m_dx11VertexInverseMass.getSRV()) );
-
-	m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &(m_vertexData.m_dx11VertexVelocity.getUAV()), NULL );
-
-	// Execute the kernel
-	m_dx11Context->CSSetShader( vSolveLinksKernel.kernel, NULL, 0 );
-
-	int	numBlocks = (constBuffer.numLinks + (128-1)) / 128;
-	m_dx11Context->Dispatch(numBlocks , 1, 1 );
-
-	{
-		// Tidy up 
-		ID3D11ShaderResourceView* pViewNULL = NULL;
-		m_dx11Context->CSSetShaderResources( 0, 1, &pViewNULL );
-		m_dx11Context->CSSetShaderResources( 1, 1, &pViewNULL );
-		m_dx11Context->CSSetShaderResources( 2, 1, &pViewNULL );
-		m_dx11Context->CSSetShaderResources( 3, 1, &pViewNULL );
-
-		ID3D11UnorderedAccessView* pUAViewNULL = NULL;
-		m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &pUAViewNULL, NULL );
-
-		ID3D11Buffer *pBufferNull = NULL;
-		m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
-	}	
-} // btDX11SoftBodySolver::solveLinksForVelocity
 
 void btDX11SoftBodySolver::updatePositionsFromVelocities( float solverdt )
 {
@@ -1708,9 +1624,6 @@ bool btDX11SoftBodySolver::buildShaders()
 	prepareLinksKernel = compileComputeShaderFromString( PrepareLinksHLSLString, "PrepareLinksKernel", sizeof(PrepareLinksCB) );
 	if( !prepareLinksKernel.constBuffer )
 		returnVal = false;
-	vSolveLinksKernel = compileComputeShaderFromString( VSolveLinksHLSLString, "VSolveLinksKernel", sizeof(VSolveLinksCB) );
-	if( !vSolveLinksKernel.constBuffer )
-		returnVal = false;
 	updatePositionsFromVelocitiesKernel = compileComputeShaderFromString( UpdatePositionsFromVelocitiesHLSLString, "UpdatePositionsFromVelocitiesKernel", sizeof(UpdatePositionsFromVelocitiesCB) );
 	if( !updatePositionsFromVelocitiesKernel.constBuffer )
 		returnVal = false;
@@ -1762,6 +1675,11 @@ bool btDX11SoftBodySolver::buildShaders()
 btAcceleratedSoftBodyInterface *btDX11SoftBodySolver::getSoftBody( int softBodyIndex )
 {
 	return m_cloths[softBodyIndex];
+}
+
+void btDX11SoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject )
+{
+	btAssert("Cannot add collision object to DX solver yet\n");
 }
 
 #endif // #ifdef BULLET_USE_DX11

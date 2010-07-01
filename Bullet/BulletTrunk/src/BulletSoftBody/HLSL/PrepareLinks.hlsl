@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer PrepareLinksCB : register( b0 )
 {
@@ -40,3 +41,4 @@ PrepareLinksKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, ui
 		g_linksLengthRatio[linkID] = linkLengthRatio;		
 	}
 }
+);

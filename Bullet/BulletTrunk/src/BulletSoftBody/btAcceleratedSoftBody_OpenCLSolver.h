@@ -62,7 +62,7 @@ private:
 	 * Cloths owned by this solver.
 	 * Only our cloths are in this array.
 	 */
-	btAlignedObjectArray< SoftBody * > m_cloths;
+	btAlignedObjectArray< btAcceleratedSoftBodyInterface * > m_cloths;
 
 	/** Acceleration value to be applied to all non-static vertices in the solver. 
 	 * Index n is cloth n, array sized by number of cloths in the world not the solver. 
@@ -136,9 +136,9 @@ public:
 
 	void optimize();
 
-	virtual int ownCloth( SoftBody *cloth );
+	virtual int ownCloth( btAcceleratedSoftBodyInterface *cloth );
 
-	virtual void removeCloth( BTAcceleratedSoftBody::Cloth *cloth );
+	virtual void removeCloth( btAcceleratedSoftBodyInterface *cloth );
 
 	virtual btSoftBodyLinkData &getLinkData();
 
@@ -173,7 +173,7 @@ public:
 	virtual void updateSoftBodies();
 
 	/** Return the softbody object represented by softBodyIndex */
-	virtual SoftBody *getSoftBody( int softBodyIndex );
+	virtual btAcceleratedSoftBodyInterface *getSoftBody( int softBodyIndex );
 
 
 	Vectormath::Aos::Vector3 ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a );
@@ -211,6 +211,11 @@ public:
 
 	// End kernel dispatches
 	/////////////////////////////////////
+	
+	/**
+	 * Add a collision object to be used by the indicated softbody.
+	 */
+	virtual void addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject );
 
 
 

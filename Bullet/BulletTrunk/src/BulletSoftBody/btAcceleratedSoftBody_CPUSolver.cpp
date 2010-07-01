@@ -14,13 +14,15 @@ subject to the following restrictions:
 */
 
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
-#include <utility>
-
 #include "BulletSoftBody/btAcceleratedSoftBody_CPUSolver.h"
+#include "BulletCollision/CollisionShapes/btCapsuleShape.h"
+
 
 btCPUSoftBodySolver::btCPUSoftBodySolver()
 {
@@ -33,7 +35,6 @@ btCPUSoftBodySolver::btCPUSoftBodySolver()
 btCPUSoftBodySolver::~btCPUSoftBodySolver()
 {
 }
-
 
 int btCPUSoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
 {
@@ -58,6 +59,8 @@ int btCPUSoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
 		m_perClothDragFactor.resize( clothIdentifier + 1 );
 	if( m_perClothMediumDensity.size() <= clothIdentifier )
 		m_perClothMediumDensity.resize( clothIdentifier + 1 );			
+	if( m_perClothCollisionObjects.size() <= clothIdentifier )
+		m_perClothCollisionObjects.resize( clothIdentifier + 1 );
 
 	return clothIdentifier;
 }
@@ -179,6 +182,10 @@ void btCPUSoftBodySolver::updateSoftBodies()
 		m_vertexData.getArea(vertexIndex) /= m_vertexData.getTriangleCount(vertexIndex);
 		m_vertexData.getNormal(vertexIndex) = normalize( m_vertexData.getNormal(vertexIndex) );
 	}
+
+
+	// Clear the collision shape array for the next frame
+	m_collisionObjectDetails.clear();
 
 } // updateSoftBodies
 
@@ -314,10 +321,77 @@ void btCPUSoftBodySolver::updateConstants( float timeStep )
 			float linearStiffness = m_linkData.getLinearStiffnessCoefficient(linkIndex);
 			float massLSC = (invMass0 + invMass1)/linearStiffness;
 			m_linkData.getMassLSC(linkIndex) = massLSC;
-			m_linkData.getRestLengthSquared(linkIndex) = m_linkData.getRestLength(linkIndex)*m_linkData.getRestLength(linkIndex);
+			float restLength = m_linkData.getRestLength(linkIndex);
+			float restLengthSquared = restLength*restLength;
+			m_linkData.getRestLengthSquared(linkIndex) = restLengthSquared;
 		}
 	}
 } // btCPUSoftBodySolver::updateConstants
+
+/**
+ * Sort the collision object details array and generate indexing into it for the per-cloth collision object array.
+ */
+void btCPUSoftBodySolver::prepareCollisionConstraints()
+{
+	// First do a simple radix sort on the collision objects
+	btAlignedObjectArray<int> numObjectsPerClothPrefixSum;
+	btAlignedObjectArray<int> numObjectsPerCloth;
+	numObjectsPerCloth.resize( m_cloths.size(), 0 );
+	numObjectsPerClothPrefixSum.resize( m_cloths.size(), 0 );
+
+	btAlignedObjectArray< CollisionShapeDescription > m_collisionObjectDetailsCopy(m_collisionObjectDetails);
+	// Count and prefix sum number of previous cloths
+	for( int collisionObject = 0; collisionObject < m_collisionObjectDetailsCopy.size(); ++collisionObject )
+	{
+		CollisionShapeDescription &shapeDescription( m_collisionObjectDetailsCopy[collisionObject] );
+		++numObjectsPerClothPrefixSum[shapeDescription.softBodyIdentifier];	
+	}
+	int sum = 0;
+	for( int cloth = 0; cloth < m_cloths.size(); ++cloth )
+	{
+		int currentValue = numObjectsPerClothPrefixSum[cloth];
+		numObjectsPerClothPrefixSum[cloth] = sum;
+		sum += currentValue;
+	}
+	// Move into the target array
+	for( int collisionObject = 0; collisionObject < m_collisionObjectDetailsCopy.size(); ++collisionObject )
+	{
+		CollisionShapeDescription &shapeDescription( m_collisionObjectDetailsCopy[collisionObject] );
+		int clothID = shapeDescription.softBodyIdentifier;
+		int newLocation = numObjectsPerClothPrefixSum[clothID] + numObjectsPerCloth[clothID];
+		numObjectsPerCloth[shapeDescription.softBodyIdentifier]++;
+		m_collisionObjectDetails[newLocation] = shapeDescription;
+	}
+	for( int collisionObject = 0; collisionObject < m_collisionObjectDetailsCopy.size(); ++collisionObject )
+	{
+		CollisionShapeDescription &shapeDescription( m_collisionObjectDetails[collisionObject] );
+	}
+
+	// Generating indexing for perClothCollisionObjects
+	// First clear the previous values
+	for( int clothIndex = 0; clothIndex < m_perClothCollisionObjects.size(); ++clothIndex )
+	{
+		m_perClothCollisionObjects[clothIndex].firstObject = 0;
+		m_perClothCollisionObjects[clothIndex].endObject = 0;
+	}
+	int currentCloth = 0;
+	int startIndex = 0;
+	for( int collisionObject = 0; collisionObject < m_collisionObjectDetails.size(); ++collisionObject )
+	{
+		int nextCloth = m_collisionObjectDetails[collisionObject].softBodyIdentifier;
+		if( nextCloth != currentCloth )
+		{	
+			// Changed cloth in the array
+			// Set the end index and the range is what we need for currentCloth
+			m_perClothCollisionObjects[currentCloth].firstObject = startIndex;
+			m_perClothCollisionObjects[currentCloth].endObject = collisionObject;
+			currentCloth = nextCloth;
+			startIndex = collisionObject;
+		}
+	}	
+	//m_perClothCollisionObjects
+} // prepareCollisionConstraints
+
 
 void btCPUSoftBodySolver::solveConstraints( float solverdt )
 {
@@ -347,57 +421,79 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 
 	}
 
+	prepareCollisionConstraints();
 
-
-	// Prepare anchors
-	/*for(i=0,ni=m_anchors.size();i<ni;++i)
+	// Solve collision constraints
+	// Very simple solver that pushes the vertex out of collision imposters for now
+	// to test integration with the broad phase code.
+	// May also want to put this into position solver loop every n iterations depending on
+	// how it behaves
+	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
 	{
-		Anchor&			a=m_anchors[i];
-		const btVector3	ra=a.m_body->getWorldTransform().getBasis()*a.m_local;
-		a.m_c0	=	ImpulseMatrix(	m_sst.sdt,
-			a.m_node->m_im,
-			a.m_body->getInvMass(),
-			a.m_body->getInvInertiaTensorWorld(),
-			ra);
-		a.m_c1	=	ra;
-		a.m_c2	=	m_sst.sdt*a.m_node->m_im;
-		a.m_body->activate();
-	}*/
+		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
+		int clothIdentifier = currentCloth->getIdentifier();
+		const int startVertex = currentCloth->getFirstVertex();
+		const int numVertices = currentCloth->getNumVertices();
+		int endVertex = startVertex + numVertices;
 
-	// Really want to combine these into a single loop, don't we? No update in the middle?
+		int startObject = m_perClothCollisionObjects[clothIndex].firstObject;
+		int endObject = m_perClothCollisionObjects[clothIndex].endObject;
 
-	// TODO: Double check what kst is meant to mean - passed in as 1 in the bullet code
-		
-	for( int iteration = 0; iteration < m_numberOfVelocityIterations ; ++iteration )
-	{
-		// Solve velocity
-		for(int linkIndex = 0; linkIndex < numLinks; ++linkIndex)
-		{				
+		for( int collisionObject = startObject; collisionObject < endObject; ++collisionObject )
+		{
+			CollisionShapeDescription &shapeDescription( m_collisionObjectDetails[collisionObject] );
 
-			int vertexIndex0 = m_linkData.getVertexPair(linkIndex).vertex0;
-			int vertexIndex1 = m_linkData.getVertexPair(linkIndex).vertex1;
-
-			float j = -dot(m_linkData.getCurrentLength(linkIndex), m_vertexData.getVelocity(vertexIndex0) - m_vertexData.getVelocity(vertexIndex1)) * m_linkData.getLinkLengthRatio(linkIndex)*kst;
-			
-			// If both ends of the link have no mass then this will be zero. Catch that case.
-			// TODO: Should really catch the /0 in the link setup, too
-			//if(psb->m_linksc0[i]>0)
+			if( shapeDescription.collisionShapeType == CAPSULE_SHAPE_PROXYTYPE )
 			{
-				m_vertexData.getVelocity(vertexIndex0) = m_vertexData.getVelocity(vertexIndex0) + m_linkData.getCurrentLength(linkIndex)*j*m_vertexData.getInverseMass(vertexIndex0);
-				m_vertexData.getVelocity(vertexIndex1) = m_vertexData.getVelocity(vertexIndex1) - m_linkData.getCurrentLength(linkIndex)*j*m_vertexData.getInverseMass(vertexIndex1);
-			}
-		}
-	}
+				using namespace Vectormath::Aos;
 
-	// Compute new positions from velocity
-	// Also update the previous position so that our position computation is now based on the new position from the velocity solution
-	// rather than based directly on the original positions
-	if( m_numberOfVelocityIterations > 0 )
-	{
-		for(int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
-		{				
-			m_vertexData.getPosition(vertexIndex) = m_vertexData.getPreviousPosition(vertexIndex) + m_vertexData.getVelocity(vertexIndex) * solverdt;
-			m_vertexData.getPreviousPosition(vertexIndex) = m_vertexData.getPosition(vertexIndex);
+				float capsuleHalfHeight = shapeDescription.capsule.halfHeight;
+				float capsuleRadius = shapeDescription.capsule.radius;
+				Transform3 worldTransform = shapeDescription.shapeTransform;
+				for( int vertexIndex = startVertex; vertexIndex < endVertex; ++vertexIndex )
+				{		
+					Point3 vertex( m_vertexData.getPosition( vertexIndex ) );
+					Point3 c1(0.f, -capsuleHalfHeight, 0.f); 
+					Point3 c2(0.f, +capsuleHalfHeight, 0.f);
+					Point3 worldC1 = worldTransform * c1;
+					Point3 worldC2 = worldTransform * c2;
+					Vector3 segment = worldC2 - worldC1;
+
+					// compute distance of tangent to vertex along line segment in capsule
+					float distanceAlongSegment = -( dot( worldC1 - vertex, segment ) / lengthSqr(segment) );
+
+					Point3 closestPoint = (worldC1 + segment * distanceAlongSegment);
+					float distanceFromLine = length(vertex - closestPoint);
+					float distanceFromC1 = length(worldC1 - vertex);
+					float distanceFromC2 = length(worldC2 - vertex);
+					
+					// Final distance from collision, point to push from, direction to push in
+					// for impulse force
+					float distance;
+					Point3 sourcePoint;
+					Vector3 pushVector;
+					if( distanceAlongSegment < 0 )
+					{
+						distance = distanceFromC1;
+						sourcePoint = worldC1;
+						pushVector = normalize(vertex - worldC1);
+					} else if( distanceAlongSegment > 1.f ) {
+						distance = distanceFromC1;
+						sourcePoint = worldC1;
+						pushVector = normalize(vertex - worldC1);	
+					} else {
+						distance = distanceFromLine;
+						sourcePoint = closestPoint;
+						pushVector = normalize(vertex - closestPoint);
+					}
+
+					// For now just update vertex position by moving to radius distance along the push vector
+					// Could use this as the basis for simple vector distance constraint for the point later, possibly?
+					// That way in the main solver loop all shape types could be the same... though when
+					// we need to apply bi-directionally it becomes more complicated
+					m_vertexData.getPosition( vertexIndex ) = closestPoint + capsuleRadius * pushVector;
+				}
+			}
 		}
 	}
 
@@ -444,25 +540,16 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 		const int numVertices = currentCloth->getNumVertices();
 		const int lastVertex = startVertex + numVertices;
 		// Update the velocities based on the change in position
-		// TODO: Damping should probably only be applied to the action of bend links so the cloth still falls but then moves stiffly once it hits something
+		// TODO: Damping should only be applied to the action of link constraints so the cloth still falls but then moves stiffly once it hits something
 		float velocityCoefficient = (1.f - m_perClothDampingFactor[clothIdentifier]);
 		float velocityCorrectionCoefficient = m_perClothVelocityCorrectionCoefficient[clothIdentifier];
 		float isolverDt = 1.f/solverdt;
-		if( m_numberOfVelocityIterations > 0 )
+
+		// If we didn't compute the velocity iteratively then we compute it purely based on the position change
+		for(int vertexIndex = startVertex; vertexIndex < lastVertex; ++vertexIndex)
 		{
-			for(int vertexIndex = startVertex; vertexIndex < lastVertex; ++vertexIndex)
-			{
-				m_vertexData.getVelocity(vertexIndex) += (m_vertexData.getPosition(vertexIndex) - m_vertexData.getPreviousPosition(vertexIndex)) * velocityCorrectionCoefficient * isolverDt;
-				m_vertexData.getVelocity(vertexIndex) *= velocityCoefficient;
-				m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
-			}
-		} else {
-			// If we didn't compute the velocity iteratively then we compute it purely based on the position change
-			for(int vertexIndex = startVertex; vertexIndex < lastVertex; ++vertexIndex)
-			{
-				m_vertexData.getVelocity(vertexIndex) = (m_vertexData.getPosition(vertexIndex) - m_vertexData.getPreviousPosition(vertexIndex)) * velocityCoefficient * isolverDt;
-				m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
-			}
+			m_vertexData.getVelocity(vertexIndex) = (m_vertexData.getPosition(vertexIndex) - m_vertexData.getPreviousPosition(vertexIndex)) * velocityCoefficient * isolverDt;
+			m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
 		}
 	}
 } // btCPUSoftBodySolver::solveConstraints
@@ -524,10 +611,49 @@ void btCPUSoftBodySolver::outputToVertexBuffers()
 
 void btCPUSoftBodySolver::optimize()
 {
+	updateConstants(0.f);
 }
 
 /** Return the softbody object represented by softBodyIndex */
 btAcceleratedSoftBodyInterface *btCPUSoftBodySolver::getSoftBody( int softBodyIndex )
 {
 	return m_cloths[softBodyIndex];
+}
+
+static Vectormath::Aos::Vector3 toVector3( const btVector3 &vec )
+{
+	Vectormath::Aos::Vector3 outVec( vec.getX(), vec.getY(), vec.getZ() );
+	return outVec;
+}
+
+static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
+{
+	Vectormath::Aos::Transform3 outTransform;
+	outTransform.setCol(0, toVector3(transform.getBasis().getColumn(0)));
+	outTransform.setCol(1, toVector3(transform.getBasis().getColumn(1)));
+	outTransform.setCol(2, toVector3(transform.getBasis().getColumn(2)));
+	outTransform.setCol(3, toVector3(transform.getOrigin()));
+	return outTransform;	
+}
+
+void btCPUSoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject )
+{
+	btCollisionShape *collisionShape = collisionObject->getCollisionShape();
+	int shapeType = collisionShape->getShapeType();
+	if( shapeType == CAPSULE_SHAPE_PROXYTYPE )
+	{
+		// Add to the list of expected collision objects
+		CollisionShapeDescription newCollisionShapeDescription;
+		newCollisionShapeDescription.softBodyIdentifier = clothIdentifier;
+		newCollisionShapeDescription.collisionShapeType = shapeType;
+		newCollisionShapeDescription.shapeTransform = toTransform3(collisionObject->getWorldTransform());
+		btCapsuleShape *capsule = static_cast<btCapsuleShape*>( collisionShape );
+		newCollisionShapeDescription.capsule.radius = capsule->getRadius();
+		newCollisionShapeDescription.capsule.halfHeight = capsule->getHalfHeight();
+		m_collisionObjectDetails.push_back( newCollisionShapeDescription );
+
+		// TODO: In the collision function, sort the above array on the clothIdentifier and generate the start and end indices
+	} else {
+		btAssert("Unsupported collision shape type\n");
+	}
 }

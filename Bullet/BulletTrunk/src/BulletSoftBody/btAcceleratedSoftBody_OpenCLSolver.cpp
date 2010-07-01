@@ -24,23 +24,29 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
-#include "BulletSoftBody/btAcceleratedSoftBody.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_OpenCLSolver.h"
+#include "BulletSoftBody/btAcceleratedSoftBody_VertexBuffers.h"
 
-#include <utility>
 
-// Generated HLSL includes
-#include "VSolveLinksCL.h"
-#include "PrepareLinksCL.h"
-#include "UpdatePositionsFromVelocitiesCL.h"
-#include "SolvePositionsCL.h"
-#include "UpdateNodesCL.h"
-#include "UpdatePositionsCL.h"
-#include "UpdateConstantsCL.h"
-#include "IntegrateCL.h"
-#include "ApplyForcesCL.h"
-#include "UpdateNormalsCL.h"
-//#include "OutputToVertexArrayCL.h"
+#define MSTRINGIFY(A) #A
+static char* PrepareLinksCLString = 
+#include "OpenCLC/PrepareLinks.cl"
+static char* UpdatePositionsFromVelocitiesCLString = 
+#include "OpenCLC/UpdatePositionsFromVelocities.cl"
+static char* SolvePositionsCLString = 
+#include "OpenCLC/SolvePositions.cl"
+static char* UpdateNodesCLString = 
+#include "OpenCLC/UpdateNodes.cl"
+static char* UpdatePositionsCLString = 
+#include "OpenCLC/UpdatePositions.cl"
+static char* UpdateConstantsCLString = 
+#include "OpenCLC/UpdateConstants.cl"
+static char* IntegrateCLString = 
+#include "OpenCLC/Integrate.cl"
+static char* ApplyForcesCLString = 
+#include "OpenCLC/ApplyForces.cl"
+static char* UpdateNormalsCLString = 
+#include "OpenCLC/UpdateNormals.cl"
 
 
 btSoftBodyVertexDataOpenCL::btSoftBodyVertexDataOpenCL( cl::CommandQueue queue) :
@@ -263,14 +269,18 @@ void btSoftBodyLinkDataOpenCL::generateBatches()
 	}
 
 	m_batchStartLengths.resize(batchCounts.size());
-	m_batchStartLengths[0] = std::pair< int, int >( 0, 0 );
-
-	int sum = 0;
-	for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
+	if( m_batchStartLengths.size() > 0 )
 	{
-		m_batchStartLengths[batchIndex].first = sum;
-		m_batchStartLengths[batchIndex].second = batchCounts[batchIndex];
-		sum += batchCounts[batchIndex];
+		m_batchStartLengths.resize(batchCounts.size());
+		m_batchStartLengths[0] = std::pair< int, int >( 0, 0 );
+
+		int sum = 0;
+		for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
+		{
+			m_batchStartLengths[batchIndex].first = sum;
+			m_batchStartLengths[batchIndex].second = batchCounts[batchIndex];
+			sum += batchCounts[batchIndex];
+		}
 	}
 
 	/////////////////////////////
@@ -572,7 +582,7 @@ void btOpenCLSoftBodySolver::optimize()
 	m_triangleData.generateBatches();
 }
 
-void btOpenCLSoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
+int btOpenCLSoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
 {
 	// Ensure that per-cloth acceleration and velocity are large enough to cope
 	int clothIdentifier = m_cloths.size();
@@ -595,13 +605,12 @@ void btOpenCLSoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
 	if( m_perClothMediumDensity.size() <= clothIdentifier )
 		m_perClothMediumDensity.resize( clothIdentifier + 1 );			
 
-	return identifier;
+	return clothIdentifier;
 }
 
-void btOpenCLSoftBodySolver::removeCloth( BTAcceleratedSoftBody::Cloth *cloth )
+void btOpenCLSoftBodySolver::removeCloth( btAcceleratedSoftBodyInterface *cloth )
 {
-	std::cerr << "You can't remove cloths yet.\n";
-	exit(1);
+	btAssert("Cannot remove cloths yet.");
 }
 
 btSoftBodyLinkData &btOpenCLSoftBodySolver::getLinkData()
@@ -688,7 +697,10 @@ void btOpenCLSoftBodySolver::resetNormalsAndAreas( int numVertices )
 
 	int	numWorkItems = workGroupSize*((numVertices + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(resetNormalsAndAreasKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(resetNormalsAndAreasKernel)" );
+	if( err != CL_SUCCESS )
+	{
+		btAssert( "enqueueNDRangeKernel(resetNormalsAndAreasKernel)" );
+	}
 }
 
 void btOpenCLSoftBodySolver::normalizeNormalsAndAreas( int numVertices )
@@ -700,7 +712,10 @@ void btOpenCLSoftBodySolver::normalizeNormalsAndAreas( int numVertices )
 
 	int	numWorkItems = workGroupSize*((numVertices + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(normalizeNormalsAndAreasKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert( "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
+	}
 }
 
 void btOpenCLSoftBodySolver::executeUpdateSoftBodies( int firstTriangle, int numTriangles )
@@ -717,7 +732,10 @@ void btOpenCLSoftBodySolver::executeUpdateSoftBodies( int firstTriangle, int num
 
 	int	numWorkItems = workGroupSize*((numTriangles + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(updateSoftBodiesKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
+	}
 }
 
 void btOpenCLSoftBodySolver::updateSoftBodies()
@@ -778,38 +796,83 @@ void btOpenCLSoftBodySolver::applyForces( float solverdt )
 
 	cl_int err;
 	err = applyForcesKernel.kernel.setArg(0, m_vertexData.getNumVertices());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(1, solverdt);
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(2, FLT_EPSILON);
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(3, m_vertexData.m_clClothIdentifier.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(4, m_vertexData.m_clVertexNormal.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(5, m_vertexData.m_clVertexArea.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(6, m_vertexData.m_clVertexInverseMass.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(7, m_clPerClothLiftFactor.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(8, m_clPerClothDragFactor.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(9, m_clPerClothWindVelocity.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(10, m_clPerClothAcceleration.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS )
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(11, m_clPerClothMediumDensity.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(12, m_vertexData.m_clVertexForceAccumulator.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 	err = applyForcesKernel.kernel.setArg(13, m_vertexData.m_clVertexVelocity.getBuffer());
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 
 	int	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	std::cout << "numWorkItems: " << numWorkItems << ", workGroupSize: " << workGroupSize << ", m_vertexData.getNumVertices(): " << m_vertexData.getNumVertices() << "\n";
+
 	err = m_queue.enqueueNDRangeKernel(applyForcesKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(applyForcesKernel)");
+	}
 }
 
 /**
@@ -830,7 +893,10 @@ void btOpenCLSoftBodySolver::integrate( float solverdt )
 
 	int	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(integrateKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(integrateKernel)");
+	if( err != CL_SUCCESS )
+	{
+		btAssert(  "enqueueNDRangeKernel(integrateKernel)");
+	}
 
 }
 
@@ -851,7 +917,7 @@ void btOpenCLSoftBodySolver::updateConstants( float timeStep )
 	using namespace Vectormath::Aos;
 
 	// TODO: Fix CL code. Something is wrong here.
-#if 1
+#if 0
 	if( m_updateSolverConstants )
 	{
 		// Ensure data is on accelerator
@@ -870,9 +936,14 @@ void btOpenCLSoftBodySolver::updateConstants( float timeStep )
 
 		int	numWorkItems = workGroupSize*((m_linkData.getNumLinks() + (workGroupSize-1)) / workGroupSize);
 		err = m_queue.enqueueNDRangeKernel(updateConstantsKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-		if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(integrate)");
+		if( err != CL_SUCCESS ) 
+		{
+			btAssert(  "enqueueNDRangeKernel(integrate)");
+		}
 	}
 #else
+	using namespace Vectormath::Aos;
+
 	if( m_updateSolverConstants )
 	{
 		m_vertexData.moveFromAccelerator();
@@ -886,19 +957,23 @@ void btOpenCLSoftBodySolver::updateConstants( float timeStep )
 		const int numLinks = m_linkData.getNumLinks();
 		for( int linkIndex = 0; linkIndex < numLinks; ++linkIndex )
 		{
-			LinkNodePair &vertices( m_linkData.getVertexPair(linkIndex) );
+			btSoftBodyLinkData::LinkNodePair &vertices( m_linkData.getVertexPair(linkIndex) );
 			m_linkData.getRestLength(linkIndex) = length((m_vertexData.getPosition( vertices.vertex0 ) - m_vertexData.getPosition( vertices.vertex1 )));
 			float invMass0 = m_vertexData.getInverseMass(vertices.vertex0);
 			float invMass1 = m_vertexData.getInverseMass(vertices.vertex1);
 			float linearStiffness = m_linkData.getLinearStiffnessCoefficient(linkIndex);
 			float massLSC = (invMass0 + invMass1)/linearStiffness;
 			m_linkData.getMassLSC(linkIndex) = massLSC;
-			m_linkData.getRestLengthSquared(linkIndex) = m_linkData.getRestLength(linkIndex)*m_linkData.getRestLength(linkIndex);
+			float restLength = m_linkData.getRestLength(linkIndex);
+			float restLengthSquared = restLength*restLength;
+			m_linkData.getRestLengthSquared(linkIndex) = restLengthSquared;
 		}
 
+		
 		m_vertexData.moveToAccelerator();
 		m_linkData.moveToAccelerator();
 	}
+
 #endif
 }
 
@@ -947,26 +1022,7 @@ void btOpenCLSoftBodySolver::solveConstraints( float solverdt )
 	// Really want to combine these into a single loop, don't we? No update in the middle?
 
 	// TODO: Double check what kst is meant to mean - passed in as 1 in the bullet code
-		
-	for( int iteration = 0; iteration < m_numberOfVelocityIterations ; ++iteration )
-	{
-		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
-		{
-			int startLink = m_linkData.m_batchStartLengths[i].first;
-			int numLinks = m_linkData.m_batchStartLengths[i].second;
 
-			solveLinksForVelocity( startLink, numLinks, kst );
-		}
-	}
-
-	// Compute new positions from velocity
-	// Also update the previous position so that our position computation is now based on the new position from the velocity solution
-	// rather than based directly on the original positions
-	if( m_numberOfVelocityIterations > 0 )
-	{
-		updatePositionsFromVelocities( solverdt );				
-
-	}
 
 	// Solve drift
 	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
@@ -982,12 +1038,7 @@ void btOpenCLSoftBodySolver::solveConstraints( float solverdt )
 	} // for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 
 
-	if( m_numberOfVelocityIterations > 0 )
-	{
-		updateVelocitiesFromPositionsWithVelocities( 1.f/solverdt );
-	} else {
-		updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
-	}
+	updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
 }
 
 
@@ -1004,22 +1055,10 @@ void btOpenCLSoftBodySolver::prepareLinks()
 
 	int	numWorkItems = workGroupSize*((m_linkData.getNumLinks() + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(prepareLinksKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(prepareLinksKernel)");
-}
-
-void btOpenCLSoftBodySolver::solveLinksForVelocity( int startLink, int numLinks, float kst )
-{
-	vSolveLinksKernel.kernel.setArg(0, startLink);
-	vSolveLinksKernel.kernel.setArg(1, numLinks);
-	vSolveLinksKernel.kernel.setArg(2, m_linkData.m_clLinks.getBuffer());
-	vSolveLinksKernel.kernel.setArg(3, m_linkData.m_clLinksLengthRatio.getBuffer());
-	vSolveLinksKernel.kernel.setArg(4, m_linkData.m_clLinksCLength.getBuffer());
-	vSolveLinksKernel.kernel.setArg(5, m_vertexData.m_clVertexInverseMass.getBuffer());
-	vSolveLinksKernel.kernel.setArg(6, m_vertexData.m_clVertexVelocity.getBuffer());
-
-	int	numWorkItems = workGroupSize*((numLinks + (workGroupSize-1)) / workGroupSize);
-	cl_int err = m_queue.enqueueNDRangeKernel(vSolveLinksKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(vSolveLinksKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(prepareLinksKernel)");
+	}
 }
 
 void btOpenCLSoftBodySolver::updatePositionsFromVelocities( float solverdt )
@@ -1032,7 +1071,10 @@ void btOpenCLSoftBodySolver::updatePositionsFromVelocities( float solverdt )
 
 	int	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(updatePositionsFromVelocitiesKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(updatePositionsFromVelocitiesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(updatePositionsFromVelocitiesKernel)");
+	}
 }
 
 void btOpenCLSoftBodySolver::solveLinksForPosition( int startLink, int numLinks, float kst, float ti )
@@ -1049,7 +1091,10 @@ void btOpenCLSoftBodySolver::solveLinksForPosition( int startLink, int numLinks,
 
 	int	numWorkItems = workGroupSize*((numLinks + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(solvePositionsFromLinksKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(solvePositionsFromLinksKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(solvePositionsFromLinksKernel)");
+	}
 } // solveLinksForPosition
 
 
@@ -1067,7 +1112,10 @@ void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithVelocities( float 
 
 	int	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(updateVelocitiesFromPositionsWithVelocitiesKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithVelocitiesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithVelocitiesKernel)");
+	}
 
 } // updateVelocitiesFromPositionsWithVelocities
 
@@ -1084,7 +1132,10 @@ void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities( flo
 
 	int	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
 	cl_int err = m_queue.enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
-	if( err != CL_SUCCESS ) btAssert(  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
+	}
 } // updateVelocitiesFromPositionsWithoutVelocities
 
 // End kernel dispatches
@@ -1099,7 +1150,7 @@ void btOpenCLSoftBodySolver::outputToVertexBuffers()
 	bool needCopyBack = false;
 	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
 	{
-		BTAcceleratedSoftBody::Cloth *currentCloth = m_cloths[clothIndex];
+		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
 
 		if( btVertexBufferDescriptor *vertexBufferTarget = currentCloth->getVertexBufferTarget() )
 		{
@@ -1121,7 +1172,7 @@ void btOpenCLSoftBodySolver::outputToVertexBuffers()
 	// per-cloth target buffer array for the copy kernel.
 	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
 	{
-		BTAcceleratedSoftBody::Cloth *currentCloth = m_cloths[clothIndex];
+		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
 
 		const int firstVertex = currentCloth->getFirstVertex();
 		const int lastVertex = firstVertex + currentCloth->getNumVertices();
@@ -1180,16 +1231,25 @@ btOpenCLSoftBodySolver::KernelDesc btOpenCLSoftBodySolver::compileCLKernelFromSt
 
 	cl::Program::Sources source(1, std::make_pair(shaderString, strlen(shaderString) + 1));
 	cl::Program program(context, source, &err);
-	if( err != CL_SUCCESS ) btAssert(  "program");
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert( "program" );
+	}
 	err = program.build(devices);
 	if (err != CL_SUCCESS) {
 		//std::string str;
 		//str = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(devices[0]);
 		//std::cout << "Program Info: " << str;
-		if( err != CL_SUCCESS ) btAssert(  "Program::build()" );
+		if( err != CL_SUCCESS ) 
+		{
+			btAssert( "Program::build()" );
+		}
 	}
 	cl::Kernel kernel(program, shaderName, &err);
-	if( err != CL_SUCCESS ) btAssert( "kernel" );
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert( "kernel" );
+	}
 
 	KernelDesc descriptor;
 	descriptor.kernel = kernel;
@@ -1204,7 +1264,6 @@ bool btOpenCLSoftBodySolver::buildShaders()
 		return true;
 	
 	prepareLinksKernel = compileCLKernelFromString( PrepareLinksCLString, "PrepareLinksKernel" );
-	vSolveLinksKernel = compileCLKernelFromString( VSolveLinksCLString, "VSolveLinksKernel" );
 	updatePositionsFromVelocitiesKernel = compileCLKernelFromString( UpdatePositionsFromVelocitiesCLString, "UpdatePositionsFromVelocitiesKernel" );
 	solvePositionsFromLinksKernel = compileCLKernelFromString( SolvePositionsCLString, "SolvePositionsFromLinksKernel" );
 	updateVelocitiesFromPositionsWithVelocitiesKernel = compileCLKernelFromString( UpdateNodesCLString, "updateVelocitiesFromPositionsWithVelocitiesKernel" );
@@ -1231,6 +1290,12 @@ bool btOpenCLSoftBodySolver::buildShaders()
 btAcceleratedSoftBodyInterface *btOpenCLSoftBodySolver::getSoftBody( int softBodyIndex )
 {
 	return m_cloths[softBodyIndex];
+}
+
+
+void btOpenCLSoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject )
+{
+	btAssert("Cannot use collision objects with OpenCL solver.");
 }
 
 #endif // #ifdef BULLET_USE_OPENCL

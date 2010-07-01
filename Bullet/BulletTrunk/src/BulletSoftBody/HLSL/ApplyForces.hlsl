@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer ApplyForcesCB : register( b0 )
 {
@@ -90,3 +91,5 @@ ApplyForcesKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uin
 		}
 	}
 }
+
+);

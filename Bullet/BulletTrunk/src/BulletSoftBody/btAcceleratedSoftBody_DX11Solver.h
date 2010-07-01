@@ -114,14 +114,6 @@ public:
 		int padding2;
 	};
 
-	struct VSolveLinksCB
-	{
-		int startLink;
-		int numLinks;
-		float kst;
-		int padding;
-	};
-
 	struct UpdateSoftBodiesCB
 	{
 		int numNodes;
@@ -227,7 +219,6 @@ private:
 	KernelDesc		updatePositionsFromVelocitiesKernel;
 	KernelDesc		updateVelocitiesFromPositionsWithoutVelocitiesKernel;
 	KernelDesc		updateVelocitiesFromPositionsWithVelocitiesKernel;
-	KernelDesc		vSolveLinksKernel;
 	KernelDesc		resetNormalsAndAreasKernel;
 	KernelDesc		normalizeNormalsAndAreasKernel;
 	KernelDesc		updateSoftBodiesKernel;
@@ -290,6 +281,12 @@ public:
 	/** Return the softbody object represented by softBodyIndex */
 	virtual btAcceleratedSoftBodyInterface *getSoftBody( int softBodyIndex );
 
+	/**
+	 * Add a collision object to be used by the indicated softbody.
+	 */
+	virtual void addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject );
+
+
 	Vectormath::Aos::Vector3 ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a );
 
 	void ApplyClampedForce( float solverdt, const Vectormath::Aos::Vector3 &force, const Vectormath::Aos::Vector3 &vertexVelocity, float inverseMass, Vectormath::Aos::Vector3 &vertexForce );
@@ -313,8 +310,6 @@ public:
 	//////////////////////////////////////
 	// Kernel dispatches
 	void prepareLinks();
-
-	void solveLinksForVelocity( int startLink, int numLinks, float kst );
 
 	void updatePositionsFromVelocities( float solverdt );
 	void solveLinksForPosition( int startLink, int numLinks, float kst, float ti );

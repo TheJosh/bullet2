@@ -38,6 +38,25 @@ public:
 	btDX11Buffer<float>									m_dx11Area;
 	btDX11Buffer<Vectormath::Aos::Vector3>				m_dx11Normal;
 
+	struct BatchPair
+	{
+		int start;
+		int length;
+
+		BatchPair() :
+			start(0),
+			length(0)
+		{
+		}
+
+		BatchPair( int s, int l ) : 
+			start( s ),
+			length( l )
+		{
+		}
+	};
+
+
 	/**
 	 * Link addressing information for each cloth.
 	 * Allows link locations to be computed independently of data batching.
@@ -47,7 +66,7 @@ public:
 	/**
 	 * Start and length values for computation batches over link data.
 	 */
-	btAlignedObjectArray< std::pair< int, int > >		m_batchStartLengths;
+	btAlignedObjectArray< BatchPair >		m_batchStartLengths;
 
 	//ID3D11Buffer*               readBackBuffer;
 

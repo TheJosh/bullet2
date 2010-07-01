@@ -8,16 +8,14 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 OPTION(USE_OPENCL "Use OpenCL"	OFF)
 OPTION(USE_DX11 "Use DirectX 11"	OFF)
 
-#SET(DX11_INCLUDE_PATH "C:/Program Files (x86)/Microsoft DirectX SDK (February 2010)/Include" CACHE DOCSTRING "Microsoft directX SDK include path")
-#SET(OPENCL_INCLUDE_PATH "S:/Perforce/advtech/contrib/opencl/include" CACHE DOCSTRING "OpenCL SDK include path")
-
-
 # OpenCL and DX11 setting options driven from OPTIONS above
 if( USE_OPENCL )
-	SET(OPENCL_INCLUDE_PATH "Unknown" CACHE DOCSTRING "OpenCL SDK include path")
+	SET(OPENCL_DIR $ENV{ATISTREAMSDKROOT})
+	SET(OPENCL_INCLUDE_PATH "${ATISTREAMSDKROOT}/include" CACHE DOCSTRING "OpenCL SDK include path")
 endif( USE_OPENCL )
 if( USE_DX11 )
-	SET(DX11_INCLUDE_PATH "Unknown" CACHE DOCSTRING "Microsoft directX SDK include path")
+	SET(DXSDK_DIR $ENV{DXSDK_DIR})
+	SET(DX11_INCLUDE_PATH  "${DXSDK_DIR}Include" CACHE DOCSTRING "Microsoft directX SDK include path")
 endif( USE_DX11 )
 SET(BULLET_USE_OPENCL false)
 SET(BULLET_USE_DX11 false)
@@ -78,9 +76,6 @@ SET(BulletSoftBody_HDRS
 	btAcceleratedSoftBody_LinkDataOpenCL.h
 	btAcceleratedSoftBody_OpenCLBuffer.h
 	btAcceleratedSoftBody_DX11Buffer.h
-	btOpenCLSupport.h
-	btDirectComputeSupport.h
-
 )
 
 # OpenCL and HLSL Shaders.
@@ -95,7 +90,6 @@ SET(BulletSoftBody_Shaders
 	UpdateNodes
 	SolvePositions
 	UpdatePositionsFromVelocities
-	VSolveLinks
 	ApplyForces
 	PrepareLinks
 	CollideCylinder
@@ -103,29 +97,6 @@ SET(BulletSoftBody_Shaders
 	CollideSphere
 )
 
-foreach(f ${BulletSoftBody_Shaders})
-    LIST(APPEND BulletSoftBody_OpenCLC "${f}CL.h")
-endforeach(f) 
-
-foreach(f ${BulletSoftBody_Shaders})
-    LIST(APPEND BulletSoftBody_HLSL "${f}HLSL.h")
-endforeach(f) 
-
-foreach( f ${BulletSoftBody_Shaders})
-	ADD_CUSTOM_COMMAND(
-		OUTPUT ${f}HLSL.h
-		COMMAND StringifyFile ${f}HLSL.h HLSL/${f}.hlsl ${f}HLSLString
-		DEPENDS StringifyFile HLSL/${f}.hlsl
-	)
-endforeach(f)
-
-foreach( f ${BulletSoftBody_Shaders})
-	ADD_CUSTOM_COMMAND(
-		OUTPUT ${f}CL.h
-		COMMAND StringifyFile ${f}CL.h OpenCLC/${f}.cl ${f}CLString
-		DEPENDS StringifyFile OpenCLC/${f}.cl
-	)
-endforeach(f)
 
 if( BULLET_USE_OPENCL )
 	INCLUDE_DIRECTORIES(${OPENCL_INCLUDE_PATH})
@@ -138,7 +109,7 @@ endif( BULLET_USE_DX11 )
 
 
 
-ADD_LIBRARY(BulletSoftBody  ${BulletSoftBody_SRCS} ${BulletSoftBody_HDRS} ${BulletSoftBody_OpenCLC} ${BulletSoftBody_HLSL})
+ADD_LIBRARY(BulletSoftBody  ${BulletSoftBody_SRCS} ${BulletSoftBody_HDRS})
 SET_TARGET_PROPERTIES(BulletSoftBody PROPERTIES VERSION ${BULLET_VERSION})
 SET_TARGET_PROPERTIES(BulletSoftBody PROPERTIES SOVERSION ${BULLET_VERSION})
 IF (BUILD_SHARED_LIBS)

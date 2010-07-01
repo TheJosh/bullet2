@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer OutputToVertexArrayCB : register( b0 )
 {
@@ -59,3 +60,4 @@ OutputToVertexArrayWithoutNormalsKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV
 		g_vertexBuffer[positionDestination+2] = position.z;		
 	}
 }
+);

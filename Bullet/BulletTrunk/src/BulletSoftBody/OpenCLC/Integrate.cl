@@ -1,3 +1,5 @@
+MSTRINGIFY(
+
 // Node indices for each link
 
 //#define float3 float4
@@ -29,3 +31,5 @@ IntegrateKernel(
 		g_vertexVelocity[nodeID]         = (float4)(velocity, 0.f);	
 	}
 }
+
+);

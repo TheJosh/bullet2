@@ -13,7 +13,7 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BulletAcceleratedSoftBody/btAcceleratedSoftBody_Settings.h"
+#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
 
 #ifdef BULLET_USE_DX11
 
@@ -45,6 +45,24 @@ public:
 	btDX11Buffer<float>											m_dx11LinksRestLength;
 	btDX11Buffer<float>											m_dx11LinksMaterialLinearStiffnessCoefficient;
 
+	struct BatchPair
+	{
+		int start;
+		int length;
+
+		BatchPair() :
+			start(0),
+			length(0)
+		{
+		}
+
+		BatchPair( int s, int l ) : 
+			start( s ),
+			length( l )
+		{
+		}
+	};
+
 	/**
 	 * Link addressing information for each cloth.
 	 * Allows link locations to be computed independently of data batching.
@@ -54,7 +72,7 @@ public:
 	/**
 	 * Start and length values for computation batches over link data.
 	 */
-	btAlignedObjectArray< std::pair< int, int > >		m_batchStartLengths;
+	btAlignedObjectArray< BatchPair >		m_batchStartLengths;
 
 
 	//ID3D11Buffer*               readBackBuffer;

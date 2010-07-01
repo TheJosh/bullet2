@@ -20,8 +20,6 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
-#include <utility>
-
 #include "BulletSoftBody/btAcceleratedSoftBody_Solvers.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_VertexBuffers.h"
 
@@ -30,7 +28,7 @@ subject to the following restrictions:
 
 class btCPUSoftBodySolver : public btSoftBodySolver
 {
-private:
+protected:
 	btSoftBodyLinkData m_linkData;
 	btSoftBodyVertexData m_vertexData;
 	btSoftBodyTriangleData m_triangleData;
@@ -68,6 +66,53 @@ private:
 
 	/** Density of the medium in which each cloth sits */
 	btAlignedObjectArray< float > m_perClothMediumDensity;
+
+	/**
+	 * Entry in the collision shape array.
+	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
+	 */
+	struct CollisionShapeDescription
+	{
+		int softBodyIdentifier;
+		int collisionShapeType;
+		Vectormath::Aos::Transform3 shapeTransform;
+		union
+		{
+			struct Sphere
+			{
+				float radius;
+			} sphere;
+			struct Capsule
+			{
+				float radius;
+				float halfHeight;
+			} capsule;
+		};
+
+		CollisionShapeDescription()
+		{
+			collisionShapeType = 0;
+		}
+	};
+
+	struct CollisionObjectIndices
+	{
+		int firstObject;
+		int endObject;
+	};
+
+	/** 
+	 * Collision shape details: pair of index of first collision shape for the cloth and number of collision objects.
+	 */
+	btAlignedObjectArray< CollisionObjectIndices > m_perClothCollisionObjects;
+
+	/** 
+	 * Collision shapes being passed across to the cloths in this solver.
+	 */
+	btAlignedObjectArray< CollisionShapeDescription > m_collisionObjectDetails;
+
+
+	void prepareCollisionConstraints();
 
 
 public:
@@ -115,6 +160,11 @@ public:
 
 	/** Return the softbody object represented by softBodyIndex */
 	virtual btAcceleratedSoftBodyInterface *getSoftBody( int softBodyIndex );
+
+	/**
+	 * Add a collision object to be used by the indicated softbody.
+	 */
+	virtual void addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject );
 
 	/**
 	 * Integrate motion on the solver.

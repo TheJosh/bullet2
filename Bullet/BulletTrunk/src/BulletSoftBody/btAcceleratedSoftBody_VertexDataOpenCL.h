@@ -15,7 +15,6 @@ subject to the following restrictions:
 
 #include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
 
-#ifdef BULLET_USE_DX11
 
 #include "BulletSoftBody/btAcceleratedSoftBodyData.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_OpenCLBuffer.h"
@@ -23,9 +22,6 @@ subject to the following restrictions:
 
 #ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_OPENCL_H
 #define BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_OPENCL_H
-
-struct ID3D11Device;
-struct ID3D11DeviceContext;
 
 
 class btSoftBodyVertexDataOpenCL : public btSoftBodyVertexData
@@ -58,6 +54,3 @@ public:
 
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_OPENCL_H
-
-
-#endif // #ifdef BULLET_USE_DX11

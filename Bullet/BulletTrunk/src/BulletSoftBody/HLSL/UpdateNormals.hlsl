@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer UpdateSoftBodiesCB : register( b0 )
 {
@@ -93,3 +94,5 @@ NormalizeNormalsAndAreasKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_Dispatch
 		g_vertexArea[DTid.x] = area/float(numTriangles);
 	}
 }
+
+);

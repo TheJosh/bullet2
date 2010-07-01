@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer UpdatePositionsFromVelocitiesCB : register( b0 )
 {
@@ -30,3 +31,5 @@ UpdatePositionsFromVelocitiesKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_Dis
 		g_vertexPreviousPositions[vertexID] = float4(newPosition, 0.f);
 	}
 }
+
+);

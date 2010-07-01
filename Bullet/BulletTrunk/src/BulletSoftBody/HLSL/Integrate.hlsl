@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer IntegrateCB : register( b0 )
 {
@@ -36,3 +37,5 @@ IntegrateKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3
 		g_vertexVelocity[nodeID] = float4(velocity, 0.f);	
 	}
 }
+
+);

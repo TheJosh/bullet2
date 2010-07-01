@@ -1,3 +1,5 @@
+MSTRINGIFY(
+
 //#define float3 float4
 
 /*float length3(float3 a)
@@ -97,3 +99,5 @@ NormalizeNormalsAndAreasKernel(
 		g_vertexArea[get_global_id(0)] = area/(float)(numTriangles);
 	}
 }
+
+);

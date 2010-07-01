@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer UpdateVelocitiesFromPositionsWithoutVelocitiesCB : register( b0 )
 {
@@ -39,3 +40,5 @@ updateVelocitiesFromPositionsWithoutVelocitiesKernel( uint3 Gid : SV_GroupID, ui
 		g_vertexForces[nodeID] = float4(0.f, 0.f, 0.f, 0.f);								
 	}
 }
+
+);

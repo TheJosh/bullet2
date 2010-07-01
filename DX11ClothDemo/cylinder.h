@@ -10,9 +10,29 @@ class cylinder
 
 	double x_offset, y_offset, z_offset;
 
+	int width;
+	int height;
 
 	ID3D11Texture2D *texture2D;
 	ID3D11ShaderResourceView *texture2D_view;
+
+	btCollisionShape *collisionShape;
+
+	//static_cast<btCapsuleShape*>(capsuleShape)
+
+
+	btCollisionObject *collisionObject;
+
+	void set_collision_object(btCollisionObject* co)
+	{
+	collisionObject = co;
+	}
+
+	void set_collision_shape(btCollisionShape* cs)
+	{
+		collisionShape = cs;
+	}
+
 
 
 	void create_texture(void)
@@ -59,7 +79,7 @@ class cylinder
 		pd3dImmediateContext->PSSetConstantBuffers( g_iCBPSPerFrameBind, 1, &g_pcbPSPerFrame );
 
 
-	   ///////////////////////////////////////Modify below//////////////////////////////////////////////////////
+		///////////////////////////////////////Modify below//////////////////////////////////////////////////////
 
 		//Get the mesh
 		//IA setup
@@ -72,38 +92,49 @@ class cylinder
 		pd3dImmediateContext->IASetIndexBuffer( g_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0 );
 
 		/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 		// Set the shaders
 		pd3dImmediateContext->VSSetShader( g_pVertexShader, NULL, 0 );
 		pd3dImmediateContext->PSSetShader( g_pPixelShader, NULL, 0 );
 		pd3dImmediateContext->GSSetShader( g_pGeometryShader, NULL, 0);
+
+		// Set the per object constant data
+
+	
+
+		btTransform trans = collisionObject->getWorldTransform();
+
+		
 	    
-		// Set the per object constant data		
-		D3DXVECTOR3 vCenter( 0.25767413f, -28.503521f, 111.00689f);
+		btVector3 origin = trans.getOrigin();
+		btMatrix3x3 btM = trans.getBasis();
+		
+		btScalar* scalar_matrix = new btScalar[16];;
+		trans.getOpenGLMatrix(scalar_matrix);
+		
+		D3DXMATRIXA16 m_trans(scalar_matrix[0],scalar_matrix[1],scalar_matrix[2],scalar_matrix[3],
+							  scalar_matrix[4],scalar_matrix[5],scalar_matrix[6],scalar_matrix[7],
+							  scalar_matrix[8],scalar_matrix[9],scalar_matrix[10],scalar_matrix[11],
+							  scalar_matrix[12],scalar_matrix[13],scalar_matrix[14],scalar_matrix[15]);
+
+		D3DXMATRIXA16 m_scale;
+		float sc = 10;
+		D3DXMatrixScaling(&m_scale,sc,sc,sc);
+
+
+		D3DXVECTOR3 vCenter( global_shift_x, global_shift_y, global_shift_z);
+
 		D3DXMatrixTranslation( &g_mCenterMesh, -vCenter.x+x_offset, -vCenter.y+y_offset, -vCenter.z+z_offset );
 
 
-		D3DXMATRIXA16 m;
-		D3DXMATRIXA16 m2;
-		D3DXMATRIXA16 m3;
-		D3DXMATRIXA16 m_scale;
+		D3DXMATRIXA16 m_trans_transpose;
+		D3DXMatrixTranspose(&m_trans_transpose,&m_trans);
 		
-		D3DXMatrixTranslation(&m2, 0, 0, -500);
-		D3DXMatrixTranslation(&m3, 0, 0, 500);
-
-		D3DXMatrixScaling(&m_scale,100,100,100);
-	    
-		D3DXMatrixRotationY( &m, D3DX_PI/4.0);
-	    
-		m = m3*m*m2;
-	   
-
-		mWorld = m * g_mCenterMesh * *g_Camera.GetWorldMatrix();
+		mWorld = *g_Camera.GetWorldMatrix() ;
 		mProj = *g_Camera.GetProjMatrix();
-		mView = *g_Camera.GetViewMatrix();
+		mView = m_trans * *g_Camera.GetViewMatrix();
 
-		mWorldViewProjection = mWorld * mView * mProj;// * m_scale;
-	     
+		mWorldViewProjection = mView * mProj;
+
 
 		// VS Per object
 		V( pd3dImmediateContext->Map( g_pcbVSPerObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource ) );
@@ -136,12 +167,18 @@ class cylinder
 
 			pd3dImmediateContext->PSSetShaderResources(0,1,&texture2D_view);
 
-			pd3dImmediateContext->DrawIndexed( ( UINT )pSubset->IndexCount, 0, ( UINT )pSubset->VertexStart );
+			pd3dImmediateContext->DrawIndexed( (width*3*2+2 + height*width*3*2), 0, ( UINT )pSubset->VertexStart );
 		}
+
+		SAFE_RELEASE(pd3dImmediateContext);
 	}
 
-	void create_buffers(int width, int height)
+	void create_buffers(int width_, int height_)
 	{
+		width = width_;
+		height = height_;
+
+
 		D3D11_BUFFER_DESC bufferDesc;
 		bufferDesc.Usage = D3D11_USAGE_DEFAULT;
 		bufferDesc.ByteWidth = sizeof(vertex_struct)*width*height;
@@ -150,21 +187,42 @@ class cylinder
 		bufferDesc.MiscFlags = 0;
 
 		vertex_struct *vertices = new vertex_struct[width*height];
+		
+		btCapsuleShape* cs = static_cast<btCapsuleShape*>(collisionShape);
+		float radius = cs->getRadius();
+		float halfHeight = cs->getHalfHeight();
+		
 		for(int y = 0; y < height; y++)
 		{
 			for(int x = 0; x < width; x++)
 			{
-				double coord_2 = sin(2.2*3.141159*y/(float)height)*100;
-				double coord_1 = cos(2.2*3.141159*y/(float)height)*100;
+				double coord_2 = sin(2.2*3.141159*y/(float)height)*radius;
+				double coord_1 = cos(2.2*3.141159*y/(float)height)*radius;
 				//double coord_2 = (y/((float)(height-1)))*1000;
 				
 				//coord = sin(y/);
 
-				vertices[y*width+x].Pos = D3DXVECTOR3( (x/((float)(width-1)))*1000, coord_1, coord_2); 
+				vertices[y*width+x].Pos = D3DXVECTOR3(coord_1,  ((x/((float)(width-1)))-.5)*halfHeight*2,  coord_2); 
+				vertices[y*width+x].Normal = D3DXVECTOR3(coord_1,0,coord_2);
+				vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
+			}
+		}
+		
+
+		/*
+		for(int y = 0; y < height; y++)
+		{
+			for(int x = 0; x < width; x++)
+			{
+				double coord = sin(x/5.0)*50;
+				//coord = sin(y/);
+
+				vertices[y*width+x].Pos = D3DXVECTOR3( (x/((float)(width-1)))*1000, coord, (y/((float)(height-1)))*1000); 
 				vertices[y*width+x].Normal = D3DXVECTOR3(1,0,0);
 				vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
 			}
 		}
+		 */
 
 		D3D11_SUBRESOURCE_DATA InitData;
 		InitData.pSysMem = vertices;

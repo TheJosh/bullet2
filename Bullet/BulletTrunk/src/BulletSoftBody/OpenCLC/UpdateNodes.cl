@@ -1,3 +1,5 @@
+MSTRINGIFY(
+
 //#define float3 float4
 
 __kernel void 
@@ -34,3 +36,5 @@ updateVelocitiesFromPositionsWithVelocitiesKernel(
 		g_vertexForces[nodeID] = (float4)(0.f, 0.f, 0.f, 0.f);								
 	}
 }
+
+);

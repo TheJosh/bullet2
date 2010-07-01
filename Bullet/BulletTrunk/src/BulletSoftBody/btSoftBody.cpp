@@ -15,12 +15,9 @@ subject to the following restrictions:
 ///btSoftBody implementation by Nathanael Presson
 
 #include "btSoftBodyInternals.h"
-#include <iostream>
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_Solvers.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_LinkDataDX11.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_VertexDataDX11.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_TriangleDataDX11.h"
+#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
 
 //
 btSoftBody::btSoftBody(btSoftBodyWorldInfo*	worldInfo,int node_count,  const btVector3* x,  const btScalar* m)
@@ -97,7 +94,6 @@ btSoftBody::btSoftBody(btSoftBodyWorldInfo*	worldInfo,int node_count,  const btV
 
 	// Initialize solver to NULL so that the solving code in the btSoftBody class
 	// is used instead.
-	m_acceleratedSolver = NULL;
 	m_acceleratedSoftBody = NULL;
 
 	m_mediumVelocity = btVector3(0,0,0);
@@ -585,7 +581,7 @@ void			btSoftBody::transform(const btTransform& trs)
 {
 	// If we have a solver, skip this work.
 	// It will have been done within the solver.
-	if( this->m_acceleratedSolver )
+	if( this->m_acceleratedSoftBody )
 		return;
 
 	const btScalar	margin=getCollisionShape()->getMargin();
@@ -1513,7 +1509,7 @@ void			btSoftBody::predictMotion(btScalar dt)
 {
 	// If we have a solver, skip this work.
 	// It will have been done within the solver.
-	if( this->m_acceleratedSolver )
+	if( this->m_acceleratedSoftBody )
 		return;
 
 	int i,ni;
@@ -1609,7 +1605,7 @@ void			btSoftBody::solveConstraints()
 {
 	// If we have a solver, skip this work.
 	// It will have been done within the solver.
-	if( this->m_acceleratedSolver )
+	if( this->m_acceleratedSoftBody )
 		return;
 
 	/* Apply clusters		*/ 
@@ -1754,7 +1750,7 @@ void			btSoftBody::integrateMotion()
 {
 	// If we have a solver, skip this work.
 	// It will have been done within the solver.
-	if( this->m_acceleratedSolver )
+	if( this->m_acceleratedSoftBody )
 		return;
 
 	/* Update			*/ 
@@ -1986,20 +1982,21 @@ bool				btSoftBody::checkContact(	btCollisionObject* colObj,
 											 btScalar margin,
 											 btSoftBody::sCti& cti) const
 {
-	btVector3			nrm;
-	btCollisionShape*	shp=colObj->getCollisionShape();
-	btRigidBody* tmpRigid = btRigidBody::upcast(colObj);
-	const btTransform&	wtr=tmpRigid? tmpRigid->getInterpolationWorldTransform() : colObj->getWorldTransform();
-	btScalar			dst=m_worldInfo->m_sparsesdf.Evaluate(	wtr.invXform(x),
-		shp,
-		nrm,
-		margin);
+	btVector3 nrm;
+	btCollisionShape *shp = colObj->getCollisionShape();
+	btRigidBody *tmpRigid = btRigidBody::upcast(colObj);
+	const btTransform &wtr = tmpRigid ? tmpRigid->getInterpolationWorldTransform() : colObj->getWorldTransform();
+	btScalar dst = 
+		m_worldInfo->m_sparsesdf.Evaluate(	
+			wtr.invXform(x),
+			shp,
+			nrm,
+			margin);
 	if(dst<0)
 	{
-		cti.m_colObj		=	colObj;
-		cti.m_normal	=	wtr.getBasis()*nrm;
-		cti.m_offset	=	-btDot(	cti.m_normal,
-			x-cti.m_normal*dst);
+		cti.m_colObj = colObj;
+		cti.m_normal = wtr.getBasis()*nrm;
+		cti.m_offset = -btDot( cti.m_normal, x - cti.m_normal * dst );
 		return(true);
 	}
 	return(false);
@@ -2037,29 +2034,42 @@ void					btSoftBody::updateNormals()
 //
 void					btSoftBody::updateBounds()
 {
-	if(m_ndbvt.m_root)
+	/*if( m_acceleratedSoftBody )
 	{
-		const btVector3&	mins=m_ndbvt.m_root->volume.Mins();
-		const btVector3&	maxs=m_ndbvt.m_root->volume.Maxs();
-		const btScalar		csm=getCollisionShape()->getMargin();
-		const btVector3		mrg=btVector3(	csm,
-			csm,
-			csm)*1; // ??? to investigate...
-		m_bounds[0]=mins-mrg;
-		m_bounds[1]=maxs+mrg;
-		if(0!=getBroadphaseHandle())
-		{					
-			m_worldInfo->m_broadphase->setAabb(	getBroadphaseHandle(),
-				m_bounds[0],
-				m_bounds[1],
-				m_worldInfo->m_dispatcher);
+		// If we have an accelerated softbody we need to obtain the bounds correctly
+		// For now (slightly hackily) just have a very large AABB
+		// TODO: Write get bounds kernel
+		// If that is updating in place, atomic collisions might be low (when the cloth isn't perfectly aligned to an axis) and we could
+		// probably do a test and exchange reasonably efficiently.
+
+		m_bounds[0] = btVector3(-1000, -1000, -1000);
+		m_bounds[1] = btVector3(1000, 1000, 1000);
+
+	} else {*/
+		if(m_ndbvt.m_root)
+		{
+			const btVector3&	mins=m_ndbvt.m_root->volume.Mins();
+			const btVector3&	maxs=m_ndbvt.m_root->volume.Maxs();
+			const btScalar		csm=getCollisionShape()->getMargin();
+			const btVector3		mrg=btVector3(	csm,
+				csm,
+				csm)*1; // ??? to investigate...
+			m_bounds[0]=mins-mrg;
+			m_bounds[1]=maxs+mrg;
+			if(0!=getBroadphaseHandle())
+			{					
+				m_worldInfo->m_broadphase->setAabb(	getBroadphaseHandle(),
+					m_bounds[0],
+					m_bounds[1],
+					m_worldInfo->m_dispatcher);
+			}
 		}
-	}
-	else
-	{
-		m_bounds[0]=
-			m_bounds[1]=btVector3(0,0,0);
-	}		
+		else
+		{
+			m_bounds[0]=
+				m_bounds[1]=btVector3(0,0,0);
+		}		
+	//}
 }
 
 
@@ -2758,26 +2768,27 @@ void				btSoftBody::PSolve_Anchors(btSoftBody* psb,btScalar kst,btScalar ti)
 }
 
 //
-void				btSoftBody::PSolve_RContacts(btSoftBody* psb,btScalar kst,btScalar ti)
+void btSoftBody::PSolve_RContacts(btSoftBody* psb, btScalar kst, btScalar ti)
 {
-	const btScalar	dt=psb->m_sst.sdt;
-	const btScalar	mrg=psb->getCollisionShape()->getMargin();
+	const btScalar	dt = psb->m_sst.sdt;
+	const btScalar	mrg = psb->getCollisionShape()->getMargin();
 	for(int i=0,ni=psb->m_rcontacts.size();i<ni;++i)
 	{
-		const RContact&		c=psb->m_rcontacts[i];
-		const sCti&			cti=c.m_cti;	
+		const RContact&		c = psb->m_rcontacts[i];
+		const sCti&			cti = c.m_cti;	
 		btRigidBody* tmpRigid = btRigidBody::upcast(cti.m_colObj);
 
-		const btVector3		va=tmpRigid ? tmpRigid->getVelocityInLocalPoint(c.m_c1)*dt : btVector3(0,0,0);
-		const btVector3		vb=c.m_node->m_x-c.m_node->m_q;	
-		const btVector3		vr=vb-va;
-		const btScalar		dn=btDot(vr,cti.m_normal);		
+		const btVector3		va = tmpRigid ? tmpRigid->getVelocityInLocalPoint(c.m_c1)*dt : btVector3(0,0,0);
+		const btVector3		vb = c.m_node->m_x-c.m_node->m_q;	
+		const btVector3		vr = vb-va;
+		const btScalar		dn = btDot(vr, cti.m_normal);		
 		if(dn<=SIMD_EPSILON)
 		{
-			const btScalar		dp=btMin(btDot(c.m_node->m_x,cti.m_normal)+cti.m_offset,mrg);
-			const btVector3		fv=vr-cti.m_normal*dn;
-			const btVector3		impulse=c.m_c0*((vr-fv*c.m_c3+cti.m_normal*(dp*c.m_c4))*kst);
-			c.m_node->m_x-=impulse*c.m_c2;
+			const btScalar		dp = btMin( (btDot(c.m_node->m_x, cti.m_normal) + cti.m_offset), mrg );
+			const btVector3		fv = vr - (cti.m_normal * dn);
+			// c0 is the impulse matrix, c3 is 1 - the friction coefficient or 0, c4 is the contact hardness coefficient
+			const btVector3		impulse = c.m_c0 * ( (vr - (fv * c.m_c3) + (cti.m_normal * (dp * c.m_c4))) * kst );
+			c.m_node->m_x -= impulse * c.m_c2;
 			if (tmpRigid)
 				tmpRigid->applyImpulse(impulse,c.m_c1);
 		}
@@ -2891,43 +2902,48 @@ void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 	// TODO: In the case of the collision handler we need to ensure that we're
 	// updating the data structures correctly and in here we generate the 
 	// collision lists to deal with in the solver
-	if( this->m_acceleratedSolver )
-		return;
-
-	switch(m_cfg.collisions&fCollision::RVSmask)
+	if( this->m_acceleratedSoftBody )
 	{
-	case	fCollision::SDF_RS:
+		// We need to pass the collision data through to the solver collision engine
+		// Note that we only add the collision object here, we are not applying the collision or dealing with 
+		// an impulse response.
+		m_acceleratedSoftBody->addCollisionObject(pco);
+	} else {
+		switch(m_cfg.collisions&fCollision::RVSmask)
 		{
-			btSoftColliders::CollideSDF_RS	docollide;		
-			btRigidBody*		prb1=btRigidBody::upcast(pco);
-			btTransform	wtr=prb1 ? prb1->getInterpolationWorldTransform() : pco->getWorldTransform();
+		case	fCollision::SDF_RS:
+			{
+				btSoftColliders::CollideSDF_RS	docollide;		
+				btRigidBody*		prb1=btRigidBody::upcast(pco);
+				btTransform	wtr=prb1 ? prb1->getInterpolationWorldTransform() : pco->getWorldTransform();
 
-			const btTransform	ctr=pco->getWorldTransform();
-			const btScalar		timemargin=(wtr.getOrigin()-ctr.getOrigin()).length();
-			const btScalar		basemargin=getCollisionShape()->getMargin();
-			btVector3			mins;
-			btVector3			maxs;
-			ATTRIBUTE_ALIGNED16(btDbvtVolume)		volume;
-			pco->getCollisionShape()->getAabb(	pco->getInterpolationWorldTransform(),
-				mins,
-				maxs);
-			volume=btDbvtVolume::FromMM(mins,maxs);
-			volume.Expand(btVector3(basemargin,basemargin,basemargin));		
-			docollide.psb		=	this;
-			docollide.m_colObj1 = pco;
-			docollide.m_rigidBody = prb1;
+				const btTransform	ctr=pco->getWorldTransform();
+				const btScalar		timemargin=(wtr.getOrigin()-ctr.getOrigin()).length();
+				const btScalar		basemargin=getCollisionShape()->getMargin();
+				btVector3			mins;
+				btVector3			maxs;
+				ATTRIBUTE_ALIGNED16(btDbvtVolume)		volume;
+				pco->getCollisionShape()->getAabb(	pco->getInterpolationWorldTransform(),
+					mins,
+					maxs);
+				volume=btDbvtVolume::FromMM(mins,maxs);
+				volume.Expand(btVector3(basemargin,basemargin,basemargin));		
+				docollide.psb		=	this;
+				docollide.m_colObj1 = pco;
+				docollide.m_rigidBody = prb1;
 
-			docollide.dynmargin	=	basemargin+timemargin;
-			docollide.stamargin	=	basemargin;
-			m_ndbvt.collideTV(m_ndbvt.m_root,volume,docollide);
+				docollide.dynmargin	=	basemargin+timemargin;
+				docollide.stamargin	=	basemargin;
+				m_ndbvt.collideTV(m_ndbvt.m_root,volume,docollide);
+			}
+			break;
+		case	fCollision::CL_RS:
+			{
+				btSoftColliders::CollideCL_RS	collider;
+				collider.Process(this,pco);
+			}
+			break;
 		}
-		break;
-	case	fCollision::CL_RS:
-		{
-			btSoftColliders::CollideCL_RS	collider;
-			collider.Process(this,pco);
-		}
-		break;
 	}
 }
 
@@ -2939,7 +2955,7 @@ void			btSoftBody::defaultCollisionHandler(btSoftBody* psb)
 	// TODO: In the case of the collision handler we need to ensure that we're
 	// updating the data structures correctly and in here we generate the 
 	// collision lists to deal with in the solver
-	if( this->m_acceleratedSolver )
+	if( this->m_acceleratedSoftBody )
 		return;
 
 
@@ -3092,7 +3108,7 @@ void btSoftBody::moveToSolver( btSoftBodySolver *solver )
 	newSoftBody->setNumLinks( numLinks );
 	// Set air density and default acceleration due to gravity
 	newSoftBody->setAcceleration( btVector3ToVectormath(this->m_worldInfo->m_gravity) );
-	newSoftBody->setAirDensity( this->m_worldInfo->air_density );
+	newSoftBody->setAirDensity( this->m_worldInfo->air_density );	
 }
 
 void btSoftBody::moveFromSolver()
@@ -3100,13 +3116,10 @@ void btSoftBody::moveFromSolver()
 	btAssert( "Move from not written yet\n" );
 }
 
-void btSoftBody::addCollisionObject( btCollisionObject* collisionObject )
-{
-}
 
 void btSoftBody::optimize()
 {
-	m_acceleratedSolver->optimize();
+	m_acceleratedSoftBody->getSolver()->optimize();
 }
 
 void btSoftBody::setVertexOutput( btVertexBufferDescriptor *vertexBuffer )

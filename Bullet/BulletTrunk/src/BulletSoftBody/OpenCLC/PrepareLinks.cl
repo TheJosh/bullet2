@@ -1,3 +1,5 @@
+MSTRINGIFY(
+
 __kernel void 
 PrepareLinksKernel( 
 	const int numLinks,
@@ -28,3 +30,5 @@ PrepareLinksKernel(
 		g_linksLengthRatio[linkID]   = linkLengthRatio;		
 	}
 }
+
+);

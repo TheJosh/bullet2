@@ -1,3 +1,6 @@
+
+MSTRINGIFY(
+
 /*#define float3 float4
 
 float dot3(float3 a, float3 b)
@@ -48,3 +51,5 @@ SolvePositionsFromLinksKernel(
 		}
 	}
 }
+
+);

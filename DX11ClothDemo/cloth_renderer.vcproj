@@ -671,6 +671,10 @@
 			</File>
 		</Filter>
 		<File
+			RelativePath=".\btDirectComputeSupport.h"
+			>
+		</File>
+		<File
 			RelativePath=".\cap.h"
 			>
 		</File>

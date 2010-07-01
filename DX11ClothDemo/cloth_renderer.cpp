@@ -17,7 +17,7 @@
 
 #include "btBulletDynamicsCommon.h"
 #include "LinearMath/btHashMap.h"
-#include "BulletSoftBody/btDirectComputeSupport.h"
+#include "btDirectComputeSupport.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_DXVertexBuffers.h"
 #include "BulletSoftBody/btSoftBodyHelpers.h"
@@ -27,12 +27,15 @@
 #include "BulletSoftBody/btAcceleratedSoftBody_CPUSolver.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_DX11Solver.h"
 #include "BulletSoftBody/btAcceleratedSoftBody_DXVertexBuffers.h"
+#include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 
-#define USE_GPU_COPY
 #define USE_GPU_SOLVER
+#define USE_GPU_COPY
 const int numFlags = 5;
-const int clothWidth = 50;
-const int clothHeight = 40;
+const int clothWidth = 40;
+const int clothHeight = 60;;
+float _windAngle = 1.0;;
+float _windStrength = 15;
 
 
 #include <fstream>
@@ -107,6 +110,11 @@ ID3D11GeometryShader*         g_pGeometryShader = NULL;
 ID3D11PixelShader*          g_pPixelShader = NULL;
 ID3D11SamplerState*         g_pSamLinear = NULL;
 
+ID3D11RasterizerState *g_pRasterizerState = NULL;
+ID3D11RasterizerState *g_pRasterizerStateWF = NULL;
+
+bool g_wireFrame = false;
+
 struct CB_VS_PER_OBJECT
 {
     D3DXMATRIX m_WorldViewProj;
@@ -157,15 +165,18 @@ struct vertex_struct
 #include "cap.h"
 #include "cylinder.h"
 #include "cloth.h"
+//#include "capsule.h"
+
+
 
 //cylinder cyl_1;
 //cap cap_1;
-
+btRigidBody *capCollider;
 
 
 
 btAlignedObjectArray<piece_of_cloth> cloths;
-
+//capsule my_capsule;
 
 //////////////////////////////////////////
 // Bullet globals
@@ -207,6 +218,8 @@ static bool testAndAddLink( btAlignedObjectArray<int> &trianglesForLinks, btSoft
 			nodeA = otherIndices[2];
 
 		softBody->appendLink( nodeA, nonLinkVertex, bendMaterial );
+
+		return true;
 	} else {
 		// Don't yet have link so create it
 		softBody->appendLink( vertex0, vertex1, structuralMaterial );
@@ -238,7 +251,6 @@ btSoftBody *createFromIndexedMesh( btVector3 *vertexArray, int numVertices, int 
 	// and can add a link across the link
 	btAlignedObjectArray<int> triangleForLinks;
 	triangleForLinks.resize( numVertices * numVertices, -1 );
-	int numLinks = 0;
 	for( int triangle = 0; triangle < numTriangles; ++triangle )
 	{
 		int index[3] = {triangleVertexIndexArray[triangle * 3], triangleVertexIndexArray[triangle * 3 + 1], triangleVertexIndexArray[triangle * 3 + 2]};
@@ -339,7 +351,8 @@ void createFlag( btSoftBodySolver &solver, int width, int height, btAlignedObjec
 	defaultRotateX[1] = btVector3( 0.f, cos(rotateAngleRoundX), sin(rotateAngleRoundX));
 	defaultRotateX[2] = btVector3(0.f, -sin(rotateAngleRoundX), cos(rotateAngleRoundX));
 
-	btMatrix3x3 defaultRotateAndScale( (defaultRotateX*defaultRotate) );
+	//btMatrix3x3 defaultRotateAndScale( (defaultRotateX*defaultRotate) );
+	btMatrix3x3 defaultRotateAndScale( (defaultRotateX) );
 
 
 	// Construct the sequence flags applying a slightly different translation to each one to arrange them
@@ -363,12 +376,16 @@ void createFlag( btSoftBodySolver &solver, int width, int height, btAlignedObjec
 		softBody->setMass((height-1)*(width), 0.f);
 		softBody->setMass((height-1)*(width) + width - 1, 0.f);
 		softBody->setMass((height-1)*width + width/2, 0.f);
+		softBody->m_cfg.collisions = btSoftBody::fCollision::CL_SS+btSoftBody::fCollision::CL_RS;	
+		
 		
 		flags.push_back( softBody );
 
 		softBody->transform( transform );
 
 		softBody->moveToSolver( &solver );
+		
+		m_dynamicsWorld->addSoftBody( softBody );
 	}
 
 	delete [] vertexArray;
@@ -378,8 +395,6 @@ void createFlag( btSoftBodySolver &solver, int width, int height, btAlignedObjec
 
 
 
-float _windAngle = 0.4;
-float _windStrength = 20;
 
 void updatePhysicsWorld()
 {
@@ -406,6 +421,9 @@ void updatePhysicsWorld()
 		}
 	}
 
+	//btVector3 origin( capCollider->getWorldTransform().getOrigin() );
+	//origin.setX( origin.getX() + 0.05 );
+	//capCollider->getWorldTransform().setOrigin( origin );
 	
 	counter++;
 }
@@ -414,7 +432,8 @@ void initBullet(void)
 {
 
 	// Initialise CPU physics device
-	m_collisionConfiguration = new btDefaultCollisionConfiguration();
+	//m_collisionConfiguration = new btDefaultCollisionConfiguration();
+	m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
 	m_dispatcher = new	btCollisionDispatcher(m_collisionConfiguration);
 	m_broadphase = new btDbvtBroadphase();
 	btSequentialImpulseConstraintSolver* sol = new btSequentialImpulseConstraintSolver;
@@ -429,10 +448,14 @@ void initBullet(void)
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0,-50,0));
 
-	g_cpuSolver = new btCPUSoftBodySolver;
-	m_dynamicsWorld->addSolver( g_cpuSolver );
+
+#ifdef USE_GPU_SOLVER
 	g_dx11Solver = new btDX11SoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
 	m_dynamicsWorld->addSolver( g_dx11Solver );
+#else
+	g_cpuSolver = new btCPUSoftBodySolver;
+	m_dynamicsWorld->addSolver( g_cpuSolver );
+#endif
 
 	m_dynamicsWorld->getWorldInfo().air_density		=	(btScalar)1.2;
 	m_dynamicsWorld->getWorldInfo().water_density	=	0;
@@ -440,7 +463,7 @@ void initBullet(void)
 	m_dynamicsWorld->getWorldInfo().water_normal		=	btVector3(0,0,0);
 	m_dynamicsWorld->getWorldInfo().m_gravity.setValue(0,-10,0);
 
-	
+#if 0
 	{
 		btScalar mass(0.);
 
@@ -459,13 +482,48 @@ void initBullet(void)
 		//add the body to the dynamics world
 		m_dynamicsWorld->addRigidBody(body);
 	}
+ 
+#endif
+#if 0
+	{		
+		btScalar mass(0.);
 
-	// Create a sequence of flags on the dx11 device	
+		//btScalar mass(1.);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+		
+		btCollisionShape *capsuleShape = new btCapsuleShape(5, 30);
+		
+		
+
+		my_capsule.set_collision_shape(capsuleShape);
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			capsuleShape->calculateLocalInertia(mass,localInertia);
+
+		m_collisionShapes.push_back(capsuleShape);
+		btTransform capsuleTransform;
+		capsuleTransform.setIdentity();
+		capsuleTransform.setOrigin(btVector3(0, 10, 0));
+		btDefaultMotionState* myMotionState = new btDefaultMotionState(capsuleTransform);
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,capsuleShape,localInertia);
+		btRigidBody* body = new btRigidBody(rbInfo);
+		
+		my_capsule.set_collision_object(body);
+
+		m_dynamicsWorld->addRigidBody(body);
+		//cap_1.collisionShape = body;
+		capCollider = body;
+	}
+#endif
+
 #ifdef USE_GPU_SOLVER
- 	createFlag( *g_dx11Solver, clothWidth, clothHeight, m_flags );
-#else // #ifdef USE_GPU_SOLVER
+	createFlag( *g_dx11Solver, clothWidth, clothHeight, m_flags );
+#else
 	createFlag( *g_cpuSolver, clothWidth, clothHeight, m_flags );
-#endif // #ifdef USE_GPU_SOLVER
+#endif
 
 	// Create output buffer descriptions for ecah flag
 	// These describe where the simulation should send output data to
@@ -487,21 +545,13 @@ void initBullet(void)
 
 	}
 
-	g_cpuSolver->optimize();
 #ifdef USE_GPU_SOLVER
 	g_dx11Solver->optimize();
+#else	
+	g_cpuSolver->optimize();
 #endif
 
 }
-
-
-
-
-
-
-
-
-
 
 
 
@@ -527,6 +577,7 @@ void initBullet(void)
 #define IDC_TOGGLEREF           3
 #define IDC_CHANGEDEVICE        4
 #define IDC_PAUSE               5
+#define IDC_WIREFRAME           6
 
 //--------------------------------------------------------------------------------------
 // Forward declarations 
@@ -616,6 +667,7 @@ void InitApp()
     g_HUD.AddButton( IDC_TOGGLEREF, L"Toggle REF (F3)", 0, iY += 26, 170, 23, VK_F3 );
     g_HUD.AddButton( IDC_CHANGEDEVICE, L"Change device (F2)", 0, iY += 26, 170, 23, VK_F2 );
 	g_HUD.AddButton( IDC_PAUSE, L"Pause", 0, iY += 26, 170, 23 );
+	g_HUD.AddButton( IDC_WIREFRAME, L"Wire frame", 0, iY += 26, 170, 23 );
     
 	g_SampleUI.SetCallback( OnGUIEvent ); iY = 10;
 }
@@ -762,6 +814,8 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
             g_D3DSettingsDlg.SetActive( !g_D3DSettingsDlg.IsActive() ); break;
 		case IDC_PAUSE:
 			paused = !paused;
+		case IDC_WIREFRAME:
+			g_wireFrame = !g_wireFrame;
 			break;
     }
 
@@ -931,9 +985,13 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
     V_RETURN( pd3dDevice->CreateBuffer( &Desc, NULL, &g_pcbPSPerFrame ) );
 
     // Setup the camera's view parameters
-    D3DXVECTOR3 vecEye( 0.0f, 0.0f, -100.0f );
+    
+	
+	D3DXVECTOR3 vecEye( 0.0f, 0.0f, -100.0f );
     D3DXVECTOR3 vecAt ( 0.0f, 0.0f, -0.0f );
-    g_Camera.SetViewParams( &vecEye, &vecAt );
+    
+
+	g_Camera.SetViewParams( &vecEye, &vecAt );
 
 	cloths.resize(numFlags);
 
@@ -942,30 +1000,45 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
 		cloths[flagIndex].create_buffers(clothWidth, clothHeight);
 	}
 
-	//cap_1.create_buffers(20, 30);
-
 	initBullet();
+
+
+	//my_capsule.create_buffers(50,40);
+
+
+
+	std::wstring flagTexs[] = {
+		L"atiFlag.bmp",
+		L"amdFlag.bmp",
+	};
+	int numFlagTexs = 2;
 
 	for( int flagIndex =  0; flagIndex < numFlags; ++flagIndex )
 	{
-		cloths[flagIndex].create_texture();
-		cloths[flagIndex].x_offset = 0; cloths[flagIndex].y_offset = 0; cloths[flagIndex].z_offset = 0;
+		cloths[flagIndex].create_texture(flagTexs[flagIndex % numFlagTexs]);
+		cloths[flagIndex].x_offset = 0; 
+		cloths[flagIndex].y_offset = 0; 
+		cloths[flagIndex].z_offset = 0;
 	}
+
+	//cap_1.create_texture();
+	//cap_1.x_offset = 0;
+	//cap_1.y_offset = 0;
+	//cap_1.z_offset = 0;
+
+	//my_capsule.create_texture();
 
 	//Turn off backface culling
 	D3D11_RASTERIZER_DESC rsDesc;
 	ZeroMemory(&rsDesc,sizeof(D3D11_RASTERIZER_DESC) );
 	rsDesc.CullMode = D3D11_CULL_NONE;
 	rsDesc.FillMode = D3D11_FILL_SOLID;
-	//rsDesc.FillMode = D3D11_FILL_WIREFRAME;
 	
+	hr = pd3dDevice->CreateRasterizerState(&rsDesc, &g_pRasterizerState);	
 	
-	ID3D11RasterizerState *pRasterizerState = NULL;
-	hr = pd3dDevice->CreateRasterizerState(&rsDesc, &pRasterizerState);
+	rsDesc.FillMode = D3D11_FILL_WIREFRAME;
+	hr = pd3dDevice->CreateRasterizerState(&rsDesc, &g_pRasterizerStateWF);
 	
-	pd3dImmediateContext->RSSetState(pRasterizerState);
-
-	SAFE_RELEASE(pRasterizerState);
 	SAFE_RELEASE(pd3dImmediateContext);
 
 
@@ -1079,9 +1152,8 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 		cloths[flagIndex].draw();
 	}
 
-
-
-//	cap_1.draw();
+	//my_capsule.draw();
+	//cap_1.draw();
 
 	
     DXUT_BeginPerfEvent( DXUT_PERFEVENTCOLOR, L"HUD / Stats" );
@@ -1133,21 +1205,27 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
     SAFE_RELEASE( g_pcbVSPerObject );
     SAFE_RELEASE( g_pcbPSPerObject );
     SAFE_RELEASE( g_pcbPSPerFrame );
+	
+	SAFE_RELEASE( g_pRasterizerState );
+	SAFE_RELEASE( g_pRasterizerStateWF );
+
 
 	for( int flagIndex =  0; flagIndex < numFlags; ++flagIndex )
 	{
 		cloths[flagIndex].destroy();
 	}
 
-	for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
-	{	
-		delete m_flags[flagIndex];
-	}
-
+	// Shouldn't need to delete this as it's just a soft body and will be deleted later by the collision object cleanup.
+	//for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
+	//{	
+		//delete m_flags[flagIndex];
+	//}
 
 	//cleanup in the reverse order of creation/initialization
-	delete g_cpuSolver;
-	delete g_dx11Solver;
+	if( g_cpuSolver )
+		delete g_cpuSolver;
+	if( g_dx11Solver )
+		delete g_dx11Solver;
 
 	for(int i=0; i< m_collisionShapes.size(); i++)
 		delete m_collisionShapes[i];
@@ -1165,26 +1243,22 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
 		m_dynamicsWorld->removeCollisionObject( obj );
 		delete obj;
 	}
+
 	delete m_dynamicsWorld;	
 	delete m_solver;	
 	delete m_broadphase;	
 	delete m_dispatcher;
 	delete m_collisionConfiguration;
 
-
-/*
-	// Release the buffers relating to the cloths
-	for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
-	{	
-		SAFE_RELEASE(cloths[flagIndex].g_pIndexBuffer);
-		SAFE_RELEASE(cloths[flagIndex].pVB[0]);
-		SAFE_RELEASE(cloths[flagIndex].g_pVB_UAV);
-		SAFE_RELEASE(cloths[flagIndex].pVB_staging);
-		SAFE_RELEASE(cloths[flagIndex].texture2D);
-		SAFE_RELEASE(cloths[flagIndex].texture2D_view);
-	}
-*/
+		
 }
+
+
+
+
+
+
+
 
 
 

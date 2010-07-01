@@ -1,3 +1,4 @@
+MSTRINGIFY(
 
 cbuffer UpdateConstantsCB : register( b0 )
 {
@@ -44,86 +45,4 @@ UpdateConstantsKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID,
 	}
 }
 
-#if 0
-[numthreads(128, 1, 1)]
-void 
-UpdateFaceAreasKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex )
-{
-	int faceID = DTid.x;
-	if( faceID < numFaces )
-	{	
-		float4 node0 = g_nodesx[g_FaceNodeIndices0[faceID]];
-		float4 node1 = g_nodesx[g_FaceNodeIndices1[faceID]];
-		float4 node2 = g_nodesx[g_FaceNodeIndices2[faceID]];
-		
-		float3 vector0 = node1.xyz - node0.xyz;
-		float3 vector1 = node2.xyz - node0.xyz;
-		float3 crossResult = cross(vector0, vector1);
-		float area = length(crossResult);
-		
-		g_FaceAreas[faceID] = area;
-	}
-}
-
-[numthreads(128, 1, 1)]
-void 
-ResetAreasKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex )
-{
-	int nodeID = DTid.x;
-	if( nodeID < numNodes )
-	{	
-		g_nodesArea[nodeID] = 0.0f;
-		g_nodeAreaCounts[nodeID] = 0;
-	}
-}
-
-
-[numthreads(128, 1, 1)]
-void 
-UpdateAreasKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex )
-{
-	int faceID = DTid.x + startFace;
-	if( DTid.x < numFaces )
-	{	
-		int nodeIndex0 = g_FaceNodeIndices0[faceID];
-		int nodeIndex1 = g_FaceNodeIndices1[faceID];
-		int nodeIndex2 = g_FaceNodeIndices2[faceID];
-		float nodeArea0 = g_nodesArea[nodeIndex0];
-		float nodeArea1 = g_nodesArea[nodeIndex1];
-		float nodeArea2 = g_nodesArea[nodeIndex2];
-		
-		float faceArea = abs(g_FaceAreas[faceID]);
-		g_nodeAreaCounts[nodeIndex0] = g_nodeAreaCounts[nodeIndex0] + 1;
-		g_nodeAreaCounts[nodeIndex1] = g_nodeAreaCounts[nodeIndex1] + 1;
-		g_nodeAreaCounts[nodeIndex2] = g_nodeAreaCounts[nodeIndex2] + 1;
-		
-		
-		nodeArea0 += faceArea;
-		nodeArea1 += faceArea;
-		nodeArea2 += faceArea;
-		
-		g_nodesArea[nodeIndex0] = nodeArea0;
-		g_nodesArea[nodeIndex1] = nodeArea1;
-		g_nodesArea[nodeIndex2] = nodeArea2;		
-	}
-}
-
-
-[numthreads(128, 1, 1)]
-void 
-NormalizeAreasKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchThreadID, uint3 GTid : SV_GroupThreadID, uint GI : SV_GroupIndex )
-{
-	int nodeID = DTid.x;
-	if( nodeID < numNodes )
-	{	
-		float area = g_nodesArea[nodeID];
-		int count = g_nodeAreaCounts[nodeID];
-		
-		float normalizedArea = 0.0f;
-		if( count > 0 )
-			normalizedArea = area/float(count);
-		
-		g_nodesArea[nodeID] = normalizedArea;
-	}
-}
-#endif
+);

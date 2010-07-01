@@ -14,7 +14,6 @@ public:
 			SAFE_RELEASE(pVB[0]);
 			SAFE_RELEASE(g_pVB_UAV);
 			SAFE_RELEASE(pVB_staging);
-			//SAFE_RELEASE(texture2D);
 			SAFE_RELEASE(texture2D_view);
 			if(m_vertexBufferDescriptor) delete [] m_vertexBufferDescriptor;
 			if(cpu_buffer) delete [] cpu_buffer;
@@ -42,7 +41,6 @@ public:
 	double x_offset, y_offset, z_offset;
 
 
-	//ID3D11Texture2D *texture2D;
 	ID3D11ShaderResourceView *texture2D_view;
 
 	int width;
@@ -50,14 +48,14 @@ public:
 
 	btDX11VertexBufferDescriptor *m_vertexBufferDescriptor;
 
-	void create_texture(void)
+	void create_texture(std::wstring filename)
 	{
 		D3DX11_IMAGE_LOAD_INFO loadInfo;
 		ZeroMemory(&loadInfo, sizeof(D3DX11_IMAGE_LOAD_INFO) );
 		loadInfo.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 		loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 
-		HRESULT hr = D3DX11CreateShaderResourceViewFromFile(g_pd3dDevice, L"texture.bmp", &loadInfo, NULL, &texture2D_view, NULL);
+		HRESULT hr = D3DX11CreateShaderResourceViewFromFile(g_pd3dDevice, filename.c_str(), &loadInfo, NULL, &texture2D_view, NULL);
 		hr = hr;
 
 	}
@@ -158,6 +156,11 @@ public:
 		SDKMESH_SUBSET* pSubset = NULL;
 		D3D11_PRIMITIVE_TOPOLOGY PrimType;
 
+		if( g_wireFrame )
+			pd3dImmediateContext->RSSetState(g_pRasterizerStateWF);
+		else	
+			pd3dImmediateContext->RSSetState(g_pRasterizerState);
+
 		pd3dImmediateContext->PSSetSamplers( 0, 1, &g_pSamLinear );
 
 		{
@@ -191,7 +194,7 @@ public:
 			for(int x = 0; x < width; x++)
 			{
 				cpu_buffer[y*8*width + x*8 + 6] = x/( (float)(width-1));
-				cpu_buffer[y*8*width + x*8 + 7] = y/((float)(height-1));
+				cpu_buffer[y*8*width + x*8 + 7] = 1-y/((float)(height-1));
 			}
 		}
 
@@ -216,7 +219,7 @@ public:
 
 				vertices[y*width+x].Pos = D3DXVECTOR3( (x/((float)(width-1)))*1000, coord, (y/((float)(height-1)))*1000); 
 				vertices[y*width+x].Normal = D3DXVECTOR3(1,0,0);
-				vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
+				vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), 1.f-y/((float)(height-1)));
 			}
 		}
 
