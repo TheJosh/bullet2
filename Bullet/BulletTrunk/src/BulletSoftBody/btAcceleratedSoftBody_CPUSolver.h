@@ -87,7 +87,7 @@ protected:
 				float radius;
 				float halfHeight;
 			} capsule;
-		};
+		} shapeInformation;
 
 		CollisionShapeDescription()
 		{
