@@ -447,8 +447,8 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 			{
 				using namespace Vectormath::Aos;
 
-				float capsuleHalfHeight = shapeDescription.capsule.halfHeight;
-				float capsuleRadius = shapeDescription.capsule.radius;
+				float capsuleHalfHeight = shapeDescription.shapeInformation.capsule.halfHeight;
+				float capsuleRadius = shapeDescription.shapeInformation.capsule.radius;
 				Transform3 worldTransform = shapeDescription.shapeTransform;
 				for( int vertexIndex = startVertex; vertexIndex < endVertex; ++vertexIndex )
 				{		
@@ -648,8 +648,8 @@ void btCPUSoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, bt
 		newCollisionShapeDescription.collisionShapeType = shapeType;
 		newCollisionShapeDescription.shapeTransform = toTransform3(collisionObject->getWorldTransform());
 		btCapsuleShape *capsule = static_cast<btCapsuleShape*>( collisionShape );
-		newCollisionShapeDescription.capsule.radius = capsule->getRadius();
-		newCollisionShapeDescription.capsule.halfHeight = capsule->getHalfHeight();
+		newCollisionShapeDescription.shapeInformation.capsule.radius = capsule->getRadius();
+		newCollisionShapeDescription.shapeInformation.capsule.halfHeight = capsule->getHalfHeight();
 		m_collisionObjectDetails.push_back( newCollisionShapeDescription );
 
 		// TODO: In the collision function, sort the above array on the clothIdentifier and generate the start and end indices
