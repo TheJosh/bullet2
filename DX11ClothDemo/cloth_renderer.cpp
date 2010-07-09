@@ -207,9 +207,7 @@ btSoftRigidDynamicsWorld* m_dynamicsWorld;
 
 btDefaultSoftBodySolver *g_defaultSolver = NULL;
 btCPUSoftBodySolver *g_cpuSolver = NULL;
-btCPUSoftBodyVertexSolver *g_cpuVertexSolver = NULL;
 btDX11SoftBodySolver *g_dx11Solver = NULL;
-btDX11SIMDAwareSoftBodySolver *g_dx11SIMDSolver = NULL;
 
 btSoftBodySolver *g_solver = NULL;
 
@@ -459,20 +457,10 @@ void initBullet(void)
 	g_dx11Solver = new btDX11SoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
 	g_solver = g_dx11Solver;
 #else
-#ifdef USE_VERTEX_SOLVER
-	g_cpuVertexSolver = new btCPUSoftBodyVertexSolver;
-	g_solver = g_cpuVertexSolver;
-#else
-#ifdef USE_SIMDAWARE_SOLVER
-	g_dx11SIMDSolver = new btDX11SIMDAwareSoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
-	g_solver = g_dx11SIMDSolver;
-#else
 	g_cpuSolver = new btCPUSoftBodySolver;
 	g_solver = g_cpuSolver;
 	//g_defaultSolver = new btDefaultSoftBodySolver;
 	//g_solver = g_defaultSolver;
-#endif
-#endif
 #endif
 
 
@@ -1269,16 +1257,12 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
 	//}
 
 	//cleanup in the reverse order of creation/initialization
-	if( g_cpuVertexSolver )
-		delete g_cpuVertexSolver;
 	if( g_defaultSolver )
 		delete g_defaultSolver;
 	if( g_cpuSolver )
 		delete g_cpuSolver;
 	if( g_dx11Solver )
 		delete g_dx11Solver;
-	if( g_dx11SIMDSolver )
-		delete g_dx11SIMDSolver;
 
 	for(int i=0; i< m_collisionShapes.size(); i++)
 		delete m_collisionShapes[i];
