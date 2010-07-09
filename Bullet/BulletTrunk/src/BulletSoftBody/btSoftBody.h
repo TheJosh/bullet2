@@ -644,17 +644,6 @@ public:
 	btTransform			m_initialWorldTransform;
 
 	btVector3			m_mediumVelocity;
-	btScalar			m_mediumDensity;
-
-
-	/** 
-	 * Accelerated version of the soft body, lives and solved within a solver class.
-	 * When NULL the btSoftBody class will be used. When non-null that solver
-	 * will be used to perform simulation.
-	 */
-	btAcceleratedSoftBodyInterface *m_acceleratedSoftBody;
-
-
 	//
 	// Api
 	//
@@ -849,44 +838,16 @@ public:
 	// Functionality to deal with new accelerated solvers.
 	//
 
-	/** 
-	 * Move the soft body from the data structures in this class and into
-	 * the data structures within the passed btSoftBodySolver.
-	 */
-	void moveToSolver( btSoftBodySolver *solver );
-
-	/** 
-	 * Move the soft body back from its accelerated solver object into the
-	 * data structures in this class.
-	 */
-	void moveFromSolver();
-
-	/** 
-	 * Optimize allows arbitrary CPU-intensive activies to be performed to 
-	 * optimize a given soft body in the context of whatever solver it has been
-	 * placed in. This might involve sorting data to improve SIMD utilization,
-	 * creating acceleration data structures or simply pre-copying the data to
-	 * the accelerator to reduce first-run delays.
-	 */
-	void optimize();
-
-	/**
-	 * Allow the user to specify a vertex buffer to directly output updated
-	 * soft body vertices to. This way we need not copy back to the host and
-	 * through complicated data structures but can update a rendering pipeline
-	 * directly.
-	 */
-	void setVertexOutput( btVertexBufferDescriptor *vertexBuffer );
-
 	/**
 	 * Set a wind velocity for interaction with the air.
 	 */
 	void setWindVelocity( const btVector3 &velocity );
 
+
 	/**
-	 * Set the density of the air medium.
+	 * Return the wind velocity for interaction with the air.
 	 */
-	void setMediumDensity( btScalar density );
+	btVector3 getWindVelocity();
 
 
 	//

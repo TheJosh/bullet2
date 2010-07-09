@@ -51,9 +51,6 @@ float4 PSMain( PS_INPUT Input ) : SV_TARGET
 	//fLighting = dot(g_vLightDir,float3(0,1,0));
 	
 	return vDiffuse * fLighting;
-	
-
-
 }
 
 

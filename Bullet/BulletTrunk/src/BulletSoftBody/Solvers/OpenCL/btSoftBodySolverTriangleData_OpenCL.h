@@ -13,49 +13,24 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
 
-#ifdef BULLET_USE_DX11
-
-#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_DX11Buffer.h"
+#include "BulletSoftBody/Solvers/CPU/btSoftBodySolverData.h"
+#include "BulletSoftBody/Solvers/OpenCL/btSoftBodySolverBuffer_OpenCL.h"
 
 
-#ifndef BT_ACCELERATED_SOFT_BODY_TRIANGLE_DATA_DX11_H
-#define BT_ACCELERATED_SOFT_BODY_TRIANGLE_DATA_DX11_H
+#ifndef BT_SOFT_BODY_SOLVER_TRIANGLE_DATA_OPENCL_H
+#define BT_SOFT_BODY_SOLVER_TRIANGLE_DATA_OPENCL_H
 
-struct ID3D11Device;
-struct ID3D11DeviceContext;
 
-class btSoftBodyTriangleDataDX11 : public btSoftBodyTriangleData
+class btSoftBodyTriangleDataOpenCL : public btSoftBodyTriangleData
 {
 public:
 	bool				m_onGPU;
-	ID3D11Device		*m_d3dDevice;
-	ID3D11DeviceContext *m_d3dDeviceContext;
+	cl::CommandQueue    m_queue;
 
-	btDX11Buffer<btSoftBodyTriangleData::TriangleNodeSet>							m_dx11VertexIndices;
-	btDX11Buffer<float>									m_dx11Area;
-	btDX11Buffer<Vectormath::Aos::Vector3>				m_dx11Normal;
-
-	struct BatchPair
-	{
-		int start;
-		int length;
-
-		BatchPair() :
-			start(0),
-			length(0)
-		{
-		}
-
-		BatchPair( int s, int l ) : 
-			start( s ),
-			length( l )
-		{
-		}
-	};
-
+	btOpenCLBuffer<btSoftBodyTriangleData::TriangleNodeSet>					m_clVertexIndices;
+	btOpenCLBuffer<float>								m_clArea;
+	btOpenCLBuffer<Vectormath::Aos::Vector3>			m_clNormal;
 
 	/**
 	 * Link addressing information for each cloth.
@@ -66,15 +41,12 @@ public:
 	/**
 	 * Start and length values for computation batches over link data.
 	 */
-	btAlignedObjectArray< BatchPair >		m_batchStartLengths;
-
-	//ID3D11Buffer*               readBackBuffer;
+	btAlignedObjectArray< std::pair< int, int > >		m_batchStartLengths;
 
 public:
-	btSoftBodyTriangleDataDX11( ID3D11Device *d3dDevice, ID3D11DeviceContext *d3dDeviceContext );
+	btSoftBodyTriangleDataOpenCL( cl::CommandQueue queue );
 
-	virtual ~btSoftBodyTriangleDataDX11();
-
+	virtual ~btSoftBodyTriangleDataOpenCL();
 
 	/** Allocate enough space in all link-related arrays to fit numLinks links */
 	virtual void createTriangles( int numTriangles );
@@ -83,9 +55,11 @@ public:
 	virtual void setTriangleAt( const btSoftBodyTriangleData::TriangleDescription &triangle, int triangleIndex );
 
 	virtual bool onAccelerator();
+
 	virtual bool moveToAccelerator();
 
 	virtual bool moveFromAccelerator();
+
 	/**
 	 * Generate (and later update) the batching for the entire triangle set.
 	 * This redoes a lot of work because it batches the entire set when each cloth is inserted.
@@ -93,11 +67,8 @@ public:
 	 * It's a one-off overhead, though, so that is a later optimisation.
 	 */
 	void generateBatches();
-};
+}; // class btSoftBodyTriangleDataOpenCL
 
 
+#endif // #ifndef BT_SOFT_BODY_SOLVER_TRIANGLE_DATA_OPENCL_H
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_TRIANGLE_DATA_DX11_H
-
-
-#endif // #ifdef BULLET_USE_DX11

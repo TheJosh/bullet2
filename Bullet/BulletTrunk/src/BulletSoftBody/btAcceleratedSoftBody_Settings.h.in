@@ -1,2 +1,0 @@
-#cmakedefine BULLET_USE_DX11
-#cmakedefine BULLET_USE_OPENCL

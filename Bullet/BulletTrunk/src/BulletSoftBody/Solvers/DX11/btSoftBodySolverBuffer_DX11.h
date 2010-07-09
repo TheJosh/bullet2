@@ -12,12 +12,8 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
-#ifndef BT_ACCELERATED_SOFT_BODY_DX11_BUFFER_H
-#define BT_ACCELERATED_SOFT_BODY_DX11_BUFFER_H
-
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
-
-#ifdef BULLET_USE_DX11
+#ifndef BT_SOFT_BODY_SOLVER_BUFFER_DX11_H
+#define BT_SOFT_BODY_SOLVER_BUFFER_DX11_H
 
 // DX11 support
 #include <windows.h>
@@ -309,6 +305,5 @@ public:
 }; // class btDX11Buffer
 
 
-#endif // #ifdef BULLET_USE_DX11
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_DX11_BUFFER_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_BUFFER_DX11_H

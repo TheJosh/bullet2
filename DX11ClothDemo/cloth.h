@@ -46,7 +46,7 @@ public:
 	int width;
 	int height;
 
-	btDX11VertexBufferDescriptor *m_vertexBufferDescriptor;
+	btVertexBufferDescriptor *m_vertexBufferDescriptor;
 
 	void create_texture(std::wstring filename)
 	{

@@ -20,7 +20,8 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
-#include "BulletSoftBody/btAcceleratedSoftBody_CPUSolver.h"
+#include "BulletSoftBody/solvers/CPU/btSoftBodySolver_CPU.h"
+#include "BulletSoftBody/btSoftBody.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
 
 
@@ -36,38 +37,8 @@ btCPUSoftBodySolver::~btCPUSoftBodySolver()
 {
 }
 
-int btCPUSoftBodySolver::ownCloth( btAcceleratedSoftBodyInterface *cloth )
-{
-	// Ensure that per-cloth acceleration and velocity are large enough to cope
-	int clothIdentifier = m_cloths.size();
 
-	// TODO: Check that it's not already there and ensure it stays ordered
-	m_cloths.push_back( cloth );	
 
-	Vectormath::Aos::Vector3 zeroVector( 0.f, 0.f, 0.f );
-	if( m_perClothAcceleration.size() <= clothIdentifier )
-		m_perClothAcceleration.resize( clothIdentifier + 1, zeroVector );
-	if( m_perClothWindVelocity.size() <= clothIdentifier )
-		m_perClothWindVelocity.resize( clothIdentifier + 1, zeroVector );
-	if( m_perClothDampingFactor.size() <= clothIdentifier )
-		m_perClothDampingFactor.resize( clothIdentifier + 1, 0 );
-	if( m_perClothVelocityCorrectionCoefficient.size() <= clothIdentifier )
-		m_perClothVelocityCorrectionCoefficient.resize( clothIdentifier + 1 );
-	if( m_perClothLiftFactor.size() <= clothIdentifier )
-		m_perClothLiftFactor.resize( clothIdentifier + 1 );
-	if( m_perClothDragFactor.size() <= clothIdentifier )
-		m_perClothDragFactor.resize( clothIdentifier + 1 );
-	if( m_perClothMediumDensity.size() <= clothIdentifier )
-		m_perClothMediumDensity.resize( clothIdentifier + 1 );			
-	if( m_perClothCollisionObjects.size() <= clothIdentifier )
-		m_perClothCollisionObjects.resize( clothIdentifier + 1 );
-
-	return clothIdentifier;
-}
-
-void btCPUSoftBodySolver::removeCloth( btAcceleratedSoftBodyInterface *cloth )
-{
-}
 
 btSoftBodyLinkData &btCPUSoftBodySolver::getLinkData()
 {
@@ -84,51 +55,140 @@ btSoftBodyTriangleData &btCPUSoftBodySolver::getTriangleData()
 	return m_triangleData;
 }
 
-void btCPUSoftBodySolver::addVelocity( Vectormath::Aos::Vector3 velocity )
+
+
+
+
+
+static Vectormath::Aos::Vector3 toVector3( const btVector3 &vec )
 {
-	int numVertices = m_vertexData.getNumVertices();
-	for( int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex )
+	Vectormath::Aos::Vector3 outVec( vec.getX(), vec.getY(), vec.getZ() );
+	return outVec;
+}
+
+static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
+{
+	Vectormath::Aos::Transform3 outTransform;
+	outTransform.setCol(0, toVector3(transform.getBasis().getColumn(0)));
+	outTransform.setCol(1, toVector3(transform.getBasis().getColumn(1)));
+	outTransform.setCol(2, toVector3(transform.getBasis().getColumn(2)));
+	outTransform.setCol(3, toVector3(transform.getOrigin()));
+	return outTransform;	
+}
+
+
+
+
+void btCPUSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
+{
+	if( m_softBodySet.size() != softBodies.size() )
 	{
-		if( m_vertexData.getInverseMass( vertexIndex ) > 0 )
-			m_vertexData.getVelocity( vertexIndex ) += velocity;
+		// Have a change in the soft body set so update, reloading all the data
+		getVertexData().clear();
+		getTriangleData().clear();
+		getLinkData().clear();
+		m_softBodySet.resize(0);
+
+
+		for( int softBodyIndex = 0; softBodyIndex < softBodies.size(); ++softBodyIndex )
+		{
+			btSoftBody *softBody = softBodies[ softBodyIndex ];
+			using Vectormath::Aos::Matrix3;
+			using Vectormath::Aos::Point3;
+
+			// Create SoftBody that will store the information within the solver
+			btAcceleratedSoftBodyInterface *newSoftBody = new btAcceleratedSoftBodyInterface( softBody );
+			m_softBodySet.push_back( newSoftBody );
+
+			m_perClothAcceleration.push_back( toVector3(softBody->getWorldInfo()->m_gravity) );
+			m_perClothDampingFactor.push_back(softBody->m_cfg.kDP);
+			m_perClothVelocityCorrectionCoefficient.push_back( softBody->m_cfg.kVCF );
+			m_perClothLiftFactor.push_back( softBody->m_cfg.kLF );
+			m_perClothDragFactor.push_back( softBody->m_cfg.kDG );
+			m_perClothMediumDensity.push_back(softBody->getWorldInfo()->air_density);
+
+			// Add space for new vertices and triangles in the default solver for now
+			// TODO: Include space here for tearing too later
+			int firstVertex = getVertexData().getNumVertices();
+			int numVertices = softBody->m_nodes.size();
+			int maxVertices = numVertices;
+			// Allocate space for new vertices in all the vertex arrays
+			getVertexData().createVertices( maxVertices, softBodyIndex );
+
+			int firstTriangle = getTriangleData().getNumTriangles();
+			int numTriangles = softBody->m_faces.size();
+			int maxTriangles = numTriangles;
+			getTriangleData().createTriangles( maxTriangles );
+
+			// Copy vertices from softbody into the solver
+			for( int vertex = 0; vertex < numVertices; ++vertex )
+			{
+				Point3 multPoint(softBody->m_nodes[vertex].m_x.getX(), softBody->m_nodes[vertex].m_x.getY(), softBody->m_nodes[vertex].m_x.getZ());
+				btSoftBodyVertexData::VertexDescription desc;
+
+				// TODO: Position in the softbody might be pre-transformed
+				// or we may need to adapt for the pose.
+				//desc.setPosition( cloth.getMeshTransform()*multPoint );
+				desc.setPosition( multPoint );
+
+				float vertexInverseMass = softBody->m_nodes[vertex].m_im;
+				desc.setInverseMass(vertexInverseMass);
+				getVertexData().setVertexAt( desc, firstVertex + vertex );
+			}
+
+			// Copy triangles similarly
+			// We're assuming here that vertex indices are based on the firstVertex rather than the entire scene
+			for( int triangle = 0; triangle < numTriangles; ++triangle )
+			{
+				// Note that large array storage is relative to the array not to the cloth
+				// So we need to add firstVertex to each value
+				int vertexIndex0 = (softBody->m_faces[triangle].m_n[0] - &(softBody->m_nodes[0]));
+				int vertexIndex1 = (softBody->m_faces[triangle].m_n[1] - &(softBody->m_nodes[0]));
+				int vertexIndex2 = (softBody->m_faces[triangle].m_n[2] - &(softBody->m_nodes[0]));
+				btSoftBodyTriangleData::TriangleDescription newTriangle(vertexIndex0 + firstVertex, vertexIndex1 + firstVertex, vertexIndex2 + firstVertex);
+				getTriangleData().setTriangleAt( newTriangle, firstTriangle + triangle );
+				
+				// Increase vertex triangle counts for this triangle		
+				getVertexData().getTriangleCount(newTriangle.getVertexSet().vertex0)++;
+				getVertexData().getTriangleCount(newTriangle.getVertexSet().vertex1)++;
+				getVertexData().getTriangleCount(newTriangle.getVertexSet().vertex2)++;
+			}
+
+			int firstLink = getLinkData().getNumLinks();
+			int numLinks = softBody->m_links.size();
+			int maxLinks = numLinks;
+			
+			// Allocate space for the links
+			getLinkData().createLinks( numLinks );
+
+			// Add the links
+			for( int link = 0; link < numLinks; ++link )
+			{
+				int vertexIndex0 = softBody->m_links[link].m_n[0] - &(softBody->m_nodes[0]);
+				int vertexIndex1 = softBody->m_links[link].m_n[1] - &(softBody->m_nodes[0]);
+
+				btSoftBodyLinkData::LinkDescription newLink(vertexIndex0 + firstVertex, vertexIndex1 + firstVertex, softBody->m_links[link].m_material->m_kLST);
+				newLink.setLinkStrength(1.f);
+				getLinkData().setLinkAt(newLink, firstLink + link);
+			}
+			
+			newSoftBody->setFirstVertex( firstVertex );
+			newSoftBody->setFirstTriangle( firstTriangle );
+			newSoftBody->setNumVertices( numVertices );
+			newSoftBody->setMaxVertices( maxVertices );
+			newSoftBody->setNumTriangles( numTriangles );
+			newSoftBody->setMaxTriangles( maxTriangles );
+			newSoftBody->setFirstLink( firstLink );
+			newSoftBody->setNumLinks( numLinks );
+		}
+
+
+
+		updateConstants(0.f);
 	}
 }
 
-void btCPUSoftBodySolver::setPerClothAcceleration( int clothIdentifier, Vectormath::Aos::Vector3 acceleration )
-{
-	m_perClothAcceleration[clothIdentifier] = acceleration;
-}
 
-void btCPUSoftBodySolver::setPerClothWindVelocity( int clothIdentifier, Vectormath::Aos::Vector3 windVelocity )
-{
-	m_perClothWindVelocity[clothIdentifier] = windVelocity;
-}
-
-void btCPUSoftBodySolver::setPerClothMediumDensity( int clothIdentifier, float mediumDensity )
-{
-	m_perClothMediumDensity[clothIdentifier] = mediumDensity;
-}
-
-void btCPUSoftBodySolver::setPerClothDampingFactor( int clothIdentifier, float dampingFactor )
-{
-	m_perClothDampingFactor[clothIdentifier] = dampingFactor;
-}
-
-void btCPUSoftBodySolver::setPerClothVelocityCorrectionCoefficient( int clothIdentifier, float velocityCorrectionCoefficient )
-{
-	m_perClothVelocityCorrectionCoefficient[clothIdentifier] = velocityCorrectionCoefficient;
-}		
-
-void btCPUSoftBodySolver::setPerClothLiftFactor( int clothIdentifier, float liftFactor )
-{
-	m_perClothLiftFactor[clothIdentifier] = liftFactor;
-}
-
-/** Drag parameter for wind action on cloth. */
-void btCPUSoftBodySolver::setPerClothDragFactor( int clothIdentifier, float dragFactor )
-{
-	m_perClothDragFactor[clothIdentifier] = dragFactor;
-}
 
 
 void btCPUSoftBodySolver::updateSoftBodies()
@@ -216,14 +276,13 @@ void btCPUSoftBodySolver::applyForces( float solverdt )
 	using namespace Vectormath::Aos;
 
 	int numVertices = m_vertexData.getNumVertices();			
-	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
+	for( int clothIndex = 0; clothIndex < m_softBodySet.size(); ++clothIndex )
 	{
-		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
-		int clothIdentifier = currentCloth->getIdentifier();
+		btAcceleratedSoftBodyInterface *currentCloth = m_softBodySet[clothIndex];
 		const int startVertex = currentCloth->getFirstVertex();
 		const int numVertices = currentCloth->getNumVertices();
 
-		Vector3 velocityChange = m_perClothAcceleration[clothIdentifier]*solverdt;
+		Vector3 velocityChange = m_perClothAcceleration[clothIndex]*solverdt;
 		for( int vertexIndex = startVertex; vertexIndex < (startVertex + numVertices); ++vertexIndex )
 		{
 			float inverseMass = m_vertexData.getInverseMass( vertexIndex );
@@ -237,8 +296,8 @@ void btCPUSoftBodySolver::applyForces( float solverdt )
 			if( m_vertexData.getInverseMass(vertexIndex) > 0 )
 			{
 				// Wind effects on a wind-per-cloth basis
-				float liftFactor = m_perClothLiftFactor[clothIdentifier];
-				float dragFactor = m_perClothDragFactor[clothIdentifier];
+				float liftFactor = m_perClothLiftFactor[clothIndex];
+				float dragFactor = m_perClothDragFactor[clothIndex];
 				if( (liftFactor > 0.f) || (dragFactor > 0.f) )
 				{
 					Vector3 normal = m_vertexData.getNormal(vertexIndex);
@@ -336,8 +395,8 @@ void btCPUSoftBodySolver::prepareCollisionConstraints()
 	// First do a simple radix sort on the collision objects
 	btAlignedObjectArray<int> numObjectsPerClothPrefixSum;
 	btAlignedObjectArray<int> numObjectsPerCloth;
-	numObjectsPerCloth.resize( m_cloths.size(), 0 );
-	numObjectsPerClothPrefixSum.resize( m_cloths.size(), 0 );
+	numObjectsPerCloth.resize( m_softBodySet.size(), 0 );
+	numObjectsPerClothPrefixSum.resize( m_softBodySet.size(), 0 );
 
 	btAlignedObjectArray< CollisionShapeDescription > m_collisionObjectDetailsCopy(m_collisionObjectDetails);
 	// Count and prefix sum number of previous cloths
@@ -347,7 +406,7 @@ void btCPUSoftBodySolver::prepareCollisionConstraints()
 		++numObjectsPerClothPrefixSum[shapeDescription.softBodyIdentifier];	
 	}
 	int sum = 0;
-	for( int cloth = 0; cloth < m_cloths.size(); ++cloth )
+	for( int cloth = 0; cloth < m_softBodySet.size(); ++cloth )
 	{
 		int currentValue = numObjectsPerClothPrefixSum[cloth];
 		numObjectsPerClothPrefixSum[cloth] = sum;
@@ -421,6 +480,7 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 
 	}
 
+#if 0
 	prepareCollisionConstraints();
 
 	// Solve collision constraints
@@ -428,10 +488,10 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 	// to test integration with the broad phase code.
 	// May also want to put this into position solver loop every n iterations depending on
 	// how it behaves
-	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
+	for( int clothIndex = 0; clothIndex < m_softBodySet.size(); ++clothIndex )
 	{
-		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
-		int clothIdentifier = currentCloth->getIdentifier();
+		btAcceleratedSoftBodyInterface *currentCloth = m_softBodySet[clothIndex];
+
 		const int startVertex = currentCloth->getFirstVertex();
 		const int numVertices = currentCloth->getNumVertices();
 		int endVertex = startVertex + numVertices;
@@ -496,14 +556,48 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 			}
 		}
 	}
+#endif
+
+	for( int iteration = 0; iteration < m_numberOfVelocityIterations ; ++iteration )
+	{
+		// Solve velocity
+		for(int linkIndex = 0; linkIndex < numLinks; ++linkIndex)
+		{				
+
+			int vertexIndex0 = m_linkData.getVertexPair(linkIndex).vertex0;
+			int vertexIndex1 = m_linkData.getVertexPair(linkIndex).vertex1;
+
+			float j = -dot(m_linkData.getCurrentLength(linkIndex), m_vertexData.getVelocity(vertexIndex0) - m_vertexData.getVelocity(vertexIndex1)) * m_linkData.getLinkLengthRatio(linkIndex)*kst;
+			
+			// If both ends of the link have no mass then this will be zero. Catch that case.
+			// TODO: Should really catch the /0 in the link setup, too
+			//if(psb->m_linksc0[i]>0)
+			{
+				m_vertexData.getVelocity(vertexIndex0) = m_vertexData.getVelocity(vertexIndex0) + m_linkData.getCurrentLength(linkIndex)*j*m_vertexData.getInverseMass(vertexIndex0);
+				m_vertexData.getVelocity(vertexIndex1) = m_vertexData.getVelocity(vertexIndex1) - m_linkData.getCurrentLength(linkIndex)*j*m_vertexData.getInverseMass(vertexIndex1);
+			}
+		}
+	}
+
+	// Compute new positions from velocity
+	// Also update the previous position so that our position computation is now based on the new position from the velocity solution
+	// rather than based directly on the original positions
+	if( m_numberOfVelocityIterations > 0 )
+	{
+		for(int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex)
+		{				
+			m_vertexData.getPosition(vertexIndex) = m_vertexData.getPreviousPosition(vertexIndex) + m_vertexData.getVelocity(vertexIndex) * solverdt;
+			m_vertexData.getPreviousPosition(vertexIndex) = m_vertexData.getPosition(vertexIndex);
+		}
+	}
 
 	// Solve drift
 	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 	{
-		for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
+		for( int clothIndex = 0; clothIndex < m_softBodySet.size(); ++clothIndex )
 		{
-			btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
-			int clothIdentifier = currentCloth->getIdentifier();
+			btAcceleratedSoftBodyInterface *currentCloth = m_softBodySet[clothIndex];
+
 			const int startLink = currentCloth->getFirstLink();
 			const int numLinks = currentCloth->getNumLinks();
 
@@ -530,10 +624,10 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 			}
 		}
 	}
-	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
+	for( int clothIndex = 0; clothIndex < m_softBodySet.size(); ++clothIndex )
 	{
-		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
-		int clothIdentifier = currentCloth->getIdentifier();
+		btAcceleratedSoftBodyInterface *currentCloth = m_softBodySet[clothIndex];
+
 		const int startLink = currentCloth->getFirstLink();
 		const int numLinks = currentCloth->getNumLinks();
 		const int startVertex = currentCloth->getFirstVertex();
@@ -541,102 +635,94 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 		const int lastVertex = startVertex + numVertices;
 		// Update the velocities based on the change in position
 		// TODO: Damping should only be applied to the action of link constraints so the cloth still falls but then moves stiffly once it hits something
-		float velocityCoefficient = (1.f - m_perClothDampingFactor[clothIdentifier]);
-		float velocityCorrectionCoefficient = m_perClothVelocityCorrectionCoefficient[clothIdentifier];
+		float velocityCoefficient = (1.f - m_perClothDampingFactor[clothIndex]);
+		float velocityCorrectionCoefficient = m_perClothVelocityCorrectionCoefficient[clothIndex];
 		float isolverDt = 1.f/solverdt;
 
-		// If we didn't compute the velocity iteratively then we compute it purely based on the position change
-		for(int vertexIndex = startVertex; vertexIndex < lastVertex; ++vertexIndex)
+		if( m_numberOfVelocityIterations > 0 )
 		{
-			m_vertexData.getVelocity(vertexIndex) = (m_vertexData.getPosition(vertexIndex) - m_vertexData.getPreviousPosition(vertexIndex)) * velocityCoefficient * isolverDt;
-			m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
+			for(int vertexIndex = startVertex; vertexIndex < lastVertex; ++vertexIndex)
+			{
+				m_vertexData.getVelocity(vertexIndex) += (m_vertexData.getPosition(vertexIndex) - m_vertexData.getPreviousPosition(vertexIndex)) * velocityCorrectionCoefficient * isolverDt;
+				m_vertexData.getVelocity(vertexIndex) *= velocityCoefficient;
+				m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
+			}
+		} else {
+			// If we didn't compute the velocity iteratively then we compute it purely based on the position change
+			for(int vertexIndex = startVertex; vertexIndex < lastVertex; ++vertexIndex)
+			{
+				m_vertexData.getVelocity(vertexIndex) = (m_vertexData.getPosition(vertexIndex) - m_vertexData.getPreviousPosition(vertexIndex)) * velocityCoefficient * isolverDt;
+				m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
+			}
 		}
 	}
+
 } // btCPUSoftBodySolver::solveConstraints
 
 
-void btCPUSoftBodySolver::outputToVertexBuffers()
+btCPUSoftBodySolver::btAcceleratedSoftBodyInterface *btCPUSoftBodySolver::findSoftBodyInterface( const btSoftBody* const softBody )
+{
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		if( softBodyInterface->getSoftBody() == softBody )
+			return softBodyInterface;
+	}
+	return 0;
+}
+
+void btCPUSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
 {
 	// Currently only support CPU output buffers
 	// TODO: check for DX11 buffers. Take all offsets into the same DX11 buffer
 	// and use them together on a single kernel call if possible by setting up a
 	// per-cloth target buffer array for the copy kernel.
-	for( int clothIndex = 0; clothIndex < m_cloths.size(); ++clothIndex )
-	{
-		btAcceleratedSoftBodyInterface *currentCloth = m_cloths[clothIndex];
 
-		if( btVertexBufferDescriptor *vertexBufferTarget = currentCloth->getVertexBufferTarget() )
+	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
+
+	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
+	{		
+		const int firstVertex = currentCloth->getFirstVertex();
+		const int lastVertex = firstVertex + currentCloth->getNumVertices();
+		const btCPUVertexBufferDescriptor *cpuVertexBuffer = static_cast< btCPUVertexBufferDescriptor* >(vertexBuffer);						
+		float *basePointer = cpuVertexBuffer->getBasePointer();						
+
+		if( vertexBuffer->hasVertexPositions() )
 		{
-			if( vertexBufferTarget->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
+			const int vertexOffset = cpuVertexBuffer->getVertexOffset();
+			const int vertexStride = cpuVertexBuffer->getVertexStride();
+			float *vertexPointer = basePointer + vertexOffset;
+
+			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				const int firstVertex = currentCloth->getFirstVertex();
-				const int lastVertex = firstVertex + currentCloth->getNumVertices();
-				const btCPUVertexBufferDescriptor *cpuVertexBuffer = static_cast< btCPUVertexBufferDescriptor* >(vertexBufferTarget);						
-				float *basePointer = cpuVertexBuffer->getBasePointer();						
+				Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
+				*(vertexPointer + 0) = position.getX();
+				*(vertexPointer + 1) = position.getY();
+				*(vertexPointer + 2) = position.getZ();
+				vertexPointer += vertexStride;
+			}
+		}
+		if( vertexBuffer->hasNormals() )
+		{
+			const int normalOffset = cpuVertexBuffer->getNormalOffset();
+			const int normalStride = cpuVertexBuffer->getNormalStride();
+			float *normalPointer = basePointer + normalOffset;
 
-				if( vertexBufferTarget->hasVertexPositions() )
-				{
-					const int vertexOffset = cpuVertexBuffer->getVertexOffset();
-					const int vertexStride = cpuVertexBuffer->getVertexStride();
-					float *vertexPointer = basePointer + vertexOffset;
-
-					for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
-					{
-						Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
-						*(vertexPointer + 0) = position.getX();
-						*(vertexPointer + 1) = position.getY();
-						*(vertexPointer + 2) = position.getZ();
-						vertexPointer += vertexStride;
-					}
-				}
-				if( vertexBufferTarget->hasNormals() )
-				{
-					const int normalOffset = cpuVertexBuffer->getNormalOffset();
-					const int normalStride = cpuVertexBuffer->getNormalStride();
-					float *normalPointer = basePointer + normalOffset;
-
-					for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
-					{
-						Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
-						*(normalPointer + 0) = normal.getX();
-						*(normalPointer + 1) = normal.getY();
-						*(normalPointer + 2) = normal.getZ();
-						normalPointer += normalStride;
-					}
-				}
+			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
+			{
+				Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
+				*(normalPointer + 0) = normal.getX();
+				*(normalPointer + 1) = normal.getY();
+				*(normalPointer + 2) = normal.getZ();
+				normalPointer += normalStride;
 			}
 		}
 	}
 } // btCPUSoftBodySolver::outputToVertexBuffers
 
-void btCPUSoftBodySolver::optimize()
-{
-	updateConstants(0.f);
-}
 
-/** Return the softbody object represented by softBodyIndex */
-btAcceleratedSoftBodyInterface *btCPUSoftBodySolver::getSoftBody( int softBodyIndex )
-{
-	return m_cloths[softBodyIndex];
-}
 
-static Vectormath::Aos::Vector3 toVector3( const btVector3 &vec )
-{
-	Vectormath::Aos::Vector3 outVec( vec.getX(), vec.getY(), vec.getZ() );
-	return outVec;
-}
-
-static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
-{
-	Vectormath::Aos::Transform3 outTransform;
-	outTransform.setCol(0, toVector3(transform.getBasis().getColumn(0)));
-	outTransform.setCol(1, toVector3(transform.getBasis().getColumn(1)));
-	outTransform.setCol(2, toVector3(transform.getBasis().getColumn(2)));
-	outTransform.setCol(3, toVector3(transform.getOrigin()));
-	return outTransform;	
-}
-
-void btCPUSoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject )
+void btCPUSoftBodySolver::addCollisionObjectForSoftBody( int clothIndex, btCollisionObject *collisionObject )
 {
 	btCollisionShape *collisionShape = collisionObject->getCollisionShape();
 	int shapeType = collisionShape->getShapeType();
@@ -644,7 +730,7 @@ void btCPUSoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, bt
 	{
 		// Add to the list of expected collision objects
 		CollisionShapeDescription newCollisionShapeDescription;
-		newCollisionShapeDescription.softBodyIdentifier = clothIdentifier;
+		newCollisionShapeDescription.softBodyIdentifier = clothIndex;
 		newCollisionShapeDescription.collisionShapeType = shapeType;
 		newCollisionShapeDescription.shapeTransform = toTransform3(collisionObject->getWorldTransform());
 		btCapsuleShape *capsule = static_cast<btCapsuleShape*>( collisionShape );
@@ -652,8 +738,31 @@ void btCPUSoftBodySolver::addCollisionObjectForSoftBody( int clothIdentifier, bt
 		newCollisionShapeDescription.shapeInformation.capsule.halfHeight = capsule->getHalfHeight();
 		m_collisionObjectDetails.push_back( newCollisionShapeDescription );
 
-		// TODO: In the collision function, sort the above array on the clothIdentifier and generate the start and end indices
+		// TODO: In the collision function, sort the above array on the clothIndex and generate the start and end indices
 	} else {
 		btAssert("Unsupported collision shape type\n");
 	}
 }
+
+
+void btCPUSoftBodySolver::predictMotion( float timeStep )
+{
+	// Fill the force arrays with current acceleration data etc
+	m_perClothWindVelocity.resize( m_softBodySet.size() );
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btSoftBody *softBody = m_softBodySet[softBodyIndex]->getSoftBody();
+		
+		m_perClothWindVelocity[softBodyIndex] = toVector3(softBody->getWindVelocity());
+	}
+
+
+	// Apply forces that we know about to the cloths
+	applyForces(  timeStep * getTimeScale() );
+
+	// Itegrate motion for all soft bodies dealt with by the solver
+	integrate( timeStep * getTimeScale() );
+	// End prediction work for solvers
+}
+
+

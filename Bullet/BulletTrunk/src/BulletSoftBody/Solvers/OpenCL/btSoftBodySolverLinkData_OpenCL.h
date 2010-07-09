@@ -13,48 +13,51 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
+#include "BulletSoftBody/Solvers/CPU/btSoftBodySolverData.h"
+#include "BulletSoftBody/Solvers/OpenCL/btSoftBodySolverBuffer_OpenCL.h"
 
 
-#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_OpenCLBuffer.h"
+#ifndef BT_SOFT_BODY_SOLVER_LINK_DATA_OPENCL_H
+#define BT_SOFT_BODY_SOLVER_LINK_DATA_OPENCL_H
 
 
-#ifndef BT_ACCELERATED_SOFT_BODY_TRIANGLE_DATA_OPENCL_H
-#define BT_ACCELERATED_SOFT_BODY_TRIANGLE_DATA_OPENCL_H
-
-
-class btSoftBodyTriangleDataOpenCL : public btSoftBodyTriangleData
+class btSoftBodyLinkDataOpenCL : public btSoftBodyLinkData
 {
 public:
 	bool				m_onGPU;
-	cl::CommandQueue    m_queue;
+	cl::CommandQueue	m_queue;
 
-	btOpenCLBuffer<btSoftBodyTriangleData::TriangleNodeSet>					m_clVertexIndices;
-	btOpenCLBuffer<float>								m_clArea;
-	btOpenCLBuffer<Vectormath::Aos::Vector3>			m_clNormal;
+	btOpenCLBuffer<LinkNodePair> m_clLinks;
+	btOpenCLBuffer<float>							      m_clLinkStrength;
+	btOpenCLBuffer<float>								  m_clLinksMassLSC;
+	btOpenCLBuffer<float>								  m_clLinksRestLengthSquared;
+	btOpenCLBuffer<Vectormath::Aos::Vector3>			  m_clLinksCLength;
+	btOpenCLBuffer<float>								  m_clLinksLengthRatio;
+	btOpenCLBuffer<float>								  m_clLinksRestLength;
+	btOpenCLBuffer<float>								  m_clLinksMaterialLinearStiffnessCoefficient;
 
 	/**
 	 * Link addressing information for each cloth.
 	 * Allows link locations to be computed independently of data batching.
 	 */
-	btAlignedObjectArray< int >							m_triangleAddresses;
+	btAlignedObjectArray< int >							m_linkAddresses;
 
 	/**
 	 * Start and length values for computation batches over link data.
 	 */
 	btAlignedObjectArray< std::pair< int, int > >		m_batchStartLengths;
 
-public:
-	btSoftBodyTriangleDataOpenCL( cl::CommandQueue queue );
+	btSoftBodyLinkDataOpenCL(cl::CommandQueue queue);
 
-	virtual ~btSoftBodyTriangleDataOpenCL();
+	virtual ~btSoftBodyLinkDataOpenCL();
 
 	/** Allocate enough space in all link-related arrays to fit numLinks links */
-	virtual void createTriangles( int numTriangles );
+	virtual void createLinks( int numLinks );
 	
 	/** Insert the link described into the correct data structures assuming space has already been allocated by a call to createLinks */
-	virtual void setTriangleAt( const btSoftBodyTriangleData::TriangleDescription &triangle, int triangleIndex );
+	virtual void setLinkAt( 
+		const LinkDescription &link, 
+		int linkIndex );
 
 	virtual bool onAccelerator();
 
@@ -63,14 +66,14 @@ public:
 	virtual bool moveFromAccelerator();
 
 	/**
-	 * Generate (and later update) the batching for the entire triangle set.
+	 * Generate (and later update) the batching for the entire link set.
 	 * This redoes a lot of work because it batches the entire set when each cloth is inserted.
 	 * In theory we could delay it until just before we need the cloth.
 	 * It's a one-off overhead, though, so that is a later optimisation.
 	 */
 	void generateBatches();
-}; // class btSoftBodyTriangleDataOpenCL
+};
 
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_TRIANGLE_DATA_OPENCL_H
 
+#endif // #ifndef BT_SOFT_BODY_SOLVER_LINK_DATA_OPENCL_H

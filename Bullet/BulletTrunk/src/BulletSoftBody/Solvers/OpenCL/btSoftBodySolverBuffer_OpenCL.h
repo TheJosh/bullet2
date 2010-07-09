@@ -13,12 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef BT_ACCELERATED_SOFT_BODY_OPENCL_BUFFER_H
-#define BT_ACCELERATED_SOFT_BODY_OPENCL_BUFFER_H
-
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
-
-#ifdef BULLET_USE_OPENCL
+#ifndef BT_SOFT_BODY_SOLVER_BUFFER_OPENCL_H
+#define BT_SOFT_BODY_SOLVER_BUFFER_OPENCL_H
 
 // OpenCL support
 #include <CL/cl.hpp>
@@ -184,6 +180,4 @@ public:
 }; // class btOpenCLBuffer
 
 
-#endif // #ifdef BULLET_USE_DX11
-
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_OPENCL_BUFFER_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_BUFFER_OPENCL_H

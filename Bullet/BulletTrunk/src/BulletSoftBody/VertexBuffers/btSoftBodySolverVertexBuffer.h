@@ -13,8 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_BUFFERS_H
-#define BT_ACCELERATED_SOFT_BODY_VERTEX_BUFFERS_H 
+#ifndef BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_H
+#define BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_H
 
 
 class btVertexBufferDescriptor
@@ -162,4 +162,4 @@ public:
 	}
 };
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_BUFFERS_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_H

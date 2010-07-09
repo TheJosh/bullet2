@@ -13,14 +13,11 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef BT_ACCELERATED_SOFT_BODY_DX_VERTEX_BUFFERS_H
-#define BT_ACCELERATED_SOFT_BODY_DX_VERTEX_BUFFERS_H 
+#ifndef BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_DX11_H
+#define BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_DX11_H 
 
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
 
-#ifdef BULLET_USE_DX11
-
-#include "BulletSoftBody/btAcceleratedSoftBody_VertexBuffers.h"
+#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer.h"
 
 #include <windows.h>
 #include <crtdbg.h>
@@ -107,6 +104,4 @@ public:
 	}		
 };
 
-#endif // #ifdef BULLET_USE_DX11
-
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_DX_VERTEX_BUFFERS_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_DX11_H

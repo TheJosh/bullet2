@@ -16,8 +16,7 @@ subject to the following restrictions:
 
 #include "btSoftBodyInternals.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_Solvers.h"
-#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
+#include "BulletSoftBody/btSoftBodySolvers.h"
 
 //
 btSoftBody::btSoftBody(btSoftBodyWorldInfo*	worldInfo,int node_count,  const btVector3* x,  const btScalar* m)
@@ -92,12 +91,7 @@ btSoftBody::btSoftBody(btSoftBodyWorldInfo*	worldInfo,int node_count,  const btV
 
 	m_initialWorldTransform.setIdentity();
 
-	// Initialize solver to NULL so that the solving code in the btSoftBody class
-	// is used instead.
-	m_acceleratedSoftBody = NULL;
-
 	m_mediumVelocity = btVector3(0,0,0);
-	m_mediumDensity = btScalar(0);
 }
 
 //
@@ -112,9 +106,6 @@ btSoftBody::~btSoftBody()
 		btAlignedFree(m_materials[i]);
 	for(i=0;i<m_joints.size();++i) 
 		btAlignedFree(m_joints[i]);
-
-	if(m_acceleratedSoftBody)
-		delete m_acceleratedSoftBody;
 }
 
 //
@@ -579,11 +570,6 @@ setVolumeMass(volume*density/6);
 //
 void			btSoftBody::transform(const btTransform& trs)
 {
-	// If we have a solver, skip this work.
-	// It will have been done within the solver.
-	if( this->m_acceleratedSoftBody )
-		return;
-
 	const btScalar	margin=getCollisionShape()->getMargin();
 	ATTRIBUTE_ALIGNED16(btDbvtVolume)	vol;
 	
@@ -1507,10 +1493,6 @@ void			btSoftBody::setSolver(eSolverPresets::_ preset)
 //
 void			btSoftBody::predictMotion(btScalar dt)
 {
-	// If we have a solver, skip this work.
-	// It will have been done within the solver.
-	if( this->m_acceleratedSoftBody )
-		return;
 
 	int i,ni;
 
@@ -1603,10 +1585,6 @@ void			btSoftBody::predictMotion(btScalar dt)
 //
 void			btSoftBody::solveConstraints()
 {
-	// If we have a solver, skip this work.
-	// It will have been done within the solver.
-	if( this->m_acceleratedSoftBody )
-		return;
 
 	/* Apply clusters		*/ 
 	applyClusters(false);
@@ -1748,11 +1726,6 @@ void			btSoftBody::solveClusters(const btAlignedObjectArray<btSoftBody*>& bodies
 //
 void			btSoftBody::integrateMotion()
 {
-	// If we have a solver, skip this work.
-	// It will have been done within the solver.
-	if( this->m_acceleratedSoftBody )
-		return;
-
 	/* Update			*/ 
 	updateNormals();
 }
@@ -2620,27 +2593,27 @@ void				btSoftBody::applyForces()
 {
 
 	BT_PROFILE("SoftBody applyForces");
-	const btScalar					dt=m_sst.sdt;
-	const btScalar					kLF=m_cfg.kLF;
-	const btScalar					kDG=m_cfg.kDG;
-	const btScalar					kPR=m_cfg.kPR;
-	const btScalar					kVC=m_cfg.kVC;
-	const bool						as_lift=kLF>0;
-	const bool						as_drag=kDG>0;
-	const bool						as_pressure=kPR!=0;
-	const bool						as_volume=kVC>0;
-	const bool						as_aero=	as_lift		||
-		as_drag		;
-	const bool						as_vaero=	as_aero		&&
-		(m_cfg.aeromodel<btSoftBody::eAeroModel::F_TwoSided);
-	const bool						as_faero=	as_aero		&&
-		(m_cfg.aeromodel>=btSoftBody::eAeroModel::F_TwoSided);
-	const bool						use_medium=	as_aero;
-	const bool						use_volume=	as_pressure	||
+	const btScalar					dt =			m_sst.sdt;
+	const btScalar					kLF =			m_cfg.kLF;
+	const btScalar					kDG =			m_cfg.kDG;
+	const btScalar					kPR =			m_cfg.kPR;
+	const btScalar					kVC =			m_cfg.kVC;
+	const bool						as_lift =		kLF>0;
+	const bool						as_drag =		kDG>0;
+	const bool						as_pressure =	kPR!=0;
+	const bool						as_volume =		kVC>0;
+	const bool						as_aero =		as_lift	||
+													as_drag		;
+	const bool						as_vaero =		as_aero	&&
+													(m_cfg.aeromodel < btSoftBody::eAeroModel::F_TwoSided);
+	const bool						as_faero =		as_aero	&&
+													(m_cfg.aeromodel >= btSoftBody::eAeroModel::F_TwoSided);
+	const bool						use_medium =	as_aero;
+	const bool						use_volume =	as_pressure	||
 		as_volume	;
-	btScalar						volume=0;
-	btScalar						ivolumetp=0;
-	btScalar						dvolumetv=0;
+	btScalar						volume =		0;
+	btScalar						ivolumetp =		0;
+	btScalar						dvolumetv =		0;
 	btSoftBody::sMedium	medium;
 	if(use_volume)
 	{
@@ -2658,39 +2631,41 @@ void				btSoftBody::applyForces()
 		{
 			if(use_medium)
 			{
-				EvaluateMedium(m_worldInfo,n.m_x,medium);
+				EvaluateMedium(m_worldInfo, n.m_x, medium);
 				medium.m_velocity = m_mediumVelocity;
-				medium.m_density = m_mediumDensity;
+				medium.m_density = m_worldInfo->air_density;
 
 				/* Aerodynamics			*/ 
 				if(as_vaero)
 				{				
-					const btVector3	rel_v=n.m_v-medium.m_velocity;
-					const btScalar	rel_v2=rel_v.length2();
+					const btVector3	rel_v = n.m_v - medium.m_velocity;
+					const btScalar	rel_v2 = rel_v.length2();
 					if(rel_v2>SIMD_EPSILON)
 					{
-						btVector3	nrm=n.m_n;
+						btVector3	nrm = n.m_n;
 						/* Setup normal		*/ 
 						switch(m_cfg.aeromodel)
 						{
 						case	btSoftBody::eAeroModel::V_Point:
-							nrm=NormalizeAny(rel_v);break;
+							nrm = NormalizeAny(rel_v);
+							break;
 						case	btSoftBody::eAeroModel::V_TwoSided:
-							nrm*=(btScalar)(btDot(nrm,rel_v)<0?-1:+1);break;
-							default:
+							nrm *= (btScalar)( (btDot(nrm,rel_v) < 0) ? -1 : +1);
+							break;							
+						default:
 							{
 							}
 						}
-						const btScalar	dvn=btDot(rel_v,nrm);
+						const btScalar dvn = btDot(rel_v,nrm);
 						/* Compute forces	*/ 
 						if(dvn>0)
 						{
 							btVector3		force(0,0,0);
-							const btScalar	c0	=	n.m_area*dvn*rel_v2/2;
-							const btScalar	c1	=	c0*medium.m_density;
+							const btScalar	c0	=	n.m_area * dvn * rel_v2/2;
+							const btScalar	c1	=	c0 * medium.m_density;
 							force	+=	nrm*(-c1*kLF);
-							force	+=	rel_v.normalized()*(-c1*kDG);
-							ApplyClampedForce(n,force,dt);
+							force	+=	rel_v.normalized() * (-c1 * kDG);
+							ApplyClampedForce(n, force, dt);
 						}
 					}
 				}
@@ -2897,6 +2872,7 @@ btSoftBody::vsolver_t	btSoftBody::getSolver(eVSolver::_ solver)
 //
 void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 {
+#if 0
 	// If we have a solver, skip this work.
 	// It will have been done within the solver.
 	// TODO: In the case of the collision handler we need to ensure that we're
@@ -2909,6 +2885,7 @@ void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 		// an impulse response.
 		m_acceleratedSoftBody->addCollisionObject(pco);
 	} else {
+#endif
 		switch(m_cfg.collisions&fCollision::RVSmask)
 		{
 		case	fCollision::SDF_RS:
@@ -2944,21 +2921,14 @@ void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 			}
 			break;
 		}
+#if 0
 	}
+#endif
 }
 
 //
 void			btSoftBody::defaultCollisionHandler(btSoftBody* psb)
 {
-	// If we have a solver, skip this work.
-	// It will have been done within the solver.
-	// TODO: In the case of the collision handler we need to ensure that we're
-	// updating the data structures correctly and in here we generate the 
-	// collision lists to deal with in the solver
-	if( this->m_acceleratedSoftBody )
-		return;
-
-
 	const int cf=m_cfg.collisions&psb->m_cfg.collisions;
 	switch(cf&fCollision::SVSmask)
 	{
@@ -3006,9 +2976,6 @@ void			btSoftBody::defaultCollisionHandler(btSoftBody* psb)
 }
 
 
-
-
-
 static btVector3 Point3TobtVector3( Vectormath::Aos::Point3 point )
 {
 	btVector3 returnPoint( point.getX(), point.getY(), point.getZ() );
@@ -3021,125 +2988,15 @@ static Vectormath::Aos::Vector3 btVector3ToVectormath( const btVector3 &vector )
 	return returnVector;
 }
 
-void btSoftBody::moveToSolver( btSoftBodySolver *solver )
-{
-	using Vectormath::Aos::Matrix3;
-	using Vectormath::Aos::Point3;
 
-	// Create SoftBody that will store the information within the solver
-	btAcceleratedSoftBodyInterface *newSoftBody = new btAcceleratedSoftBodyInterface;
-	m_acceleratedSoftBody = newSoftBody;
-	newSoftBody->setSolver( solver );
-
-	// Add space for new vertices and triangles in the default solver for now
-	// TODO: Include space here for tearing too later
-	int firstVertex = solver->getVertexData().getNumVertices();
-	int numVertices = this->m_nodes.size();
-	int maxVertices = numVertices;
-	// Allocate space for new vertices in all the vertex arrays
-	solver->getVertexData().createVertices( maxVertices, newSoftBody->getIdentifier() );
-
-	int firstTriangle = solver->getTriangleData().getNumTriangles();
-	int numTriangles = this->m_faces.size();
-	int maxTriangles = numTriangles;
-	solver->getTriangleData().createTriangles( maxTriangles );
-
-	// Copy vertices from softbody into the solver
-	for( int vertex = 0; vertex < numVertices; ++vertex )
-	{
-		Point3 multPoint(m_nodes[vertex].m_x.getX(), m_nodes[vertex].m_x.getY(), m_nodes[vertex].m_x.getZ());
-		btSoftBodyVertexData::VertexDescription desc;
-
-		// TODO: Position in the softbody might be pre-transformed
-		// or we may need to adapt for the pose.
-		//desc.setPosition( cloth.getMeshTransform()*multPoint );
-		desc.setPosition( multPoint );
-
-		float vertexInverseMass = this->m_nodes[vertex].m_im;
-		desc.setInverseMass(vertexInverseMass);
-		solver->getVertexData().setVertexAt( desc, firstVertex + vertex );
-	}
-
-	// Copy triangles similarly
-	// We're assuming here that vertex indices are based on the firstVertex rather than the entire scene
-	for( int triangle = 0; triangle < numTriangles; ++triangle )
-	{
-		// Note that large array storage is relative to the array not to the cloth
-		// So we need to add firstVertex to each value
-		int vertexIndex0 = (m_faces[triangle].m_n[0] - &(m_nodes[0]));
-		int vertexIndex1 = (m_faces[triangle].m_n[1] - &(m_nodes[0]));
-		int vertexIndex2 = (m_faces[triangle].m_n[2] - &(m_nodes[0]));
-		btSoftBodyTriangleData::TriangleDescription newTriangle(vertexIndex0 + firstVertex, vertexIndex1 + firstVertex, vertexIndex2 + firstVertex);
-		solver->getTriangleData().setTriangleAt( newTriangle, firstTriangle + triangle );
-		
-		// Increase vertex triangle counts for this triangle		
-		solver->getVertexData().getTriangleCount(newTriangle.getVertexSet().vertex0)++;
-		solver->getVertexData().getTriangleCount(newTriangle.getVertexSet().vertex1)++;
-		solver->getVertexData().getTriangleCount(newTriangle.getVertexSet().vertex2)++;
-	}
-
-	int firstLink = solver->getLinkData().getNumLinks();
-	int numLinks = m_links.size();
-	int maxLinks = numLinks;
-	
-	// Allocate space for the links
-	solver->getLinkData().createLinks( numLinks );
-
-	// Add the links
-	for( int link = 0; link < numLinks; ++link )
-	{
-		int vertexIndex0 = m_links[link].m_n[0] - &(m_nodes[0]);
-		int vertexIndex1 = m_links[link].m_n[1] - &(m_nodes[0]);
-
-		btSoftBodyLinkData::LinkDescription newLink(vertexIndex0 + firstVertex, vertexIndex1 + firstVertex, m_links[link].m_material->m_kLST);
-		newLink.setLinkStrength(1.f);
-		solver->getLinkData().setLinkAt(newLink, firstLink + link);
-	}
-
-
-	
-	newSoftBody->setFirstVertex( firstVertex );
-	newSoftBody->setFirstTriangle( firstTriangle );
-	newSoftBody->setNumVertices( numVertices );
-	newSoftBody->setMaxVertices( maxVertices );
-	newSoftBody->setNumTriangles( numTriangles );
-	newSoftBody->setMaxTriangles( maxTriangles );
-	newSoftBody->setFirstLink( firstLink );
-	newSoftBody->setNumLinks( numLinks );
-	// Set air density and default acceleration due to gravity
-	newSoftBody->setAcceleration( btVector3ToVectormath(this->m_worldInfo->m_gravity) );
-	newSoftBody->setAirDensity( this->m_worldInfo->air_density );	
-}
-
-void btSoftBody::moveFromSolver()
-{
-	btAssert( "Move from not written yet\n" );
-}
-
-
-void btSoftBody::optimize()
-{
-	m_acceleratedSoftBody->getSolver()->optimize();
-}
-
-void btSoftBody::setVertexOutput( btVertexBufferDescriptor *vertexBuffer )
-{
-	if( m_acceleratedSoftBody )
-		m_acceleratedSoftBody->setVertexBufferTarget( vertexBuffer );
-	else
-		btAssert( "Cannot set the vertex output on a plan btSoftBody object\n" );
-}
 
 void btSoftBody::setWindVelocity( const btVector3 &velocity )
 {
 	m_mediumVelocity = velocity;
-	if( m_acceleratedSoftBody )
-		m_acceleratedSoftBody->setWindVelocity( Vectormath::Aos::Vector3( velocity.getX(), velocity.getY(), velocity.getZ() ) );
 }
 
-void btSoftBody::setMediumDensity( btScalar density )
+
+btVector3 btSoftBody::getWindVelocity()
 {
-	m_mediumDensity = density;
-	if( m_acceleratedSoftBody )
-		m_acceleratedSoftBody->setAirDensity( density );
+	return m_mediumVelocity;
 }

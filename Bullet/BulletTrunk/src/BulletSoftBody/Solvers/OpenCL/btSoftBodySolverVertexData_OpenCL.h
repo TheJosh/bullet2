@@ -13,15 +13,11 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
+#include "BulletSoftBody/Solvers/CPU/btSoftBodySolverData.h"
+#include "BulletSoftBody/Solvers/OpenCL/btSoftBodySolverBuffer_OpenCL.h"
 
-
-#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_OpenCLBuffer.h"
-
-
-#ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_OPENCL_H
-#define BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_OPENCL_H
+#ifndef BT_SOFT_BODY_SOLVER_VERTEX_DATA_OPENCL_H
+#define BT_SOFT_BODY_SOLVER_VERTEX_DATA_OPENCL_H
 
 
 class btSoftBodyVertexDataOpenCL : public btSoftBodyVertexData
@@ -53,4 +49,4 @@ public:
 };
 
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_OPENCL_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_VERTEX_DATA_OPENCL_H

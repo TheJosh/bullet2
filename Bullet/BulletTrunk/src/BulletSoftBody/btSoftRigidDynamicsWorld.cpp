@@ -20,15 +20,22 @@ subject to the following restrictions:
 //softbody & helpers
 #include "btSoftBody.h"
 #include "btSoftBodyHelpers.h"
-#include "btAcceleratedSoftBody_Solvers.h"
+#include "btSoftBodySolvers.h"
+#include "solvers/btDefaultSoftBodySolver.h"
 
 
 
-
-
-btSoftRigidDynamicsWorld::btSoftRigidDynamicsWorld(btDispatcher* dispatcher,btBroadphaseInterface* pairCache,btConstraintSolver* constraintSolver,btCollisionConfiguration* collisionConfiguration)
-:btDiscreteDynamicsWorld(dispatcher,pairCache,constraintSolver,collisionConfiguration)
+btSoftRigidDynamicsWorld::btSoftRigidDynamicsWorld(
+	btDispatcher* dispatcher,
+	btBroadphaseInterface* pairCache,
+	btConstraintSolver* constraintSolver,
+	btCollisionConfiguration* collisionConfiguration,
+	btSoftBodySolver *softBodySolver = 0 ) : 
+		btDiscreteDynamicsWorld(dispatcher,pairCache,constraintSolver,collisionConfiguration),
+		m_softBodySolver( softBodySolver )
 {
+	if( !m_softBodySolver )
+		m_softBodySolver = new btDefaultSoftBodySolver();
 	m_drawFlags			=	fDrawFlags::Std;
 	m_drawNodeTree		=	true;
 	m_drawFaceTree		=	false;
@@ -49,41 +56,19 @@ void	btSoftRigidDynamicsWorld::predictUnconstraintMotion(btScalar timeStep)
 {
 	btDiscreteDynamicsWorld::predictUnconstraintMotion( timeStep );
 
-	// Do initialization of the solvers if optimize wasn't run
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-	{
-		if( !m_solvers[solverIndex]->checkInitialized() )
-		{
-			btAssert( "Solver initialization failed\n" );
-		}
-	}
-
-	// ///////////////////////////////
-	// Do prediction work for solvers
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-		m_solvers[solverIndex]->updateConstants( timeStep );
-
-	// Apply forces that we know about to the cloths
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-		m_solvers[solverIndex]->applyForces(  timeStep * m_solvers[solverIndex]->getTimeScale() );
-
-	// Itegrate motion for all soft bodies dealt with by the solver
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-		m_solvers[solverIndex]->integrate( timeStep * m_solvers[solverIndex]->getTimeScale() );
-	// End prediction work for solvers
-	// ///////////////////////////////
-
-
-	for ( int i=0;i<m_softBodies.size();++i)
-	{
-		btSoftBody*	psb= m_softBodies[i];
-
-		psb->predictMotion(timeStep);		
-	}
+	m_softBodySolver->predictMotion( timeStep );
 }
 
 void	btSoftRigidDynamicsWorld::internalSingleStepSimulation( btScalar timeStep )
 {
+	if( !m_softBodySolver->checkInitialized() )
+	{
+		btAssert( "Solver initialization failed\n" );
+	}
+
+	// Let the solver grab the soft bodies and if necessary optimize for it
+	m_softBodySolver->optimize( getSoftBodyArray() );
+
 	btDiscreteDynamicsWorld::internalSingleStepSimulation( timeStep );
 
 	///solve soft bodies constraints
@@ -99,32 +84,11 @@ void	btSoftRigidDynamicsWorld::internalSingleStepSimulation( btScalar timeStep )
 #endif
 
 	///update soft bodies
-	updateSoftBodies();
-
-
-	// ///////////////////////////////
-	// Do solver-wise simulation step
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-		m_solvers[solverIndex]->updateSoftBodies();
-
-	// Output the cloth's vertices and normals to the appropriate defined vertex buffer
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-		m_solvers[solverIndex]->outputToVertexBuffers();
+	m_softBodySolver->updateSoftBodies( );
 	
 	// End solver-wise simulation step
 	// ///////////////////////////////
 
-}
-
-void	btSoftRigidDynamicsWorld::updateSoftBodies()
-{
-	BT_PROFILE("updateSoftBodies");
-
-	for ( int i=0;i<m_softBodies.size();i++)
-	{
-		btSoftBody*	psb=(btSoftBody*)m_softBodies[i];
-		psb->integrateMotion();	
-	}
 }
 
 void	btSoftRigidDynamicsWorld::solveSoftBodiesConstraints( btScalar timeStep )
@@ -137,15 +101,8 @@ void	btSoftRigidDynamicsWorld::solveSoftBodiesConstraints( btScalar timeStep )
 	}
 
 	// Solve constraints solver-wise
-	for( int solverIndex = 0; solverIndex < m_solvers.size(); ++solverIndex )
-		m_solvers[solverIndex]->solveConstraints( timeStep * m_solvers[solverIndex]->getTimeScale() );
+	m_softBodySolver->solveConstraints( timeStep * m_softBodySolver->getTimeScale() );
 
-	// Solve constraints for non-solver softbodies
-	for(int i=0;i<m_softBodies.size();++i)
-	{
-		btSoftBody*	psb=(btSoftBody*)m_softBodies[i];
-		psb->solveConstraints();
-	}	
 }
 
 void	btSoftRigidDynamicsWorld::addSoftBody(btSoftBody* body,short int collisionFilterGroup,short int collisionFilterMask)
@@ -335,17 +292,4 @@ void	btSoftRigidDynamicsWorld::rayTestSingle(const btTransform& rayFromTrans,con
 	else {
 		btCollisionWorld::rayTestSingle(rayFromTrans,rayToTrans,collisionObject,collisionShape,colObjWorldTransform,resultCallback);
 	}
-}
-
-void btSoftRigidDynamicsWorld::addSolver( btSoftBodySolver *solver )
-{
-	bool found = false;
-	for( int i = 0; i < m_solvers.size(); ++i )
-	{
-		if( m_solvers[i] == solver )
-			found = true;
-	}
-
-	if( !found )
-		m_solvers.push_back( solver );
 }

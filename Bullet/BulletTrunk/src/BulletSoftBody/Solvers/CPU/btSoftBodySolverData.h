@@ -13,8 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef BT_ACCELERATED_SOFT_BODY_DATA_H
-#define BT_ACCELERATED_SOFT_BODY_DATA_H 
+#ifndef BT_SOFT_BODY_SOLVER_DATA_H
+#define BT_SOFT_BODY_SOLVER_DATA_H
 
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
@@ -151,6 +151,17 @@ public:
 
 	virtual ~btSoftBodyLinkData()
 	{
+	}
+
+	virtual void clear()
+	{
+		m_links.resize(0);
+		m_linkStrength.resize(0);
+		m_linksMassLSC.resize(0);
+		m_linksRestLengthSquared.resize(0);
+		m_linksLengthRatio.resize(0);
+		m_linksRestLength.resize(0);
+		m_linksMaterialLinearStiffnessCoefficient.resize(0);
 	}
 
 	int getNumLinks()
@@ -387,6 +398,19 @@ public:
 	{
 	}
 
+	virtual void clear()
+	{
+		m_clothIdentifier.resize(0);
+		m_vertexPosition.resize(0);
+		m_vertexPreviousPosition.resize(0);
+		m_vertexVelocity.resize(0);
+		m_vertexForceAccumulator.resize(0);
+		m_vertexNormal.resize(0);
+		m_vertexInverseMass.resize(0);
+		m_vertexArea.resize(0);
+		m_vertexTriangleCount.resize(0);
+	}
+
 	int getNumVertices()
 	{
 		return m_vertexPosition.size();
@@ -610,6 +634,13 @@ public:
 	{
 	}
 
+	virtual void clear()
+	{
+		m_vertexIndices.resize(0);
+		m_area.resize(0);
+		m_normal.resize(0);
+	}
+
 	int getNumTriangles()
 	{
 		return m_vertexIndices.size();
@@ -685,4 +716,4 @@ public:
 };
 
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_DATA_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_DATA_H

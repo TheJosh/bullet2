@@ -34,7 +34,7 @@ class btSoftRigidDynamicsWorld : public btDiscreteDynamicsWorld
 	btSoftBodyWorldInfo m_sbi;
 
 	/** Solver classes that encapsulate multiple soft bodies for solving. */
-	btAlignedObjectArray< btSoftBodySolver * > m_solvers;
+	btSoftBodySolver *m_softBodySolver;
 
 protected:
 
@@ -42,14 +42,12 @@ protected:
 
 	virtual void	internalSingleStepSimulation( btScalar timeStep);
 
-	void	updateSoftBodies();
-
 	void	solveSoftBodiesConstraints( btScalar timeStep );
 
 
 public:
 
-	btSoftRigidDynamicsWorld(btDispatcher* dispatcher,btBroadphaseInterface* pairCache,btConstraintSolver* constraintSolver,btCollisionConfiguration* collisionConfiguration);
+	btSoftRigidDynamicsWorld(btDispatcher* dispatcher,btBroadphaseInterface* pairCache,btConstraintSolver* constraintSolver, btCollisionConfiguration* collisionConfiguration, btSoftBodySolver *softBodySolver);
 
 	virtual ~btSoftRigidDynamicsWorld();
 
@@ -97,8 +95,6 @@ public:
 					  const btTransform& colObjWorldTransform,
 					  RayResultCallback& resultCallback);
 
-	/** Add a solver to the solver set such that it is unique. */
-	void addSolver( btSoftBodySolver *solver );
 
 };
 

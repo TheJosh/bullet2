@@ -13,16 +13,13 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
 
-#ifdef BULLET_USE_DX11
-
-#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_DX11Buffer.h"
+#include "BulletSoftBody/Solvers/CPU/btSoftBodySolverData.h"
+#include "BulletSoftBody/solvers/DX11/btSoftBodySolverBuffer_DX11.h"
 
 
-#ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_DX11_H
-#define BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_DX11_H
+#ifndef BT_SOFT_BHODY_SOLVER_VERTEX_DATA_DX11_H
+#define BT_SOFT_BHODY_SOLVER_VERTEX_DATA_DX11_H
 
 class btSoftBodyLinkData;
 class btSoftBodyLinkData::LinkDescription;
@@ -62,7 +59,5 @@ public:
 };
 
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_VERTEX_DATA_DX11_H
+#endif // #ifndef BT_SOFT_BHODY_SOLVER_VERTEX_DATA_DX11_H
 
-
-#endif // #ifdef BULLET_USE_DX11

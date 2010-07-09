@@ -13,37 +13,26 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#include "BulletSoftBody/btAcceleratedSoftBody_Settings.h"
-
-#ifdef BULLET_USE_DX11
-
-#include "BulletSoftBody/btAcceleratedSoftBodyData.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_DX11Buffer.h"
+#include "BulletSoftBody/Solvers/CPU/btSoftBodySolverData.h"
+#include "BulletSoftBody/Solvers/DX11/btSoftBodySolverBuffer_DX11.h"
 
 
-#ifndef BT_ACCELERATED_SOFT_BODY_LINK_DATA_DX11_H
-#define BT_ACCELERATED_SOFT_BODY_LINK_DATA_DX11_H
+#ifndef BT_SOFT_BODY_SOLVER_TRIANGLE_DATA_DX11_H
+#define BT_SOFT_BODY_SOLVER_TRIANGLE_DATA_DX11_H
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
-
-class btSoftBodyLinkDataDX11 : public btSoftBodyLinkData
+class btSoftBodyTriangleDataDX11 : public btSoftBodyTriangleData
 {
 public:
 	bool				m_onGPU;
 	ID3D11Device		*m_d3dDevice;
 	ID3D11DeviceContext *m_d3dDeviceContext;
 
-
-	btDX11Buffer<LinkNodePair>				m_dx11Links;
-	btDX11Buffer<float>											m_dx11LinkStrength;
-	btDX11Buffer<float>											m_dx11LinksMassLSC;
-	btDX11Buffer<float>											m_dx11LinksRestLengthSquared;
-	btDX11Buffer<Vectormath::Aos::Vector3>						m_dx11LinksCLength;
-	btDX11Buffer<float>											m_dx11LinksLengthRatio;
-	btDX11Buffer<float>											m_dx11LinksRestLength;
-	btDX11Buffer<float>											m_dx11LinksMaterialLinearStiffnessCoefficient;
+	btDX11Buffer<btSoftBodyTriangleData::TriangleNodeSet>							m_dx11VertexIndices;
+	btDX11Buffer<float>									m_dx11Area;
+	btDX11Buffer<Vectormath::Aos::Vector3>				m_dx11Normal;
 
 	struct BatchPair
 	{
@@ -63,38 +52,38 @@ public:
 		}
 	};
 
+
 	/**
 	 * Link addressing information for each cloth.
 	 * Allows link locations to be computed independently of data batching.
 	 */
-	btAlignedObjectArray< int >							m_linkAddresses;
+	btAlignedObjectArray< int >							m_triangleAddresses;
 
 	/**
 	 * Start and length values for computation batches over link data.
 	 */
 	btAlignedObjectArray< BatchPair >		m_batchStartLengths;
 
-
 	//ID3D11Buffer*               readBackBuffer;
-	
-	btSoftBodyLinkDataDX11( ID3D11Device *d3dDevice, ID3D11DeviceContext *d3dDeviceContext );
 
-	virtual ~btSoftBodyLinkDataDX11();
+public:
+	btSoftBodyTriangleDataDX11( ID3D11Device *d3dDevice, ID3D11DeviceContext *d3dDeviceContext );
+
+	virtual ~btSoftBodyTriangleDataDX11();
+
 
 	/** Allocate enough space in all link-related arrays to fit numLinks links */
-	virtual void createLinks( int numLinks );
+	virtual void createTriangles( int numTriangles );
 	
 	/** Insert the link described into the correct data structures assuming space has already been allocated by a call to createLinks */
-	virtual void setLinkAt( const LinkDescription &link, int linkIndex );
+	virtual void setTriangleAt( const btSoftBodyTriangleData::TriangleDescription &triangle, int triangleIndex );
 
 	virtual bool onAccelerator();
-
 	virtual bool moveToAccelerator();
 
 	virtual bool moveFromAccelerator();
-
 	/**
-	 * Generate (and later update) the batching for the entire link set.
+	 * Generate (and later update) the batching for the entire triangle set.
 	 * This redoes a lot of work because it batches the entire set when each cloth is inserted.
 	 * In theory we could delay it until just before we need the cloth.
 	 * It's a one-off overhead, though, so that is a later optimisation.
@@ -103,7 +92,5 @@ public:
 };
 
 
-#endif // #ifndef BT_ACCELERATED_SOFT_BODY_LINK_DATA_DX11_H
 
-
-#endif // #ifdef BULLET_USE_DX11
+#endif // #ifndef BT_SOFT_BODY_SOLVER_TRIANGLE_DATA_DX11_H

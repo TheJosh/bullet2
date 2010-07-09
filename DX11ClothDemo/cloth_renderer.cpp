@@ -19,22 +19,36 @@
 #include "LinearMath/btHashMap.h"
 #include "btDirectComputeSupport.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_DXVertexBuffers.h"
+#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer_DX11.h"
 #include "BulletSoftBody/btSoftBodyHelpers.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_CPUSolver.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_DX11Solver.h"
-#include "BulletSoftBody/btAcceleratedSoftBody_DXVertexBuffers.h"
+
+class btDefaultSoftBodySolver;
+class btCPUSoftBodySolver;
+class btCPUSoftBodyVertexSolver;
+class btDX11SoftBodySolver;
+class btDX11SIMDAwareSoftBodySolver;
+
+#include "BulletSoftBody/btSoftBodySolvers.h"
+#include "BulletSoftBody/Solvers/btDefaultSoftBodySolver.h"
+#include "BulletSoftBody/Solvers/CPU/btSoftBodySolver_CPU.h"
+//#include "BulletSoftBody/Solvers/CPU/btAcceleratedSoftBody_CPUVertexSolver.h"
+#include "BulletSoftBody/Solvers/DX11/btSoftBodySolver_DX11.h"
+//#include "BulletSoftBody/Solvers/DX11/btAcceleratedSoftBody_DX11SIMDAwareSolver.h"
+//#include "BulletSoftBody/btAcceleratedSoftBody_DXVertexBuffers.h"
+
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 
+//#define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
+//#define USE_VERTEX_SOLVER
 #define USE_GPU_COPY
-const int numFlags = 5;
+const int numFlags = 2;
 const int clothWidth = 40;
-const int clothHeight = 60;;
-float _windAngle = 1.0;;
+const int clothHeight = 60;//60;
+float _windAngle = 1.0;//0.4;
 float _windStrength = 15;
 
 
@@ -54,7 +68,7 @@ class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
 
-int paused = 0;
+int paused = 1;
 
 float global_shift_x = 0;
 float global_shift_y = 0;
@@ -191,8 +205,13 @@ BTAcceleratedSoftBody::DX11SupportHelper m_dxSupport;
 btAlignedObjectArray<btSoftBody *> m_flags;
 btSoftRigidDynamicsWorld* m_dynamicsWorld;
 
+btDefaultSoftBodySolver *g_defaultSolver = NULL;
 btCPUSoftBodySolver *g_cpuSolver = NULL;
+btCPUSoftBodyVertexSolver *g_cpuVertexSolver = NULL;
 btDX11SoftBodySolver *g_dx11Solver = NULL;
+btDX11SIMDAwareSoftBodySolver *g_dx11SIMDSolver = NULL;
+
+btSoftBodySolver *g_solver = NULL;
 
 // End bullet globals
 //////////////////////////////////////////
@@ -268,7 +287,7 @@ btSoftBody *createFromIndexedMesh( btVector3 *vertexArray, int numVertices, int 
 /**
  * Create a sequence of flag objects and add them to the world.
  */
-void createFlag( btSoftBodySolver &solver, int width, int height, btAlignedObjectArray<btSoftBody *> &flags )
+void createFlag( int width, int height, btAlignedObjectArray<btSoftBody *> &flags )
 {
 	// First create a triangle mesh to represent a flag
 
@@ -373,17 +392,21 @@ void createFlag( btSoftBodySolver &solver, int width, int height, btAlignedObjec
 		{
 			softBody->setMass(i, 10.f/mesh.m_numVertices);
 		}
+
+		// Set the fixed points
 		softBody->setMass((height-1)*(width), 0.f);
 		softBody->setMass((height-1)*(width) + width - 1, 0.f);
 		softBody->setMass((height-1)*width + width/2, 0.f);
+
 		softBody->m_cfg.collisions = btSoftBody::fCollision::CL_SS+btSoftBody::fCollision::CL_RS;	
-		
+		softBody->m_cfg.kLF = 0.0005f;
+		softBody->m_cfg.kVCF = 0.001f;
+		softBody->m_cfg.kDP = 0.f;
+		softBody->m_cfg.kDG = 0.f;
 		
 		flags.push_back( softBody );
 
 		softBody->transform( transform );
-
-		softBody->moveToSolver( &solver );
 		
 		m_dynamicsWorld->addSoftBody( softBody );
 	}
@@ -403,7 +426,7 @@ void updatePhysicsWorld()
 	// Change wind velocity a bit based on a frame counter
 	if( (counter % 400) == 0 )
 	{
-		_windAngle = (_windAngle + 0.05);
+		_windAngle = (_windAngle + 0.05f);
 		if( _windAngle > (2*3.141) )
 			_windAngle = 0;
 
@@ -431,6 +454,29 @@ void updatePhysicsWorld()
 void initBullet(void)
 {
 
+
+#ifdef USE_GPU_SOLVER
+	g_dx11Solver = new btDX11SoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
+	g_solver = g_dx11Solver;
+#else
+#ifdef USE_VERTEX_SOLVER
+	g_cpuVertexSolver = new btCPUSoftBodyVertexSolver;
+	g_solver = g_cpuVertexSolver;
+#else
+#ifdef USE_SIMDAWARE_SOLVER
+	g_dx11SIMDSolver = new btDX11SIMDAwareSoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
+	g_solver = g_dx11SIMDSolver;
+#else
+	g_cpuSolver = new btCPUSoftBodySolver;
+	g_solver = g_cpuSolver;
+	//g_defaultSolver = new btDefaultSoftBodySolver;
+	//g_solver = g_defaultSolver;
+#endif
+#endif
+#endif
+
+
+
 	// Initialise CPU physics device
 	//m_collisionConfiguration = new btDefaultCollisionConfiguration();
 	m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
@@ -439,7 +485,7 @@ void initBullet(void)
 	btSequentialImpulseConstraintSolver* sol = new btSequentialImpulseConstraintSolver;
 	m_solver = sol;
 
-	m_dynamicsWorld = new btSoftRigidDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);	
+	m_dynamicsWorld = new btSoftRigidDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration, g_solver);	
 
 	m_dynamicsWorld->setGravity(btVector3(0,-10,0));	
 	btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(50.),btScalar(50.)));	
@@ -448,21 +494,12 @@ void initBullet(void)
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0,-50,0));
 
-
-#ifdef USE_GPU_SOLVER
-	g_dx11Solver = new btDX11SoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
-	m_dynamicsWorld->addSolver( g_dx11Solver );
-#else
-	g_cpuSolver = new btCPUSoftBodySolver;
-	m_dynamicsWorld->addSolver( g_cpuSolver );
-#endif
-
-	m_dynamicsWorld->getWorldInfo().air_density		=	(btScalar)1.2;
-	m_dynamicsWorld->getWorldInfo().water_density	=	0;
+	m_dynamicsWorld->getWorldInfo().air_density			=	(btScalar)1.2;
+	m_dynamicsWorld->getWorldInfo().water_density		=	0;
 	m_dynamicsWorld->getWorldInfo().water_offset		=	0;
 	m_dynamicsWorld->getWorldInfo().water_normal		=	btVector3(0,0,0);
 	m_dynamicsWorld->getWorldInfo().m_gravity.setValue(0,-10,0);
-
+	
 #if 0
 	{
 		btScalar mass(0.);
@@ -519,18 +556,13 @@ void initBullet(void)
 	}
 #endif
 
-#ifdef USE_GPU_SOLVER
-	createFlag( *g_dx11Solver, clothWidth, clothHeight, m_flags );
-#else
-	createFlag( *g_cpuSolver, clothWidth, clothHeight, m_flags );
-#endif
+
+	createFlag( clothWidth, clothHeight, m_flags );
 
 	// Create output buffer descriptions for ecah flag
 	// These describe where the simulation should send output data to
 	for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
 	{		
-//		m_flags[flagIndex]->setWindVelocity( Vectormath::Aos::Vector3( 0.f, 0.f, 15.f ) );
-		
 		// In this case we have a DX11 output buffer with a vertex at index 0, 8, 16 and so on as well as a normal at 3, 11, 19 etc.
 		// Copies will be performed GPU-side directly into the output buffer
 #ifdef USE_GPU_COPY
@@ -538,20 +570,30 @@ void initBullet(void)
 		cloths[flagIndex].m_vertexBufferDescriptor = vertexBufferDescriptor;
 #else  // #ifdef USE_GPU_COPY
 		btCPUVertexBufferDescriptor *vertexBufferDescriptor = new btCPUVertexBufferDescriptor(cloths[flagIndex].cpu_buffer, 0, 8, 3, 8);
+		cloths[flagIndex].m_vertexBufferDescriptor = vertexBufferDescriptor;
 #endif // #ifdef USE_GPU_COPY
-
-		m_flags[flagIndex]->setVertexOutput( vertexBufferDescriptor );
-
-
 	}
 
-#ifdef USE_GPU_SOLVER
-	g_dx11Solver->optimize();
-#else	
-	g_cpuSolver->optimize();
-#endif
+	g_solver->optimize( m_dynamicsWorld->getSoftBodyArray() );
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -640,6 +682,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     DXUTSetCursorSettings( true, true ); // Show the cursor and clip it when in full screen
     DXUTCreateWindow( L"Cloth Renderer" );
     DXUTCreateDevice (D3D_FEATURE_LEVEL_11_0, true, 800, 600 );
+	DXUTSetMultimonSettings(false);
     //DXUTCreateDevice(true, 640, 480);
     DXUTMainLoop(); // Enter into the DXUT render loop
 
@@ -814,6 +857,7 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl* pControl, v
             g_D3DSettingsDlg.SetActive( !g_D3DSettingsDlg.IsActive() ); break;
 		case IDC_PAUSE:
 			paused = !paused;
+			break;
 		case IDC_WIREFRAME:
 			g_wireFrame = !g_wireFrame;
 			break;
@@ -1124,6 +1168,8 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 
 		updatePhysicsWorld();
 	}
+
+	//paused = 1;
 	
 
 
@@ -1149,6 +1195,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 
 	for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
 	{	
+		g_solver->copySoftBodyToVertexBuffer( m_flags[flagIndex], cloths[flagIndex].m_vertexBufferDescriptor );
 		cloths[flagIndex].draw();
 	}
 
@@ -1222,10 +1269,16 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
 	//}
 
 	//cleanup in the reverse order of creation/initialization
+	if( g_cpuVertexSolver )
+		delete g_cpuVertexSolver;
+	if( g_defaultSolver )
+		delete g_defaultSolver;
 	if( g_cpuSolver )
 		delete g_cpuSolver;
 	if( g_dx11Solver )
 		delete g_dx11Solver;
+	if( g_dx11SIMDSolver )
+		delete g_dx11SIMDSolver;
 
 	for(int i=0; i< m_collisionShapes.size(); i++)
 		delete m_collisionShapes[i];
