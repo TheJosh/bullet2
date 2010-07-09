@@ -30,7 +30,7 @@ btSoftRigidDynamicsWorld::btSoftRigidDynamicsWorld(
 	btBroadphaseInterface* pairCache,
 	btConstraintSolver* constraintSolver,
 	btCollisionConfiguration* collisionConfiguration,
-	btSoftBodySolver *softBodySolver = 0 ) : 
+	btSoftBodySolver *softBodySolver ) : 
 		btDiscreteDynamicsWorld(dispatcher,pairCache,constraintSolver,collisionConfiguration),
 		m_softBodySolver( softBodySolver )
 {
