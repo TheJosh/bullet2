@@ -68,7 +68,7 @@ class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
 
-int paused = 1;
+int paused = 0;
 
 float global_shift_x = 0;
 float global_shift_y = 0;
