@@ -17,7 +17,7 @@ subject to the following restrictions:
 #define BT_SOFT_BODY_SOLVER_VERTEX_BUFFER_DX11_H 
 
 
-#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer.h"
+#include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 
 #include <windows.h>
 #include <crtdbg.h>

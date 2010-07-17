@@ -29,9 +29,6 @@ subject to the following restrictions:
 
 class btBroadphaseInterface;
 class btDispatcher;
-class btSoftBodySolver;
-class btAcceleratedSoftBodyInterface;
-class btVertexBufferDescriptor;
 
 
 /* btSoftBodyWorldInfo	*/ 
@@ -643,7 +640,7 @@ public:
 
 	btTransform			m_initialWorldTransform;
 
-	btVector3			m_mediumVelocity;
+	btVector3			m_windVelocity;
 	//
 	// Api
 	//
@@ -847,7 +844,7 @@ public:
 	/**
 	 * Return the wind velocity for interaction with the air.
 	 */
-	btVector3 getWindVelocity();
+	const btVector3& getWindVelocity();
 
 
 	//

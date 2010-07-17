@@ -19,7 +19,7 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
 #include "BulletSoftBody/solvers/DX11/btSoftBodySolver_DX11.h"
-#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer_DX11.h"
+#include "BulletSoftBody/Solvers/DX11/btSoftBodySolverVertexBuffer_DX11.h"
 #include "BulletSoftBody/btSoftBody.h"
 
 #define MSTRINGIFY(A) #A

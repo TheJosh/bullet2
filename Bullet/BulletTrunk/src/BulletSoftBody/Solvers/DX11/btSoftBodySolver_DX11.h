@@ -19,7 +19,7 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
 #include "BulletSoftBody/btSoftBodySolvers.h"
-#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer_DX11.h"
+#include "BulletSoftBody/Solvers/DX11/btSoftBodySolverVertexBuffer_DX11.h"
 #include "BulletSoftBody/Solvers/DX11/btSoftBodySolverLinkData_DX11.h"
 #include "BulletSoftBody/Solvers/DX11/btSoftBodySolverVertexData_DX11.h"
 #include "BulletSoftBody/Solvers/DX11/btSoftBodySolverTriangleData_DX11.h"

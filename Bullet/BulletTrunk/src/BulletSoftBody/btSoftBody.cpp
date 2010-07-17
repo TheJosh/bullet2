@@ -15,7 +15,6 @@ subject to the following restrictions:
 ///btSoftBody implementation by Nathanael Presson
 
 #include "btSoftBodyInternals.h"
-#include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
 #include "BulletSoftBody/btSoftBodySolvers.h"
 
 //
@@ -46,7 +45,7 @@ btSoftBody::btSoftBody(btSoftBodyWorldInfo*	worldInfo,int node_count,  const btV
 	m_cfg.maxvolume		=	(btScalar)1;
 	m_cfg.timescale		=	1;
 	m_cfg.viterations	=	0;
-	m_cfg.piterations	=	5;	
+	m_cfg.piterations	=	1;	
 	m_cfg.diterations	=	0;
 	m_cfg.citerations	=	4;
 	m_cfg.collisions	=	fCollision::Default;
@@ -91,7 +90,7 @@ btSoftBody::btSoftBody(btSoftBodyWorldInfo*	worldInfo,int node_count,  const btV
 
 	m_initialWorldTransform.setIdentity();
 
-	m_mediumVelocity = btVector3(0,0,0);
+	m_windVelocity = btVector3(0,0,0);
 }
 
 //
@@ -2632,7 +2631,7 @@ void				btSoftBody::applyForces()
 			if(use_medium)
 			{
 				EvaluateMedium(m_worldInfo, n.m_x, medium);
-				medium.m_velocity = m_mediumVelocity;
+				medium.m_velocity = m_windVelocity;
 				medium.m_density = m_worldInfo->air_density;
 
 				/* Aerodynamics			*/ 
@@ -2976,27 +2975,14 @@ void			btSoftBody::defaultCollisionHandler(btSoftBody* psb)
 }
 
 
-static btVector3 Point3TobtVector3( Vectormath::Aos::Point3 point )
-{
-	btVector3 returnPoint( point.getX(), point.getY(), point.getZ() );
-	return returnPoint;
-}
-
-static Vectormath::Aos::Vector3 btVector3ToVectormath( const btVector3 &vector )
-{
-	Vectormath::Aos::Vector3 returnVector( vector.getX(), vector.getY(), vector.getZ() );
-	return returnVector;
-}
-
-
 
 void btSoftBody::setWindVelocity( const btVector3 &velocity )
 {
-	m_mediumVelocity = velocity;
+	m_windVelocity = velocity;
 }
 
 
-btVector3 btSoftBody::getWindVelocity()
+const btVector3& btSoftBody::getWindVelocity()
 {
-	return m_mediumVelocity;
+	return m_windVelocity;
 }

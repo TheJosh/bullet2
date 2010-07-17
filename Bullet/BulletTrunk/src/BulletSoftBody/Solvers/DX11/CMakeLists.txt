@@ -4,7 +4,7 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 )
 
 SET(DXSDK_DIR $ENV{DXSDK_DIR})
-SET(DX11_INCLUDE_PATH  "${DXSDK_DIR}Include" CACHE DOCSTRING "Microsoft directX SDK include path")
+SET(DX11_INCLUDE_PATH  "${DIRECTX_SDK_BASE_DIR}/Include" CACHE DOCSTRING "Microsoft directX SDK include path")
 
 
 INCLUDE_DIRECTORIES(${DX11_INCLUDE_PATH} "../cpu/")
@@ -20,8 +20,7 @@ SET(BulletSoftBodyDX11Solvers_HDRS
 	btSoftBodySolverTriangleData_DX11.h
 	btSoftBodySolverLinkData_DX11.h
 	btSoftBodySolverBuffer_DX11.h
-	../../VertexBuffers/btSoftBodySolverVertexBuffer.h
-	../../VertexBuffers/btSoftBodySolverVertexBuffer_DX11.h
+	btSoftBodySolverVertexBuffer_DX11.h
 
 )
 

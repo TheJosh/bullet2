@@ -21,7 +21,7 @@ subject to the following restrictions:
 #include "btSoftBody.h"
 #include "btSoftBodyHelpers.h"
 #include "btSoftBodySolvers.h"
-#include "solvers/btDefaultSoftBodySolver.h"
+#include "btDefaultSoftBodySolver.h"
 
 
 
@@ -32,10 +32,16 @@ btSoftRigidDynamicsWorld::btSoftRigidDynamicsWorld(
 	btCollisionConfiguration* collisionConfiguration,
 	btSoftBodySolver *softBodySolver ) : 
 		btDiscreteDynamicsWorld(dispatcher,pairCache,constraintSolver,collisionConfiguration),
-		m_softBodySolver( softBodySolver )
+		m_softBodySolver( softBodySolver ),
+		m_ownsSolver(false)
 {
 	if( !m_softBodySolver )
-		m_softBodySolver = new btDefaultSoftBodySolver();
+	{
+		void* ptr = btAlignedAlloc(sizeof(btDefaultSoftBodySolver),16);
+		m_softBodySolver = new(ptr) btDefaultSoftBodySolver();
+		m_ownsSolver = true;
+	}
+
 	m_drawFlags			=	fDrawFlags::Std;
 	m_drawNodeTree		=	true;
 	m_drawFaceTree		=	false;
@@ -49,7 +55,11 @@ btSoftRigidDynamicsWorld::btSoftRigidDynamicsWorld(
 
 btSoftRigidDynamicsWorld::~btSoftRigidDynamicsWorld()
 {
-
+	if (m_ownsSolver)
+	{
+		m_softBodySolver->~btSoftBodySolver();
+		btAlignedFree(m_softBodySolver);
+	}
 }
 
 void	btSoftRigidDynamicsWorld::predictUnconstraintMotion(btScalar timeStep)
@@ -75,13 +85,11 @@ void	btSoftRigidDynamicsWorld::internalSingleStepSimulation( btScalar timeStep )
 	solveSoftBodiesConstraints( timeStep );
 
 	//self collisions
-#if 0
 	for ( int i=0;i<m_softBodies.size();i++)
 	{
 		btSoftBody*	psb=(btSoftBody*)m_softBodies[i];
 		psb->defaultCollisionHandler(psb);
 	}
-#endif
 
 	///update soft bodies
 	m_softBodySolver->updateSoftBodies( );

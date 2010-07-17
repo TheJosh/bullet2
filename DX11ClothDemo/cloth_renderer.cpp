@@ -19,7 +19,7 @@
 #include "LinearMath/btHashMap.h"
 #include "btDirectComputeSupport.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
-#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer_DX11.h"
+#include "BulletSoftBody/Solvers/DX11/btSoftBodySolverVertexBuffer_DX11.h"
 #include "BulletSoftBody/btSoftBodyHelpers.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
 #include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
@@ -32,7 +32,7 @@ class btDX11SoftBodySolver;
 class btDX11SIMDAwareSoftBodySolver;
 
 #include "BulletSoftBody/btSoftBodySolvers.h"
-#include "BulletSoftBody/Solvers/btDefaultSoftBodySolver.h"
+#include "BulletSoftBody/btDefaultSoftBodySolver.h"
 #include "BulletSoftBody/Solvers/CPU/btSoftBodySolver_CPU.h"
 //#include "BulletSoftBody/Solvers/CPU/btAcceleratedSoftBody_CPUVertexSolver.h"
 #include "BulletSoftBody/Solvers/DX11/btSoftBodySolver_DX11.h"

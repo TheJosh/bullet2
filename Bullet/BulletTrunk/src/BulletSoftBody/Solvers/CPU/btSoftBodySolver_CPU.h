@@ -21,8 +21,7 @@ subject to the following restrictions:
 #include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
 
 #include "BulletSoftBody/btSoftBodySolvers.h"
-#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer.h"
-
+#include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/Solvers/CPU/btSoftBodySolverData.h"
 
 
