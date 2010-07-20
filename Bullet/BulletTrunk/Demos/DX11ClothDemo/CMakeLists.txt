@@ -97,12 +97,17 @@ SET(BulletClothExample_HDRS
 	cap.h
 	cloth.h
 	cylinder.h
-	FreeImage.h
+#	FreeImage.h
 	resource.h
 )
 
 
-INCLUDE_DIRECTORIES(${DX11_INCLUDE_PATH} ${BULLET_PHYSICS_SOURCE_DIR}/src  "DXUT/Core" "DXUT/Optional")
+INCLUDE_DIRECTORIES(
+${DX11_INCLUDE_PATH} 
+${BULLET_PHYSICS_SOURCE_DIR}/src  
+"DXUT/Core" "DXUT/Optional"
+${VECTOR_MATH_INCLUDE}
+)
 LINK_DIRECTORIES(${DX11_LIB_PATH})
 
 ADD_DEFINITIONS(-DUNICODE)

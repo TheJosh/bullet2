@@ -4,7 +4,7 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 	
 )
 
-SUBDIRS( Solvers )
+
 
 SET(BulletSoftBody_SRCS
 	btSoftBody.cpp

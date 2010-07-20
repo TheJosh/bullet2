@@ -1,10 +1,11 @@
 INCLUDE_DIRECTORIES(
 	${BULLET_PHYSICS_SOURCE_DIR}/src
-	${BULLET_PHYSICS_SOURCE_DIR}/src/BulletMultiThreaded/vectormath/scalar/cpp
+	${VECTOR_MATH_INCLUDE}
 )
 
 ADD_LIBRARY(BulletMultiThreaded
 		PlatformDefinitions.h
+		PpuAddressSpace.h
 		SpuFakeDma.cpp
 		SpuFakeDma.h
 		SpuDoubleBuffer.h
@@ -70,6 +71,12 @@ ADD_LIBRARY(BulletMultiThreaded
 		../MiniCL/cl_platform.h
 		../MiniCL/cl_MiniCL_Defs.h
 )
+
+#for now, only Direct 11 (Direct Compute)
+IF(USE_DX11)
+	SUBDIRS(GpuSoftBodySolvers)
+ENDIF(USE_DX11)
+
 
 IF (BUILD_SHARED_LIBS)
 	TARGET_LINK_LIBRARIES(BulletMultiThreaded BulletDynamics BulletCollision)
