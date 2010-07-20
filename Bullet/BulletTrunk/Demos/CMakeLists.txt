@@ -1,4 +1,9 @@
 
+IF(USE_DX11)
+	SUBDIRS( DX11ClothDemo )
+ENDIF(USE_DX11)
+
+
 IF (USE_GLUT)
 
 SET(SharedDemoSubdirs

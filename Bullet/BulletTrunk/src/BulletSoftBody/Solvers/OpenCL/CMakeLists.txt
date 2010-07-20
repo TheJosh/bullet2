@@ -20,14 +20,13 @@ SET(BulletSoftBodyOpenCLSolvers_HDRS
 	btSoftBodySolverTriangleData_OpenCL.h
 	btSoftBodySolverLinkData_OpenCL.h
 	btSoftBodySolverBuffer_OpenCL.h
-	../../VertexBuffers/btSoftBodySolverVertexBuffer.h
 )
 
 # OpenCL and HLSL Shaders.
 # Build rules generated to stringify these into headers
 # which are needed by some of the sources
 SET(BulletSoftBodyOpenCLSolvers_Shaders
-	OutputToVertexArray
+#	OutputToVertexArray
 	UpdateNormals
 	Integrate
 	UpdatePositions

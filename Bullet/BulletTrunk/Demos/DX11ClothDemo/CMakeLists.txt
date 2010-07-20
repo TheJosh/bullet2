@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 2.4)
 #this line has to appear before 'PROJECT' in order to be able to disable incremental linking
 SET(MSVC_INCREMENTAL_DEFAULT ON)
 
-PROJECT(BulletClothExample)
+PROJECT(AppDX11ClothDemo)
 SET(BULLET_VERSION 2.76)
 
 IF (NOT CMAKE_BUILD_TYPE)
@@ -101,21 +101,18 @@ SET(BulletClothExample_HDRS
 	resource.h
 )
 
-SET(BULLET_PATH "../Bullet/BulletTrunk" CACHE DOCSTRING "Path to Bullet")
-SET(BULLET_INCLUDE_PATH "${BULLET_PATH}/src" CACHE DOCSTRING "Bullet includes")
-SET(BULLET_LIB_PATH "${BULLET_PATH}/lib/" CACHE DOCSTRING "Bullet libraries")
 
-INCLUDE_DIRECTORIES(${DX11_INCLUDE_PATH} ${BULLET_INCLUDE_PATH} "DXUT/Core" "DXUT/Optional")
-LINK_DIRECTORIES(${BULLET_LIB_PATH} ${DX11_LIB_PATH})
+INCLUDE_DIRECTORIES(${DX11_INCLUDE_PATH} ${BULLET_PHYSICS_SOURCE_DIR}/src  "DXUT/Core" "DXUT/Optional")
+LINK_DIRECTORIES(${DX11_LIB_PATH})
 
 ADD_DEFINITIONS(-DUNICODE)
 ADD_DEFINITIONS(-D_UNICODE)
 
-ADD_EXECUTABLE(BulletClothExample WIN32
+ADD_EXECUTABLE(AppDX11ClothDemo WIN32
 	${BulletClothExample_SRCS} 
 	${BulletClothExample_HDRS} 
 )
-TARGET_LINK_LIBRARIES(BulletClothExample
+TARGET_LINK_LIBRARIES(AppDX11ClothDemo
 	d3dcompiler
 	dxerr
 	dxguid
@@ -131,3 +128,20 @@ TARGET_LINK_LIBRARIES(BulletClothExample
 	BulletSoftBodySolvers_CPU
 	BulletSoftBodySolvers_DX11
 )
+
+IF (NOT INTERNAL_CREATE_DISTRIBUTABLE_MSVC_PROJECTFILES)
+	ADD_CUSTOM_COMMAND(
+		TARGET AppDX11ClothDemo
+		POST_BUILD
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/cloth_renderer_PS.hlsl ${CMAKE_CURRENT_BINARY_DIR}/cloth_renderer_PS.hlsl
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/cloth_renderer_VS.hlsl ${CMAKE_CURRENT_BINARY_DIR}/cloth_renderer_VS.hlsl
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/texture.bmp ${CMAKE_CURRENT_BINARY_DIR}/texture.bmp
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/amdFlag.bmp  ${CMAKE_CURRENT_BINARY_DIR}/amdFlag.bmp
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/atiFlag.bmp  ${CMAKE_CURRENT_BINARY_DIR}/atiFlag.bmp
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/texture.png ${CMAKE_CURRENT_BINARY_DIR}/texture.png
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/Media/UI/Font.dds ${CMAKE_CURRENT_BINARY_DIR}/Media/UI/Font.dds
+		COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/DX11ClothDemo/Media/Tiny/tiny.sdkmesh ${CMAKE_CURRENT_BINARY_DIR}/Media/Tiny/tiny.sdkmesh
+		
+	)
+ENDIF()
+	

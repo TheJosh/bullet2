@@ -42,9 +42,9 @@ class btDX11SIMDAwareSoftBodySolver;
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 
 //#define USE_SIMDAWARE_SOLVER
-#define USE_GPU_SOLVER
+//#define USE_GPU_SOLVER
 //#define USE_VERTEX_SOLVER
-#define USE_GPU_COPY
+//#define USE_GPU_COPY
 const int numFlags = 2;
 const int clothWidth = 40;
 const int clothHeight = 60;//60;
@@ -1171,7 +1171,6 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
         g_D3DSettingsDlg.OnRender( fElapsedTime );
         return;
     }
-
 
     // Clear the render target and depth stencil
     float ClearColor[4] = { 0.0f, 0.25f, 0.25f, 0.55f };
