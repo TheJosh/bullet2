@@ -77,6 +77,8 @@ m_cameraUp(0,1,0),
 m_forwardAxis(2),	
 m_glutScreenWidth(0),
 m_glutScreenHeight(0),
+m_frustumZNear(1.f),
+m_frustumZFar(10000.f),
 m_ortho(0),
 m_ShootBoxInitialSpeed(40.f),
 m_stepping(true),
@@ -245,10 +247,12 @@ void DemoApplication::updateCamera() {
 	{
 		if (m_glutScreenWidth > m_glutScreenHeight) 
 		{
-			glFrustum (-aspect, aspect, -1.0, 1.0, 1.0, 10000.0);
+//			glFrustum (-aspect, aspect, -1.0, 1.0, 1.0, 10000.0);
+			glFrustum (-aspect * m_frustumZNear, aspect * m_frustumZNear, -m_frustumZNear, m_frustumZNear, m_frustumZNear, m_frustumZFar);
 		} else 
 		{
-			glFrustum (-1.0, 1.0, -aspect, aspect, 1.0, 10000.0);
+//			glFrustum (-1.0, 1.0, -aspect, aspect, 1.0, 10000.0);
+			glFrustum (-aspect * m_frustumZNear, aspect * m_frustumZNear, -m_frustumZNear, m_frustumZNear, m_frustumZNear, m_frustumZFar);
 		}
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -950,8 +954,8 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		{
 			btVector3 hor = getRayTo(0,0)-getRayTo(1,0);
 			btVector3 vert = getRayTo(0,0)-getRayTo(0,1);
-			btScalar multiplierX = btScalar(0.01);
-			btScalar multiplierY = btScalar(0.01);
+			btScalar multiplierX = btScalar(0.001);
+			btScalar multiplierY = btScalar(0.001);
 			if (m_ortho)
 			{
 				multiplierX = 1;
@@ -975,7 +979,7 @@ void	DemoApplication::mouseMotionFunc(int x,int y)
 		} 
 		else if(m_mouseButtons & 4) 
 		{
-			m_cameraDistance -= dy * btScalar(0.2f);
+			m_cameraDistance -= dy * btScalar(0.02f);
 			if (m_cameraDistance<btScalar(0.1))
 				m_cameraDistance = btScalar(0.1);
 
@@ -1320,7 +1324,9 @@ void DemoApplication::renderme()
 	updateCamera();
 
 }
+
 #include "BulletCollision/BroadphaseCollision/btAxisSweep3.h"
+
 
 void	DemoApplication::clientResetScene()
 {
@@ -1361,7 +1367,8 @@ void	DemoApplication::clientResetScene()
 					//colObj->setActivationState(WANTS_DEACTIVATION);
 				}
 				//removed cached contact points (this is not necessary if all objects have been removed from the dynamics world)
-				//m_dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(colObj->getBroadphaseHandle(),getDynamicsWorld()->getDispatcher());
+				if (m_dynamicsWorld->getBroadphase()->getOverlappingPairCache())
+					m_dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(colObj->getBroadphaseHandle(),getDynamicsWorld()->getDispatcher());
 
 				btRigidBody* body = btRigidBody::upcast(colObj);
 				if (body && !body->isStaticObject())

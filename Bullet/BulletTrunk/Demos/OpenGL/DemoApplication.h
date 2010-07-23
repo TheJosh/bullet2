@@ -40,6 +40,7 @@ class	btTypedConstraint;
 
 class DemoApplication
 {
+protected:
 	void	displayProfileString(int xOffset,int yStart,char* message);
 	class CProfileIterator* m_profileIterator;
 
@@ -78,6 +79,9 @@ protected:
 
 	int m_glutScreenWidth;
 	int m_glutScreenHeight;
+
+	float	m_frustumZNear;
+	float	m_frustumZFar;
 
 	int	m_ortho;
 
@@ -176,6 +180,11 @@ public:
 #else
 		return btScalar(16666.);
 #endif
+	}
+	void setFrustumZPlanes(float zNear, float zFar)
+	{
+		m_frustumZNear = zNear;
+		m_frustumZFar = zFar;
 	}
 
 	///glut callbacks

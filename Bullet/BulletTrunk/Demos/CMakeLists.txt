@@ -1,32 +1,34 @@
 
-IF(USE_DX11)
-	SUBDIRS( DX11ClothDemo )
-ENDIF(USE_DX11)
-
+IF (USE_DX11)
+	SUBDIRS(DX11ClothDemo)
+ENDIF()
 
 IF (USE_GLUT)
 
-SET(SharedDemoSubdirs
-	OpenGL AllBulletDemos  ConvexDecompositionDemo Benchmarks HelloWorld
-	CcdPhysicsDemo ConstraintDemo SliderConstraintDemo GenericJointDemo Raytracer
-	RagdollDemo ForkLiftDemo BasicDemo Box2dDemo BspDemo MovingConcaveDemo VehicleDemo
-	UserCollisionAlgorithm CharacterDemo SoftDemo HeightFieldFluidDemo
-	CollisionInterfaceDemo ConcaveConvexcastDemo SimplexDemo DynamicControlDemo
-	DoublePrecisionDemo ConcaveDemo CollisionDemo
-	ContinuousConvexCollision ConcaveRaycastDemo GjkConvexCastDemo
-	MultiMaterialDemo SerializeDemo InternalEdgeDemo
-)
-
-
-if (CMAKE_SIZEOF_VOID_P MATCHES "8")
-	SUBDIRS( 	${SharedDemoSubdirs}
+IF(BUILD_CPU_DEMOS)
+	SET(SharedDemoSubdirs
+		OpenGL AllBulletDemos  ConvexDecompositionDemo HelloWorld
+		CcdPhysicsDemo ConstraintDemo SliderConstraintDemo GenericJointDemo Raytracer
+		RagdollDemo ForkLiftDemo BasicDemo Box2dDemo BspDemo MovingConcaveDemo VehicleDemo
+		UserCollisionAlgorithm CharacterDemo SoftDemo HeightFieldFluidDemo
+		CollisionInterfaceDemo ConcaveConvexcastDemo SimplexDemo DynamicControlDemo
+		DoublePrecisionDemo ConcaveDemo CollisionDemo
+		ContinuousConvexCollision ConcaveRaycastDemo GjkConvexCastDemo
+		MultiMaterialDemo SerializeDemo InternalEdgeDemo
 	)
-else (CMAKE_SIZEOF_VOID_P MATCHES "8")
+ELSE()
+	SET(SharedDemoSubdirs
+		OpenGL
+	)
+ENDIF()
+
 	SUBDIRS( 		${SharedDemoSubdirs}
+	Benchmarks
+		ThreadingDemo
 		MultiThreadedDemo
-		MiniCL_VectorAdd
-	)
-endif (CMAKE_SIZEOF_VOID_P MATCHES "8")
+		VectorAdd_OpenCL
+		ParticlesOpenCL
+		)
 
 ELSE (USE_GLUT)
 
@@ -44,7 +46,7 @@ SUBDIRS(
 	GenericJointDemo 
 	SerializeDemo 
 	SoftDemo
-	MiniCL_VectorAdd
+	VectorAdd_OpenCL
 )
 
 ENDIF (USE_GLUT)

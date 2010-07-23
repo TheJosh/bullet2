@@ -35,7 +35,7 @@ subject to the following restrictions:
 
 
 btHingeConstraint::btHingeConstraint(btRigidBody& rbA,btRigidBody& rbB, const btVector3& pivotInA,const btVector3& pivotInB,
-									 btVector3& axisInA,btVector3& axisInB, bool useReferenceFrameA)
+									 const btVector3& axisInA,const btVector3& axisInB, bool useReferenceFrameA)
 									 :btTypedConstraint(HINGE_CONSTRAINT_TYPE, rbA,rbB),
 									 m_angularOnly(false),
 									 m_enableAngularMotor(false),
@@ -87,7 +87,7 @@ btHingeConstraint::btHingeConstraint(btRigidBody& rbA,btRigidBody& rbB, const bt
 
 
 
-btHingeConstraint::btHingeConstraint(btRigidBody& rbA,const btVector3& pivotInA,btVector3& axisInA, bool useReferenceFrameA)
+btHingeConstraint::btHingeConstraint(btRigidBody& rbA,const btVector3& pivotInA,const btVector3& axisInA, bool useReferenceFrameA)
 :btTypedConstraint(HINGE_CONSTRAINT_TYPE, rbA), m_angularOnly(false), m_enableAngularMotor(false), 
 m_useSolveConstraintObsolete(HINGE_USE_OBSOLETE_SOLVER),
 m_useOffsetForConstraintFrame(HINGE_USE_FRAME_OFFSET),
@@ -358,10 +358,13 @@ void btHingeConstraint::getInfo2Internal(btConstraintInfo2* info, const btTransf
 	}
 #endif //#if 0
 	// linear (all fixed)
-    info->m_J1linearAxis[0] = 1;
-    info->m_J1linearAxis[skip + 1] = 1;
-    info->m_J1linearAxis[2 * skip + 2] = 1;
-	
+
+	if (!m_angularOnly)
+	{
+		info->m_J1linearAxis[0] = 1;
+		info->m_J1linearAxis[skip + 1] = 1;
+		info->m_J1linearAxis[2 * skip + 2] = 1;
+	}	
 
 
 
@@ -383,10 +386,13 @@ void btHingeConstraint::getInfo2Internal(btConstraintInfo2* info, const btTransf
 	}
 	// linear RHS
     btScalar k = info->fps * info->erp;
-	for(i = 0; i < 3; i++)
-    {
-        info->m_constraintError[i * skip] = k * (pivotBInW[i] - pivotAInW[i]);
-    }
+	if (!m_angularOnly)
+	{
+		for(i = 0; i < 3; i++)
+		{
+			info->m_constraintError[i * skip] = k * (pivotBInW[i] - pivotAInW[i]);
+		}
+	}
 	// make rotations around X and Y equal
 	// the hinge axis should be the only unconstrained
 	// rotational axis, the angular velocity of the two bodies perpendicular to

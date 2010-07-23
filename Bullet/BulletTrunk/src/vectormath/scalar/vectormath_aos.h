@@ -43,7 +43,6 @@ class Transform3;
 //
 class Vector3
 {
-public:
     float mX;
     float mY;
     float mZ;
