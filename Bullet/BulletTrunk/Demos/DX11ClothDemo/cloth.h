@@ -1,4 +1,7 @@
 
+#include <fstream>
+#include <iostream>
+#include <iomanip>
 
 class piece_of_cloth 
 {
@@ -171,7 +174,8 @@ public:
 
 			pd3dImmediateContext->PSSetShaderResources(0,1,&texture2D_view);
 
-			pd3dImmediateContext->DrawIndexed( (width*3*2+2 + height*width*3*2), 0, ( UINT )pSubset->VertexStart );
+			//pd3dImmediateContext->DrawIndexed( (width*3*2+2 + height*width*3*2), 0, ( UINT )pSubset->VertexStart );
+			pd3dImmediateContext->DrawIndexed( ((height-1)*(width-1)*3*2), 0, ( UINT )pSubset->VertexStart );
 		}
 
 		SAFE_RELEASE(pd3dImmediateContext);
@@ -246,7 +250,7 @@ public:
 
 
 		//unsigned int indices[] = {0,1,2, 1,3,2};
-		unsigned int* indices = new unsigned int[width*3*2+2 + height*width*3*2];
+		unsigned int* indices = new unsigned int[(height-1)*(width-1)*3*2];
 
 		for(int y = 0; y < height-1; y++)
 		{
@@ -265,7 +269,8 @@ public:
 			}
 		}
 
-		bufferDesc.ByteWidth = sizeof(unsigned int)*(width*3*2+2 + height*width*3*2);
+
+		bufferDesc.ByteWidth = sizeof(unsigned int)*((height-1)*(width-1)*3*2);
 		bufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 
 		InitData.pSysMem = indices;

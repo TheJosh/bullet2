@@ -14,7 +14,8 @@ IF(BUILD_CPU_DEMOS)
 		CollisionInterfaceDemo ConcaveConvexcastDemo SimplexDemo DynamicControlDemo
 		DoublePrecisionDemo ConcaveDemo CollisionDemo
 		ContinuousConvexCollision ConcaveRaycastDemo GjkConvexCastDemo
-		MultiMaterialDemo SerializeDemo InternalEdgeDemo
+		MultiMaterialDemo SerializeDemo InternalEdgeDemo 
+		DX11ClothDemo
 	)
 ELSE()
 	SET(SharedDemoSubdirs
