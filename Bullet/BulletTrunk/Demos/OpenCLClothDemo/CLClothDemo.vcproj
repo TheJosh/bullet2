@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="C:\Users\bgaster\tree\dist\windows\release\include;&quot;..\..\..\contrib\glut-3.7\include&quot;;&quot;..\..\..\contrib\glew-1.5.4\include&quot;;..\..\..\contrib\opencl\include;..\..\..\projects\physics\Bullet\BulletTrunk\src"
+				AdditionalIncludeDirectories="S:\SVN\GpuClothAMD\Bullet\BulletTrunk\Glut;&quot;C:\Program Files (x86)\ATI Stream\include&quot;;..\..\..\projects\physics\Bullet\BulletTrunk\src;S:\SVN\GpuClothAMD\Bullet\BulletTrunk\src"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,12 +61,14 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="glew32.lib OpenCL.lib BulletSoftBody.lib BulletDynamics.lib BulletCollision.lib LinearMath.lib BulletSoftBodySolvers_CPU.lib BulletSoftBodySolvers_OpenCL.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\Bullet\BulletTrunk\lib\Debug\;&quot;..\..\..\contrib\glew-1.5.4\lib&quot;;..\..\..\contrib\opencl\lib\x86;&quot;..\..\..\contrib\glut-3.7\win32\lib&quot;;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\BulletAcceleratedSoftBody\Release;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\BulletDynamics\Debug;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\BulletCollision\Debug;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\LinearMath\Debug"
+				LinkLibraryDependencies="false"
+				AdditionalDependencies="glew32.lib OpenCL.lib ..\..\lib\Debug\BulletDynamics.lib ..\..\lib\Debug\BulletCollision.lib ..\..\lib\Debug\LinearMath.lib ..\..\lib\Debug\BulletSoftBody.lib ..\..\lib\Debug\BulletSoftBodySolvers_CPU.lib ..\..\lib\Debug\BulletSoftBodySolvers_OpenCL.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;C:\Program Files (x86)\ATI Stream\lib\x86&quot;;S:\SVN\GpuClothAMD\Bullet\BulletTrunk\Glut;S:\SVN\GpuClothAMD\Bullet\BulletTrunk\lib\Debug"
 				GenerateDebugInformation="true"
 				SubSystem="1"
-				TargetMachine="1"
+				ImportLibrary="S:\SVN\GpuClothAMD\Bullet\BulletTrunk\Demos\DX11ClothDemo\Debug\AppDX11ClothDemo.lib"
+				TargetMachine="0"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -117,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\..\contrib\glut-3.7\include&quot;;&quot;..\..\..\contrib\glew-1.5.4\include&quot;;..\..\..\contrib\opencl\include;..\..\..\projects\physics\Bullet\BulletTrunk\src"
+				AdditionalIncludeDirectories="S:\SVN\GpuClothAMD\Bullet\BulletTrunk\Glut;&quot;C:\Program Files (x86)\ATI Stream\include&quot;;..\..\..\projects\physics\Bullet\BulletTrunk\src;S:\SVN\GpuClothAMD\Bullet\BulletTrunk\src"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -138,7 +140,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="glew32.lib OpenCL.lib BulletSoftBody.lib BulletDynamics.lib BulletCollision.lib LinearMath.lib BulletSoftBodySolvers_CPU.lib BulletSoftBodySolvers_OpenCL.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\Bullet\BulletTrunk\lib\Release\;&quot;..\..\..\contrib\glew-1.5.4\lib&quot;;..\..\..\contrib\opencl\lib\x86;&quot;..\..\..\contrib\glut-3.7\win32\lib&quot;;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\BulletAcceleratedSoftBody\Release;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\BulletDynamics\Release;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\BulletCollision\Release;..\..\..\projects\physics\Bullet\BulletTrunk\msvc\2008\src\LinearMath\Release"
+				AdditionalLibraryDirectories="..\Bullet\BulletTrunk\lib\Release\;&quot;C:\Program Files (x86)\ATI Stream\lib\x86&quot;;S:\SVN\GpuClothAMD\Bullet\BulletTrunk\Glut;S:\SVN\GpuClothAMD\Bullet\BulletTrunk\lib\Release"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

@@ -16,9 +16,12 @@ subject to the following restrictions:
 
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "vectormath/vmInclude.h"
-#include "BulletSoftBody/solvers/OpenCL/btSoftBodySolver_OpenCL.h"
-#include "BulletSoftBody/VertexBuffers/btSoftBodySolverVertexBuffer.h"
+
+#include "btSoftBodySolver_OpenCL.h"
+#include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/btSoftBody.h"
+
+
 
 #define MSTRINGIFY(A) #A
 static char* PrepareLinksCLString = 
@@ -272,13 +275,13 @@ void btSoftBodyLinkDataOpenCL::generateBatches()
 	if( m_batchStartLengths.size() > 0 )
 	{
 		m_batchStartLengths.resize(batchCounts.size());
-		m_batchStartLengths[0] = std::pair< int, int >( 0, 0 );
+		m_batchStartLengths[0] = BatchPair(0, 0);
 
 		int sum = 0;
 		for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
 		{
-			m_batchStartLengths[batchIndex].first = sum;
-			m_batchStartLengths[batchIndex].second = batchCounts[batchIndex];
+			m_batchStartLengths[batchIndex].start = sum;
+			m_batchStartLengths[batchIndex].length = batchCounts[batchIndex];
 			sum += batchCounts[batchIndex];
 		}
 	}
@@ -313,7 +316,7 @@ void btSoftBodyLinkDataOpenCL::generateBatches()
 		// next element in that batch, incrementing the batch counter
 		// afterwards
 		int batch = batchValues[linkIndex];
-		int newLocation = m_batchStartLengths[batch].first + batchCounts[batch];
+		int newLocation = m_batchStartLengths[batch].start + batchCounts[batch];
 
 		batchCounts[batch] = batchCounts[batch] + 1;
 		m_links[newLocation] = m_links_Backup[linkLocation];
@@ -988,33 +991,34 @@ void btOpenCLSoftBodySolver::solveConstraints( float solverdt )
 
 
 
-	// Prepare anchors
-	/*for(i=0,ni=m_anchors.size();i<ni;++i)
+	for( int iteration = 0; iteration < m_numberOfVelocityIterations ; ++iteration )
 	{
-		Anchor&			a=m_anchors[i];
-		const btVector3	ra=a.m_body->getWorldTransform().getBasis()*a.m_local;
-		a.m_c0	=	ImpulseMatrix(	m_sst.sdt,
-			a.m_node->m_im,
-			a.m_body->getInvMass(),
-			a.m_body->getInvInertiaTensorWorld(),
-			ra);
-		a.m_c1	=	ra;
-		a.m_c2	=	m_sst.sdt*a.m_node->m_im;
-		a.m_body->activate();
-	}*/
+		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
+		{
+			int startLink = m_linkData.m_batchStartLengths[i].start;
+			int numLinks = m_linkData.m_batchStartLengths[i].length;
 
-	// Really want to combine these into a single loop, don't we? No update in the middle?
+			solveLinksForVelocity( startLink, numLinks, kst );
+		}
+	}
 
-	// TODO: Double check what kst is meant to mean - passed in as 1 in the bullet code
-
+	// Compute new positions from velocity
+	// Also update the previous position so that our position computation is now based on the new position from the velocity solution
+	// rather than based directly on the original positions
+	if( m_numberOfVelocityIterations > 0 )
+	{
+		updateVelocitiesFromPositionsWithVelocities( 1.f/solverdt );
+	} else {
+		updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
+	}
 
 	// Solve drift
 	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 	{
 		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
 		{
-			int startLink = m_linkData.m_batchStartLengths[i].first;
-			int numLinks = m_linkData.m_batchStartLengths[i].second;
+			int startLink = m_linkData.m_batchStartLengths[i].start;
+			int numLinks = m_linkData.m_batchStartLengths[i].length;
 
 			solveLinksForPosition( startLink, numLinks, kst, ti );
 		}
@@ -1082,6 +1086,24 @@ void btOpenCLSoftBodySolver::solveLinksForPosition( int startLink, int numLinks,
 } // solveLinksForPosition
 
 
+void btOpenCLSoftBodySolver::solveLinksForVelocity( int startLink, int numLinks, float kst )
+{
+	vSolveLinksKernel.kernel.setArg(0, startLink);
+	vSolveLinksKernel.kernel.setArg(1, numLinks);
+	vSolveLinksKernel.kernel.setArg(2, m_linkData.m_clLinks.getBuffer());
+	vSolveLinksKernel.kernel.setArg(3, m_linkData.m_clLinksLengthRatio.getBuffer());
+	vSolveLinksKernel.kernel.setArg(4, m_linkData.m_clLinksCLength.getBuffer());
+	vSolveLinksKernel.kernel.setArg(5, m_vertexData.m_clVertexInverseMass.getBuffer());
+	vSolveLinksKernel.kernel.setArg(6, m_vertexData.m_clVertexVelocity.getBuffer());
+
+	int	numWorkItems = workGroupSize*((numLinks + (workGroupSize-1)) / workGroupSize);
+	cl_int err = m_queue.enqueueNDRangeKernel(vSolveLinksKernel.kernel, cl::NullRange, cl::NDRange(numWorkItems), cl::NDRange(workGroupSize));
+	if( err != CL_SUCCESS ) 
+	{
+		btAssert(  "enqueueNDRangeKernel(vSolveLinksKernel)");
+	}
+}
+
 void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithVelocities( float isolverdt )
 {
 	updateVelocitiesFromPositionsWithVelocitiesKernel.kernel.setArg(0, m_vertexData.getNumVertices());
@@ -1135,12 +1157,16 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 
 	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
 
+	const int firstVertex = currentCloth->getFirstVertex();
+	const int lastVertex = firstVertex + currentCloth->getNumVertices();
+
 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
 	{		
-		const int firstVertex = currentCloth->getFirstVertex();
-		const int lastVertex = firstVertex + currentCloth->getNumVertices();
 		const btCPUVertexBufferDescriptor *cpuVertexBuffer = static_cast< btCPUVertexBufferDescriptor* >(vertexBuffer);						
 		float *basePointer = cpuVertexBuffer->getBasePointer();						
+
+		m_vertexData.m_clVertexPosition.copyFromGPU();
+		m_vertexData.m_clVertexNormal.copyFromGPU();
 
 		if( vertexBuffer->hasVertexPositions() )
 		{

@@ -17,11 +17,12 @@ subject to the following restrictions:
 #define BT_SOFT_BODY_SOLVER_OPENCL_H
 
 #include "vectormath/vmInclude.h"
+
 #include "BulletSoftBody/btSoftBodySolvers.h"
-#include "BulletSoftBody/solvers/OpenCL/btSoftBodySolverBuffer_OpenCL.h"
-#include "BulletSoftBody/solvers/OpenCL/btSoftBodySolverLinkData_OpenCL.h"
-#include "BulletSoftBody/solvers/OpenCL/btSoftBodySolverVertexData_OpenCL.h"
-#include "BulletSoftBody/solvers/OpenCL/btSoftBodySolverTriangleData_OpenCL.h"
+#include "btSoftBodySolverBuffer_OpenCL.h"
+#include "btSoftBodySolverLinkData_OpenCL.h"
+#include "btSoftBodySolverVertexData_OpenCL.h"
+#include "btSoftBodySolverTriangleData_OpenCL.h"
 
 
 class btOpenCLSoftBodySolver : public btSoftBodySolver

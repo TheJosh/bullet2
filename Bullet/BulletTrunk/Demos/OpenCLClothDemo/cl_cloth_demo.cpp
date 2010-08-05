@@ -22,11 +22,9 @@ using namespace std;
 #include "LinearMath/btHashMap.h"
 #include "btOpenCLSupport.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
-#include "BulletMultiThreaded/vectormath/scalar/cpp/vectormath_aos.h"
-#include "BulletMultiThreaded/vectormath/scalar/cpp/mat_aos.h"
-#include "BulletMultiThreaded/vectormath/scalar/cpp/vec_aos.h"
-#include "BulletSoftBody/solvers/CPU/btSoftBodySolver_CPU.h"
-#include "BulletSoftBody/solvers/OpenCL/btSoftBodySolver_OpenCL.h"
+#include "vectormath/vmInclude.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolver_CPU.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCL.h"
 
 using Vectormath::Aos::Vector3;
 
