@@ -31,7 +31,6 @@ subject to the following restrictions:
 #include "btSoftBodySolverVertexBuffer_DX11.h"
 #include "BulletSoftBody/btSoftBody.h"
 
-
 #define MSTRINGIFY(A) #A
 static char* PrepareLinksHLSLString = 
 #include "HLSL/PrepareLinks.hlsl"
@@ -57,6 +56,7 @@ static char* VSolveLinksHLSLString =
 #include "HLSL/VSolveLinks.hlsl"
 
 
+
 btSoftBodyLinkDataDX11SIMDAware::btSoftBodyLinkDataDX11SIMDAware( ID3D11Device *d3dDevice, ID3D11DeviceContext *d3dDeviceContext ) : 
 		m_d3dDevice( d3dDevice ),
 		m_d3dDeviceContext( d3dDeviceContext ),
@@ -65,6 +65,7 @@ btSoftBodyLinkDataDX11SIMDAware::btSoftBodyLinkDataDX11SIMDAware( ID3D11Device *
 		m_maxBatchesWithinWave( 0 ),
 		m_maxLinksPerWavefront( m_wavefrontSize * m_linksPerWorkItem ),
 		m_numWavefronts( 0 ),
+		m_maxVertex( 0 ),
 		m_dx11NumBatchesAndVerticesWithinWaves( d3dDevice, d3dDeviceContext, &m_numBatchesAndVerticesWithinWaves, true ),
 		m_dx11WavefrontVerticesGlobalAddresses( d3dDevice, d3dDeviceContext, &m_wavefrontVerticesGlobalAddresses, true ),
 		m_dx11LinkVerticesLocalAddresses( d3dDevice, d3dDeviceContext, &m_linkVerticesLocalAddresses, true ),
@@ -102,6 +103,11 @@ void btSoftBodyLinkDataDX11SIMDAware::createLinks( int numLinks )
 void btSoftBodyLinkDataDX11SIMDAware::setLinkAt( const btSoftBodyLinkData::LinkDescription &link, int linkIndex )
 {
 	btSoftBodyLinkData::setLinkAt( link, linkIndex );
+
+	if( link.getVertex0() > m_maxVertex )
+		m_maxVertex = link.getVertex0();
+	if( link.getVertex1() > m_maxVertex )
+		m_maxVertex = link.getVertex1();
 
 	// Set the link index correctly for initialisation
 	m_linkAddresses[linkIndex] = linkIndex;
@@ -148,6 +154,15 @@ bool btSoftBodyLinkDataDX11SIMDAware::moveFromAccelerator()
 
 	return success;
 }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1185,8 +1200,10 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 
 	bool returnVal = true;
 
+
 	if( m_shadersInitialized )
 		return true;
+
 	
 	updatePositionsFromVelocitiesKernel = compileComputeShaderFromString( UpdatePositionsFromVelocitiesHLSLString, "UpdatePositionsFromVelocitiesKernel", sizeof(UpdatePositionsFromVelocitiesCB) );
 	if( !updatePositionsFromVelocitiesKernel.constBuffer )
@@ -1195,14 +1212,10 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 	char maxVerticesPerWavefront[20];
 	char maxBatchesPerWavefront[20];
 	char waveFrontSize[20];
-	char wavefrontBlockMultiplier[20];
-	char blockSize[20];
 	sprintf(maxVerticesPerWavefront, "%d", m_linkData.getMaxVerticesPerWavefront());
 	sprintf(maxBatchesPerWavefront, "%d", m_linkData.getMaxBatchesPerWavefront());
 	sprintf(waveFrontSize, "%d", m_linkData.getWavefrontSize());
-	sprintf(wavefrontBlockMultiplier, "%d", WAVEFRONT_BLOCK_MULTIPLIER);
-	sprintf(blockSize, "%d", m_linkData.getWavefrontSize()*WAVEFRONT_BLOCK_MULTIPLIER);
-	D3D10_SHADER_MACRO solvePositionsMacros[6] = { "MAX_NUM_VERTICES_PER_WAVE", maxVerticesPerWavefront, "MAX_BATCHES_PER_WAVE", maxBatchesPerWavefront, "WAVEFRONT_SIZE", waveFrontSize, "WAVEFRONT_BLOCK_MULTIPLIER", wavefrontBlockMultiplier, "BLOCK_SIZE", blockSize, 0, 0 };
+	D3D10_SHADER_MACRO solvePositionsMacros[5] = { "MAX_NUM_VERTICES_PER_WAVE", maxVerticesPerWavefront, "MAX_BATCHES_PER_WAVE", maxBatchesPerWavefront, "WAVEFRONT_SIZE", waveFrontSize, "WAVEFRONT_BLOCK_MULTIPLIER", STRINGIFY(WAVEFRONT_BLOCK_MULTIPLIER), 0, 0 };
 
 	solvePositionsFromLinksKernel = compileComputeShaderFromString( SolvePositionsSIMDBatchedHLSLString, "SolvePositionsFromLinksKernel", sizeof(SolvePositionsFromLinksKernelCB), solvePositionsMacros );
 	if( !solvePositionsFromLinksKernel.constBuffer )
@@ -1237,6 +1250,7 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 	outputToVertexArrayWithoutNormalsKernel = compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithoutNormalsKernel", sizeof(OutputToVertexArrayCB) );
 	if( !outputToVertexArrayWithoutNormalsKernel.constBuffer )
 		returnVal = false;
+
 
 	if( returnVal )
 		m_shadersInitialized = true;
@@ -1284,8 +1298,12 @@ void btDX11SIMDAwareSoftBodySolver::predictMotion( float timeStep )
 
 
 
-static void generateBatchesOfWavefronts( btAlignedObjectArray < btAlignedObjectArray <int> > &linksForWavefronts, btSoftBodyLinkData &linkData, btAlignedObjectArray < btAlignedObjectArray <int> > &wavefrontBatches )
+static void generateBatchesOfWavefronts( btAlignedObjectArray < btAlignedObjectArray <int> > &linksForWavefronts, btSoftBodyLinkData &linkData, int numVertices, btAlignedObjectArray < btAlignedObjectArray <int> > &wavefrontBatches )
 {
+	// A per-batch map of truth values stating whether a given vertex is in that batch
+	// This allows us to significantly optimize the batching
+	btAlignedObjectArray <btAlignedObjectArray<bool> > mapOfVerticesInBatches;
+
 	for( int waveIndex = 0; waveIndex < linksForWavefronts.size(); ++waveIndex )
 	{
 		btAlignedObjectArray <int> &wavefront( linksForWavefronts[waveIndex] );
@@ -1299,27 +1317,22 @@ static void generateBatchesOfWavefronts( btAlignedObjectArray < btAlignedObjectA
 			for( int link = 0; link < wavefront.size(); ++link )
 			{
 				btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( wavefront[link] );
-				for( int otherWaveIndex = 0; otherWaveIndex < wavefrontBatches[batch].size(); ++otherWaveIndex )
+				if( (mapOfVerticesInBatches[batch])[vertices.vertex0] || (mapOfVerticesInBatches[batch])[vertices.vertex1] )
 				{
-					int otherWave = wavefrontBatches[batch][otherWaveIndex];
-					for( int link2 = 0; link2 < linksForWavefronts[otherWave].size(); ++link2 )
-					{
-						btSoftBodyLinkData::LinkNodePair vertices2 = linkData.getVertexPair( (linksForWavefronts[otherWave])[link2] );
-
-						if( vertices.vertex0 == vertices2.vertex0 ||
-							vertices.vertex1 == vertices2.vertex0 ||
-							vertices.vertex0 == vertices2.vertex1 ||
-							vertices.vertex1 == vertices2.vertex1 )
-						{
-							foundSharedVertex = true;
-						}
-					}
+					foundSharedVertex = true;
 				}
 			}
 
 			if( !foundSharedVertex )
 			{
 				wavefrontBatches[batch].push_back( waveIndex );	
+				// Insert vertices into this batch too
+				for( int link = 0; link < wavefront.size(); ++link )
+				{
+					btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( wavefront[link] );
+					(mapOfVerticesInBatches[batch])[vertices.vertex0] = true;
+					(mapOfVerticesInBatches[batch])[vertices.vertex1] = true;
+				}
 				placed = true;
 			}
 			batch++;
@@ -1328,8 +1341,23 @@ static void generateBatchesOfWavefronts( btAlignedObjectArray < btAlignedObjectA
 		{
 			wavefrontBatches.resize( batch + 1 );
 			wavefrontBatches[batch].push_back( waveIndex );
+
+			// And resize map as well
+			mapOfVerticesInBatches.resize( batch + 1 );
+			
+			// Resize maps with total number of vertices
+			mapOfVerticesInBatches[batch].resize( numVertices, false );
+
+			// Insert vertices into this batch too
+			for( int link = 0; link < wavefront.size(); ++link )
+			{
+				btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( wavefront[link] );
+				(mapOfVerticesInBatches[batch])[vertices.vertex0] = true;
+				(mapOfVerticesInBatches[batch])[vertices.vertex1] = true;
+			}
 		}
 	}
+	mapOfVerticesInBatches.clear();
 }
 
 // Function to remove an object from a vector maintaining correct ordering of the vector
@@ -1590,7 +1618,6 @@ static void computeBatchingIntoWavefronts(
 
 }
 
-
 void btSoftBodyLinkDataDX11SIMDAware::generateBatches()
 {
 	btAlignedObjectArray < btAlignedObjectArray <int> > linksForWavefronts;
@@ -1601,8 +1628,9 @@ void btSoftBodyLinkDataDX11SIMDAware::generateBatches()
 	// Group the links into wavefronts
 	computeBatchingIntoWavefronts( *this, m_wavefrontSize, m_linksPerWorkItem, m_maxLinksPerWavefront, linksForWavefronts, batchesWithinWaves, verticesForWavefronts );
 
+
 	// Batch the wavefronts
-	generateBatchesOfWavefronts( linksForWavefronts, *this, wavefrontBatches );
+	generateBatchesOfWavefronts( linksForWavefronts, *this, m_maxVertex, wavefrontBatches );
 
 	m_numWavefronts = linksForWavefronts.size();
 
@@ -1649,8 +1677,6 @@ void btSoftBodyLinkDataDX11SIMDAware::generateBatches()
 	//btAlignedObjectArray<float>											m_linksLengthRatio_Backup(m_linksLengthRatio);
 	btAlignedObjectArray<float>											m_linksRestLength_Backup(m_linksRestLength);
 	btAlignedObjectArray<float>											m_linksMaterialLinearStiffnessCoefficient_Backup(m_linksMaterialLinearStiffnessCoefficient);
-
-
 
 	// Resize to a wavefront sized batch per batch per wave so we get perfectly coherent memory accesses.
 	m_links.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );

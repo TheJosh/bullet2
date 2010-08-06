@@ -13,7 +13,6 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-
 #include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolverData.h"
 #include "btSoftBodySolverBuffer_DX11.h"
 
@@ -37,6 +36,8 @@ public:
 	int m_maxBatchesWithinWave;
 	int m_maxVerticesWithinWave;
 	int m_numWavefronts;
+
+	int m_maxVertex;
 
 	struct NumBatchesVerticesPair
 	{
