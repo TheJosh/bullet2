@@ -1212,10 +1212,16 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 	char maxVerticesPerWavefront[20];
 	char maxBatchesPerWavefront[20];
 	char waveFrontSize[20];
+	char waveFrontBlockMultiplier[20];
+	char blockSize[20];
+
 	sprintf(maxVerticesPerWavefront, "%d", m_linkData.getMaxVerticesPerWavefront());
 	sprintf(maxBatchesPerWavefront, "%d", m_linkData.getMaxBatchesPerWavefront());
-	sprintf(waveFrontSize, "%d", m_linkData.getWavefrontSize());
-	D3D10_SHADER_MACRO solvePositionsMacros[5] = { "MAX_NUM_VERTICES_PER_WAVE", maxVerticesPerWavefront, "MAX_BATCHES_PER_WAVE", maxBatchesPerWavefront, "WAVEFRONT_SIZE", waveFrontSize, "WAVEFRONT_BLOCK_MULTIPLIER", STRINGIFY(WAVEFRONT_BLOCK_MULTIPLIER), 0, 0 };
+	sprintf(waveFrontSize, "%d", m_linkData.getWavefrontSize());	
+	sprintf(waveFrontBlockMultiplier, "%d", WAVEFRONT_BLOCK_MULTIPLIER);
+	sprintf(blockSize, "%d", WAVEFRONT_BLOCK_MULTIPLIER*m_linkData.getWavefrontSize());
+	
+	D3D10_SHADER_MACRO solvePositionsMacros[6] = { "MAX_NUM_VERTICES_PER_WAVE", maxVerticesPerWavefront, "MAX_BATCHES_PER_WAVE", maxBatchesPerWavefront, "WAVEFRONT_SIZE", waveFrontSize, "WAVEFRONT_BLOCK_MULTIPLIER", waveFrontBlockMultiplier, "BLOCK_SIZE", blockSize, 0, 0 };
 
 	solvePositionsFromLinksKernel = compileComputeShaderFromString( SolvePositionsSIMDBatchedHLSLString, "SolvePositionsFromLinksKernel", sizeof(SolvePositionsFromLinksKernelCB), solvePositionsMacros );
 	if( !solvePositionsFromLinksKernel.constBuffer )

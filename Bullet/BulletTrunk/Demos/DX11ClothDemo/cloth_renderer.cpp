@@ -39,7 +39,7 @@ class btDX11SIMDAwareSoftBodySolver;
 
 #define USE_SIMDAWARE_SOLVER
 //#define USE_GPU_SOLVER
-#define USE_GPU_COPY
+//#define USE_GPU_COPY
 const int numFlags = 2;
 const int clothWidth = 40;
 const int clothHeight = 60;//60;
