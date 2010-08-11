@@ -124,10 +124,10 @@ static void initGL(void)
    glEnable( GL_DEPTH_TEST );
 #endif
    rotateX    = 0;
-   rotateY    = 0;
+   rotateY    = 30;
    translateX = 0.0f;
    translateY = -30.0f;
-   translateZ = -150.0;
+   translateZ = -120.0;
 }
 
 void display(void)
