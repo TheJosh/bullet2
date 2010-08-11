@@ -22,7 +22,31 @@ subject to the following restrictions:
 #include "BulletSoftBody/btSoftBody.h"
 
 
-
+#if (CL_VERSION_1_0 == 1)
+////OpenCL 1.0 kernels don't use float3
+#define MSTRINGIFY(A) #A
+static char* PrepareLinksCLString = 
+#include "OpenCLC10/PrepareLinks.cl"
+static char* UpdatePositionsFromVelocitiesCLString = 
+#include "OpenCLC10/UpdatePositionsFromVelocities.cl"
+static char* SolvePositionsCLString = 
+#include "OpenCLC10/SolvePositions.cl"
+static char* UpdateNodesCLString = 
+#include "OpenCLC10/UpdateNodes.cl"
+static char* UpdatePositionsCLString = 
+#include "OpenCLC10/UpdatePositions.cl"
+static char* UpdateConstantsCLString = 
+#include "OpenCLC10/UpdateConstants.cl"
+static char* IntegrateCLString = 
+#include "OpenCLC10/Integrate.cl"
+static char* ApplyForcesCLString = 
+#include "OpenCLC10/ApplyForces.cl"
+static char* UpdateNormalsCLString = 
+#include "OpenCLC10/UpdateNormals.cl"
+static char* VSolveLinksCLString = 
+#include "OpenCLC10/VSolveLinks.cl"
+#else
+//OpenCL 1.1 uses float3
 #define MSTRINGIFY(A) #A
 static char* PrepareLinksCLString = 
 #include "OpenCLC/PrepareLinks.cl"
@@ -44,6 +68,7 @@ static char* UpdateNormalsCLString =
 #include "OpenCLC/UpdateNormals.cl"
 static char* VSolveLinksCLString = 
 #include "OpenCLC/VSolveLinks.cl"
+#endif
 
 
 btSoftBodyVertexDataOpenCL::btSoftBodyVertexDataOpenCL( cl::CommandQueue queue) :
