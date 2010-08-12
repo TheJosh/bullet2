@@ -1227,8 +1227,9 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 } // btCPUSoftBodySolver::outputToVertexBuffers
 
 
-btOpenCLSoftBodySolver::KernelDesc btOpenCLSoftBodySolver::compileCLKernelFromString( const char *shaderString, const char *shaderName )
+btOpenCLSoftBodySolver::KernelDesc btOpenCLSoftBodySolver::compileCLKernelFromString( const char*shaderString, const char *shaderName )
 {
+	printf("Compiling OpenCL kernel %s ", shaderName);
 	cl_int err;
 
 	context = m_queue.getInfo<CL_QUEUE_CONTEXT>();
@@ -1260,6 +1261,7 @@ btOpenCLSoftBodySolver::KernelDesc btOpenCLSoftBodySolver::compileCLKernelFromSt
 
 	KernelDesc descriptor;
 	descriptor.kernel = kernel;
+	printf("Finished\n");
 	return descriptor;
 }
 

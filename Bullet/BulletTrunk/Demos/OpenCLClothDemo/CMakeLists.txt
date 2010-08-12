@@ -38,7 +38,7 @@ ENDIF(CMAKE_CL_64)
 IF (USE_GLUT)
 	LINK_LIBRARIES(
 		OpenGLSupport 
-		BulletSoftBodySolvers_OpenCL
+		BulletSoftBodySolvers_OpenCL_AMD
 		BulletSoftBodySolvers_CPU
 		BulletMultiThreaded
 		BulletSoftBody
