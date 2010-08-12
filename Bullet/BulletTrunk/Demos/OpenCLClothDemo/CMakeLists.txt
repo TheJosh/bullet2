@@ -7,6 +7,8 @@ ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL
 )
 
 ADD_DEFINITIONS(-DUSE_AMD_OPENCL)
+ADD_DEFINITIONS(-DCL_PLATFORM_AMD)
+
 
 IF (INTERNAL_CREATE_DISTRIBUTABLE_MSVC_PROJECTFILES)
 	INCLUDE_DIRECTORIES(		$ENV{==ATISTREAMSDKROOT=}/include )
@@ -37,6 +39,7 @@ IF (USE_GLUT)
 	LINK_LIBRARIES(
 		OpenGLSupport 
 		BulletSoftBodySolvers_OpenCL
+		BulletSoftBodySolvers_CPU
 		BulletMultiThreaded
 		BulletSoftBody
 		BulletDynamics  
@@ -52,6 +55,10 @@ IF (USE_GLUT)
 
 	ADD_EXECUTABLE(AppClothDemo_AMD
 		cl_cloth_demo.cpp
+		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclUtils.h
+		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclCommon.h
+		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclUtils.cpp
+		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclCommon.cpp
 		gl_win.cpp
 		clstuff.cpp
 		bmpLoader.cpp

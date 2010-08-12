@@ -39,8 +39,8 @@ class btDX11SIMDAwareSoftBodySolver;
 
 #define USE_SIMDAWARE_SOLVER
 //#define USE_GPU_SOLVER
-//#define USE_GPU_COPY
-const int numFlags = 2;
+#define USE_GPU_COPY
+const int numFlags = 5;
 const int clothWidth = 40;
 const int clothHeight = 60;//60;
 float _windAngle = 1.0;//0.4;
