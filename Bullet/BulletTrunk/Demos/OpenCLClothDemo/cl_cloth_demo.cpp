@@ -397,8 +397,14 @@ void doFlags()
 	///step the simulation
 	if( m_dynamicsWorld )
 	{
-		m_dynamicsWorld->stepSimulation(dt / 1000000.f);
-
+		m_dynamicsWorld->stepSimulation(dt/1000000.);
+		static int frameCount = 0;
+		frameCount++;
+		if (frameCount==100)
+		{
+ 			m_dynamicsWorld->stepSimulation(1./60.,0);
+			CProfileManager::dumpAll();
+		}
 		updatePhysicsWorld();
 	}
 	
