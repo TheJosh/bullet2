@@ -9,7 +9,7 @@ updateVelocitiesFromPositionsWithoutVelocitiesKernel(
 	__global int * g_vertexClothIndices,
 	__global float * g_clothDampingFactor,
 	__global float4 * g_vertexVelocities,
-	__global float4 * g_vertexForces)
+	__global float4 * g_vertexForces GUID_ARG)
 
 {
 	int nodeID = get_global_id(0);

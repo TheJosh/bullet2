@@ -25,7 +25,9 @@ class btSoftBodyLinkDataOpenCL : public btSoftBodyLinkData
 {
 public:
 	bool				m_onGPU;
-	cl::CommandQueue	m_queue;
+
+	cl_command_queue	m_cqCommandQue;
+
 
 	btOpenCLBuffer<LinkNodePair> m_clLinks;
 	btOpenCLBuffer<float>							      m_clLinkStrength;
@@ -65,7 +67,7 @@ public:
 	 */
 	btAlignedObjectArray< BatchPair >		m_batchStartLengths;
 
-	btSoftBodyLinkDataOpenCL(cl::CommandQueue queue);
+	btSoftBodyLinkDataOpenCL(cl_command_queue queue, cl_context ctx);
 
 	virtual ~btSoftBodyLinkDataOpenCL();
 

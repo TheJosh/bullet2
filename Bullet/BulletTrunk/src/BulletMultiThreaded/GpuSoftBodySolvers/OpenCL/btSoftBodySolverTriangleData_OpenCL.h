@@ -26,7 +26,7 @@ class btSoftBodyTriangleDataOpenCL : public btSoftBodyTriangleData
 {
 public:
 	bool				m_onGPU;
-	cl::CommandQueue    m_queue;
+	cl_command_queue    m_queue;
 
 	btOpenCLBuffer<btSoftBodyTriangleData::TriangleNodeSet>					m_clVertexIndices;
 	btOpenCLBuffer<float>								m_clArea;
@@ -41,10 +41,20 @@ public:
 	/**
 	 * Start and length values for computation batches over link data.
 	 */
-	btAlignedObjectArray< std::pair< int, int > >		m_batchStartLengths;
+	struct btSomePair
+	{
+		btSomePair() {}
+		btSomePair(int f,int s)
+			:first(f),second(s)
+		{
+		}
+		int first;
+		int second;
+	};
+	btAlignedObjectArray< btSomePair >		m_batchStartLengths;
 
 public:
-	btSoftBodyTriangleDataOpenCL( cl::CommandQueue queue );
+	btSoftBodyTriangleDataOpenCL( cl_command_queue queue, cl_context ctx );
 
 	virtual ~btSoftBodyTriangleDataOpenCL();
 

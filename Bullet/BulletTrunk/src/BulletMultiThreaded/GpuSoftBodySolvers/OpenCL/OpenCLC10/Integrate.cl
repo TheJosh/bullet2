@@ -12,7 +12,7 @@ IntegrateKernel(
 	__global float4 * g_vertexPositions,
 	__global float4 * g_vertexVelocity,
 	__global float4 * g_vertexPreviousPositions,
-	__global float4 * g_vertexForceAccumulator)
+	__global float4 * g_vertexForceAccumulator GUID_ARG)
 {
 	int nodeID = get_global_id(0);
 	if( nodeID < numNodes )

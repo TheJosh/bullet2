@@ -1,5 +1,7 @@
 #include "bmpLoader.hpp"
 #include <string>
+#include "LinearMath/btScalar.h"
+
 
 struct vertex_struct 
 {
@@ -125,7 +127,7 @@ class piece_of_cloth
 		{
 			for(int x = 0; x < width; x++)
 			{
-				double coord = sin(x/5.0)*0.01;
+				double coord = btSin(x/5.0)*0.01;
 				//coord = sin(y/);
 
 				cpu_buffer[y*width+x].pos[0]      = (x/((float)(width-1)))*1;

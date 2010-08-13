@@ -13,7 +13,7 @@ PrepareLinksKernel(
 	__global float * g_linksMassLSC,
 	__global float4 * g_nodesPreviousPosition,
 	__global float * g_linksLengthRatio,
-	__global float4 * g_linksCurrentLength)
+	__global float4 * g_linksCurrentLength GUID_ARG)
 {
 	int linkID = get_global_id(0);
 	if( linkID < numLinks )

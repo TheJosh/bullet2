@@ -23,7 +23,6 @@
 #include <GL/glut.h>
 #endif
 
-#include <CL/cl.hpp>
 
 static GLuint vbo = 0;
 
@@ -84,7 +83,8 @@ void render( void)
 
 static void initGL(void) 
 {
-	glClearColor( 0.05f, 0.0f, 0.1f, 0.1f );
+	//glClearColor( 0.05f, 0.0f, 0.1f, 0.1f );
+	glClearColor(  0.0f, 0.45f, 0.45f, 1.f);
 
 #if 0
 	GLfloat mat_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -253,8 +253,9 @@ void preInitGL(int argc, char ** argv)
 	glutMotionFunc(motion);
 }
 
-int getVBO( std::string, GLuint size )
+int getVBO( std::string, int s)
 {
+	GLuint size = (GLuint)s;
 	if (vbo == 0) {
 		// Create VBO
 		// create buffer object

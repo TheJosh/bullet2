@@ -1,8 +1,10 @@
 
+
+
 MSTRINGIFY(
 
 
-float dot3(float4 a, float4 b)
+float mydot3(float4 a, float4 b)
 {
    return a.x*b.x + a.y*b.y + a.z*b.z;
 }
@@ -18,7 +20,7 @@ SolvePositionsFromLinksKernel(
 	__global float * g_linksMassLSC,
 	__global float * g_linksRestLengthSquared,
 	__global float * g_verticesInverseMass,
-	__global float4 * g_vertexPositions)
+	__global float4 * g_vertexPositions GUID_ARG)
 	
 {
 	int linkID = get_global_id(0) + startLink;
@@ -40,7 +42,7 @@ SolvePositionsFromLinksKernel(
 			float inverseMass1 = g_verticesInverseMass[node1]; 
 
 			float4 del = position1 - position0;
-			float len  = dot3(del, del);
+			float len  = mydot3(del, del);
 			float k    = ((restLengthSquared - len)/(massLSC*(restLengthSquared+len)))*kst;
 			position0 = position0 - del*(k*inverseMass0);
 			position1 = position1 + del*(k*inverseMass1);

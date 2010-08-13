@@ -24,7 +24,7 @@ class btSoftBodyVertexDataOpenCL : public btSoftBodyVertexData
 {
 protected:
 	bool		m_onGPU;
-	cl::CommandQueue m_queue;
+	cl_command_queue	m_queue;
 
 public:
 	btOpenCLBuffer<int>									m_clClothIdentifier;
@@ -37,7 +37,7 @@ public:
 	btOpenCLBuffer<float>									m_clVertexArea;
 	btOpenCLBuffer<int>									m_clVertexTriangleCount;
 public:
-	btSoftBodyVertexDataOpenCL( cl::CommandQueue queue);
+	btSoftBodyVertexDataOpenCL( cl_command_queue queue,  cl_context ctx);
 
 	virtual ~btSoftBodyVertexDataOpenCL();
 

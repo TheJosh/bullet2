@@ -1,4 +1,7 @@
+
 MSTRINGIFY(
+
+
 
 
 __kernel void 
@@ -7,7 +10,7 @@ UpdatePositionsFromVelocitiesKernel(
 	const float solverSDT,
 	__global float4 * g_vertexVelocities,
 	__global float4 * g_vertexPreviousPositions,
-	__global float4 * g_vertexCurrentPosition)
+	__global float4 * g_vertexCurrentPosition GUID_ARG)
 {
 	int vertexID = get_global_id(0);
 	if( vertexID < numNodes )

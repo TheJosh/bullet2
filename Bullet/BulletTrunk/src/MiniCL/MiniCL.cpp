@@ -486,7 +486,7 @@ extern CL_API_ENTRY cl_int CL_API_CALL clGetContextInfo(cl_context         /* co
 }
 
 CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_properties * /* properties */,
-                        cl_device_type          /* device_type */,
+                        cl_device_type           device_type ,
                         void (*pfn_notify)(const char *, const void *, size_t, void *) /* pfn_notify */,
                         void *                  /* user_data */,
                         cl_int *                 errcode_ret ) CL_API_SUFFIX__VERSION_1_0
@@ -502,14 +502,18 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
 		"MiniCL_0", "MiniCL_1", "MiniCL_2", "MiniCL_3", "MiniCL_4", "MiniCL_5", "MiniCL_6", "MiniCL_7" 
 	};
 
-#ifdef DEBUG_MINICL_KERNELS
-	SequentialThreadSupport::SequentialThreadConstructionInfo stc("MiniCL",processMiniCLTask,createMiniCLLocalStoreMemory);
-	SequentialThreadSupport* threadSupport = new SequentialThreadSupport(stc);
-#else
+	btThreadSupportInterface* threadSupport = 0;
+
+	if (device_type==CL_DEVICE_TYPE_DEBUG)
+	{
+		SequentialThreadSupport::SequentialThreadConstructionInfo stc("MiniCL",processMiniCLTask,createMiniCLLocalStoreMemory);
+		threadSupport = new SequentialThreadSupport(stc);
+	} else
+	{
 
 #if _WIN32
 	btAssert(sUniqueThreadSupportIndex < maxNumOfThreadSupports);
-	Win32ThreadSupport* threadSupport = new Win32ThreadSupport(Win32ThreadSupport::Win32ThreadConstructionInfo(
+	threadSupport = new Win32ThreadSupport(Win32ThreadSupport::Win32ThreadConstructionInfo(
 //								"MiniCL",
 								sUniqueThreadSupportName[sUniqueThreadSupportIndex++],
 								processMiniCLTask, //processCollisionTask,
@@ -518,10 +522,10 @@ CL_API_ENTRY cl_context CL_API_CALL clCreateContextFromType(cl_context_propertie
 #else
 	///todo: add posix thread support for other platforms
 	SequentialThreadSupport::SequentialThreadConstructionInfo stc("MiniCL",processMiniCLTask,createMiniCLLocalStoreMemory);
-	SequentialThreadSupport* threadSupport = new SequentialThreadSupport(stc);
+	threadSupport = new SequentialThreadSupport(stc);
 #endif
 
-#endif //DEBUG_MINICL_KERNELS
+	}
 	
 	
 	MiniCLTaskScheduler* scheduler = new MiniCLTaskScheduler(threadSupport,maxNumOutstandingTasks);

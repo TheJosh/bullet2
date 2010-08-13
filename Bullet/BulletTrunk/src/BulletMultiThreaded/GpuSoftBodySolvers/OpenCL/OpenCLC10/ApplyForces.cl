@@ -1,14 +1,14 @@
 MSTRINGIFY(
 
 
-float dot3(float4 a, float4 b)
+float adot3(float4 a, float4 b)
 {
    return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
 float4 projectOnAxis( float4 v, float4 a )
 {
-	return (a*dot3(v, a));
+	return (a*adot3(v, a));
 }
 
 __kernel void 
@@ -26,7 +26,7 @@ ApplyForcesKernel(
 	__global float4 * g_clothAcceleration,
 	__global float * g_clothMediumDensity,
 	__global float4 * g_vertexForceAccumulator,
-	__global float4 * g_vertexVelocity)
+	__global float4 * g_vertexVelocity GUID_ARG)
 {
 	unsigned int nodeID = get_global_id(0);
 	if( nodeID < numNodes )

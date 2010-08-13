@@ -5,11 +5,14 @@
 #include "cloth.h"
 
 #define USE_GPU_SOLVER
+
+
 const int numFlags = 5;
 const int clothWidth = 40;
-const int clothHeight = 200;//60;
+const int clothHeight = 60;//60;
 float _windAngle = 1.0;//0.4;
 float _windStrength = 15;
+
 
 
 #include <iostream>
@@ -20,7 +23,6 @@ using namespace std;
 
 #include "btBulletDynamicsCommon.h"
 #include "LinearMath/btHashMap.h"
-#include "btOpenCLSupport.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 #include "vectormath/vmInclude.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolver_CPU.h"
@@ -61,7 +63,9 @@ btAlignedObjectArray<btSoftBody *> m_flags;
 btSoftRigidDynamicsWorld* m_dynamicsWorld;
 btAlignedObjectArray<piece_of_cloth> cloths;
 
-extern cl::CommandQueue g_queue;
+extern cl_context			g_cxMainContext;
+extern cl_device_id		g_cdDevice;
+extern cl_command_queue	g_cqCommandQue;
 
 
 const float flagSpacing = 30.f;
@@ -95,8 +99,10 @@ static bool testAndAddLink( btAlignedObjectArray<int> &trianglesForLinks, btSoft
 		// If we added a new link, set the triangle array
 		trianglesForLinks[numVertices * vertex0 + vertex1] = triangle;
 		trianglesForLinks[numVertices * vertex1 + vertex0] = triangle;
-		return true;
+
 	}
+
+	return true;
 }
 
 btSoftBody *createFromIndexedMesh( btVector3 *vertexArray, int numVertices, int *triangleVertexIndexArray, int numTriangles, bool createBendLinks )
@@ -141,7 +147,6 @@ void createFlag( btSoftBodySolver &solver, int width, int height, btAlignedObjec
 {
 	// First create a triangle mesh to represent a flag
 
-	using namespace BTAcceleratedSoftBody;	
 	using Vectormath::Aos::Matrix3;
 	using Vectormath::Aos::Vector3;
 
@@ -266,7 +271,7 @@ void updatePhysicsWorld()
 	// Change wind velocity a bit based on a frame counter
 	if( (counter % 400) == 0 )
 	{
-		_windAngle = (_windAngle + 0.05);
+		_windAngle = (_windAngle + 0.05f);
 		if( _windAngle > (2*3.141) )
 			_windAngle = 0;
 
@@ -295,7 +300,7 @@ void initBullet(void)
 {
 
 #ifdef USE_GPU_SOLVER
-	g_openCLSolver = new btOpenCLSoftBodySolver( g_queue );
+	g_openCLSolver = new btOpenCLSoftBodySolver( g_cqCommandQue, g_cxMainContext);
 	g_solver = g_openCLSolver;
 #else
 	g_cpuSolver = new btCPUSoftBodySolver;

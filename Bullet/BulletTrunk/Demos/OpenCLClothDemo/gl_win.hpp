@@ -6,6 +6,6 @@
 void goGL(void);
 void preInitGL(int argc, char ** argv);
 
-int getVBO( std::string, GLuint size );
+int getVBO( std::string, int size );
 
 #endif //__GL_WIN_HDR__

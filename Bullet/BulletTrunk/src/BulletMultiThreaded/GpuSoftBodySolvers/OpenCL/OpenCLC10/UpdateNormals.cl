@@ -16,7 +16,7 @@ __kernel void
 ResetNormalsAndAreasKernel(
 	const unsigned int numNodes,
 	__global float4 * g_vertexNormals,
-	__global float * g_vertexArea)
+	__global float * g_vertexArea GUID_ARG)
 {
 	if( get_global_id(0) < numNodes )
 	{
@@ -35,7 +35,7 @@ UpdateSoftBodiesKernel(
 	__global float4 * g_vertexNormals,
 	__global float * g_vertexArea,
 	__global float4 * g_triangleNormals,
-	__global float * g_triangleArea)
+	__global float * g_triangleArea GUID_ARG)
 {
 	int faceID = get_global_id(0) + startFace;
 	if( get_global_id(0) < numFaces )
@@ -84,7 +84,7 @@ NormalizeNormalsAndAreasKernel(
 	const unsigned int numNodes,
 	__global int * g_vertexTriangleCount,
 	__global float4 * g_vertexNormals,
-	__global float * g_vertexArea)
+	__global float * g_vertexArea GUID_ARG)
 {
 	if( get_global_id(0) < numNodes )
 	{

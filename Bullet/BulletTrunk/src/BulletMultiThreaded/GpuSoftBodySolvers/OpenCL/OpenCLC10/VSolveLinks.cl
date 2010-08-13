@@ -9,7 +9,7 @@ VSolveLinksKernel(
 	__global float * g_linksLengthRatio,
 	__global float4 * g_linksCurrentLength,
 	__global float * g_vertexInverseMass,
-	__global float4 * g_vertexVelocity)
+	__global float4 * g_vertexVelocity GUID_ARG)
 {
 	int linkID = get_global_id(0) + startLink;
 	if( get_global_id(0) < numLinks )
