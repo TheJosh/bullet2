@@ -1,4 +1,3 @@
-#include <GL/glew.h>
 
 #include "clstuff.hpp"
 #include "gl_win.hpp"
@@ -13,15 +12,10 @@
 #include <cstring>
 
 
-#ifndef _WIN32
-#include <GL/glx.h>
-#endif //!_WIN32
+//#ifndef _WIN32 && !defined(__APPLE__)
+//#include <GL/glx.h>
+//#endif //!_WIN32
 
-#if defined(__APPLE__) || defined(__MACOSX)
-#include <GLUT/glut.h>
-#else
-#include <GL/glut.h>
-#endif
 
 
 static GLuint vbo = 0;
@@ -231,14 +225,6 @@ void preInitGL(int argc, char ** argv)
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
 	glutInitWindowSize( windowWidth, windowHeight );    
 	glutCreateWindow ("OpenCL Renderer");
-
-    glewInit();
-    if (!glewIsSupported( "GL_VERSION_2_0 " )) {
-          std::cerr
-              << "Support for necessary OpenGL extensions missing."
-              << std::endl;
-          exit(EXIT_FAILURE);
-    }
 
 	initGL();
 

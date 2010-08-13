@@ -243,8 +243,6 @@ private:
 	cl_kernel		collideSphereKernel;
 	cl_kernel		collideCylinderKernel;
 
-	static const size_t workGroupSize = 128;
-
 	cl_command_queue	m_cqCommandQue;
 	cl_context			m_cxMainContext;
 

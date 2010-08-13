@@ -1,6 +1,4 @@
 
-#todo: enable NVidia, MiniCL and Apple
-
 IF(BUILD_MINICL_OPENCL_DEMOS)
 	SUBDIRS( MiniCL  )
 ENDIF()
@@ -13,6 +11,6 @@ IF(BUILD_NVIDIA_OPENCL_DEMOS)
 	SUBDIRS(NVidia)
 ENDIF()
 
-#IF(APPLE)
-#	SUBDIRS(Apple)
-#ENDIF()
+IF(APPLE)
+	SUBDIRS(Apple)
+ENDIF()

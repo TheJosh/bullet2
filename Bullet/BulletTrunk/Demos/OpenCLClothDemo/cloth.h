@@ -1,3 +1,6 @@
+
+#include "gl_win.hpp" //for OpenGL stuff
+
 #include "bmpLoader.hpp"
 #include <string>
 #include "LinearMath/btScalar.h"

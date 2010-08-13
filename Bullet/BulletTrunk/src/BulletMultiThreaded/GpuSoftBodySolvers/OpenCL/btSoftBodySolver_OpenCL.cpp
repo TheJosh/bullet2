@@ -21,6 +21,8 @@ subject to the following restrictions:
 #include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/btSoftBody.h"
 
+     static const size_t workGroupSize = 128;
+
 
 #if (CL_VERSION_1_1 == 1)
 //OpenCL 1.1 kernels use float3

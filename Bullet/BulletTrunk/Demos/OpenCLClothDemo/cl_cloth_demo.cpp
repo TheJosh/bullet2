@@ -1,4 +1,6 @@
+#ifdef _WIN32
 #include <GL/glew.h>
+#endif
 
 #include "clstuff.hpp"
 #include "gl_win.hpp"
