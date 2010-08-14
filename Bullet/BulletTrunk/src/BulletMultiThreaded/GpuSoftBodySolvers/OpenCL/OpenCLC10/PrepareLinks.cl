@@ -18,6 +18,7 @@ PrepareLinksKernel(
 	int linkID = get_global_id(0);
 	if( linkID < numLinks )
 	{	
+		
 		int2 nodeIndices = g_linksVertexIndices[linkID];
 		int node0 = nodeIndices.x;
 		int node1 = nodeIndices.y;

@@ -31,7 +31,7 @@ IF (USE_GLUT)
 	)
 
 
-	ADD_EXECUTABLE(AppClothDemo_Apple
+	ADD_EXECUTABLE(AppOpenCLClothDemo_Apple
 		../cl_cloth_demo.cpp
 		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclUtils.h
 		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclCommon.h
@@ -40,21 +40,21 @@ IF (USE_GLUT)
 		../gl_win.cpp
 		../clstuff.cpp
 		../bmpLoader.cpp
-		../bmpLoader.hpp
-		../clstuff.hpp
-		../gl_win.hpp			
+		../bmpLoader.h
+		../clstuff.h
+		../gl_win.h
 
 	)
 ELSE (USE_GLUT)
 ENDIF (USE_GLUT)
 
 
-ADD_CUSTOM_COMMAND(	TARGET AppClothDemo_Apple	POST_BUILD
+ADD_CUSTOM_COMMAND(	TARGET AppOpenCLClothDemo_Apple	POST_BUILD
 			COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenCLClothDemo/amdFlag.bmp ${CMAKE_CURRENT_BINARY_DIR}
 			COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenCLClothDemo/atiFlag.bmp ${CMAKE_CURRENT_BINARY_DIR}
 			)
 
 IF (UNIX)
-  TARGET_LINK_LIBRARIES(AppClothDemo_Apple pthread)
+  TARGET_LINK_LIBRARIES(AppOpenCLClothDemo_Apple pthread)
 ENDIF(UNIX)
 

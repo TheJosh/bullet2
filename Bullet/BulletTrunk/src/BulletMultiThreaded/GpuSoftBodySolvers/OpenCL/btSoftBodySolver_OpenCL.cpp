@@ -24,8 +24,10 @@ subject to the following restrictions:
      static const size_t workGroupSize = 128;
 
 
-#if (CL_VERSION_1_1 == 1)
-//OpenCL 1.1 kernels use float3
+//CL_VERSION_1_1 seems broken on NVidia SDK so just disable it
+
+#if (0)//CL_VERSION_1_1 == 1)
+ //OpenCL 1.1 kernels use float3
 #define MSTRINGIFY(A) #A
 static char* PrepareLinksCLString = 
 #include "OpenCLC/PrepareLinks.cl"

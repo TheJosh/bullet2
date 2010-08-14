@@ -21,6 +21,7 @@ IF (USE_GLUT)
 	LINK_LIBRARIES(
 		OpenGLSupport 
 		BulletSoftBodySolvers_OpenCL_Mini
+		BulletSoftBodySolvers_CPU
 		MiniCL
 		BulletMultiThreaded
 		BulletSoftBody
@@ -35,14 +36,14 @@ IF (USE_GLUT)
 	)
 
 
-	ADD_EXECUTABLE(AppClothDemo_Mini
+	ADD_EXECUTABLE(AppOpenCLClothDemo_Mini
 		../cl_cloth_demo.cpp
 		../gl_win.cpp
 		../clstuff.cpp
 		../bmpLoader.cpp
-		../bmpLoader.hpp
-		../clstuff.hpp
-		../gl_win.hpp
+		../bmpLoader.h
+		../clstuff.h
+		../gl_win.h
 		${BULLET_PHYSICS_SOURCE_DIR}/src/BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/MiniCL/MiniCLTaskWrap.cpp
 		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclUtils.h
 		${BULLET_PHYSICS_SOURCE_DIR}/Demos/SharedOpenCL/btOclCommon.h
@@ -56,30 +57,30 @@ ENDIF (USE_GLUT)
 IF(WIN32)
 IF (CMAKE_CL_64)
 	IF (NOT INTERNAL_CREATE_DISTRIBUTABLE_MSVC_PROJECTFILES)
-		ADD_CUSTOM_COMMAND(	TARGET AppClothDemo_Mini		POST_BUILD
+		ADD_CUSTOM_COMMAND(	TARGET AppOpenCLClothDemo_Mini		POST_BUILD
 					COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/glut64.dll ${CMAKE_CURRENT_BINARY_DIR}	
 					)
-		ADD_CUSTOM_COMMAND(	TARGET AppClothDemo_Mini	POST_BUILD
+		ADD_CUSTOM_COMMAND(	TARGET AppOpenCLClothDemo_Mini	POST_BUILD
 					COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/GLEW64.DLL ${CMAKE_CURRENT_BINARY_DIR})
 	ENDIF()
 ELSE(CMAKE_CL_64)
 	IF (NOT INTERNAL_CREATE_DISTRIBUTABLE_MSVC_PROJECTFILES)
-		ADD_CUSTOM_COMMAND(	TARGET AppClothDemo_Mini	POST_BUILD
+		ADD_CUSTOM_COMMAND(	TARGET AppOpenCLClothDemo_Mini	POST_BUILD
 					COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/GLUT32.DLL ${CMAKE_CURRENT_BINARY_DIR}
 					)
-		ADD_CUSTOM_COMMAND(	TARGET AppClothDemo_Mini	POST_BUILD
+		ADD_CUSTOM_COMMAND(	TARGET AppOpenCLClothDemo_Mini	POST_BUILD
 					COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/GLEW32.DLL ${CMAKE_CURRENT_BINARY_DIR})
 
 	ENDIF()
 ENDIF(CMAKE_CL_64)
 ENDIF(WIN32)
 
-ADD_CUSTOM_COMMAND(	TARGET AppClothDemo_Mini	POST_BUILD
+ADD_CUSTOM_COMMAND(	TARGET AppOpenCLClothDemo_Mini	POST_BUILD
 			COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenCLClothDemo/amdFlag.bmp ${CMAKE_CURRENT_BINARY_DIR}
 			COMMAND ${CMAKE_COMMAND} ARGS -E copy_if_different ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenCLClothDemo/atiFlag.bmp ${CMAKE_CURRENT_BINARY_DIR}
 			)
 
 IF (UNIX)
-  TARGET_LINK_LIBRARIES(AppClothDemo_Mini pthread)
+  TARGET_LINK_LIBRARIES(AppOpenCLClothDemo_Mini pthread)
 ENDIF(UNIX)
 
