@@ -396,6 +396,10 @@ public:
 	{
 	}
 
+	virtual ~btSoftBodyVertexData()
+	{
+	}
+
 	virtual void clear()
 	{
 		m_clothIdentifier.resize(0);
@@ -630,6 +634,11 @@ protected:
 public:
 	btSoftBodyTriangleData()
 	{
+	}
+
+	virtual ~btSoftBodyTriangleData()
+	{
+
 	}
 
 	virtual void clear()
