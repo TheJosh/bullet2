@@ -1,4 +1,7 @@
 
+#ifndef CYLINDER_H
+#define CYLINDER_H
+
 class cylinder 
 {
 	public:
@@ -33,7 +36,15 @@ class cylinder
 		collisionShape = cs;
 	}
 
+	
+	void destroy()
+	{
+		SAFE_RELEASE( g_pIndexBuffer );
+		SAFE_RELEASE( pVB[0] );
 
+		SAFE_RELEASE( texture2D );
+		SAFE_RELEASE( texture2D_view );
+	}
 
 	void create_texture(void)
 	{
@@ -43,8 +54,6 @@ class cylinder
 		loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 
 		HRESULT hr = D3DX11CreateShaderResourceViewFromFile(g_pd3dDevice, L"texture.bmp", &loadInfo, NULL, &texture2D_view, NULL);
-		hr = hr;
-
 	}
 
 	void draw(void)
@@ -265,3 +274,4 @@ class cylinder
 
 };
 
+#endif CYLINDER_H

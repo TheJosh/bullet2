@@ -21,6 +21,8 @@ subject to the following restrictions:
 #include "gl_win.h"
 #include "cloth.h"
 
+
+#define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
 
 
@@ -44,6 +46,7 @@ using namespace std;
 #include "vectormath/vmInclude.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolver_CPU.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCL.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCLSIMDAware.h"
 
 using Vectormath::Aos::Vector3;
 
@@ -73,6 +76,7 @@ btDefaultCollisionConfiguration* m_collisionConfiguration;
 
 btCPUSoftBodySolver *g_cpuSolver = NULL;
 btOpenCLSoftBodySolver *g_openCLSolver = NULL;
+btOpenCLSoftBodySolverSIMDAware *g_openCLSIMDSolver = NULL;
 
 btSoftBodySolver *g_solver = NULL;
 
@@ -317,8 +321,13 @@ void initBullet(void)
 {
 
 #ifdef USE_GPU_SOLVER
+#ifdef USE_SIMDAWARE_SOLVER
+	g_openCLSIMDSolver = new btOpenCLSoftBodySolverSIMDAware( g_cqCommandQue, g_cxMainContext);
+	g_solver = g_openCLSIMDSolver;
+#else
 	g_openCLSolver = new btOpenCLSoftBodySolver( g_cqCommandQue, g_cxMainContext);
 	g_solver = g_openCLSolver;
+#endif
 #else
 	g_cpuSolver = new btCPUSoftBodySolver;
 	g_solver = g_cpuSolver;
@@ -465,6 +474,14 @@ int main(int argc, char *argv[])
 	}
 
 	goGL();
+
+	if( g_cpuSolver )
+		delete g_cpuSolver;
+	if( g_openCLSolver  )
+		delete g_openCLSolver;
+	if( g_openCLSIMDSolver  )
+		delete g_openCLSIMDSolver ;
+
  	return 0;
 }
 

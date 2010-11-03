@@ -71,7 +71,7 @@ public:
 	virtual void getAabb(const btTransform& t,btVector3& aabbMin,btVector3& aabbMax) const
 	{
 		/* t should be identity, but better be safe than...fast? */ 
-		const btVector3	mins=m_body->m_bounds[0];
+ 		const btVector3	mins=m_body->m_bounds[0];
 		const btVector3	maxs=m_body->m_bounds[1];
 		const btVector3	crns[]={t*btVector3(mins.x(),mins.y(),mins.z()),
 			t*btVector3(maxs.x(),mins.y(),mins.z()),

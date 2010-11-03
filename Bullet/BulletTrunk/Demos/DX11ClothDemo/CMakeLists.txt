@@ -97,6 +97,7 @@ SET(BulletClothExample_HDRS
 	cap.h
 	cloth.h
 	cylinder.h
+	capsule.h
 #	FreeImage.h
 	resource.h
 )

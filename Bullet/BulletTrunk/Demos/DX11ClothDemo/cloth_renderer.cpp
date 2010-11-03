@@ -41,10 +41,13 @@ class btDX11SIMDAwareSoftBodySolver;
 //#define USE_GPU_SOLVER
 #define USE_GPU_COPY
 const int numFlags = 5;
-const int clothWidth = 40;
+const int clothWidth = 40;//40;
 const int clothHeight = 60;//60;
 float _windAngle = 1.0;//0.4;
-float _windStrength = 15;
+float _windStrength = 0;//15;
+
+
+//#define TABLETEST
 
 
 #include <fstream>
@@ -63,7 +66,7 @@ class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
 
-int paused = 0;
+int paused = 1;
 
 float global_shift_x = 0;
 float global_shift_y = 0;
@@ -171,21 +174,20 @@ struct vertex_struct
 
 
 
+#include "capsule.h"
 #include "cap.h"
 #include "cylinder.h"
 #include "cloth.h"
-//#include "capsule.h"
 
 
 
 //cylinder cyl_1;
 //cap cap_1;
 btRigidBody *capCollider;
-
+capsule my_capsule;
 
 
 btAlignedObjectArray<piece_of_cloth> cloths;
-//capsule my_capsule;
 
 //////////////////////////////////////////
 // Bullet globals
@@ -359,13 +361,23 @@ void createFlag( int width, int height, btAlignedObjectArray<btSoftBody *> &flag
 	defaultRotate[0] = btVector3(cos(rotateAngleRoundZ), sin(rotateAngleRoundZ), 0.f); 
 	defaultRotate[1] = btVector3(-sin(rotateAngleRoundZ), cos(rotateAngleRoundZ), 0.f);
 	defaultRotate[2] = btVector3(0.f, 0.f, 1.f);
+
+
+	//btMatrix3x3 defaultRotateAndScale( (defaultRotateX*defaultRotate) );
+#ifdef TABLETEST
+	btMatrix3x3 defaultRotateX;
+	rotateAngleRoundX = 3.141592654/2;
+	defaultRotateX[0] = btVector3(1.f, 0.f, 0.f);
+	defaultRotateX[1] = btVector3( 0.f, cos(rotateAngleRoundX), sin(rotateAngleRoundX));
+	defaultRotateX[2] = btVector3(0.f, -sin(rotateAngleRoundX), cos(rotateAngleRoundX));
+	btMatrix3x3 defaultRotateAndScale( (defaultRotateX) );
+#else
 	btMatrix3x3 defaultRotateX;
 	defaultRotateX[0] = btVector3(1.f, 0.f, 0.f);
 	defaultRotateX[1] = btVector3( 0.f, cos(rotateAngleRoundX), sin(rotateAngleRoundX));
 	defaultRotateX[2] = btVector3(0.f, -sin(rotateAngleRoundX), cos(rotateAngleRoundX));
-
-	//btMatrix3x3 defaultRotateAndScale( (defaultRotateX*defaultRotate) );
 	btMatrix3x3 defaultRotateAndScale( (defaultRotateX) );
+#endif
 
 
 	// Construct the sequence flags applying a slightly different translation to each one to arrange them
@@ -387,10 +399,12 @@ void createFlag( int width, int height, btAlignedObjectArray<btSoftBody *> &flag
 			softBody->setMass(i, 10.f/mesh.m_numVertices);
 		}
 
+#ifndef TABLETEST
 		// Set the fixed points
 		softBody->setMass((height-1)*(width), 0.f);
 		softBody->setMass((height-1)*(width) + width - 1, 0.f);
 		softBody->setMass((height-1)*width + width/2, 0.f);
+#endif
 
 		softBody->m_cfg.collisions = btSoftBody::fCollision::CL_SS+btSoftBody::fCollision::CL_RS;	
 		softBody->m_cfg.kLF = 0.0005f;
@@ -401,7 +415,7 @@ void createFlag( int width, int height, btAlignedObjectArray<btSoftBody *> &flag
 		flags.push_back( softBody );
 
 		softBody->transform( transform );
-		
+		softBody->setFriction( 0.8f );
 		m_dynamicsWorld->addSoftBody( softBody );
 	}
 
@@ -437,11 +451,12 @@ void updatePhysicsWorld()
 			cloth->setWindVelocity( btVector3(xCoordinate, 0, zCoordinate) );
 		}
 	}
+#ifndef TABLETEST
+	btVector3 origin( capCollider->getWorldTransform().getOrigin() );
+	origin.setZ( origin.getZ() + 0.01 );
+	capCollider->getWorldTransform().setOrigin( origin );
+#endif
 
-	//btVector3 origin( capCollider->getWorldTransform().getOrigin() );
-	//origin.setX( origin.getX() + 0.05 );
-	//capCollider->getWorldTransform().setOrigin( origin );
-	
 	counter++;
 }
 
@@ -510,7 +525,7 @@ void initBullet(void)
 	}
  
 #endif
-#if 0
+#if 1
 	{		
 		btScalar mass(0.);
 
@@ -519,7 +534,8 @@ void initBullet(void)
 		//rigidbody is dynamic if and only if mass is non zero, otherwise static
 		bool isDynamic = (mass != 0.f);
 		
-		btCollisionShape *capsuleShape = new btCapsuleShape(5, 30);
+		btCollisionShape *capsuleShape = new btCapsuleShape(5, 10);
+		capsuleShape->setMargin( 0.5 );
 		
 		
 
@@ -532,11 +548,21 @@ void initBullet(void)
 		m_collisionShapes.push_back(capsuleShape);
 		btTransform capsuleTransform;
 		capsuleTransform.setIdentity();
-		capsuleTransform.setOrigin(btVector3(0, 10, 0));
+#ifdef TABLETEST
+		capsuleTransform.setOrigin(btVector3(0, 10, -11));
+		const btScalar pi = 3.141592654;
+		capsuleTransform.setRotation(btQuaternion(0, 0, pi/2));
+#else
+		capsuleTransform.setOrigin(btVector3(0, 20, -10));
+		
+		const btScalar pi = 3.141592654;
+		//capsuleTransform.setRotation(btQuaternion(0, 0, pi/2));
+		capsuleTransform.setRotation(btQuaternion(0, 0, 0));
+#endif
 		btDefaultMotionState* myMotionState = new btDefaultMotionState(capsuleTransform);
 		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,capsuleShape,localInertia);
 		btRigidBody* body = new btRigidBody(rbInfo);
-		
+		body->setFriction( 0.8f );
 		my_capsule.set_collision_object(body);
 
 		m_dynamicsWorld->addRigidBody(body);
@@ -1035,14 +1061,9 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
 
 	initBullet();
 
-
-	//my_capsule.create_buffers(50,40);
-
-
-
 	std::wstring flagTexs[] = {
-		L"atiFlag.bmp",
 		L"amdFlag.bmp",
+		L"atiFlag.bmp",
 	};
 	int numFlagTexs = 2;
 
@@ -1054,12 +1075,10 @@ HRESULT CALLBACK OnD3D11CreateDevice( ID3D11Device* pd3dDevice, const DXGI_SURFA
 		cloths[flagIndex].z_offset = 0;
 	}
 
-	//cap_1.create_texture();
-	//cap_1.x_offset = 0;
-	//cap_1.y_offset = 0;
-	//cap_1.z_offset = 0;
+	
 
-	//my_capsule.create_texture();
+	my_capsule.create_buffers(50,40);
+	my_capsule.create_texture();
 
 	//Turn off backface culling
 	D3D11_RASTERIZER_DESC rsDesc;
@@ -1187,8 +1206,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 		cloths[flagIndex].draw();
 	}
 
-	//my_capsule.draw();
-	//cap_1.draw();
+	my_capsule.draw();
 
 	
     DXUT_BeginPerfEvent( DXUT_PERFEVENTCOLOR, L"HUD / Stats" );
@@ -1249,6 +1267,8 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
 	{
 		cloths[flagIndex].destroy();
 	}
+
+	my_capsule.destroy();
 
 	// Shouldn't need to delete this as it's just a soft body and will be deleted later by the collision object cleanup.
 	//for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )

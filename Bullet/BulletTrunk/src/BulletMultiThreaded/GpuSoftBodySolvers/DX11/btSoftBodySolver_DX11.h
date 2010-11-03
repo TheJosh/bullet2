@@ -26,181 +26,226 @@ subject to the following restrictions:
 
 
 
-/**
- * SoftBody class to maintain information about a soft body instance
- * within a solver.
- * This data addresses the main solver arrays.
- */
-class btDX11AcceleratedSoftBodyInterface
-{
-protected:
-	/** Current number of vertices that are part of this cloth */
-	int m_numVertices;
-	/** Maximum number of vertices allocated to be part of this cloth */
-	int m_maxVertices;
-	/** Current number of triangles that are part of this cloth */
-	int m_numTriangles;
-	/** Maximum number of triangles allocated to be part of this cloth */
-	int m_maxTriangles;
-	/** Index of first vertex in the world allocated to this cloth */
-	int m_firstVertex;
-	/** Index of first triangle in the world allocated to this cloth */
-	int m_firstTriangle;
-	/** Index of first link in the world allocated to this cloth */
-	int m_firstLink;
-	/** Maximum number of links allocated to this cloth */
-	int m_maxLinks;
-	/** Current number of links allocated to this cloth */
-	int m_numLinks;
-
-	/** The actual soft body this data represents */
-	btSoftBody *m_softBody;
-
-
-public:
-	btDX11AcceleratedSoftBodyInterface( btSoftBody *softBody ) :
-	  m_softBody( softBody )
-	{
-		m_numVertices = 0;
-		m_maxVertices = 0;
-		m_numTriangles = 0;
-		m_maxTriangles = 0;
-		m_firstVertex = 0;
-		m_firstTriangle = 0;
-		m_firstLink = 0;
-		m_maxLinks = 0;
-		m_numLinks = 0;
-	}
-	int getNumVertices()
-	{
-		return m_numVertices;
-	}
-
-	int getNumTriangles()
-	{
-		return m_numTriangles;
-	}
-
-	int getMaxVertices()
-	{
-		return m_maxVertices;
-	}
-
-	int getMaxTriangles()
-	{
-		return m_maxTriangles;
-	}
-
-	int getFirstVertex()
-	{
-		return m_firstVertex;
-	}
-
-	int getFirstTriangle()
-	{
-		return m_firstTriangle;
-	}
-
-	// TODO: All of these set functions will have to do checks and
-	// update the world because restructuring of the arrays will be necessary
-	// Reasonable use of "friend"?
-	void setNumVertices( int numVertices )
-	{
-		m_numVertices = numVertices;
-	}	
-	
-	void setNumTriangles( int numTriangles )
-	{
-		m_numTriangles = numTriangles;
-	}
-
-	void setMaxVertices( int maxVertices )
-	{
-		m_maxVertices = maxVertices;
-	}
-
-	void setMaxTriangles( int maxTriangles )
-	{
-		m_maxTriangles = maxTriangles;
-	}
-
-	void setFirstVertex( int firstVertex )
-	{
-		m_firstVertex = firstVertex;
-	}
-
-	void setFirstTriangle( int firstTriangle )
-	{
-		m_firstTriangle = firstTriangle;
-	}
-
-	void setMaxLinks( int maxLinks )
-	{
-		m_maxLinks = maxLinks;
-	}
-
-	void setNumLinks( int numLinks )
-	{
-		m_numLinks = numLinks;
-	}
-
-	void setFirstLink( int firstLink )
-	{
-		m_firstLink = firstLink;
-	}
-
-	int getMaxLinks()
-	{
-		return m_maxLinks;
-	}
-
-	int getNumLinks()
-	{
-		return m_numLinks;
-	}
-
-	int getFirstLink()
-	{
-		return m_firstLink;
-	}
-
-	btSoftBody* getSoftBody()
-	{
-		return m_softBody;
-	}
-
-#if 0
-	void setAcceleration( Vectormath::Aos::Vector3 acceleration )
-	{
-		m_currentSolver->setPerClothAcceleration( m_clothIdentifier, acceleration );
-	}
-
-	void setWindVelocity( Vectormath::Aos::Vector3 windVelocity )
-	{
-		m_currentSolver->setPerClothWindVelocity( m_clothIdentifier, windVelocity );
-	}
-
-	/** 
-	 * Set the density of the air in which the cloth is situated.
-	 */
-	void setAirDensity( btScalar density )
-	{
-		m_currentSolver->setPerClothMediumDensity( m_clothIdentifier, static_cast<float>(density) );
-	}
-
-	/**
-	 * Add a collision object to this soft body.
-	 */
-	void addCollisionObject( btCollisionObject *collisionObject )
-	{
-		m_currentSolver->addCollisionObjectForSoftBody( m_clothIdentifier, collisionObject );
-	}
-#endif
-};
 
 
 class btDX11SoftBodySolver : public btSoftBodySolver
 {
+protected:
+	/**
+	 * Entry in the collision shape array.
+	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
+	 */
+	struct CollisionShapeDescription
+	{
+		Vectormath::Aos::Transform3 shapeTransform;
+		Vectormath::Aos::Vector3 linearVelocity;
+		Vectormath::Aos::Vector3 angularVelocity;
+
+		int softBodyIdentifier;
+		int collisionShapeType;
+	
+		// Both needed for capsule
+		float radius;
+		float halfHeight;
+		
+		float margin;
+		float friction;
+
+		CollisionShapeDescription()
+		{
+			collisionShapeType = 0;
+			margin = 0;
+			friction = 0;
+		}
+	};
+
+	struct UIntVector3
+	{
+		UIntVector3()
+		{
+			x = 0;
+			y = 0;
+			z = 0;
+			_padding = 0;
+		}
+		
+		UIntVector3( unsigned int x_, unsigned int y_, unsigned int z_ )
+		{
+			x = x_;
+			y = y_;
+			z = z_;
+			_padding = 0;
+		}
+			
+		unsigned int x;
+		unsigned int y;
+		unsigned int z;
+		unsigned int _padding;
+	};
+
+	/**
+	 * SoftBody class to maintain information about a soft body instance
+	 * within a solver.
+	 * This data addresses the main solver arrays.
+	 */
+	class btDX11AcceleratedSoftBodyInterface
+	{
+	protected:
+		/** Current number of vertices that are part of this cloth */
+		int m_numVertices;
+		/** Maximum number of vertices allocated to be part of this cloth */
+		int m_maxVertices;
+		/** Current number of triangles that are part of this cloth */
+		int m_numTriangles;
+		/** Maximum number of triangles allocated to be part of this cloth */
+		int m_maxTriangles;
+		/** Index of first vertex in the world allocated to this cloth */
+		int m_firstVertex;
+		/** Index of first triangle in the world allocated to this cloth */
+		int m_firstTriangle;
+		/** Index of first link in the world allocated to this cloth */
+		int m_firstLink;
+		/** Maximum number of links allocated to this cloth */
+		int m_maxLinks;
+		/** Current number of links allocated to this cloth */
+		int m_numLinks;
+
+		/** The actual soft body this data represents */
+		btSoftBody *m_softBody;
+
+
+	public:
+		btDX11AcceleratedSoftBodyInterface( btSoftBody *softBody ) :
+		  m_softBody( softBody )
+		{
+			m_numVertices = 0;
+			m_maxVertices = 0;
+			m_numTriangles = 0;
+			m_maxTriangles = 0;
+			m_firstVertex = 0;
+			m_firstTriangle = 0;
+			m_firstLink = 0;
+			m_maxLinks = 0;
+			m_numLinks = 0;
+		}
+		int getNumVertices()
+		{
+			return m_numVertices;
+		}
+
+		int getNumTriangles()
+		{
+			return m_numTriangles;
+		}
+
+		int getMaxVertices()
+		{
+			return m_maxVertices;
+		}
+
+		int getMaxTriangles()
+		{
+			return m_maxTriangles;
+		}
+
+		int getFirstVertex()
+		{
+			return m_firstVertex;
+		}
+
+		int getFirstTriangle()
+		{
+			return m_firstTriangle;
+		}
+
+
+		/**
+		 * Update the bounds in the btSoftBody object
+		 */
+		void updateBounds( btVector3 lowerBound, btVector3 upperBound );
+
+		// TODO: All of these set functions will have to do checks and
+		// update the world because restructuring of the arrays will be necessary
+		// Reasonable use of "friend"?
+		void setNumVertices( int numVertices )
+		{
+			m_numVertices = numVertices;
+		}	
+	
+		void setNumTriangles( int numTriangles )
+		{
+			m_numTriangles = numTriangles;
+		}
+
+		void setMaxVertices( int maxVertices )
+		{
+			m_maxVertices = maxVertices;
+		}
+
+		void setMaxTriangles( int maxTriangles )
+		{
+			m_maxTriangles = maxTriangles;
+		}
+
+		void setFirstVertex( int firstVertex )
+		{
+			m_firstVertex = firstVertex;
+		}
+
+		void setFirstTriangle( int firstTriangle )
+		{
+			m_firstTriangle = firstTriangle;
+		}
+
+		void setMaxLinks( int maxLinks )
+		{
+			m_maxLinks = maxLinks;
+		}
+
+		void setNumLinks( int numLinks )
+		{
+			m_numLinks = numLinks;
+		}
+
+		void setFirstLink( int firstLink )
+		{
+			m_firstLink = firstLink;
+		}
+
+		int getMaxLinks()
+		{
+			return m_maxLinks;
+		}
+
+		int getNumLinks()
+		{
+			return m_numLinks;
+		}
+
+		int getFirstLink()
+		{
+			return m_firstLink;
+		}
+
+		btSoftBody* getSoftBody()
+		{
+			return m_softBody;
+		}
+
+	};
+
+	
+	struct CollisionObjectIndices
+	{
+		CollisionObjectIndices( int f, int e )
+		{
+			firstObject = f;
+			endObject = e;
+		}
+
+		int firstObject;
+		int endObject;
+	};
 public:
 
 
@@ -225,6 +270,8 @@ public:
 			// in case KernelDescs are copied
 		}
 	}; 
+
+
 
 
 	struct PrepareLinksCB
@@ -326,6 +373,24 @@ public:
 		int padding;
 	};
 
+	struct ComputeBoundsCB
+	{
+		int numNodes;
+		int numSoftBodies;
+		int padding1;
+		int padding2;
+	};
+
+	struct SolveCollisionsAndUpdateVelocitiesCB
+	{
+		unsigned int numNodes;
+		float isolverdt;
+		int padding0;
+		int padding1;
+	};
+
+	
+
 
 private:
 	ID3D11Device *		 m_dx11Device;
@@ -380,6 +445,44 @@ private:
 	btAlignedObjectArray< float >						m_perClothMediumDensity;
 	btDX11Buffer<float>									m_dx11PerClothMediumDensity;
 
+	
+	/** 
+	 * Collision shape details: pair of index of first collision shape for the cloth and number of collision objects.
+	 */
+	btAlignedObjectArray< CollisionObjectIndices >		m_perClothCollisionObjects;
+	btDX11Buffer<CollisionObjectIndices>				m_dx11PerClothCollisionObjects;
+
+	/** 
+	 * Collision shapes being passed across to the cloths in this solver.
+	 */
+	btAlignedObjectArray< CollisionShapeDescription >	m_collisionObjectDetails;
+	btDX11Buffer< CollisionShapeDescription >			m_dx11CollisionObjectDetails;
+
+	/** 
+	 * Minimum bounds for each cloth.
+	 * Updated by GPU and returned for use by broad phase.
+	 * These are int vectors as a reminder that they store the int representation of a float, not a float.
+	 * Bit 31 is inverted - is floats are stored with int-sortable values.
+	 */
+	btAlignedObjectArray< UIntVector3 >	m_perClothMinBounds;
+	btDX11Buffer< UIntVector3 >			m_dx11PerClothMinBounds;
+
+	/** 
+	 * Maximum bounds for each cloth.
+	 * Updated by GPU and returned for use by broad phase.
+	 * These are int vectors as a reminder that they store the int representation of a float, not a float.
+	 * Bit 31 is inverted - is floats are stored with int-sortable values.
+	 */
+	btAlignedObjectArray< UIntVector3 >	m_perClothMaxBounds;
+	btDX11Buffer< UIntVector3 >			m_dx11PerClothMaxBounds;
+
+	
+	/** 
+	 * Friction coefficient for each cloth
+	 */
+	btAlignedObjectArray< float >	m_perClothFriction;
+	btDX11Buffer< float >			m_dx11PerClothFriction;
+
 	KernelDesc		prepareLinksKernel;
 	KernelDesc		solvePositionsFromLinksKernel;
 	KernelDesc		vSolveLinksKernel;
@@ -388,16 +491,16 @@ private:
 	KernelDesc		updatePositionsFromVelocitiesKernel;
 	KernelDesc		updateVelocitiesFromPositionsWithoutVelocitiesKernel;
 	KernelDesc		updateVelocitiesFromPositionsWithVelocitiesKernel;
+	KernelDesc		solveCollisionsAndUpdateVelocitiesKernel;
 	KernelDesc		resetNormalsAndAreasKernel;
 	KernelDesc		normalizeNormalsAndAreasKernel;
+	KernelDesc		computeBoundsKernel;
 	KernelDesc		updateSoftBodiesKernel;
 	KernelDesc		outputToVertexArrayWithNormalsKernel;
 	KernelDesc		outputToVertexArrayWithoutNormalsKernel;
 
 	KernelDesc		outputToVertexArrayKernel;
 	KernelDesc		applyForcesKernel;
-	KernelDesc		collideSphereKernel;
-	KernelDesc		collideCylinderKernel;
 
 
 	/**
@@ -423,6 +526,8 @@ private:
 
 	void executeUpdateSoftBodies( int firstTriangle, int numTriangles );
 
+	void prepareCollisionConstraints();
+
 	Vectormath::Aos::Vector3 ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a );
 
 	void ApplyClampedForce( float solverdt, const Vectormath::Aos::Vector3 &force, const Vectormath::Aos::Vector3 &vertexVelocity, float inverseMass, Vectormath::Aos::Vector3 &vertexForce );
@@ -432,6 +537,7 @@ private:
 	void updateConstants( float timeStep );
 
 	btDX11AcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	int findSoftBodyIndex( const btSoftBody* const softBody );
 
 	//////////////////////////////////////
 	// Kernel dispatches
@@ -443,9 +549,13 @@ private:
 	
 	void updateVelocitiesFromPositionsWithVelocities( float isolverdt );
 	void updateVelocitiesFromPositionsWithoutVelocities( float isolverdt );
+	void computeBounds( );
+	void solveCollisionsAndUpdateVelocities( float isolverdt );
 
 	// End kernel dispatches
 	/////////////////////////////////////
+
+	void updateBounds();
 
 public:
 	btDX11SoftBodySolver(ID3D11Device * dx11Device, ID3D11DeviceContext* dx11Context);
@@ -473,6 +583,9 @@ public:
 	virtual void predictMotion( float solverdt );
 
 	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
+
+	
+	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
 };
 

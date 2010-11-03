@@ -17,14 +17,17 @@ ENDIF()
 
 SET(BulletSoftBodyOpenCLSolvers_SRCS
 	../btSoftBodySolver_OpenCL.cpp
+	../btSoftBodySolver_OpenCLSIMDAware.cpp
 )
 
 SET(BulletSoftBodyOpenCLSolvers_HDRS
 	../btSoftBodySolver_OpenCL.h
+	../btSoftBodySolver_OpenCLSIMDAware.h
 	../../CPU/btSoftBodySolverData.h
 	../btSoftBodySolverVertexData_OpenCL.h
 	../btSoftBodySolverTriangleData_OpenCL.h
 	../btSoftBodySolverLinkData_OpenCL.h
+	../btSoftBodySolverLinkData_OpenCLSIMDAware.h
 	../btSoftBodySolverBuffer_OpenCL.h
 )
 
@@ -32,7 +35,6 @@ SET(BulletSoftBodyOpenCLSolvers_HDRS
 # Build rules generated to stringify these into headers
 # which are needed by some of the sources
 SET(BulletSoftBodyOpenCLSolvers_Shaders
-#	OutputToVertexArray
 	UpdateNormals
 	Integrate
 	UpdatePositions

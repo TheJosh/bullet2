@@ -115,6 +115,12 @@ void btDefaultSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody *cons
 	}
 } // btDefaultSoftBodySolver::copySoftBodyToVertexBuffer
 
+// For the default solver just leave the soft body to do its collision processing
+void btDefaultSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
+{
+	softBody->defaultCollisionHandler( collisionObject );
+} // btDefaultSoftBodySolver::processCollision
+
 
 void btDefaultSoftBodySolver::predictMotion( float timeStep )
 {

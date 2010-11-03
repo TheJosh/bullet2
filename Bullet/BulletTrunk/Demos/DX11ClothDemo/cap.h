@@ -1,4 +1,7 @@
 
+#ifndef CAP_H
+#define CAP_H
+
 class cap 
 {
 	public:
@@ -20,7 +23,7 @@ class cap
 
 	void set_collision_object(btCollisionObject* co)
 	{
-	collisionObject = co;
+		collisionObject = co;
 	}
 
 	void set_collision_shape(btCollisionShape* cs)
@@ -41,7 +44,10 @@ class cap
 
 	void destroy()
 	{
-
+		SAFE_RELEASE( g_pIndexBuffer );
+		SAFE_RELEASE( pVB[0] );
+		SAFE_RELEASE( texture2D );
+		SAFE_RELEASE( texture2D_view );
 	}
 
 	void draw(void)
@@ -195,42 +201,35 @@ class cap
 
 		if (top)
 		{
-		for(int y = 0; y < height; y++)
-		{
-			for(int x = 0; x < width; x++)
-			{	
-				float X =  (x/((float)(width-1)))*3.14159;
-				float Y =  (y/((float)(height-1)))*3.14159;
-				float z_coord = radius*cos(X)*sin(Y);
-				float y_coord = radius*sin(X)*sin(Y) + halfHeight;
-				float x_coord = radius*cos(Y);
-				vertices[y*width+x].Pos = D3DXVECTOR3(x_coord, y_coord, z_coord); 
-				vertices[y*width+x].Normal = D3DXVECTOR3(x_coord,y_coord-halfHeight,z_coord);
-				vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
+			for(int y = 0; y < height; y++)
+			{
+				for(int x = 0; x < width; x++)
+				{	
+					float X =  (x/((float)(width-1)))*3.14159;
+					float Y =  (y/((float)(height-1)))*3.14159;
+					float z_coord = radius*cos(X)*sin(Y);
+					float y_coord = radius*sin(X)*sin(Y) + halfHeight;
+					float x_coord = radius*cos(Y);
+					vertices[y*width+x].Pos = D3DXVECTOR3(x_coord, y_coord, z_coord); 
+					vertices[y*width+x].Normal = D3DXVECTOR3(x_coord,y_coord-halfHeight,z_coord);
+					vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
+				}
 			}
-		}
-
-		}
-
-		else
-
-		{
-
-		for(int y = 0; y < height; y++)
-		{
-			for(int x = 0; x < width; x++)
-			{	
-				float X =  (x/((float)(width-1)))*3.14159;
-				float Y =  (y/((float)(height-1)))*3.14159;
-				float z_coord = radius*cos(X)*sin(Y);
-				float y_coord = -radius*sin(X)*sin(Y) - halfHeight;
-				float x_coord = radius*cos(Y);
-				vertices[y*width+x].Pos = D3DXVECTOR3(x_coord, y_coord, z_coord); 
-				vertices[y*width+x].Normal = D3DXVECTOR3(x_coord,y_coord+halfHeight,z_coord);
-				vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
+		} else	{
+			for(int y = 0; y < height; y++)
+			{
+				for(int x = 0; x < width; x++)
+				{	
+					float X =  (x/((float)(width-1)))*3.14159;
+					float Y =  (y/((float)(height-1)))*3.14159;
+					float z_coord = radius*cos(X)*sin(Y);
+					float y_coord = -radius*sin(X)*sin(Y) - halfHeight;
+					float x_coord = radius*cos(Y);
+					vertices[y*width+x].Pos = D3DXVECTOR3(x_coord, y_coord, z_coord); 
+					vertices[y*width+x].Normal = D3DXVECTOR3(x_coord,y_coord+halfHeight,z_coord);
+					vertices[y*width+x].Texcoord = D3DXVECTOR2(x/( (float)(width-1)), y/((float)(height-1)));
+				}
 			}
-		}
-
 		}
 
 		D3D11_SUBRESOURCE_DATA InitData;
@@ -272,3 +271,5 @@ class cap
 		hr = hr;
 	}
 };
+
+#endif CAP_H

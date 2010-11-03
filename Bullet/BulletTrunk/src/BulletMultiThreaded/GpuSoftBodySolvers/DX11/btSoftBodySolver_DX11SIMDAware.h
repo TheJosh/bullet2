@@ -26,9 +26,60 @@ subject to the following restrictions:
 
 class btDX11SIMDAwareSoftBodySolver : public btSoftBodySolver
 {
-public:
+public:	
+	/**
+	 * Entry in the collision shape array.
+	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
+	 */
+	struct CollisionShapeDescription
+	{
+		Vectormath::Aos::Transform3 shapeTransform;
+		Vectormath::Aos::Vector3 linearVelocity;
+		Vectormath::Aos::Vector3 angularVelocity;
 
-		/**
+		int softBodyIdentifier;
+		int collisionShapeType;
+	
+		// Both needed for capsule
+		float radius;
+		float halfHeight;
+		
+		float margin;
+		float friction;
+
+		CollisionShapeDescription()
+		{
+			collisionShapeType = 0;
+			margin = 0;
+			friction = 0;
+		}
+	};
+
+	struct UIntVector3
+	{
+		UIntVector3()
+		{
+			x = 0;
+			y = 0;
+			z = 0;
+			_padding = 0;
+		}
+		
+		UIntVector3( unsigned int x_, unsigned int y_, unsigned int z_ )
+		{
+			x = x_;
+			y = y_;
+			z = z_;
+			_padding = 0;
+		}
+			
+		unsigned int x;
+		unsigned int y;
+		unsigned int z;
+		unsigned int _padding;
+	};
+
+	/**
 	 * SoftBody class to maintain information about a soft body instance
 	 * within a solver.
 	 * This data addresses the main solver arrays.
@@ -102,7 +153,12 @@ public:
 		{
 			return m_firstTriangle;
 		}
+		
 
+		/**
+		 * Update the bounds in the btSoftBody object
+		 */
+		void updateBounds( btVector3 lowerBound, btVector3 upperBound );
 
 		void setNumVertices( int numVertices )
 		{
@@ -170,7 +226,19 @@ public:
 		}
 
 	};
+	
+	
+	struct CollisionObjectIndices
+	{
+		CollisionObjectIndices( int f, int e )
+		{
+			firstObject = f;
+			endObject = e;
+		}
 
+		int firstObject;
+		int endObject;
+	};
 
 	class KernelDesc
 	{
@@ -276,7 +344,22 @@ public:
 		int padding2;
 		int padding3;
 	};
+	
+	struct ComputeBoundsCB
+	{
+		int numNodes;
+		int numSoftBodies;
+		int padding1;
+		int padding2;
+	};
 
+	struct SolveCollisionsAndUpdateVelocitiesCB
+	{
+		unsigned int numNodes;
+		float isolverdt;
+		int padding0;
+		int padding1;
+	};
 
 private:
 	ID3D11Device *		 m_dx11Device;
@@ -331,14 +414,54 @@ private:
 	btAlignedObjectArray< float >						m_perClothMediumDensity;
 	btDX11Buffer<float>									m_dx11PerClothMediumDensity;
 
+
+	/** 
+	 * Collision shape details: pair of index of first collision shape for the cloth and number of collision objects.
+	 */
+	btAlignedObjectArray< CollisionObjectIndices >		m_perClothCollisionObjects;
+	btDX11Buffer<CollisionObjectIndices>				m_dx11PerClothCollisionObjects;
+
+	/** 
+	 * Collision shapes being passed across to the cloths in this solver.
+	 */
+	btAlignedObjectArray< CollisionShapeDescription >	m_collisionObjectDetails;
+	btDX11Buffer< CollisionShapeDescription >			m_dx11CollisionObjectDetails;
+
+	/** 
+	 * Minimum bounds for each cloth.
+	 * Updated by GPU and returned for use by broad phase.
+	 * These are int vectors as a reminder that they store the int representation of a float, not a float.
+	 * Bit 31 is inverted - is floats are stored with int-sortable values.
+	 */
+	btAlignedObjectArray< UIntVector3 >	m_perClothMinBounds;
+	btDX11Buffer< UIntVector3 >			m_dx11PerClothMinBounds;
+
+	/** 
+	 * Maximum bounds for each cloth.
+	 * Updated by GPU and returned for use by broad phase.
+	 * These are int vectors as a reminder that they store the int representation of a float, not a float.
+	 * Bit 31 is inverted - is floats are stored with int-sortable values.
+	 */
+	btAlignedObjectArray< UIntVector3 >	m_perClothMaxBounds;
+	btDX11Buffer< UIntVector3 >			m_dx11PerClothMaxBounds;
+	
+	/** 
+	 * Friction coefficient for each cloth
+	 */
+	btAlignedObjectArray< float >	m_perClothFriction;
+	btDX11Buffer< float >			m_dx11PerClothFriction;
+
+
 	KernelDesc		solvePositionsFromLinksKernel;
 	KernelDesc		integrateKernel;
 	KernelDesc		addVelocityKernel;
 	KernelDesc		updatePositionsFromVelocitiesKernel;
 	KernelDesc		updateVelocitiesFromPositionsWithoutVelocitiesKernel;
 	KernelDesc		updateVelocitiesFromPositionsWithVelocitiesKernel;
+	KernelDesc		solveCollisionsAndUpdateVelocitiesKernel;
 	KernelDesc		resetNormalsAndAreasKernel;
 	KernelDesc		normalizeNormalsAndAreasKernel;
+	KernelDesc		computeBoundsKernel;
 	KernelDesc		updateSoftBodiesKernel;
 	KernelDesc		outputToVertexArrayWithNormalsKernel;
 	KernelDesc		outputToVertexArrayWithoutNormalsKernel;
@@ -372,6 +495,8 @@ private:
 	void normalizeNormalsAndAreas( int numVertices );
 
 	void executeUpdateSoftBodies( int firstTriangle, int numTriangles );
+	
+	void prepareCollisionConstraints();
 
 	Vectormath::Aos::Vector3 ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a );
 
@@ -382,10 +507,10 @@ private:
 	void updateConstants( float timeStep );
 
 	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	int findSoftBodyIndex( const btSoftBody* const softBody );
 
 	//////////////////////////////////////
 	// Kernel dispatches
-	void prepareLinks();
 
 	void updatePositionsFromVelocities( float solverdt );
 	void solveLinksForPosition( int startLink, int numLinks, float kst, float ti );
@@ -393,7 +518,11 @@ private:
 	
 	void updateVelocitiesFromPositionsWithVelocities( float isolverdt );
 	void updateVelocitiesFromPositionsWithoutVelocities( float isolverdt );
+	void computeBounds( );
+	void solveCollisionsAndUpdateVelocities( float isolverdt );
 
+	
+	void updateBounds();
 	// End kernel dispatches
 	/////////////////////////////////////
 
@@ -426,6 +555,8 @@ public:
 	virtual void predictMotion( float solverdt );
 
 	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
+	
+	virtual void processCollision( btSoftBody *, btCollisionObject* );
 };
 
 #endif // #ifndef BT_SOFT_BODY_DX11_SOLVER_SIMDAWARE_H

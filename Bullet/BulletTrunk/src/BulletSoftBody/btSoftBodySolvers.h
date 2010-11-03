@@ -49,35 +49,6 @@ public:
 	{
 	}
 
-#if 0
-	/** Acceleration for all cloths in the solver. Can be used to efficiently apply gravity. */
-	virtual void setPerClothAcceleration( int clothIdentifier, Vectormath::Aos::Vector3 acceleration ) = 0;
-
-	/** A wind velocity applied normal to the cloth for all cloths in the solver. */
-	virtual void setPerClothWindVelocity( int clothIdentifier, Vectormath::Aos::Vector3 windVelocity ) = 0;
-
-	/** Set the density of the medium a given cloth is situated in. This could be air or possibly water. */
-	virtual void setPerClothMediumDensity( int clothIdentifier, float mediumDensity ) = 0;		
-
-	/** A damping factor specific to each cloth applied for all cloths. */
-	virtual void setPerClothDampingFactor( int clothIdentifier, float dampingFactor ) = 0;
-
-	/** A damping factor specific to each cloth applied for all cloths. */
-	virtual void setPerClothVelocityCorrectionCoefficient( int clothIdentifier, float velocityCorrectionCoefficient ) = 0;
-
-	/** Lift parameter for wind action on cloth. */
-	virtual void setPerClothLiftFactor( int clothIdentifier, float liftFactor ) = 0;
-
-	/** Drag parameter for wind action on cloth. */
-	virtual void setPerClothDragFactor( int clothIdentifier, float dragFactor ) = 0;
-
-	/**
-	 * Add a velocity to all soft bodies in the solver - useful for doing world-wide velocities such as a change due to gravity 
-	 * Only add a velocity to nodes with a non-zero inverse mass.
-	 */
-	virtual void addVelocity( Vectormath::Aos::Vector3 velocity ) = 0;
-#endif
-
 
 
 	/** Ensure that this solver is initialized. */
@@ -98,7 +69,8 @@ public:
 	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
 	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer ) = 0;
 
-
+	/** Process a collision between one of the world's soft bodies and another collision object */
+	virtual void processCollision( btSoftBody *, btCollisionObject* ) = 0;
 
 	/** Set the number of velocity constraint solver iterations this solver uses. */
 	virtual void setNumberOfPositionIterations( int iterations )

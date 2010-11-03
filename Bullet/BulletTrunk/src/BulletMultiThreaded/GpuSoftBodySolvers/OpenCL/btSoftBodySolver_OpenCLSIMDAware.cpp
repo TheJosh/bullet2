@@ -17,12 +17,17 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
 #include "vectormath/vmInclude.h"
 #include <stdio.h> //@todo: remove the debugging printf at some stage
-#include "btSoftBodySolver_OpenCL.h"
+#include "btSoftBodySolver_OpenCLSIMDAware.h"
 #include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/btSoftBody.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
 
-     static const size_t workGroupSize = 128;
+#define WAVEFRONT_SIZE 32
+#define WAVEFRONT_BLOCK_MULTIPLIER 2
+#define GROUP_SIZE (WAVEFRONT_SIZE*WAVEFRONT_BLOCK_MULTIPLIER)
+#define LINKS_PER_SIMD_LANE 16
+
+static const size_t workGroupSize = GROUP_SIZE;
 
 
 //CL_VERSION_1_1 seems broken on NVidia SDK so just disable it
@@ -30,12 +35,10 @@ subject to the following restrictions:
 #if (0)//CL_VERSION_1_1 == 1)
  //OpenCL 1.1 kernels use float3
 #define MSTRINGIFY(A) #A
-static char* PrepareLinksCLString = 
-#include "OpenCLC/PrepareLinks.cl"
 static char* UpdatePositionsFromVelocitiesCLString = 
 #include "OpenCLC/UpdatePositionsFromVelocities.cl"
 static char* SolvePositionsCLString = 
-#include "OpenCLC/SolvePositions.cl"
+#include "OpenCLC/SolvePositionsSIMDBatched.cl"
 static char* UpdateNodesCLString = 
 #include "OpenCLC/UpdateNodes.cl"
 static char* UpdatePositionsCLString = 
@@ -53,16 +56,14 @@ static char* VSolveLinksCLString =
 static char* ComputeBoundsCLString = 
 #include "OpenCLC/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
-#include "OpenCLC/SolveCollisionsAndUpdateVelocities.cl"
+#include "OpenCLC/SolveCollisionsAndUpdateVelocitiesSIMDBatched.cl"
 #else
 ////OpenCL 1.0 kernels don't use float3
 #define MSTRINGIFY(A) #A
-static char* PrepareLinksCLString = 
-#include "OpenCLC10/PrepareLinks.cl"
 static char* UpdatePositionsFromVelocitiesCLString = 
 #include "OpenCLC10/UpdatePositionsFromVelocities.cl"
 static char* SolvePositionsCLString = 
-#include "OpenCLC10/SolvePositions.cl"
+#include "OpenCLC10/SolvePositionsSIMDBatched.cl"
 static char* UpdateNodesCLString = 
 #include "OpenCLC10/UpdateNodes.cl"
 static char* UpdatePositionsCLString = 
@@ -80,89 +81,31 @@ static char* VSolveLinksCLString =
 static char* ComputeBoundsCLString = 
 #include "OpenCLC10/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
-#include "OpenCLC10/SolveCollisionsAndUpdateVelocities.cl"
+#include "OpenCLC10/SolveCollisionsAndUpdateVelocitiesSIMDBatched.cl"
 #endif //CL_VERSION_1_1
 
 
-btSoftBodyVertexDataOpenCL::btSoftBodyVertexDataOpenCL( cl_command_queue queue, cl_context ctx) :
-    m_queue(queue),
-	m_clClothIdentifier( queue, ctx, &m_clothIdentifier, false ),
-	m_clVertexPosition( queue, ctx, &m_vertexPosition, false ),
-	m_clVertexPreviousPosition( queue, ctx, &m_vertexPreviousPosition, false ),
-	m_clVertexVelocity( queue, ctx, &m_vertexVelocity, false ),
-	m_clVertexForceAccumulator( queue, ctx, &m_vertexForceAccumulator, false ),
-	m_clVertexNormal( queue, ctx, &m_vertexNormal, false ),
-	m_clVertexInverseMass( queue, ctx, &m_vertexInverseMass, false ),
-	m_clVertexArea( queue, ctx, &m_vertexArea, false ),
-	m_clVertexTriangleCount( queue, ctx, &m_vertexTriangleCount, false )
-{
-}
 
-btSoftBodyVertexDataOpenCL::~btSoftBodyVertexDataOpenCL()
-{
-
-}
-
-bool btSoftBodyVertexDataOpenCL::onAccelerator()
-{
-	return m_onGPU;
-}
-
-bool btSoftBodyVertexDataOpenCL::moveToAccelerator()
-{
-	bool success = true;
-	success = success && m_clClothIdentifier.moveToGPU();
-	success = success && m_clVertexPosition.moveToGPU();
-	success = success && m_clVertexPreviousPosition.moveToGPU();
-	success = success && m_clVertexVelocity.moveToGPU();
-	success = success && m_clVertexForceAccumulator.moveToGPU();
-	success = success && m_clVertexNormal.moveToGPU();
-	success = success && m_clVertexInverseMass.moveToGPU();
-	success = success && m_clVertexArea.moveToGPU();
-	success = success && m_clVertexTriangleCount.moveToGPU();
-
-	if( success )
-		m_onGPU = true;
-
-	return success;
-}
-
-bool btSoftBodyVertexDataOpenCL::moveFromAccelerator()
-{
-	bool success = true;
-	success = success && m_clClothIdentifier.moveFromGPU();
-	success = success && m_clVertexPosition.moveFromGPU();
-	success = success && m_clVertexPreviousPosition.moveFromGPU();
-	success = success && m_clVertexVelocity.moveFromGPU();
-	success = success && m_clVertexForceAccumulator.moveFromGPU();
-	success = success && m_clVertexNormal.moveFromGPU();
-	success = success && m_clVertexInverseMass.moveFromGPU();
-	success = success && m_clVertexArea.moveFromGPU();
-	success = success && m_clVertexTriangleCount.moveFromGPU();
-
-	if( success )
-		m_onGPU = true;
-
-	return success;
-}
-
-
-
-
-btSoftBodyLinkDataOpenCL::btSoftBodyLinkDataOpenCL(cl_command_queue queue,  cl_context ctx) 
-:m_cqCommandQue(queue),
-	m_clLinks( queue, ctx, &m_links, false ),
+btSoftBodyLinkDataOpenCLSIMDAware::btSoftBodyLinkDataOpenCLSIMDAware(cl_command_queue queue,  cl_context ctx) :
+	m_cqCommandQue(queue),
+	m_wavefrontSize( WAVEFRONT_SIZE ),
+	m_linksPerWorkItem( LINKS_PER_SIMD_LANE ),
+	m_maxBatchesWithinWave( 0 ),
+	m_maxLinksPerWavefront( m_wavefrontSize * m_linksPerWorkItem ),
+	m_numWavefronts( 0 ),
+	m_maxVertex( 0 ),
+	m_clNumBatchesAndVerticesWithinWaves( queue, ctx, &m_numBatchesAndVerticesWithinWaves, true ),
+	m_clWavefrontVerticesGlobalAddresses( queue, ctx, &m_wavefrontVerticesGlobalAddresses, true ),
+	m_clLinkVerticesLocalAddresses( queue, ctx, &m_linkVerticesLocalAddresses, true ),
 	m_clLinkStrength( queue, ctx, &m_linkStrength, false ),
 	m_clLinksMassLSC( queue, ctx, &m_linksMassLSC, false ),
 	m_clLinksRestLengthSquared( queue, ctx, &m_linksRestLengthSquared, false ),
-	m_clLinksCLength( queue, ctx, &m_linksCLength, false ),
-	m_clLinksLengthRatio( queue, ctx, &m_linksLengthRatio, false ),
 	m_clLinksRestLength( queue, ctx, &m_linksRestLength, false ),
 	m_clLinksMaterialLinearStiffnessCoefficient( queue, ctx, &m_linksMaterialLinearStiffnessCoefficient, false )
 {
 }
 
-btSoftBodyLinkDataOpenCL::~btSoftBodyLinkDataOpenCL()
+btSoftBodyLinkDataOpenCLSIMDAware::~btSoftBodyLinkDataOpenCLSIMDAware()
 {
 }
 
@@ -173,7 +116,7 @@ static Vectormath::Aos::Vector3 toVector3( const btVector3 &vec )
 }
 
 /** Allocate enough space in all link-related arrays to fit numLinks links */
-void btSoftBodyLinkDataOpenCL::createLinks( int numLinks )
+void btSoftBodyLinkDataOpenCLSIMDAware::createLinks( int numLinks )
 {
 	int previousSize = m_links.size();
 	int newSize = previousSize + numLinks;
@@ -185,30 +128,35 @@ void btSoftBodyLinkDataOpenCL::createLinks( int numLinks )
 }
 
 /** Insert the link described into the correct data structures assuming space has already been allocated by a call to createLinks */
-void btSoftBodyLinkDataOpenCL::setLinkAt( 
+void btSoftBodyLinkDataOpenCLSIMDAware::setLinkAt( 
 	const LinkDescription &link, 
 	int linkIndex )
 {
 	btSoftBodyLinkData::setLinkAt( link, linkIndex );
 
+	if( link.getVertex0() > m_maxVertex )
+		m_maxVertex = link.getVertex0();
+	if( link.getVertex1() > m_maxVertex )
+		m_maxVertex = link.getVertex1();
+
 	// Set the link index correctly for initialisation
 	m_linkAddresses[linkIndex] = linkIndex;
 }
 
-bool btSoftBodyLinkDataOpenCL::onAccelerator()
+bool btSoftBodyLinkDataOpenCLSIMDAware::onAccelerator()
 {
 	return m_onGPU;
 }
 
-bool btSoftBodyLinkDataOpenCL::moveToAccelerator()
+bool btSoftBodyLinkDataOpenCLSIMDAware::moveToAccelerator()
 {
 	bool success = true;
-	success = success && m_clLinks.moveToGPU();
+	success = success && m_clNumBatchesAndVerticesWithinWaves.moveToGPU();
+	success = success && m_clWavefrontVerticesGlobalAddresses.moveToGPU();
+	success = success && m_clLinkVerticesLocalAddresses.moveToGPU();
 	success = success && m_clLinkStrength.moveToGPU();
 	success = success && m_clLinksMassLSC.moveToGPU();
 	success = success && m_clLinksRestLengthSquared.moveToGPU();
-	success = success && m_clLinksCLength.moveToGPU();
-	success = success && m_clLinksLengthRatio.moveToGPU();
 	success = success && m_clLinksRestLength.moveToGPU();
 	success = success && m_clLinksMaterialLinearStiffnessCoefficient.moveToGPU();
 
@@ -219,15 +167,15 @@ bool btSoftBodyLinkDataOpenCL::moveToAccelerator()
 	return success;
 }
 
-bool btSoftBodyLinkDataOpenCL::moveFromAccelerator()
+bool btSoftBodyLinkDataOpenCLSIMDAware::moveFromAccelerator()
 {
 	bool success = true;
-	success = success && m_clLinks.moveFromGPU();
+	success = success && m_clNumBatchesAndVerticesWithinWaves.moveToGPU();
+	success = success && m_clWavefrontVerticesGlobalAddresses.moveToGPU();
+	success = success && m_clLinkVerticesLocalAddresses.moveToGPU();
 	success = success && m_clLinkStrength.moveFromGPU();
 	success = success && m_clLinksMassLSC.moveFromGPU();
 	success = success && m_clLinksRestLengthSquared.moveFromGPU();
-	success = success && m_clLinksCLength.moveFromGPU();
-	success = success && m_clLinksLengthRatio.moveFromGPU();
 	success = success && m_clLinksRestLength.moveFromGPU();
 	success = success && m_clLinksMaterialLinearStiffnessCoefficient.moveFromGPU();
 
@@ -238,357 +186,14 @@ bool btSoftBodyLinkDataOpenCL::moveFromAccelerator()
 	return success;
 }
 
-/**
- * Generate (and later update) the batching for the entire link set.
- * This redoes a lot of work because it batches the entire set when each cloth is inserted.
- * In theory we could delay it until just before we need the cloth.
- * It's a one-off overhead, though, so that is a later optimisation.
- */
-void btSoftBodyLinkDataOpenCL::generateBatches()
-{
-	int numLinks = getNumLinks();
 
-	// Do the graph colouring here temporarily
-	btAlignedObjectArray< int > batchValues;
-	batchValues.resize( numLinks, 0 );
 
-	// Find the maximum vertex value internally for now
-	int maxVertex = 0;
-	for( int linkIndex = 0; linkIndex < numLinks; ++linkIndex )
-	{
-		int vertex0 = getVertexPair(linkIndex).vertex0;
-		int vertex1 = getVertexPair(linkIndex).vertex1;
-		if( vertex0 > maxVertex )
-			maxVertex = vertex0;
-		if( vertex1 > maxVertex )
-			maxVertex = vertex1;
-	}
-	int numVertices = maxVertex + 1;
 
-	// Set of lists, one for each node, specifying which colours are connected
-	// to that node.
-	// No two edges into a node can share a colour.
-	btAlignedObjectArray< btAlignedObjectArray< int > > vertexConnectedColourLists;
-	vertexConnectedColourLists.resize(numVertices);
 
-	// Simple algorithm that chooses the lowest batch number
-	// that none of the links attached to either of the connected 
-	// nodes is in
-	for( int linkIndex = 0; linkIndex < numLinks; ++linkIndex )
-	{				
-		int linkLocation = m_linkAddresses[linkIndex];
 
-		int vertex0 = getVertexPair(linkLocation).vertex0;
-		int vertex1 = getVertexPair(linkLocation).vertex1;
 
-		// Get the two node colour lists
-		btAlignedObjectArray< int > &colourListVertex0( vertexConnectedColourLists[vertex0] );
-		btAlignedObjectArray< int > &colourListVertex1( vertexConnectedColourLists[vertex1] );
 
-		// Choose the minimum colour that is in neither list
-		int colour = 0;
-		while( colourListVertex0.findLinearSearch(colour) != colourListVertex0.size() || colourListVertex1.findLinearSearch(colour) != colourListVertex1.size()  )
-			++colour;
-		// i should now be the minimum colour in neither list
-		// Add to the two lists so that future edges don't share
-		// And store the colour against this edge
-
-		colourListVertex0.push_back(colour);
-		colourListVertex1.push_back(colour);
-		batchValues[linkIndex] = colour;
-	}
-
-	// Check the colour counts
-	btAlignedObjectArray< int > batchCounts;
-	for( int i = 0; i < numLinks; ++i )
-	{
-		int batch = batchValues[i];
-		if( batch >= batchCounts.size() )
-			batchCounts.push_back(1);
-		else
-			++(batchCounts[batch]);
-	}
-
-	m_batchStartLengths.resize(batchCounts.size());
-	if( m_batchStartLengths.size() > 0 )
-	{
-		m_batchStartLengths.resize(batchCounts.size());
-		m_batchStartLengths[0] = BatchPair(0, 0);
-
-		int sum = 0;
-		for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
-		{
-			m_batchStartLengths[batchIndex].start = sum;
-			m_batchStartLengths[batchIndex].length = batchCounts[batchIndex];
-			sum += batchCounts[batchIndex];
-		}
-	}
-
-	/////////////////////////////
-	// Sort data based on batches
-
-	// Create source arrays by copying originals
-	btAlignedObjectArray<LinkNodePair>									m_links_Backup(m_links);
-	btAlignedObjectArray<float>											m_linkStrength_Backup(m_linkStrength);
-	btAlignedObjectArray<float>											m_linksMassLSC_Backup(m_linksMassLSC);
-	btAlignedObjectArray<float>											m_linksRestLengthSquared_Backup(m_linksRestLengthSquared);
-	btAlignedObjectArray<Vectormath::Aos::Vector3>						m_linksCLength_Backup(m_linksCLength);
-	btAlignedObjectArray<float>											m_linksLengthRatio_Backup(m_linksLengthRatio);
-	btAlignedObjectArray<float>											m_linksRestLength_Backup(m_linksRestLength);
-	btAlignedObjectArray<float>											m_linksMaterialLinearStiffnessCoefficient_Backup(m_linksMaterialLinearStiffnessCoefficient);
-
-
-	for( int batch = 0; batch < batchCounts.size(); ++batch )
-		batchCounts[batch] = 0;
-
-	// Do sort as single pass into destination arrays	
-	for( int linkIndex = 0; linkIndex < numLinks; ++linkIndex )
-	{
-		// To maintain locations run off the original link locations rather than the current position.
-		// It's not cache efficient, but as we run this rarely that should not matter.
-		// It's faster than searching the link location array for the current location and then updating it.
-		// The other alternative would be to unsort before resorting, but this is equivalent to doing that.
-		int linkLocation = m_linkAddresses[linkIndex];
-
-		// Obtain batch and calculate target location for the
-		// next element in that batch, incrementing the batch counter
-		// afterwards
-		int batch = batchValues[linkIndex];
-		int newLocation = m_batchStartLengths[batch].start + batchCounts[batch];
-
-		batchCounts[batch] = batchCounts[batch] + 1;
-		m_links[newLocation] = m_links_Backup[linkLocation];
-#if 1
-		m_linkStrength[newLocation] = m_linkStrength_Backup[linkLocation];
-		m_linksMassLSC[newLocation] = m_linksMassLSC_Backup[linkLocation];
-		m_linksRestLengthSquared[newLocation] = m_linksRestLengthSquared_Backup[linkLocation];
-		m_linksLengthRatio[newLocation] = m_linksLengthRatio_Backup[linkLocation];
-		m_linksRestLength[newLocation] = m_linksRestLength_Backup[linkLocation];
-		m_linksMaterialLinearStiffnessCoefficient[newLocation] = m_linksMaterialLinearStiffnessCoefficient_Backup[linkLocation];
-#endif
-		// Update the locations array to account for the moved entry
-		m_linkAddresses[linkIndex] = newLocation;
-	}
-
-
-} // void generateBatches()
-
-
-
-
-
-btSoftBodyTriangleDataOpenCL::btSoftBodyTriangleDataOpenCL( cl_command_queue queue , cl_context ctx) : 
-    m_queue( queue ),
-	m_clVertexIndices( queue, ctx, &m_vertexIndices, false ),
-	m_clArea( queue, ctx, &m_area, false ),
-	m_clNormal( queue, ctx, &m_normal, false )
-{
-}
-
-btSoftBodyTriangleDataOpenCL::~btSoftBodyTriangleDataOpenCL()
-{
-}
-
-/** Allocate enough space in all link-related arrays to fit numLinks links */
-void btSoftBodyTriangleDataOpenCL::createTriangles( int numTriangles )
-{
-	int previousSize = getNumTriangles();
-	int newSize = previousSize + numTriangles;
-
-	btSoftBodyTriangleData::createTriangles( numTriangles );
-
-	// Resize the link addresses array as well
-	m_triangleAddresses.resize( newSize );
-}
-
-/** Insert the link described into the correct data structures assuming space has already been allocated by a call to createLinks */
-void btSoftBodyTriangleDataOpenCL::setTriangleAt( const btSoftBodyTriangleData::TriangleDescription &triangle, int triangleIndex )
-{
-	btSoftBodyTriangleData::setTriangleAt( triangle, triangleIndex );
-
-	m_triangleAddresses[triangleIndex] = triangleIndex;
-}
-
-bool btSoftBodyTriangleDataOpenCL::onAccelerator()
-{
-	return m_onGPU;
-}
-
-bool btSoftBodyTriangleDataOpenCL::moveToAccelerator()
-{
-	bool success = true;
-	success = success && m_clVertexIndices.moveToGPU();
-	success = success && m_clArea.moveToGPU();
-	success = success && m_clNormal.moveToGPU();
-
-	if( success )
-		m_onGPU = true;
-
-	return success;
-}
-
-bool btSoftBodyTriangleDataOpenCL::moveFromAccelerator()
-{
-	bool success = true;
-	success = success && m_clVertexIndices.moveFromGPU();
-	success = success && m_clArea.moveFromGPU();
-	success = success && m_clNormal.moveFromGPU();
-
-	if( success )
-		m_onGPU = true;
-
-	return success;
-}
-
-/**
- * Generate (and later update) the batching for the entire triangle set.
- * This redoes a lot of work because it batches the entire set when each cloth is inserted.
- * In theory we could delay it until just before we need the cloth.
- * It's a one-off overhead, though, so that is a later optimisation.
- */
-void btSoftBodyTriangleDataOpenCL::generateBatches()
-{
-	int numTriangles = getNumTriangles();
-	if( numTriangles == 0 )
-		return;
-
-	// Do the graph colouring here temporarily
-	btAlignedObjectArray< int > batchValues;
-	batchValues.resize( numTriangles );
-
-	// Find the maximum vertex value internally for now
-	int maxVertex = 0;
-	for( int triangleIndex = 0; triangleIndex < numTriangles; ++triangleIndex )
-	{
-		int vertex0 = getVertexSet(triangleIndex).vertex0;
-		int vertex1 = getVertexSet(triangleIndex).vertex1;
-		int vertex2 = getVertexSet(triangleIndex).vertex2;
-		
-		if( vertex0 > maxVertex )
-			maxVertex = vertex0;
-		if( vertex1 > maxVertex )
-			maxVertex = vertex1;
-		if( vertex2 > maxVertex )
-			maxVertex = vertex2;
-	}
-	int numVertices = maxVertex + 1;
-
-	// Set of lists, one for each node, specifying which colours are connected
-	// to that node.
-	// No two edges into a node can share a colour.
-	btAlignedObjectArray< btAlignedObjectArray< int > > vertexConnectedColourLists;
-	vertexConnectedColourLists.resize(numVertices);
-
-
-	//std::cout << "\n";
-	// Simple algorithm that chooses the lowest batch number
-	// that none of the faces attached to either of the connected 
-	// nodes is in
-	for( int triangleIndex = 0; triangleIndex < numTriangles; ++triangleIndex )
-	{
-		// To maintain locations run off the original link locations rather than the current position.
-		// It's not cache efficient, but as we run this rarely that should not matter.
-		// It's faster than searching the link location array for the current location and then updating it.
-		// The other alternative would be to unsort before resorting, but this is equivalent to doing that.
-		int triangleLocation = m_triangleAddresses[triangleIndex];
-
-		int vertex0 = getVertexSet(triangleLocation).vertex0;
-		int vertex1 = getVertexSet(triangleLocation).vertex1;
-		int vertex2 = getVertexSet(triangleLocation).vertex2;
-
-		// Get the three node colour lists
-		btAlignedObjectArray< int > &colourListVertex0( vertexConnectedColourLists[vertex0] );
-		btAlignedObjectArray< int > &colourListVertex1( vertexConnectedColourLists[vertex1] );
-		btAlignedObjectArray< int > &colourListVertex2( vertexConnectedColourLists[vertex2] );
-
-		// Choose the minimum colour that is in none of the lists
-		int colour = 0;
-		while( 
-			colourListVertex0.findLinearSearch(colour) != colourListVertex0.size() || 
-			colourListVertex1.findLinearSearch(colour) != colourListVertex1.size() ||
-			colourListVertex2.findLinearSearch(colour) != colourListVertex2.size() )
-		{
-			++colour;
-		}
-		// i should now be the minimum colour in neither list
-		// Add to the three lists so that future edges don't share
-		// And store the colour against this face
-		colourListVertex0.push_back(colour);
-		colourListVertex1.push_back(colour);
-		colourListVertex2.push_back(colour);
-
-		batchValues[triangleIndex] = colour;
-	}
-
-
-	// Check the colour counts
-	btAlignedObjectArray< int > batchCounts;
-	for( int i = 0; i < numTriangles; ++i )
-	{
-		int batch = batchValues[i];
-		if( batch >= batchCounts.size() )
-			batchCounts.push_back(1);
-		else
-			++(batchCounts[batch]);
-	}
-
-
-	m_batchStartLengths.resize(batchCounts.size());
-	m_batchStartLengths[0] = btSomePair(0,0);
-
-
-	int sum = 0;
-	for( int batchIndex = 0; batchIndex < batchCounts.size(); ++batchIndex )
-	{
-		m_batchStartLengths[batchIndex].first = sum;
-		m_batchStartLengths[batchIndex].second = batchCounts[batchIndex];
-		sum += batchCounts[batchIndex];
-	}
-	
-	/////////////////////////////
-	// Sort data based on batches
-	
-	// Create source arrays by copying originals
-	btAlignedObjectArray<btSoftBodyTriangleData::TriangleNodeSet>							m_vertexIndices_Backup(m_vertexIndices);
-	btAlignedObjectArray<float>										m_area_Backup(m_area);
-	btAlignedObjectArray<Vectormath::Aos::Vector3>					m_normal_Backup(m_normal);
-
-
-	for( int batch = 0; batch < batchCounts.size(); ++batch )
-		batchCounts[batch] = 0;
-
-	// Do sort as single pass into destination arrays	
-	for( int triangleIndex = 0; triangleIndex < numTriangles; ++triangleIndex )
-	{
-		// To maintain locations run off the original link locations rather than the current position.
-		// It's not cache efficient, but as we run this rarely that should not matter.
-		// It's faster than searching the link location array for the current location and then updating it.
-		// The other alternative would be to unsort before resorting, but this is equivalent to doing that.
-		int triangleLocation = m_triangleAddresses[triangleIndex];
-
-		// Obtain batch and calculate target location for the
-		// next element in that batch, incrementing the batch counter
-		// afterwards
-		int batch = batchValues[triangleIndex];
-		int newLocation = m_batchStartLengths[batch].first + batchCounts[batch];
-
-		batchCounts[batch] = batchCounts[batch] + 1;
-		m_vertexIndices[newLocation] = m_vertexIndices_Backup[triangleLocation];
-		m_area[newLocation] = m_area_Backup[triangleLocation];
-		m_normal[newLocation] = m_normal_Backup[triangleLocation];
-
-		// Update the locations array to account for the moved entry
-		m_triangleAddresses[triangleIndex] = newLocation;
-	}
-} // btSoftBodyTriangleDataOpenCL::generateBatches
-
-
-
-
-
-
-
-btOpenCLSoftBodySolver::btOpenCLSoftBodySolver(cl_command_queue queue, cl_context ctx) :
+btOpenCLSoftBodySolverSIMDAware::btOpenCLSoftBodySolverSIMDAware(cl_command_queue queue, cl_context ctx) :
 	m_linkData(queue, ctx),
 	m_vertexData(queue, ctx),
 	m_triangleData(queue, ctx),
@@ -598,7 +203,7 @@ btOpenCLSoftBodySolver::btOpenCLSoftBodySolver(cl_command_queue queue, cl_contex
 	m_clPerClothVelocityCorrectionCoefficient(queue, ctx,&m_perClothVelocityCorrectionCoefficient, true ),
 	m_clPerClothLiftFactor(queue, ctx,&m_perClothLiftFactor, true ),
 	m_clPerClothDragFactor(queue, ctx,&m_perClothDragFactor, true ),
-	m_clPerClothMediumDensity(queue, ctx,&m_perClothMediumDensity, true ),
+	m_clPerClothMediumDensity(queue, ctx,&m_perClothMediumDensity, true ),	
 	m_clPerClothCollisionObjects( queue, ctx, &m_perClothCollisionObjects, true ),
 	m_clCollisionObjectDetails( queue, ctx, &m_collisionObjectDetails, true ),
 	m_clPerClothMinBounds( queue, ctx, &m_perClothMinBounds, false ),
@@ -615,11 +220,12 @@ btOpenCLSoftBodySolver::btOpenCLSoftBodySolver(cl_command_queue queue, cl_contex
 	m_shadersInitialized = false;
 }
 
-btOpenCLSoftBodySolver::~btOpenCLSoftBodySolver()
+btOpenCLSoftBodySolverSIMDAware::~btOpenCLSoftBodySolverSIMDAware()
 {
+	// TODO: Cleanup kernels, not now being freed as they were in the C++ version
 }
 
-void btOpenCLSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
+void btOpenCLSoftBodySolverSIMDAware::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
 {
 	if( m_softBodySet.size() != softBodies.size() )
 	{
@@ -647,8 +253,18 @@ void btOpenCLSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &sof
 			m_perClothDragFactor.push_back( softBody->m_cfg.kDG );
 			m_perClothMediumDensity.push_back(softBody->getWorldInfo()->air_density);
 			// Simple init values. Actually we'll put 0 and -1 into them at the appropriate time
-			m_perClothMinBounds.push_back( UIntVector3(UINT_MAX, UINT_MAX, UINT_MAX) );
-			m_perClothMaxBounds.push_back( UIntVector3(0, 0, 0) );
+			//m_perClothMinBounds.push_back( UIntVector3(UINT_MAX, UINT_MAX, UINT_MAX) );
+			//m_perClothMaxBounds.push_back( UIntVector3(0, 0, 0) );
+			m_perClothMinBounds.push_back( UINT_MAX );
+			m_perClothMaxBounds.push_back( 0 );
+			m_perClothMinBounds.push_back( UINT_MAX );
+			m_perClothMaxBounds.push_back( 0 );
+			m_perClothMinBounds.push_back( UINT_MAX );
+			m_perClothMaxBounds.push_back( 0 );
+			m_perClothMinBounds.push_back( UINT_MAX );
+			m_perClothMaxBounds.push_back( 0 );
+
+
 			m_perClothFriction.push_back( softBody->getFriction() );
 			m_perClothCollisionObjects.push_back( CollisionObjectIndices(-1, -1) );
 
@@ -656,8 +272,11 @@ void btOpenCLSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &sof
 			// TODO: Include space here for tearing too later
 			int firstVertex = getVertexData().getNumVertices();
 			int numVertices = softBody->m_nodes.size();
+			// Round maxVertices to a multiple of the workgroup size so we know we're safe to run over in a given group
+			// maxVertices can be increased to allow tearing, but should be used sparingly because these extra verts will always be processed
+			int maxVertices = GROUP_SIZE*((numVertices+GROUP_SIZE)/GROUP_SIZE);
 			// Allocate space for new vertices in all the vertex arrays
-			getVertexData().createVertices( numVertices, softBodyIndex );
+			getVertexData().createVertices( numVertices, softBodyIndex, maxVertices );
 
 			int firstTriangle = getTriangleData().getNumTriangles();
 			int numTriangles = softBody->m_faces.size();
@@ -719,7 +338,7 @@ void btOpenCLSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &sof
 			newSoftBody->setFirstVertex( firstVertex );
 			newSoftBody->setFirstTriangle( firstTriangle );
 			newSoftBody->setNumVertices( numVertices );
-			newSoftBody->setMaxVertices( numVertices );
+			newSoftBody->setMaxVertices( maxVertices );
 			newSoftBody->setNumTriangles( numTriangles );
 			newSoftBody->setMaxTriangles( maxTriangles );
 			newSoftBody->setFirstLink( firstLink );
@@ -733,35 +352,39 @@ void btOpenCLSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &sof
 
 		m_linkData.generateBatches();		
 		m_triangleData.generateBatches();
+
+		
+		// Build the shaders to match the batching parameters
+		buildShaders();
 	}
 }
 
 
-btSoftBodyLinkData &btOpenCLSoftBodySolver::getLinkData()
+btSoftBodyLinkData &btOpenCLSoftBodySolverSIMDAware::getLinkData()
 {
 	// TODO: Consider setting link data to "changed" here
 	return m_linkData;
 }
 
-btSoftBodyVertexData &btOpenCLSoftBodySolver::getVertexData()
+btSoftBodyVertexData &btOpenCLSoftBodySolverSIMDAware::getVertexData()
 {
 	// TODO: Consider setting vertex data to "changed" here
 	return m_vertexData;
 }
 
-btSoftBodyTriangleData &btOpenCLSoftBodySolver::getTriangleData()
+btSoftBodyTriangleData &btOpenCLSoftBodySolverSIMDAware::getTriangleData()
 {
 	// TODO: Consider setting triangle data to "changed" here
 	return m_triangleData;
 }
 
 
-bool btOpenCLSoftBodySolver::checkInitialized()
+bool btOpenCLSoftBodySolverSIMDAware::checkInitialized()
 {
 	return buildShaders();
 }
 
-void btOpenCLSoftBodySolver::resetNormalsAndAreas( int numVertices )
+void btOpenCLSoftBodySolverSIMDAware::resetNormalsAndAreas( int numVertices )
 {
 	cl_int ciErrNum;
 	ciErrNum = clSetKernelArg(resetNormalsAndAreasKernel, 0, sizeof(numVertices), (void*)&numVertices); //oclCHECKERROR(ciErrNum, CL_SUCCESS);
@@ -777,7 +400,7 @@ void btOpenCLSoftBodySolver::resetNormalsAndAreas( int numVertices )
 
 }
 
-void btOpenCLSoftBodySolver::normalizeNormalsAndAreas( int numVertices )
+void btOpenCLSoftBodySolverSIMDAware::normalizeNormalsAndAreas( int numVertices )
 {
 
 	cl_int ciErrNum;
@@ -788,6 +411,7 @@ void btOpenCLSoftBodySolver::normalizeNormalsAndAreas( int numVertices )
 	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 3, sizeof(cl_mem), &m_vertexData.m_clVertexArea.m_buffer);
 	size_t	numWorkItems = workGroupSize*((numVertices + (workGroupSize-1)) / workGroupSize);
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, normalizeNormalsAndAreasKernel, 1, NULL, &numWorkItems, &workGroupSize, 0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 && "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
@@ -795,7 +419,7 @@ void btOpenCLSoftBodySolver::normalizeNormalsAndAreas( int numVertices )
 
 }
 
-void btOpenCLSoftBodySolver::executeUpdateSoftBodies( int firstTriangle, int numTriangles )
+void btOpenCLSoftBodySolverSIMDAware::executeUpdateSoftBodies( int firstTriangle, int numTriangles )
 {
 
 	cl_int ciErrNum;
@@ -809,7 +433,9 @@ void btOpenCLSoftBodySolver::executeUpdateSoftBodies( int firstTriangle, int num
 	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 7, sizeof(cl_mem), &m_triangleData.m_clArea.m_buffer);
 
 	size_t numWorkItems = workGroupSize*((numTriangles + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, updateSoftBodiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
@@ -817,7 +443,7 @@ void btOpenCLSoftBodySolver::executeUpdateSoftBodies( int firstTriangle, int num
 
 }
 
-void btOpenCLSoftBodySolver::updateSoftBodies()
+void btOpenCLSoftBodySolverSIMDAware::updateSoftBodies()
 {
 	using namespace Vectormath::Aos;
 
@@ -852,15 +478,15 @@ void btOpenCLSoftBodySolver::updateSoftBodies()
 	m_clPerClothCollisionObjects.changedOnCPU();
 	m_collisionObjectDetails.clear();
 
-} // btOpenCLSoftBodySolver::updateSoftBodies
+} // btOpenCLSoftBodySolverSIMDAware::updateSoftBodies
 
 
-Vectormath::Aos::Vector3 btOpenCLSoftBodySolver::ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a )
+Vectormath::Aos::Vector3 btOpenCLSoftBodySolverSIMDAware::ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a )
 {
 	return a*Vectormath::Aos::dot(v, a);
 }
 
-void btOpenCLSoftBodySolver::ApplyClampedForce( float solverdt, const Vectormath::Aos::Vector3 &force, const Vectormath::Aos::Vector3 &vertexVelocity, float inverseMass, Vectormath::Aos::Vector3 &vertexForce )
+void btOpenCLSoftBodySolverSIMDAware::ApplyClampedForce( float solverdt, const Vectormath::Aos::Vector3 &force, const Vectormath::Aos::Vector3 &vertexVelocity, float inverseMass, Vectormath::Aos::Vector3 &vertexForce )
 {
 	float dtInverseMass = solverdt*inverseMass;
 	if( Vectormath::Aos::lengthSqr(force * dtInverseMass) > Vectormath::Aos::lengthSqr(vertexVelocity) )
@@ -871,7 +497,7 @@ void btOpenCLSoftBodySolver::ApplyClampedForce( float solverdt, const Vectormath
 	}
 }
 
-void btOpenCLSoftBodySolver::applyForces( float solverdt )
+void btOpenCLSoftBodySolverSIMDAware::applyForces( float solverdt )
 {	
 
 	// Ensure data is on accelerator
@@ -900,7 +526,9 @@ void btOpenCLSoftBodySolver::applyForces( float solverdt )
 	ciErrNum = clSetKernelArg(applyForcesKernel,12, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
 	ciErrNum = clSetKernelArg(applyForcesKernel,13, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
 	size_t numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,applyForcesKernel, 1, NULL, &numWorkItems, &workGroupSize, 0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(applyForcesKernel)");
@@ -911,7 +539,7 @@ void btOpenCLSoftBodySolver::applyForces( float solverdt )
 /**
  * Integrate motion on the solver.
  */
-void btOpenCLSoftBodySolver::integrate( float solverdt )
+void btOpenCLSoftBodySolverSIMDAware::integrate( float solverdt )
 {
 	
 
@@ -929,7 +557,9 @@ void btOpenCLSoftBodySolver::integrate( float solverdt )
 	ciErrNum = clSetKernelArg(integrateKernel, 6, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
 
 	size_t numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,integrateKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS )
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(integrateKernel)");
@@ -937,7 +567,7 @@ void btOpenCLSoftBodySolver::integrate( float solverdt )
 
 }
 
-float btOpenCLSoftBodySolver::computeTriangleArea( 
+float btOpenCLSoftBodySolverSIMDAware::computeTriangleArea( 
 	const Vectormath::Aos::Point3 &vertex0,
 	const Vectormath::Aos::Point3 &vertex1,
 	const Vectormath::Aos::Point3 &vertex2 )
@@ -950,7 +580,7 @@ float btOpenCLSoftBodySolver::computeTriangleArea(
 }
 
 
-void btOpenCLSoftBodySolver::updateBounds()
+void btOpenCLSoftBodySolverSIMDAware::updateBounds()
 {	
 	using Vectormath::Aos::Point3;
 	// Interpretation structure for float and int
@@ -972,14 +602,14 @@ void btOpenCLSoftBodySolver::updateBounds()
 	// Update bounds array to min and max int values to allow easy atomics
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
 	{
-		m_perClothMinBounds[softBodyIndex] = UIntVector3( UINT_MAX, UINT_MAX, UINT_MAX );
-		m_perClothMaxBounds[softBodyIndex] = UIntVector3( 0, 0, 0 );
-		/*m_perClothMinBounds[softBodyIndex*4] = UINT_MAX;
+		//m_perClothMinBounds[softBodyIndex] = UIntVector3( UINT_MAX, UINT_MAX, UINT_MAX );
+		//m_perClothMaxBounds[softBodyIndex] = UIntVector3( 0, 0, 0 );
+		m_perClothMinBounds[softBodyIndex*4] = UINT_MAX;
 		m_perClothMinBounds[softBodyIndex*4+1] = UINT_MAX;
 		m_perClothMinBounds[softBodyIndex*4+2] = UINT_MAX;
 		m_perClothMaxBounds[softBodyIndex*4] = 0;
 		m_perClothMaxBounds[softBodyIndex*4+1] = 0;
-		m_perClothMaxBounds[softBodyIndex*4+2] = 0;*/
+		m_perClothMaxBounds[softBodyIndex*4+2] = 0;
 	}
 	
 	m_clPerClothMinBounds.moveToGPU();
@@ -996,16 +626,16 @@ void btOpenCLSoftBodySolver::updateBounds()
 	
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
 	{
-		UIntVector3 minBoundUInt = m_perClothMinBounds[softBodyIndex];
-		UIntVector3 maxBoundUInt = m_perClothMaxBounds[softBodyIndex];
-		/*UIntVector3 minBoundUInt;
+		//UIntVector3 minBoundUInt = m_perClothMinBounds[softBodyIndex];
+		//UIntVector3 maxBoundUInt = m_perClothMaxBounds[softBodyIndex];
+		UIntVector3 minBoundUInt;
 		minBoundUInt.x = m_perClothMinBounds[softBodyIndex*4];
 		minBoundUInt.y = m_perClothMinBounds[softBodyIndex*4+1];	
 		minBoundUInt.z = m_perClothMinBounds[softBodyIndex*4+2];
 		UIntVector3 maxBoundUInt;
 		maxBoundUInt.x = m_perClothMaxBounds[softBodyIndex*4];
 		maxBoundUInt.y = m_perClothMaxBounds[softBodyIndex*4+1];
-		maxBoundUInt.z = m_perClothMaxBounds[softBodyIndex*4+2];*/
+		maxBoundUInt.z = m_perClothMaxBounds[softBodyIndex*4+2];
 				
 		// Convert back to float
 		FloatAsInt fai;
@@ -1035,10 +665,9 @@ void btOpenCLSoftBodySolver::updateBounds()
 		// And finally assign to the soft body
 		m_softBodySet[softBodyIndex]->updateBounds( minBound, maxBound );
 	}
-} // btOpenCLSoftBodySolver::updateBounds
+} // btOpenCLSoftBodySolverSIMDAware::updateBounds
 
-
-void btOpenCLSoftBodySolver::updateConstants( float timeStep )
+void btOpenCLSoftBodySolverSIMDAware::updateConstants( float timeStep )
 {			
 
 	using namespace Vectormath::Aos;
@@ -1068,10 +697,11 @@ void btOpenCLSoftBodySolver::updateConstants( float timeStep )
 
 }
 
+
 /**
  * Sort the collision object details array and generate indexing into it for the per-cloth collision object array.
  */
-void btOpenCLSoftBodySolver::prepareCollisionConstraints()
+void btOpenCLSoftBodySolverSIMDAware::prepareCollisionConstraints()
 {
 	// First do a simple sort on the collision objects
 	btAlignedObjectArray<int> numObjectsPerClothPrefixSum;
@@ -1120,11 +750,9 @@ void btOpenCLSoftBodySolver::prepareCollisionConstraints()
 	m_perClothCollisionObjects[currentCloth].firstObject = startIndex;
 	m_perClothCollisionObjects[currentCloth].endObject =  m_collisionObjectDetails.size();
 	
-} // btOpenCLSoftBodySolver::prepareCollisionConstraints
-
-
-
-void btOpenCLSoftBodySolver::solveConstraints( float solverdt )
+} // btOpenCLSoftBodySolverSIMDAware::prepareCollisionConstraints
+#include <iostream>
+void btOpenCLSoftBodySolverSIMDAware::solveConstraints( float solverdt )
 {
 
 	using Vectormath::Aos::Vector3;
@@ -1148,78 +776,28 @@ void btOpenCLSoftBodySolver::solveConstraints( float solverdt )
 	m_linkData.moveToAccelerator();
 	m_vertexData.moveToAccelerator();
 
-	prepareLinks();	
-
-
-
-	for( int iteration = 0; iteration < m_numberOfVelocityIterations ; ++iteration )
-	{
-		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
-		{
-			int startLink = m_linkData.m_batchStartLengths[i].start;
-			int numLinks = m_linkData.m_batchStartLengths[i].length;
-
-			solveLinksForVelocity( startLink, numLinks, kst );
-		}
-	}
-
-	
-	prepareCollisionConstraints();
-
-	// Compute new positions from velocity
-	// Also update the previous position so that our position computation is now based on the new position from the velocity solution
-	// rather than based directly on the original positions
-	if( m_numberOfVelocityIterations > 0 )
-	{
-		updateVelocitiesFromPositionsWithVelocities( 1.f/solverdt );
-	} else {
-		updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
-	}
-
 	// Solve drift
 	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 	{
-		for( int i = 0; i < m_linkData.m_batchStartLengths.size(); ++i )
-		{
-			int startLink = m_linkData.m_batchStartLengths[i].start;
-			int numLinks = m_linkData.m_batchStartLengths[i].length;
 
-			solveLinksForPosition( startLink, numLinks, kst, ti );
+		for( int i = 0; i < m_linkData.m_wavefrontBatchStartLengths.size(); ++i )
+		{
+			int startWave = m_linkData.m_wavefrontBatchStartLengths[i].start;
+			int numWaves = m_linkData.m_wavefrontBatchStartLengths[i].length;
+			solveLinksForPosition( startWave, numWaves, kst, ti );
 		}
-		
 	} // for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 
 	
 	// At this point assume that the force array is blank - we will overwrite it
 	solveCollisionsAndUpdateVelocities( 1.f/solverdt );
-
 }
 
 
 //////////////////////////////////////
 // Kernel dispatches
-void btOpenCLSoftBodySolver::prepareLinks()
-{
 
-	cl_int ciErrNum;
-	int numLinks = m_linkData.getNumLinks();
-	ciErrNum = clSetKernelArg(prepareLinksKernel,0, sizeof(int), &numLinks);
-	ciErrNum = clSetKernelArg(prepareLinksKernel,1, sizeof(cl_mem), &m_linkData.m_clLinks.m_buffer);
-	ciErrNum = clSetKernelArg(prepareLinksKernel,2, sizeof(cl_mem), &m_linkData.m_clLinksMassLSC.m_buffer);
-	ciErrNum = clSetKernelArg(prepareLinksKernel,3, sizeof(cl_mem), &m_vertexData.m_clVertexPreviousPosition.m_buffer);
-	ciErrNum = clSetKernelArg(prepareLinksKernel,4, sizeof(cl_mem), &m_linkData.m_clLinksLengthRatio.m_buffer);
-	ciErrNum = clSetKernelArg(prepareLinksKernel,5, sizeof(cl_mem), &m_linkData.m_clLinksCLength.m_buffer);
-
-	size_t	numWorkItems = workGroupSize*((m_linkData.getNumLinks() + (workGroupSize-1)) / workGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,prepareLinksKernel, 1 , NULL, &numWorkItems, &workGroupSize,0,0,0);
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(prepareLinksKernel)");
-	}
-
-}
-
-void btOpenCLSoftBodySolver::updatePositionsFromVelocities( float solverdt )
+void btOpenCLSoftBodySolverSIMDAware::updatePositionsFromVelocities( float solverdt )
 {
 
 	cl_int ciErrNum;
@@ -1231,7 +809,9 @@ void btOpenCLSoftBodySolver::updatePositionsFromVelocities( float solverdt )
 	ciErrNum = clSetKernelArg(updatePositionsFromVelocitiesKernel,4, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
 
 	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,updatePositionsFromVelocitiesKernel, 1, NULL, &numWorkItems,&workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(updatePositionsFromVelocitiesKernel)");
@@ -1239,22 +819,32 @@ void btOpenCLSoftBodySolver::updatePositionsFromVelocities( float solverdt )
 
 }
 
-void btOpenCLSoftBodySolver::solveLinksForPosition( int startLink, int numLinks, float kst, float ti )
+void btOpenCLSoftBodySolverSIMDAware::solveLinksForPosition( int startWave, int numWaves, float kst, float ti )
 {
-
 	cl_int ciErrNum;
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,0, sizeof(int), &startLink);
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,1, sizeof(int), &numLinks);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,0, sizeof(int), &startWave);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,1, sizeof(int), &numWaves);
 	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,2, sizeof(float), &kst);
 	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,3, sizeof(float), &ti);
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,4, sizeof(cl_mem), &m_linkData.m_clLinks.m_buffer);
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,5, sizeof(cl_mem), &m_linkData.m_clLinksMassLSC.m_buffer);
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,6, sizeof(cl_mem), &m_linkData.m_clLinksRestLengthSquared.m_buffer);
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,7, sizeof(cl_mem), &m_vertexData.m_clVertexInverseMass.m_buffer);
-	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,8, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
+	
+	
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,4, sizeof(cl_mem), &m_linkData.m_clNumBatchesAndVerticesWithinWaves.m_buffer);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,5, sizeof(cl_mem), &m_linkData.m_clWavefrontVerticesGlobalAddresses.m_buffer);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,6, sizeof(cl_mem), &m_linkData.m_clLinkVerticesLocalAddresses.m_buffer);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,7, sizeof(cl_mem), &m_linkData.m_clLinksMassLSC.m_buffer);
 
-	size_t	numWorkItems = workGroupSize*((numLinks + (workGroupSize-1)) / workGroupSize);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,8, sizeof(cl_mem), &m_linkData.m_clLinksRestLengthSquared.m_buffer);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,9, sizeof(cl_mem), &m_vertexData.m_clVertexInverseMass.m_buffer);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,10, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
+
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,11, WAVEFRONT_BLOCK_MULTIPLIER*sizeof(cl_int2), 0);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,12, m_linkData.getMaxVerticesPerWavefront()*WAVEFRONT_BLOCK_MULTIPLIER*sizeof(cl_float4), 0);
+	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,13, m_linkData.getMaxVerticesPerWavefront()*WAVEFRONT_BLOCK_MULTIPLIER*sizeof(cl_float), 0);
+
+	size_t	numWorkItems = workGroupSize*((numWaves*WAVEFRONT_SIZE*WAVEFRONT_BLOCK_MULTIPLIER + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solvePositionsFromLinksKernel,1,NULL,&numWorkItems,&workGroupSize,0,0,0);
+	
 	if( ciErrNum!= CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(solvePositionsFromLinksKernel)");
@@ -1263,28 +853,7 @@ void btOpenCLSoftBodySolver::solveLinksForPosition( int startLink, int numLinks,
 } // solveLinksForPosition
 
 
-void btOpenCLSoftBodySolver::solveLinksForVelocity( int startLink, int numLinks, float kst )
-{
-
-	cl_int ciErrNum;
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 0, sizeof(int), &startLink);
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 1, sizeof(int), &numLinks);
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 2, sizeof(cl_mem), &m_linkData.m_clLinks.m_buffer);
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 3, sizeof(cl_mem), &m_linkData.m_clLinksLengthRatio.m_buffer);
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 4, sizeof(cl_mem), &m_linkData.m_clLinksCLength.m_buffer);
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 5, sizeof(cl_mem), &m_vertexData.m_clVertexInverseMass.m_buffer);
-	ciErrNum = clSetKernelArg(vSolveLinksKernel, 6, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
-
-	size_t	numWorkItems = workGroupSize*((numLinks + (workGroupSize-1)) / workGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,vSolveLinksKernel,1,NULL,&numWorkItems, &workGroupSize,0,0,0);
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(vSolveLinksKernel)");
-	}
-
-}
-
-void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithVelocities( float isolverdt )
+void btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithVelocities( float isolverdt )
 {
 
 	cl_int ciErrNum;
@@ -1300,7 +869,9 @@ void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithVelocities( float 
 	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 8, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
 
 	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,updateVelocitiesFromPositionsWithVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithVelocitiesKernel)");
@@ -1309,7 +880,7 @@ void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithVelocities( float 
 
 } // updateVelocitiesFromPositionsWithVelocities
 
-void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities( float isolverdt )
+void btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithoutVelocities( float isolverdt )
 {
 
 	cl_int ciErrNum;
@@ -1324,7 +895,9 @@ void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities( flo
 	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 7, sizeof(cl_mem),&m_vertexData.m_clVertexForceAccumulator.m_buffer);
 
 	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,updateVelocitiesFromPositionsWithoutVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
@@ -1333,7 +906,7 @@ void btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities( flo
 } // updateVelocitiesFromPositionsWithoutVelocities
 
 
-void btOpenCLSoftBodySolver::computeBounds( )
+void btOpenCLSoftBodySolverSIMDAware::computeBounds( )
 {	
 	m_vertexData.moveToAccelerator();
 
@@ -1350,14 +923,16 @@ void btOpenCLSoftBodySolver::computeBounds( )
 	ciErrNum = clSetKernelArg(computeBoundsKernel, 7, sizeof(cl_uint4)*256,0);
 
 	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,computeBoundsKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
 		btAssert( 0 &&  "enqueueNDRangeKernel(computeBoundsKernel)");
 	}
-} // btOpenCLSoftBodySolver::computeBounds
+} // btOpenCLSoftBodySolverSIMDAware::computeBounds
 
-void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
+void btOpenCLSoftBodySolverSIMDAware::solveCollisionsAndUpdateVelocities( float isolverdt )
 {
 
 	// Copy kernel parameters to GPU
@@ -1380,23 +955,24 @@ void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt
 	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 8, sizeof(cl_mem),&m_vertexData.m_clVertexForceAccumulator.m_buffer);
 	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 9, sizeof(cl_mem),&m_vertexData.m_clVertexVelocity.m_buffer);
 	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 10, sizeof(cl_mem),&m_vertexData.m_clVertexPosition.m_buffer);
-
+	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 11, sizeof(CollisionShapeDescription)*16,0);
 	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solveCollisionsAndUpdateVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+	
 	if( ciErrNum != CL_SUCCESS ) 
 	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
+		btAssert( 0 &&  "enqueueNDRangeKernel(solveCollisionsAndUpdateVelocitiesKernel)");
 	}
 
-} // btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities
-
+} // btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithoutVelocities
 
 
 // End kernel dispatches
 /////////////////////////////////////
 
 
-void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
+void btOpenCLSoftBodySolverSIMDAware::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
 {
 	// Currently only support CPU output buffers
 	// TODO: check for DX11 buffers. Take all offsets into the same DX11 buffer
@@ -1452,7 +1028,8 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 } // btCPUSoftBodySolver::outputToVertexBuffers
 
 
-cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelSource, const char* kernelName )
+
+cl_kernel btOpenCLSoftBodySolverSIMDAware::compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros )
 {
 	printf("compiling kernalName: %s ",kernelName);
 	cl_kernel kernel;
@@ -1463,12 +1040,18 @@ cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelS
 //	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		
     // Build the program with 'mad' Optimization option
+
+	
 #ifdef MAC
 	char* flags = "-cl-mad-enable -DMAC -DGUID_ARG";
 #else
-	const char* flags = "-DGUID_ARG=";
+	//const char* flags = "-DGUID_ARG= -fno-alias";
+	const char* flags = "-DGUID_ARG= ";
 #endif
-    ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, flags, NULL, NULL);
+
+	char* compileFlags = new char[strlen(additionalMacros) + strlen(flags) + 5];
+	sprintf(compileFlags, "%s %s", flags, additionalMacros);
+    ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, compileFlags, NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
 		size_t numDevices;
@@ -1495,6 +1078,7 @@ cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelS
         exit(0);
     }
 	
+	
     // Create the kernel
     kernel = clCreateKernel(m_cpProgram, kernelName, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
@@ -1505,11 +1089,79 @@ cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelS
     }
 
 	printf("ready. \n");
+	delete [] compileFlags;
 	return kernel;
 
 }
 
-void btOpenCLSoftBodySolver::predictMotion( float timeStep )
+
+btOpenCLSoftBodySolverSIMDAware::btAcceleratedSoftBodyInterface *btOpenCLSoftBodySolverSIMDAware::findSoftBodyInterface( const btSoftBody* const softBody )
+{
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		if( softBodyInterface->getSoftBody() == softBody )
+			return softBodyInterface;
+	}
+	return 0;
+}
+
+int btOpenCLSoftBodySolverSIMDAware::findSoftBodyIndex( const btSoftBody* const softBody )
+{
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		if( softBodyInterface->getSoftBody() == softBody )
+			return softBodyIndex;
+	}
+	return 1;
+}
+
+bool btOpenCLSoftBodySolverSIMDAware::buildShaders()
+{
+	bool returnVal = true;
+
+	if( m_shadersInitialized )
+		return true;
+
+	char *wavefrontMacros = new char[256];
+
+	sprintf(
+		wavefrontMacros, 
+		"-DMAX_NUM_VERTICES_PER_WAVE=%d -DMAX_BATCHES_PER_WAVE=%d -DWAVEFRONT_SIZE=%d -DWAVEFRONT_BLOCK_MULTIPLIER=%d -DBLOCK_SIZE=%d", 
+		m_linkData.getMaxVerticesPerWavefront(),
+		m_linkData.getMaxBatchesPerWavefront(),
+		m_linkData.getWavefrontSize(),
+		WAVEFRONT_BLOCK_MULTIPLIER,
+		WAVEFRONT_BLOCK_MULTIPLIER*m_linkData.getWavefrontSize());
+	
+	updatePositionsFromVelocitiesKernel = compileCLKernelFromString( UpdatePositionsFromVelocitiesCLString, "UpdatePositionsFromVelocitiesKernel", "" );
+	solvePositionsFromLinksKernel = compileCLKernelFromString( SolvePositionsCLString, "SolvePositionsFromLinksKernel", wavefrontMacros );
+	updateVelocitiesFromPositionsWithVelocitiesKernel = compileCLKernelFromString( UpdateNodesCLString, "updateVelocitiesFromPositionsWithVelocitiesKernel", "" );
+	updateVelocitiesFromPositionsWithoutVelocitiesKernel = compileCLKernelFromString( UpdatePositionsCLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel", "" );
+	integrateKernel = compileCLKernelFromString( IntegrateCLString, "IntegrateKernel", "" );
+	applyForcesKernel = compileCLKernelFromString( ApplyForcesCLString, "ApplyForcesKernel", "" );
+	computeBoundsKernel = compileCLKernelFromString( ComputeBoundsCLString, "ComputeBoundsKernel", "" );
+	solveCollisionsAndUpdateVelocitiesKernel = compileCLKernelFromString( SolveCollisionsAndUpdateVelocitiesCLString, "SolveCollisionsAndUpdateVelocitiesKernel", "" );
+
+	// TODO: Rename to UpdateSoftBodies
+	resetNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel", "" );
+	normalizeNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "NormalizeNormalsAndAreasKernel", "" );
+	updateSoftBodiesKernel = compileCLKernelFromString( UpdateNormalsCLString, "UpdateSoftBodiesKernel", "" );
+	//outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
+	//outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
+
+	delete [] wavefrontMacros;
+
+	if( returnVal )
+		m_shadersInitialized = true;
+
+	return returnVal;
+}
+
+
+
+void btOpenCLSoftBodySolverSIMDAware::predictMotion( float timeStep )
 {
 	// Fill the force arrays with current acceleration data etc
 	m_perClothWindVelocity.resize( m_softBodySet.size() );
@@ -1541,17 +1193,17 @@ static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
 	return outTransform;	
 }
 
-void btOpenCLSoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( btVector3 lowerBound, btVector3 upperBound )
+void btOpenCLSoftBodySolverSIMDAware::btAcceleratedSoftBodyInterface::updateBounds( btVector3 lowerBound, btVector3 upperBound )
 {
 	float scalarMargin = this->getSoftBody()->getCollisionShape()->getMargin();
 	btVector3 vectorMargin( scalarMargin, scalarMargin, scalarMargin );
 	m_softBody->m_bounds[0] = lowerBound - vectorMargin;
 	m_softBody->m_bounds[1] = upperBound + vectorMargin;
-}  // btOpenCLSoftBodySolver::btDX11AcceleratedSoftBodyInterface::updateBounds
+}  // btOpenCLSoftBodySolverSIMDAware::btDX11AcceleratedSoftBodyInterface::updateBounds
 
 
 // Add the collision object to the set to deal with for a particular soft body
-void btOpenCLSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
+void btOpenCLSoftBodySolverSIMDAware::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
 {
 	int softBodyIndex = findSoftBodyIndex( softBody );
 
@@ -1584,63 +1236,512 @@ void btOpenCLSoftBodySolver::processCollision( btSoftBody *softBody, btCollision
 	} else {
 		btAssert("Unknown soft body");
 	}
-} // btOpenCLSoftBodySolver::processCollision
+} // btOpenCLSoftBodySolverSIMDAware::processCollision
 
 
 
 
 
-btOpenCLSoftBodySolver::btAcceleratedSoftBodyInterface *btOpenCLSoftBodySolver::findSoftBodyInterface( const btSoftBody* const softBody )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void generateBatchesOfWavefronts( btAlignedObjectArray < btAlignedObjectArray <int> > &linksForWavefronts, btSoftBodyLinkData &linkData, int numVertices, btAlignedObjectArray < btAlignedObjectArray <int> > &wavefrontBatches )
 {
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	// A per-batch map of truth values stating whether a given vertex is in that batch
+	// This allows us to significantly optimize the batching
+	btAlignedObjectArray <btAlignedObjectArray<bool> > mapOfVerticesInBatches;
+
+	for( int waveIndex = 0; waveIndex < linksForWavefronts.size(); ++waveIndex )
 	{
-		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
-		if( softBodyInterface->getSoftBody() == softBody )
-			return softBodyInterface;
+		btAlignedObjectArray <int> &wavefront( linksForWavefronts[waveIndex] );
+
+		int batch = 0;
+		bool placed = false;
+		while( batch < wavefrontBatches.size() && !placed )
+		{
+			// Test the current batch, see if this wave shares any vertex with the waves in the batch
+			bool foundSharedVertex = false;
+			for( int link = 0; link < wavefront.size(); ++link )
+			{
+				btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( wavefront[link] );
+				if( (mapOfVerticesInBatches[batch])[vertices.vertex0] || (mapOfVerticesInBatches[batch])[vertices.vertex1] )
+				{
+					foundSharedVertex = true;
+				}
+			}
+
+			if( !foundSharedVertex )
+			{
+				wavefrontBatches[batch].push_back( waveIndex );	
+				// Insert vertices into this batch too
+				for( int link = 0; link < wavefront.size(); ++link )
+				{
+					btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( wavefront[link] );
+					(mapOfVerticesInBatches[batch])[vertices.vertex0] = true;
+					(mapOfVerticesInBatches[batch])[vertices.vertex1] = true;
+				}
+				placed = true;
+			}
+			batch++;
+		}
+		if( batch == wavefrontBatches.size() && !placed )
+		{
+			wavefrontBatches.resize( batch + 1 );
+			wavefrontBatches[batch].push_back( waveIndex );
+
+			// And resize map as well
+			mapOfVerticesInBatches.resize( batch + 1 );
+			
+			// Resize maps with total number of vertices
+			mapOfVerticesInBatches[batch].resize( numVertices, false );
+
+			// Insert vertices into this batch too
+			for( int link = 0; link < wavefront.size(); ++link )
+			{
+				btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( wavefront[link] );
+				(mapOfVerticesInBatches[batch])[vertices.vertex0] = true;
+				(mapOfVerticesInBatches[batch])[vertices.vertex1] = true;
+			}
+		}
 	}
-	return 0;
+	mapOfVerticesInBatches.clear();
 }
 
-
-int btOpenCLSoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
+// Function to remove an object from a vector maintaining correct ordering of the vector
+template< typename T > static void removeFromVector( btAlignedObjectArray< T > &vectorToUpdate, int indexToRemove )
 {
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	int currentSize = vectorToUpdate.size();
+	for( int i = indexToRemove; i < (currentSize-1); ++i )
 	{
-		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
-		if( softBodyInterface->getSoftBody() == softBody )
-			return softBodyIndex;
+		vectorToUpdate[i] = vectorToUpdate[i+1];
 	}
-	return 1;
+	if( currentSize > 0 )
+		vectorToUpdate.resize( currentSize - 1 );
 }
 
-bool btOpenCLSoftBodySolver::buildShaders()
+/**
+ * Insert element into vectorToUpdate at index index.
+ */
+template< typename T > static void insertAtIndex( btAlignedObjectArray< T > &vectorToUpdate, int index, T element )
 {
-	bool returnVal = true;
+	vectorToUpdate.resize( vectorToUpdate.size() + 1 );
+	for( int i = (vectorToUpdate.size() - 1); i > index; --i )
+	{
+		vectorToUpdate[i] = vectorToUpdate[i-1];
+	}
+	vectorToUpdate[index] = element;
+}
 
-	if( m_shadersInitialized )
-		return true;
+/** 
+ * Insert into btAlignedObjectArray assuming the array is ordered and maintaining both ordering and uniqueness.
+ * ie it treats vectorToUpdate as an ordered set.
+ */
+template< typename T > static void insertUniqueAndOrderedIntoVector( btAlignedObjectArray<T> &vectorToUpdate, T element )
+{
+	int index = 0;
+	while( index < vectorToUpdate.size() && vectorToUpdate[index] < element )
+	{
+		index++;
+	}
+	if( index == vectorToUpdate.size() || vectorToUpdate[index] != element )
+		insertAtIndex( vectorToUpdate, index, element );
+}
+
+static void generateLinksPerVertex( int numVertices, btSoftBodyLinkData &linkData, btAlignedObjectArray< int > &listOfLinksPerVertex, btAlignedObjectArray <int> &numLinksPerVertex, int &maxLinks )
+{
+	for( int linkIndex = 0; linkIndex < linkData.getNumLinks(); ++linkIndex )
+	{
+		btSoftBodyLinkData::LinkNodePair nodes( linkData.getVertexPair(linkIndex) );
+		numLinksPerVertex[nodes.vertex0]++;
+		numLinksPerVertex[nodes.vertex1]++;
+	}
+	int maxLinksPerVertex = 0;
+	for( int vertexIndex = 0; vertexIndex < numVertices; ++vertexIndex )
+	{
+		maxLinksPerVertex = btMax(numLinksPerVertex[vertexIndex], maxLinksPerVertex);
+	}
+	maxLinks = maxLinksPerVertex;
+
+	btAlignedObjectArray< int > linksFoundPerVertex;
+	linksFoundPerVertex.resize( numVertices, 0 );
+
+	listOfLinksPerVertex.resize( maxLinksPerVertex * numVertices );
+
+	for( int linkIndex = 0; linkIndex < linkData.getNumLinks(); ++linkIndex )
+	{
+		btSoftBodyLinkData::LinkNodePair nodes( linkData.getVertexPair(linkIndex) );
+		{
+			// Do vertex 0
+			int vertexIndex = nodes.vertex0;
+			int linkForVertex = linksFoundPerVertex[nodes.vertex0];
+			int linkAddress = vertexIndex * maxLinksPerVertex + linkForVertex;
+
+			listOfLinksPerVertex[linkAddress] = linkIndex;
+
+			linksFoundPerVertex[nodes.vertex0] = linkForVertex + 1;
+		}
+		{
+			// Do vertex 1
+			int vertexIndex = nodes.vertex1;
+			int linkForVertex = linksFoundPerVertex[nodes.vertex1];
+			int linkAddress = vertexIndex * maxLinksPerVertex + linkForVertex;
+
+			listOfLinksPerVertex[linkAddress] = linkIndex;
+
+			linksFoundPerVertex[nodes.vertex1] = linkForVertex + 1;
+		}
+	}
+}
+
+static void computeBatchingIntoWavefronts( 
+	btSoftBodyLinkData &linkData, 
+	int wavefrontSize, 
+	int linksPerWorkItem, 
+	int maxLinksPerWavefront, 
+	btAlignedObjectArray < btAlignedObjectArray <int> > &linksForWavefronts, 
+	btAlignedObjectArray< btAlignedObjectArray < btAlignedObjectArray <int> > > &batchesWithinWaves, /* wave, batch, links in batch */
+	btAlignedObjectArray< btAlignedObjectArray< int > > &verticesForWavefronts /* wavefront, vertex */
+	)
+{
 	
-	prepareLinksKernel = compileCLKernelFromString( PrepareLinksCLString, "PrepareLinksKernel" );
-	updatePositionsFromVelocitiesKernel = compileCLKernelFromString( UpdatePositionsFromVelocitiesCLString, "UpdatePositionsFromVelocitiesKernel" );
-	solvePositionsFromLinksKernel = compileCLKernelFromString( SolvePositionsCLString, "SolvePositionsFromLinksKernel" );
-	updateVelocitiesFromPositionsWithVelocitiesKernel = compileCLKernelFromString( UpdateNodesCLString, "updateVelocitiesFromPositionsWithVelocitiesKernel" );
-	updateVelocitiesFromPositionsWithoutVelocitiesKernel = compileCLKernelFromString( UpdatePositionsCLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel" );
-	computeBoundsKernel = compileCLKernelFromString( ComputeBoundsCLString, "ComputeBoundsKernel" );
-	solveCollisionsAndUpdateVelocitiesKernel = compileCLKernelFromString( SolveCollisionsAndUpdateVelocitiesCLString, "SolveCollisionsAndUpdateVelocitiesKernel" );
-	integrateKernel = compileCLKernelFromString( IntegrateCLString, "IntegrateKernel" );
-	applyForcesKernel = compileCLKernelFromString( ApplyForcesCLString, "ApplyForcesKernel" );
 
-	// TODO: Rename to UpdateSoftBodies
-	resetNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel" );
-	normalizeNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "NormalizeNormalsAndAreasKernel" );
-	updateSoftBodiesKernel = compileCLKernelFromString( UpdateNormalsCLString, "UpdateSoftBodiesKernel" );
-	//outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
-	//outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
+	// Attempt generation of larger batches of links.
+	btAlignedObjectArray< bool > processedLink;
+	processedLink.resize( linkData.getNumLinks() );
+	btAlignedObjectArray< int > listOfLinksPerVertex;
+	int maxLinksPerVertex = 0;
+
+	// Count num vertices
+	int numVertices = 0;
+	for( int linkIndex = 0; linkIndex < linkData.getNumLinks(); ++linkIndex )
+	{
+		btSoftBodyLinkData::LinkNodePair nodes( linkData.getVertexPair(linkIndex) );
+		numVertices = btMax( numVertices, nodes.vertex0 + 1 );
+		numVertices = btMax( numVertices, nodes.vertex1 + 1 );
+	}
+
+	// Need list of links per vertex
+	// Compute valence of each vertex
+	btAlignedObjectArray <int> numLinksPerVertex;
+	numLinksPerVertex.resize(0);
+	numLinksPerVertex.resize( numVertices, 0 );
+
+	generateLinksPerVertex( numVertices, linkData, listOfLinksPerVertex, numLinksPerVertex, maxLinksPerVertex );
+
+	for( int vertex = 0; vertex < 10; ++vertex )
+	{
+		for( int link = 0; link < numLinksPerVertex[vertex]; ++link )
+		{
+			int linkAddress = vertex * maxLinksPerVertex + link;
+		}
+	}
 
 
-	if( returnVal )
-		m_shadersInitialized = true;
+	// At this point we know what links we have for each vertex so we can start batching
+	
+	// We want a vertex to start with, let's go with 0
+	int currentVertex = 0;
+	int linksProcessed = 0;
 
-	return returnVal;
+	btAlignedObjectArray <int> verticesToProcess;
+
+	while( linksProcessed < linkData.getNumLinks() )
+	{
+		// Next wavefront
+		int nextWavefront = linksForWavefronts.size();
+		linksForWavefronts.resize( nextWavefront + 1 );
+		btAlignedObjectArray <int> &linksForWavefront(linksForWavefronts[nextWavefront]);
+		verticesForWavefronts.resize( nextWavefront + 1 );
+		btAlignedObjectArray<int> &vertexSet( verticesForWavefronts[nextWavefront] );
+
+		linksForWavefront.resize(0);
+
+		// Loop to find enough links to fill the wavefront
+		// Stopping if we either run out of links, or fill it
+		while( linksProcessed < linkData.getNumLinks() && linksForWavefront.size() < maxLinksPerWavefront )
+		{
+			// Go through the links for the current vertex
+			for( int link = 0; link < numLinksPerVertex[currentVertex] && linksForWavefront.size() < maxLinksPerWavefront; ++link )
+			{
+				int linkAddress = currentVertex * maxLinksPerVertex + link;
+				int linkIndex = listOfLinksPerVertex[linkAddress];
+				
+				// If we have not already processed this link, add it to the wavefront
+				// Claim it as another processed link
+				// Add the vertex at the far end to the list of vertices to process.
+				if( !processedLink[linkIndex] )
+				{
+					linksForWavefront.push_back( linkIndex );
+					linksProcessed++;
+					processedLink[linkIndex] = true;
+					int v0 = linkData.getVertexPair(linkIndex).vertex0;
+					int v1 = linkData.getVertexPair(linkIndex).vertex1;
+					if( v0 == currentVertex )
+						verticesToProcess.push_back( v1 );
+					else
+						verticesToProcess.push_back( v0 );
+				}
+			}
+			if( verticesToProcess.size() > 0 )
+			{
+				// Get the element on the front of the queue and remove it
+				currentVertex = verticesToProcess[0];
+				removeFromVector( verticesToProcess, 0 );
+			} else {		
+				// If we've not yet processed all the links, find the first unprocessed one
+				// and select one of its vertices as the current vertex
+				if( linksProcessed < linkData.getNumLinks() )
+				{
+					int searchLink = 0;
+					while( processedLink[searchLink] )
+						searchLink++;
+					currentVertex = linkData.getVertexPair(searchLink).vertex0;
+				}	
+			}
+		}
+
+		// We have either finished or filled a wavefront
+		for( int link = 0; link < linksForWavefront.size(); ++link )
+		{
+			int v0 = linkData.getVertexPair( linksForWavefront[link] ).vertex0;
+			int v1 = linkData.getVertexPair( linksForWavefront[link] ).vertex1;
+			insertUniqueAndOrderedIntoVector( vertexSet, v0 );
+			insertUniqueAndOrderedIntoVector( vertexSet, v1 );
+		}
+		// Iterate over links mapped to the wave and batch those
+		// We can run a batch on each cycle trivially
+		
+		batchesWithinWaves.resize( batchesWithinWaves.size() + 1 );
+		btAlignedObjectArray < btAlignedObjectArray <int> > &batchesWithinWave( batchesWithinWaves[batchesWithinWaves.size()-1] );
+		
+
+		for( int link = 0; link < linksForWavefront.size(); ++link )
+		{
+			int linkIndex = linksForWavefront[link];
+			btSoftBodyLinkData::LinkNodePair vertices = linkData.getVertexPair( linkIndex );
+			
+			int batch = 0;
+			bool placed = false;
+			while( batch < batchesWithinWave.size() && !placed )
+			{
+				bool foundSharedVertex = false;
+				if( batchesWithinWave[batch].size() >= wavefrontSize )
+				{
+					// If we have already filled this batch, move on to another
+					foundSharedVertex = true;
+				} else {
+					for( int link2 = 0; link2 < batchesWithinWave[batch].size(); ++link2 )
+					{
+						btSoftBodyLinkData::LinkNodePair vertices2 = linkData.getVertexPair( (batchesWithinWave[batch])[link2] );
+
+						if( vertices.vertex0 == vertices2.vertex0 ||
+							vertices.vertex1 == vertices2.vertex0 ||
+							vertices.vertex0 == vertices2.vertex1 ||
+							vertices.vertex1 == vertices2.vertex1 )
+						{
+							foundSharedVertex = true;
+							break;
+						}
+					}
+				}
+				if( !foundSharedVertex )
+				{
+					batchesWithinWave[batch].push_back( linkIndex );
+					placed = true;
+				} else {
+					++batch;
+				}
+			}
+			if( batch == batchesWithinWave.size() && !placed )
+			{
+				batchesWithinWave.resize( batch + 1 );
+				batchesWithinWave[batch].push_back( linkIndex );
+			}
+		}
+		
+	}
+
 }
+
+void btSoftBodyLinkDataOpenCLSIMDAware::generateBatches()
+{
+	btAlignedObjectArray < btAlignedObjectArray <int> > linksForWavefronts;
+	btAlignedObjectArray < btAlignedObjectArray <int> > wavefrontBatches;
+	btAlignedObjectArray< btAlignedObjectArray < btAlignedObjectArray <int> > > batchesWithinWaves;
+	btAlignedObjectArray< btAlignedObjectArray< int > > verticesForWavefronts; // wavefronts, vertices in wavefront as an ordered set
+
+	// Group the links into wavefronts
+	computeBatchingIntoWavefronts( *this, m_wavefrontSize, m_linksPerWorkItem, m_maxLinksPerWavefront, linksForWavefronts, batchesWithinWaves, verticesForWavefronts );
+
+
+	// Batch the wavefronts
+	generateBatchesOfWavefronts( linksForWavefronts, *this, m_maxVertex, wavefrontBatches );
+
+	m_numWavefronts = linksForWavefronts.size();
+
+	// At this point we have a description of which links we need to process in each wavefront
+
+	// First correctly fill the batch ranges vector
+	int numBatches = wavefrontBatches.size();
+	m_wavefrontBatchStartLengths.resize(0);
+	int prefixSum = 0;
+	for( int batchIndex = 0; batchIndex < numBatches; ++batchIndex )
+	{
+		int wavesInBatch = wavefrontBatches[batchIndex].size();
+		int nextPrefixSum = prefixSum + wavesInBatch;
+		m_wavefrontBatchStartLengths.push_back( BatchPair( prefixSum, nextPrefixSum - prefixSum ) );
+
+		prefixSum += wavesInBatch;
+	}
+	
+	// Also find max number of batches within a wave
+	m_maxBatchesWithinWave = 0;
+	m_maxVerticesWithinWave = 0;
+	m_numBatchesAndVerticesWithinWaves.resize( m_numWavefronts );
+	for( int waveIndex = 0; waveIndex < m_numWavefronts; ++waveIndex )
+	{
+		// See if the number of batches in this wave is greater than the current maxium
+		int batchesInCurrentWave = batchesWithinWaves[waveIndex].size();
+		int verticesInCurrentWave = verticesForWavefronts[waveIndex].size();
+		m_maxBatchesWithinWave = btMax( batchesInCurrentWave, m_maxBatchesWithinWave );
+		m_maxVerticesWithinWave = btMax( verticesInCurrentWave, m_maxVerticesWithinWave );
+	}
+	
+	// Add padding values both for alignment and as dudd addresses within LDS to compute junk rather than branch around
+	m_maxVerticesWithinWave = 16*((m_maxVerticesWithinWave/16)+2);
+
+	// Now we know the maximum number of vertices per-wave we can resize the global vertices array
+	m_wavefrontVerticesGlobalAddresses.resize( m_maxVerticesWithinWave * m_numWavefronts );
+
+	// Grab backup copies of all the link data arrays for the sorting process
+	btAlignedObjectArray<btSoftBodyLinkData::LinkNodePair>				m_links_Backup(m_links);
+	btAlignedObjectArray<float>											m_linkStrength_Backup(m_linkStrength);
+	btAlignedObjectArray<float>											m_linksMassLSC_Backup(m_linksMassLSC);
+	btAlignedObjectArray<float>											m_linksRestLengthSquared_Backup(m_linksRestLengthSquared);
+	//btAlignedObjectArray<Vectormath::Aos::Vector3>						m_linksCLength_Backup(m_linksCLength);
+	//btAlignedObjectArray<float>											m_linksLengthRatio_Backup(m_linksLengthRatio);
+	btAlignedObjectArray<float>											m_linksRestLength_Backup(m_linksRestLength);
+	btAlignedObjectArray<float>											m_linksMaterialLinearStiffnessCoefficient_Backup(m_linksMaterialLinearStiffnessCoefficient);
+
+	// Resize to a wavefront sized batch per batch per wave so we get perfectly coherent memory accesses.
+	m_links.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );
+	m_linkVerticesLocalAddresses.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );
+	m_linkStrength.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );
+	m_linksMassLSC.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );
+	m_linksRestLengthSquared.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );
+	m_linksRestLength.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );
+	m_linksMaterialLinearStiffnessCoefficient.resize( m_maxBatchesWithinWave * m_wavefrontSize * m_numWavefronts );	
+		
+	// Then re-order links into wavefront blocks
+
+	// Total number of wavefronts moved. This will decide the ordering of sorted wavefronts.
+	int wavefrontCount = 0;
+
+	// Iterate over batches of wavefronts, then wavefronts in the batch
+	for( int batchIndex = 0; batchIndex < numBatches; ++batchIndex )
+	{
+		btAlignedObjectArray <int> &batch( wavefrontBatches[batchIndex] );
+		int wavefrontsInBatch = batch.size();
+
+		
+		for( int wavefrontIndex = 0; wavefrontIndex < wavefrontsInBatch; ++wavefrontIndex )
+		{	
+
+			int originalWavefrontIndex = batch[wavefrontIndex];
+			btAlignedObjectArray< int > &wavefrontVertices( verticesForWavefronts[originalWavefrontIndex] );
+			int verticesUsedByWavefront = wavefrontVertices.size();
+
+			// Copy the set of vertices into the correctly structured array for use on the device
+			// Fill the non-vertices with -1s
+			// so we can mask out those reads
+			for( int vertex = 0; vertex < verticesUsedByWavefront; ++vertex )
+			{
+				m_wavefrontVerticesGlobalAddresses[m_maxVerticesWithinWave * wavefrontCount + vertex] = wavefrontVertices[vertex];
+			}
+			for( int vertex = verticesUsedByWavefront; vertex < m_maxVerticesWithinWave; ++vertex )
+			{
+				m_wavefrontVerticesGlobalAddresses[m_maxVerticesWithinWave * wavefrontCount + vertex] = -1;
+			}
+
+			// Obtain the set of batches within the current wavefront
+			btAlignedObjectArray < btAlignedObjectArray <int> > &batchesWithinWavefront( batchesWithinWaves[originalWavefrontIndex] );
+			// Set the size of the batches for use in the solver, correctly ordered
+			NumBatchesVerticesPair batchesAndVertices;
+			batchesAndVertices.numBatches = batchesWithinWavefront.size();
+			batchesAndVertices.numVertices = verticesUsedByWavefront;
+			m_numBatchesAndVerticesWithinWaves[wavefrontCount] = batchesAndVertices;
+			
+
+			// Now iterate over batches within the wavefront to structure the links correctly
+			for( int wavefrontBatch = 0; wavefrontBatch < batchesWithinWavefront.size(); ++wavefrontBatch )
+			{
+				btAlignedObjectArray <int> &linksInBatch( batchesWithinWavefront[wavefrontBatch] );
+				int wavefrontBatchSize = linksInBatch.size();
+
+				int batchAddressInTarget = m_maxBatchesWithinWave * m_wavefrontSize * wavefrontCount + m_wavefrontSize * wavefrontBatch;
+
+				for( int linkIndex = 0; linkIndex < wavefrontBatchSize; ++linkIndex )
+				{
+					int originalLinkAddress = linksInBatch[linkIndex];
+					// Reorder simple arrays trivially
+					m_links[batchAddressInTarget + linkIndex] = m_links_Backup[originalLinkAddress];
+					m_linkStrength[batchAddressInTarget + linkIndex] = m_linkStrength_Backup[originalLinkAddress];
+					m_linksMassLSC[batchAddressInTarget + linkIndex] = m_linksMassLSC_Backup[originalLinkAddress];
+					m_linksRestLengthSquared[batchAddressInTarget + linkIndex] = m_linksRestLengthSquared_Backup[originalLinkAddress];
+					m_linksRestLength[batchAddressInTarget + linkIndex] = m_linksRestLength_Backup[originalLinkAddress];
+					m_linksMaterialLinearStiffnessCoefficient[batchAddressInTarget + linkIndex] = m_linksMaterialLinearStiffnessCoefficient_Backup[originalLinkAddress];
+
+					// The local address is more complicated. We need to work out where a given vertex will end up
+					// by searching the set of vertices for this link and using the index as the local address
+					btSoftBodyLinkData::LinkNodePair localPair;
+					btSoftBodyLinkData::LinkNodePair globalPair = m_links[batchAddressInTarget + linkIndex];
+					localPair.vertex0 = wavefrontVertices.findLinearSearch( globalPair.vertex0 );
+					localPair.vertex1 = wavefrontVertices.findLinearSearch( globalPair.vertex1 );
+					m_linkVerticesLocalAddresses[batchAddressInTarget + linkIndex] = localPair;
+				}
+				for( int linkIndex = wavefrontBatchSize; linkIndex < m_wavefrontSize; ++linkIndex )
+				{
+					// Put 0s into these arrays for padding for cleanliness
+					m_links[batchAddressInTarget + linkIndex] = btSoftBodyLinkData::LinkNodePair(0, 0);
+					m_linkStrength[batchAddressInTarget + linkIndex] = 0.f;
+					m_linksMassLSC[batchAddressInTarget + linkIndex] = 0.f;
+					m_linksRestLengthSquared[batchAddressInTarget + linkIndex] = 0.f;
+					m_linksRestLength[batchAddressInTarget + linkIndex] = 0.f;
+					m_linksMaterialLinearStiffnessCoefficient[batchAddressInTarget + linkIndex] = 0.f;
+
+
+					// For local addresses of junk data choose a set of addresses just above the range of valid ones 
+					// and cycling tyhrough % 16 so that we don't have bank conficts between all dud addresses
+					// The valid addresses will do scatter and gather in the valid range, the junk ones should happily work
+					// off the end of that range so we need no control
+					btSoftBodyLinkData::LinkNodePair localPair;
+					localPair.vertex0 = verticesUsedByWavefront + (linkIndex % 16);
+					localPair.vertex1 = verticesUsedByWavefront + (linkIndex % 16);
+					m_linkVerticesLocalAddresses[batchAddressInTarget + linkIndex] = localPair;
+				}
+
+			}
+
+			
+			wavefrontCount++;
+		}
+
+	
+	}
+
+} // void btSoftBodyLinkDataDX11SIMDAware::generateBatches()
+
+
 

@@ -117,6 +117,10 @@ void	btSoftRigidDynamicsWorld::addSoftBody(btSoftBody* body,short int collisionF
 {
 	m_softBodies.push_back(body);
 
+	// Set the soft body solver that will deal with this body
+	// to be the world's solver
+	body->setSoftBodySolver( m_softBodySolver );
+
 	btCollisionWorld::addCollisionObject(body,
 		collisionFilterGroup,
 		collisionFilterMask);

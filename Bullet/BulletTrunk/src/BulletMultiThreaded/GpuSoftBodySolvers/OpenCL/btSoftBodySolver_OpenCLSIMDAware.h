@@ -13,24 +13,77 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
-#ifndef BT_SOFT_BODY_SOLVER_OPENCL_H
-#define BT_SOFT_BODY_SOLVER_OPENCL_H
+#ifndef BT_SOFT_BODY_SOLVER_OPENCL_SIMDAWARE_H
+#define BT_SOFT_BODY_SOLVER_OPENCL_SIMDAWARE_H
 
 #include "stddef.h" //for size_t
 #include "vectormath/vmInclude.h"
 
 #include "BulletSoftBody/btSoftBodySolvers.h"
 #include "btSoftBodySolverBuffer_OpenCL.h"
-#include "btSoftBodySolverLinkData_OpenCL.h"
+#include "btSoftBodySolverLinkData_OpenCLSIMDAware.h"
 #include "btSoftBodySolverVertexData_OpenCL.h"
 #include "btSoftBodySolverTriangleData_OpenCL.h"
 
 
 
 
-class btOpenCLSoftBodySolver : public btSoftBodySolver
+
+class btOpenCLSoftBodySolverSIMDAware : public btSoftBodySolver
 {
 protected:
+	/**
+	 * Entry in the collision shape array.
+	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
+	 */
+	struct CollisionShapeDescription
+	{
+		Vectormath::Aos::Transform3 shapeTransform;
+		Vectormath::Aos::Vector3 linearVelocity;
+		Vectormath::Aos::Vector3 angularVelocity;
+
+		int softBodyIdentifier;
+		int collisionShapeType;
+	
+		// Both needed for capsule
+		float radius;
+		float halfHeight;
+		
+		float margin;
+		float friction;
+
+		CollisionShapeDescription()
+		{
+			collisionShapeType = 0;
+			margin = 0;
+			friction = 0;
+		}
+	};
+
+	struct UIntVector3
+	{
+		UIntVector3()
+		{
+			x = 0;
+			y = 0;
+			z = 0;
+			_padding = 0;
+		}
+		
+		UIntVector3( unsigned int x_, unsigned int y_, unsigned int z_ )
+		{
+			x = x_;
+			y = y_;
+			z = z_;
+			_padding = 0;
+		}
+			
+		unsigned int x;
+		unsigned int y;
+		unsigned int z;
+		unsigned int _padding;
+	};
+
 	/**
 	 * SoftBody class to maintain information about a soft body instance
 	 * within a solver.
@@ -105,7 +158,7 @@ protected:
 		{
 			return m_firstTriangle;
 		}
-		
+
 		/**
 		 * Update the bounds in the btSoftBody object
 		 */
@@ -181,58 +234,6 @@ protected:
 
 	};
 
-	/**
-	 * Entry in the collision shape array.
-	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
-	 */
-	struct CollisionShapeDescription
-	{
-		Vectormath::Aos::Transform3 shapeTransform;
-		Vectormath::Aos::Vector3 linearVelocity;
-		Vectormath::Aos::Vector3 angularVelocity;
-
-		int softBodyIdentifier;
-		int collisionShapeType;
-	
-		// Both needed for capsule
-		float radius;
-		float halfHeight;
-		
-		float margin;
-		float friction;
-
-		CollisionShapeDescription()
-		{
-			collisionShapeType = 0;
-			margin = 0;
-			friction = 0;
-		}
-	};
-
-	struct UIntVector3
-	{
-		UIntVector3()
-		{
-			x = 0;
-			y = 0;
-			z = 0;
-			_padding = 0;
-		}
-		
-		UIntVector3( unsigned int x_, unsigned int y_, unsigned int z_ )
-		{
-			x = x_;
-			y = y_;
-			z = z_;
-			_padding = 0;
-		}
-			
-		unsigned int x;
-		unsigned int y;
-		unsigned int z;
-		unsigned int _padding;
-	};
-
 	struct CollisionObjectIndices
 	{
 		CollisionObjectIndices( int f, int e )
@@ -245,7 +246,9 @@ protected:
 		int endObject;
 	};
 
-	btSoftBodyLinkDataOpenCL m_linkData;
+
+
+	btSoftBodyLinkDataOpenCLSIMDAware m_linkData;
 	btSoftBodyVertexDataOpenCL m_vertexData;
 	btSoftBodyTriangleDataOpenCL m_triangleData;
 
@@ -291,7 +294,6 @@ protected:
 	/** Density of the medium in which each cloth sits */
 	btAlignedObjectArray< float >						m_perClothMediumDensity;
 	btOpenCLBuffer<float>								m_clPerClothMediumDensity;
-
 	/** 
 	 * Collision shape details: pair of index of first collision shape for the cloth and number of collision objects.
 	 */
@@ -311,8 +313,10 @@ protected:
 	 * Bit 31 is inverted - is floats are stored with int-sortable values.
 	 * This is really a uint4 array but thanks to a limitation of OpenCL atomics we are using uints.
 	 */
-	btAlignedObjectArray< UIntVector3 >		m_perClothMinBounds;
-	btOpenCLBuffer< UIntVector3 >			m_clPerClothMinBounds;
+	//btAlignedObjectArray< UIntVector3 >		m_perClothMinBounds;
+	//btOpenCLBuffer< UIntVector3 >			m_clPerClothMinBounds;
+	btAlignedObjectArray< cl_uint >		m_perClothMinBounds;
+	btOpenCLBuffer< cl_uint >			m_clPerClothMinBounds;
 
 	/** 
 	 * Maximum bounds for each cloth.
@@ -320,8 +324,10 @@ protected:
 	 * These are int vectors as a reminder that they store the int representation of a float, not a float.
 	 * Bit 31 is inverted - is floats are stored with int-sortable values.
 	 */
-	btAlignedObjectArray< UIntVector3 >		m_perClothMaxBounds;
-	btOpenCLBuffer< UIntVector3 >			m_clPerClothMaxBounds;
+	//btAlignedObjectArray< UIntVector3 >		m_perClothMaxBounds;
+	//btOpenCLBuffer< UIntVector3 >			m_clPerClothMaxBounds;
+	btAlignedObjectArray< cl_uint >		m_perClothMaxBounds;
+	btOpenCLBuffer< cl_uint >			m_clPerClothMaxBounds;
 
 	
 	/** 
@@ -330,9 +336,6 @@ protected:
 	btAlignedObjectArray< float >	m_perClothFriction;
 	btOpenCLBuffer< float >			m_clPerClothFriction;
 
-
-
-	cl_kernel		prepareLinksKernel;
 	cl_kernel		solvePositionsFromLinksKernel;
 	cl_kernel		updateConstantsKernel;
 	cl_kernel		integrateKernel;
@@ -340,19 +343,16 @@ protected:
 	cl_kernel		updatePositionsFromVelocitiesKernel;
 	cl_kernel		updateVelocitiesFromPositionsWithoutVelocitiesKernel;
 	cl_kernel		updateVelocitiesFromPositionsWithVelocitiesKernel;
-	cl_kernel		vSolveLinksKernel;
+	cl_kernel		computeBoundsKernel;
 	cl_kernel		solveCollisionsAndUpdateVelocitiesKernel;
 	cl_kernel		resetNormalsAndAreasKernel;
 	cl_kernel		normalizeNormalsAndAreasKernel;
-	cl_kernel		computeBoundsKernel;
 	cl_kernel		updateSoftBodiesKernel;
 	cl_kernel		outputToVertexArrayWithNormalsKernel;
 	cl_kernel		outputToVertexArrayWithoutNormalsKernel;
 
 	cl_kernel		outputToVertexArrayKernel;
 	cl_kernel		applyForcesKernel;
-	cl_kernel		collideSphereKernel;
-	cl_kernel		collideCylinderKernel;
 
 	cl_command_queue	m_cqCommandQue;
 	cl_context			m_cxMainContext;
@@ -361,7 +361,7 @@ protected:
 	/**
 	 * Compile a compute shader kernel from a string and return the appropriate cl_kernel object.
 	 */
-	cl_kernel compileCLKernelFromString( const char *shaderString, const char *shaderName );
+	cl_kernel compileCLKernelFromString( const char *shaderString, const char *shaderName, const char* additionalMacros );
 
 	bool buildShaders();
 
@@ -398,8 +398,6 @@ protected:
 
 	//////////////////////////////////////
 	// Kernel dispatches
-	void prepareLinks();
-
 	void solveLinksForVelocity( int startLink, int numLinks, float kst );
 
 	void updatePositionsFromVelocities( float solverdt );
@@ -409,6 +407,7 @@ protected:
 	void updateVelocitiesFromPositionsWithVelocities( float isolverdt );
 
 	void updateVelocitiesFromPositionsWithoutVelocities( float isolverdt );
+
 	void computeBounds( );
 	void solveCollisionsAndUpdateVelocities( float isolverdt );
 
@@ -418,9 +417,9 @@ protected:
 	void updateBounds();
 
 public:
-	btOpenCLSoftBodySolver(cl_command_queue queue,cl_context	ctx);
+	btOpenCLSoftBodySolverSIMDAware(cl_command_queue queue,cl_context	ctx);
 
-	virtual ~btOpenCLSoftBodySolver();
+	virtual ~btOpenCLSoftBodySolverSIMDAware();
 
 
 
@@ -445,9 +444,9 @@ public:
 	virtual void predictMotion( float solverdt );
 
 	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
-
+	
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
-}; // btOpenCLSoftBodySolver
+}; // btOpenCLSoftBodySolverSIMDAware
 
-#endif // #ifndef BT_SOFT_BODY_SOLVER_OPENCL_H
+#endif // #ifndef BT_SOFT_BODY_SOLVER_OPENCL_SIMDAWARE_H

@@ -47,10 +47,17 @@ protected:
 				float halfHeight;
 			} capsule;
 		} shapeInformation;
+		
+		float margin;
+		float friction;
+		Vectormath::Aos::Vector3 linearVelocity;
+		Vectormath::Aos::Vector3 angularVelocity;
 
 		CollisionShapeDescription()
 		{
 			collisionShapeType = 0;
+			margin = 0;
+			friction = 0;
 		}
 	};
 
@@ -129,6 +136,11 @@ protected:
 			return m_firstTriangle;
 		}
 
+		/**
+		 * Update the bounds in the btSoftBody object
+		 */
+		void updateBounds( btVector3 lowerBound, btVector3 upperBound );
+
 		// TODO: All of these set functions will have to do checks and
 		// update the world because restructuring of the arrays will be necessary
 		// Reasonable use of "friend"?
@@ -196,39 +208,17 @@ protected:
 		{
 			return m_softBody;
 		}
-
-	#if 0
-		void setAcceleration( Vectormath::Aos::Vector3 acceleration )
-		{
-			m_currentSolver->setPerClothAcceleration( m_clothIdentifier, acceleration );
-		}
-
-		void setWindVelocity( Vectormath::Aos::Vector3 windVelocity )
-		{
-			m_currentSolver->setPerClothWindVelocity( m_clothIdentifier, windVelocity );
-		}
-
-		/** 
-		 * Set the density of the air in which the cloth is situated.
-		 */
-		void setAirDensity( btScalar density )
-		{
-			m_currentSolver->setPerClothMediumDensity( m_clothIdentifier, static_cast<float>(density) );
-		}
-
-		/**
-		 * Add a collision object to this soft body.
-		 */
-		void addCollisionObject( btCollisionObject *collisionObject )
-		{
-			m_currentSolver->addCollisionObjectForSoftBody( m_clothIdentifier, collisionObject );
-		}
-	#endif
 	};
 
 
 	struct CollisionObjectIndices
 	{
+		CollisionObjectIndices( int f, int e )
+		{
+			firstObject = f;
+			endObject = e;
+		}
+
 		int firstObject;
 		int endObject;
 	};
@@ -299,6 +289,10 @@ protected:
 	void integrate( float solverdt );
 	void updateConstants( float timeStep );
 	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	int findSoftBodyIndex( const btSoftBody* const softBody );
+	
+	/** Update the bounds of the soft body objects in the solver */
+	void updateBounds();
 
 
 public:
@@ -317,14 +311,6 @@ public:
 
 
 
-	/**
-	 * Add a collision object to be used by the indicated softbody.
-	 */
-	virtual void addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject );
-
-
-
-
 
 
 
@@ -339,6 +325,8 @@ public:
 	virtual void predictMotion( float solverdt );
 
 	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
+
+	virtual void processCollision( btSoftBody *, btCollisionObject* );
 };
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_CPU_SOLVER_H

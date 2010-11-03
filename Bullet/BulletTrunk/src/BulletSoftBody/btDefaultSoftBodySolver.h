@@ -46,6 +46,9 @@ public:
 	virtual void predictMotion( float solverdt );
 
 	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
+
+	virtual void processCollision( btSoftBody *, btCollisionObject* );
+
 };
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_CPU_SOLVER_H

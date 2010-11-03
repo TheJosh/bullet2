@@ -30,6 +30,7 @@ subject to the following restrictions:
 class btBroadphaseInterface;
 class btDispatcher;
 
+class btSoftBodySolver;
 
 /* btSoftBodyWorldInfo	*/ 
 struct	btSoftBodyWorldInfo
@@ -51,6 +52,9 @@ class	btSoftBody : public btCollisionObject
 {
 public:
 	btAlignedObjectArray<class btCollisionObject*> m_collisionDisabledObjects;
+
+	// The solver object that handles this soft body
+	btSoftBodySolver *m_softBodySolver;
 
 	//
 	// Enumerations
@@ -845,6 +849,23 @@ public:
 	 * Return the wind velocity for interaction with the air.
 	 */
 	const btVector3& getWindVelocity();
+
+	//
+	// Set the solver that handles this soft body
+	// Should not be allowed to get out of sync with reality
+	// Currently called internally on addition to the world
+	void setSoftBodySolver( btSoftBodySolver *softBodySolver )
+	{
+		m_softBodySolver = softBodySolver;
+	}
+
+	//
+	// Return the solver that handles this soft body
+	// 
+	btSoftBodySolver *getSoftBodySolver()
+	{
+		return m_softBodySolver;
+	}
 
 
 	//

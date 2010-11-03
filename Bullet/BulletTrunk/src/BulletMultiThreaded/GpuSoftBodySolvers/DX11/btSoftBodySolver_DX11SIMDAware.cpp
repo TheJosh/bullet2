@@ -18,6 +18,7 @@ subject to the following restrictions:
 
 #define WAVEFRONT_SIZE 32
 #define WAVEFRONT_BLOCK_MULTIPLIER 2
+#define GROUP_SIZE (WAVEFRONT_SIZE*WAVEFRONT_BLOCK_MULTIPLIER)
 #define LINKS_PER_SIMD_LANE 16
 
 #define STRINGIFY( S ) STRINGIFY2( S )
@@ -30,10 +31,9 @@ subject to the following restrictions:
 #include "btSoftBodySolver_DX11SIMDAware.h"
 #include "btSoftBodySolverVertexBuffer_DX11.h"
 #include "BulletSoftBody/btSoftBody.h"
+#include "BulletCollision/CollisionShapes/btCapsuleShape.h"
 
 #define MSTRINGIFY(A) #A
-static char* PrepareLinksHLSLString = 
-#include "HLSL/PrepareLinks.hlsl"
 static char* UpdatePositionsFromVelocitiesHLSLString = 
 #include "HLSL/UpdatePositionsFromVelocities.hlsl"
 static char* SolvePositionsSIMDBatchedHLSLString = 
@@ -54,6 +54,10 @@ static char* OutputToVertexArrayHLSLString =
 #include "HLSL/OutputToVertexArray.hlsl"
 static char* VSolveLinksHLSLString = 
 #include "HLSL/VSolveLinks.hlsl"
+static char* ComputeBoundsHLSLString = 
+#include "HLSL/ComputeBounds.hlsl"
+static char* SolveCollisionsAndUpdateVelocitiesHLSLString =
+#include "HLSL/solveCollisionsAndUpdateVelocitiesSIMDBatched.hlsl"
 
 
 
@@ -181,7 +185,12 @@ btDX11SIMDAwareSoftBodySolver::btDX11SIMDAwareSoftBodySolver(ID3D11Device * dx11
 	m_dx11PerClothVelocityCorrectionCoefficient( m_dx11Device, m_dx11Context, &m_perClothVelocityCorrectionCoefficient, true ),
 	m_dx11PerClothLiftFactor( m_dx11Device, m_dx11Context, &m_perClothLiftFactor, true ),
 	m_dx11PerClothDragFactor( m_dx11Device, m_dx11Context, &m_perClothDragFactor, true ),
-	m_dx11PerClothMediumDensity( m_dx11Device, m_dx11Context, &m_perClothMediumDensity, true )
+	m_dx11PerClothMediumDensity( m_dx11Device, m_dx11Context, &m_perClothMediumDensity, true ),
+	m_dx11PerClothCollisionObjects( m_dx11Device, m_dx11Context, &m_perClothCollisionObjects, true ),
+	m_dx11CollisionObjectDetails( m_dx11Device, m_dx11Context, &m_collisionObjectDetails, true ),
+	m_dx11PerClothMinBounds( m_dx11Device, m_dx11Context, &m_perClothMinBounds, false ),
+	m_dx11PerClothMaxBounds( m_dx11Device, m_dx11Context, &m_perClothMaxBounds, false ),
+	m_dx11PerClothFriction( m_dx11Device, m_dx11Context, &m_perClothFriction, false )
 {
 	// Initial we will clearly need to update solver constants
 	// For now this is global for the cloths linked with this solver - we should probably make this body specific 
@@ -213,6 +222,10 @@ void btDX11SIMDAwareSoftBodySolver::releaseKernels()
 	SAFE_RELEASE( outputToVertexArrayWithNormalsKernel.kernel );
 	SAFE_RELEASE( outputToVertexArrayWithoutNormalsKernel.constBuffer );
 	SAFE_RELEASE( outputToVertexArrayWithoutNormalsKernel.kernel );
+	SAFE_RELEASE( solveCollisionsAndUpdateVelocitiesKernel.kernel );
+	SAFE_RELEASE( solveCollisionsAndUpdateVelocitiesKernel.constBuffer );
+	SAFE_RELEASE( computeBoundsKernel.kernel );
+	SAFE_RELEASE( computeBoundsKernel.constBuffer );
 
 
 	SAFE_RELEASE( addVelocityKernel.constBuffer );
@@ -260,14 +273,21 @@ void btDX11SIMDAwareSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody *
 			m_perClothLiftFactor.push_back( softBody->m_cfg.kLF );
 			m_perClothDragFactor.push_back( softBody->m_cfg.kDG );
 			m_perClothMediumDensity.push_back(softBody->getWorldInfo()->air_density);
+			// Simple init values. Actually we'll put 0 and -1 into them at the appropriate time
+			m_perClothMinBounds.push_back( UIntVector3( 0, 0, 0 ) );
+			m_perClothMaxBounds.push_back( UIntVector3( UINT_MAX, UINT_MAX, UINT_MAX ) );
+			m_perClothFriction.push_back( softBody->getFriction() );
+			m_perClothCollisionObjects.push_back( CollisionObjectIndices(-1, -1) );
 
 			// Add space for new vertices and triangles in the default solver for now
 			// TODO: Include space here for tearing too later
 			int firstVertex = getVertexData().getNumVertices();
 			int numVertices = softBody->m_nodes.size();
-			int maxVertices = numVertices;
+			// Round maxVertices to a multiple of the workgroup size so we know we're safe to run over in a given group
+			// maxVertices can be increased to allow tearing, but should be used sparingly because these extra verts will always be processed
+			int maxVertices = GROUP_SIZE*((numVertices+GROUP_SIZE)/GROUP_SIZE);
 			// Allocate space for new vertices in all the vertex arrays
-			getVertexData().createVertices( maxVertices, softBodyIndex );
+			getVertexData().createVertices( numVertices, softBodyIndex, maxVertices );
 
 			int firstTriangle = getTriangleData().getNumTriangles();
 			int numTriangles = softBody->m_faces.size();
@@ -532,6 +552,13 @@ void btDX11SIMDAwareSoftBodySolver::updateSoftBodies()
 
 	normalizeNormalsAndAreas( numVertices );
 
+	
+	// Clear the collision shape array for the next frame
+	// Ensure that the DX11 ones are moved off the device so they will be updated correctly
+	m_dx11CollisionObjectDetails.changedOnCPU();
+	m_dx11PerClothCollisionObjects.changedOnCPU();
+	m_collisionObjectDetails.clear();
+
 } // btDX11SIMDAwareSoftBodySolver::updateSoftBodies
 
 
@@ -686,6 +713,82 @@ float btDX11SIMDAwareSoftBodySolver::computeTriangleArea(
 	return area;
 } // btDX11SIMDAwareSoftBodySolver::computeTriangleArea
 
+
+
+void btDX11SIMDAwareSoftBodySolver::updateBounds()
+{	
+	using Vectormath::Aos::Point3;
+	// Interpretation structure for float and int
+	
+	struct FPRep {
+		unsigned int mantissa  : 23;
+		unsigned int exponent : 8;
+		unsigned int sign    : 1;
+	};
+	union FloatAsInt
+	{
+		float floatValue;
+		int intValue;
+		unsigned int uintValue;
+		FPRep fpRep;
+	};
+
+	
+	// Update bounds array to min and max int values to allow easy atomics
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		m_perClothMinBounds[softBodyIndex] = UIntVector3( UINT_MAX, UINT_MAX, UINT_MAX );
+		m_perClothMaxBounds[softBodyIndex] = UIntVector3( 0, 0, 0 );
+	}
+	
+	m_dx11PerClothMinBounds.moveToGPU();
+	m_dx11PerClothMaxBounds.moveToGPU();
+
+
+	computeBounds( );
+
+
+	m_dx11PerClothMinBounds.moveFromGPU();
+	m_dx11PerClothMaxBounds.moveFromGPU();
+
+
+	
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		UIntVector3 minBoundUInt = m_perClothMinBounds[softBodyIndex];
+		UIntVector3 maxBoundUInt = m_perClothMaxBounds[softBodyIndex];
+				
+		// Convert back to float
+		FloatAsInt fai;
+
+		btVector3 minBound;
+		fai.uintValue = minBoundUInt.x;
+	    fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
+		minBound.setX( fai.floatValue );
+		fai.uintValue = minBoundUInt.y;
+		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
+		minBound.setY( fai.floatValue );
+		fai.uintValue = minBoundUInt.z;
+		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
+		minBound.setZ( fai.floatValue );
+
+		btVector3 maxBound;
+		fai.uintValue = maxBoundUInt.x;
+		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
+		maxBound.setX( fai.floatValue );
+		fai.uintValue = maxBoundUInt.y;
+		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
+		maxBound.setY( fai.floatValue );
+		fai.uintValue = maxBoundUInt.z;
+		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
+		maxBound.setZ( fai.floatValue );
+		
+		// And finally assign to the soft body
+		m_softBodySet[softBodyIndex]->updateBounds( minBound, maxBound );
+	}
+} // btDX11SIMDAwareSoftBodySolver::updateBounds
+
+
 // Update constants here is a simple CPU version that is run on optimize
 void btDX11SIMDAwareSoftBodySolver::updateConstants( float timeStep )
 {
@@ -716,6 +819,61 @@ void btDX11SIMDAwareSoftBodySolver::updateConstants( float timeStep )
 } // btDX11SIMDAwareSoftBodySolver::updateConstants
 
 
+/**
+ * Sort the collision object details array and generate indexing into it for the per-cloth collision object array.
+ */
+void btDX11SIMDAwareSoftBodySolver::prepareCollisionConstraints()
+{
+	// First do a simple sort on the collision objects
+	btAlignedObjectArray<int> numObjectsPerClothPrefixSum;
+	btAlignedObjectArray<int> numObjectsPerCloth;
+	numObjectsPerCloth.resize( m_softBodySet.size(), 0 );
+	numObjectsPerClothPrefixSum.resize( m_softBodySet.size(), 0 );
+
+
+	class QuickSortCompare
+	{
+		public:
+
+		bool operator() ( const CollisionShapeDescription& a, const CollisionShapeDescription& b )
+		{
+			return ( a.softBodyIdentifier < b.softBodyIdentifier );
+		}
+	};
+
+	QuickSortCompare comparator;
+	m_collisionObjectDetails.quickSort( comparator );
+
+	// Generating indexing for perClothCollisionObjects
+	// First clear the previous values with the "no collision object for cloth" constant
+	for( int clothIndex = 0; clothIndex < m_perClothCollisionObjects.size(); ++clothIndex )
+	{
+		m_perClothCollisionObjects[clothIndex].firstObject = -1;
+		m_perClothCollisionObjects[clothIndex].endObject = -1;
+	}
+	int currentCloth = 0;
+	int startIndex = 0;
+	for( int collisionObject = 0; collisionObject < m_collisionObjectDetails.size(); ++collisionObject )
+	{
+		int nextCloth = m_collisionObjectDetails[collisionObject].softBodyIdentifier;
+		if( nextCloth != currentCloth )
+		{	
+			// Changed cloth in the array
+			// Set the end index and the range is what we need for currentCloth
+			m_perClothCollisionObjects[currentCloth].firstObject = startIndex;
+			m_perClothCollisionObjects[currentCloth].endObject = collisionObject;
+			currentCloth = nextCloth;
+			startIndex = collisionObject;
+		}
+	}
+
+	// And update last cloth	
+	m_perClothCollisionObjects[currentCloth].firstObject = startIndex;
+	m_perClothCollisionObjects[currentCloth].endObject =  m_collisionObjectDetails.size();
+	
+} // btDX11SIMDAwareSoftBodySolver::prepareCollisionConstraints
+
+
 
 void btDX11SIMDAwareSoftBodySolver::solveConstraints( float solverdt )
 {
@@ -743,10 +901,14 @@ void btDX11SIMDAwareSoftBodySolver::solveConstraints( float solverdt )
 	m_linkData.moveToAccelerator();
 	m_vertexData.moveToAccelerator();
 
+
+	
+	prepareCollisionConstraints();
+
+
 	// Solve drift
   	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 	{
- 		int it = iteration; 
 
 		for( int i = 0; i < m_linkData.m_wavefrontBatchStartLengths.size(); ++i )
 		{
@@ -760,8 +922,9 @@ void btDX11SIMDAwareSoftBodySolver::solveConstraints( float solverdt )
 
 
 
-
-	updateVelocitiesFromPositionsWithoutVelocities( 1.f/solverdt );
+	
+	// At this point assume that the force array is blank - we will overwrite it
+	solveCollisionsAndUpdateVelocities( 1.f/solverdt );
 
 } // btDX11SIMDAwareSoftBodySolver::solveConstraints
 
@@ -975,6 +1138,120 @@ void btDX11SIMDAwareSoftBodySolver::updateVelocitiesFromPositionsWithoutVelociti
 
 } // btDX11SIMDAwareSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities
 
+
+
+void btDX11SIMDAwareSoftBodySolver::computeBounds( )
+{
+	ComputeBoundsCB constBuffer;
+	m_vertexData.moveToAccelerator();
+
+	// Set the first link of the batch
+	// and the batch size
+	constBuffer.numNodes = m_vertexData.getNumVertices();
+	constBuffer.numSoftBodies = m_softBodySet.size();
+
+	D3D11_MAPPED_SUBRESOURCE MappedResource = {0};
+	m_dx11Context->Map( computeBoundsKernel.constBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource );
+	memcpy( MappedResource.pData, &constBuffer, sizeof(ComputeBoundsCB) );	
+	m_dx11Context->Unmap( computeBoundsKernel.constBuffer, 0 );
+	m_dx11Context->CSSetConstantBuffers( 0, 1, &computeBoundsKernel.constBuffer );
+
+	// Set resources and dispatch
+	m_dx11Context->CSSetShaderResources( 0, 1, &(m_vertexData.m_dx11ClothIdentifier.getSRV()) );
+	m_dx11Context->CSSetShaderResources( 1, 1, &(m_vertexData.m_dx11VertexPosition.getSRV()) );
+
+	m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &(m_dx11PerClothMinBounds.getUAV()), NULL );
+	m_dx11Context->CSSetUnorderedAccessViews( 1, 1, &(m_dx11PerClothMaxBounds.getUAV()), NULL );
+	
+	// Execute the kernel
+	m_dx11Context->CSSetShader( computeBoundsKernel.kernel, NULL, 0 );
+
+	int	numBlocks = (constBuffer.numNodes + (128-1)) / 128;
+	m_dx11Context->Dispatch(numBlocks , 1, 1 );
+
+	{
+		// Tidy up 
+		ID3D11ShaderResourceView* pViewNULL = NULL;
+		m_dx11Context->CSSetShaderResources( 0, 1, &pViewNULL );
+		m_dx11Context->CSSetShaderResources( 1, 1, &pViewNULL );
+
+		ID3D11UnorderedAccessView* pUAViewNULL = NULL;
+		m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &pUAViewNULL, NULL );
+		m_dx11Context->CSSetUnorderedAccessViews( 1, 1, &pUAViewNULL, NULL );
+
+		ID3D11Buffer *pBufferNull = NULL;
+		m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
+	}	
+} // btDX11SIMDAwareSoftBodySolver::computeBounds
+
+
+
+//#include <iostream>
+//#include <fstream>	
+void btDX11SIMDAwareSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
+{
+
+	// Copy kernel parameters to GPU
+	m_vertexData.moveToAccelerator();
+	m_dx11PerClothFriction.moveToGPU();
+	m_dx11PerClothDampingFactor.moveToGPU();
+	m_dx11PerClothCollisionObjects.moveToGPU();
+	m_dx11CollisionObjectDetails.moveToGPU();
+
+	SolveCollisionsAndUpdateVelocitiesCB constBuffer;
+
+	// Set the first link of the batch
+	// and the batch size
+	constBuffer.numNodes = m_vertexData.getNumVertices();
+	constBuffer.isolverdt = isolverdt;
+
+
+	D3D11_MAPPED_SUBRESOURCE MappedResource = {0};
+	m_dx11Context->Map( solveCollisionsAndUpdateVelocitiesKernel.constBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource );
+	memcpy( MappedResource.pData, &constBuffer, sizeof(SolveCollisionsAndUpdateVelocitiesCB) );	
+	m_dx11Context->Unmap( solveCollisionsAndUpdateVelocitiesKernel.constBuffer, 0 );
+	m_dx11Context->CSSetConstantBuffers( 0, 1, &solveCollisionsAndUpdateVelocitiesKernel.constBuffer );
+
+	// Set resources and dispatch
+	m_dx11Context->CSSetShaderResources( 0, 1, &(m_vertexData.m_dx11ClothIdentifier.getSRV()) );	
+	m_dx11Context->CSSetShaderResources( 1, 1, &(m_vertexData.m_dx11VertexPreviousPosition.getSRV()) );
+	m_dx11Context->CSSetShaderResources( 2, 1, &(m_dx11PerClothFriction.getSRV()) );
+	m_dx11Context->CSSetShaderResources( 3, 1, &(m_dx11PerClothDampingFactor.getSRV()) );
+	m_dx11Context->CSSetShaderResources( 4, 1, &(m_dx11PerClothCollisionObjects.getSRV()) );
+	m_dx11Context->CSSetShaderResources( 5, 1, &(m_dx11CollisionObjectDetails.getSRV()) );
+
+	m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &(m_vertexData.m_dx11VertexForceAccumulator.getUAV()), NULL );
+	m_dx11Context->CSSetUnorderedAccessViews( 1, 1, &(m_vertexData.m_dx11VertexVelocity.getUAV()), NULL );
+	m_dx11Context->CSSetUnorderedAccessViews( 2, 1, &(m_vertexData.m_dx11VertexPosition.getUAV()), NULL );
+	
+	// Execute the kernel
+	m_dx11Context->CSSetShader( solveCollisionsAndUpdateVelocitiesKernel.kernel, NULL, 0 );
+
+	int	numBlocks = (constBuffer.numNodes + (128-1)) / 128;
+	m_dx11Context->Dispatch(numBlocks , 1, 1 );
+
+	{
+		// Tidy up 
+		ID3D11ShaderResourceView* pViewNULL = NULL;
+		m_dx11Context->CSSetShaderResources( 0, 1, &pViewNULL );
+		m_dx11Context->CSSetShaderResources( 1, 1, &pViewNULL );
+		m_dx11Context->CSSetShaderResources( 2, 1, &pViewNULL );
+		m_dx11Context->CSSetShaderResources( 3, 1, &pViewNULL );
+		m_dx11Context->CSSetShaderResources( 4, 1, &pViewNULL );
+		m_dx11Context->CSSetShaderResources( 5, 1, &pViewNULL );
+
+		ID3D11UnorderedAccessView* pUAViewNULL = NULL;
+		m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &pUAViewNULL, NULL );
+		m_dx11Context->CSSetUnorderedAccessViews( 1, 1, &pUAViewNULL, NULL );
+		m_dx11Context->CSSetUnorderedAccessViews( 2, 1, &pUAViewNULL, NULL );
+
+		ID3D11Buffer *pBufferNull = NULL;
+		m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
+	}	
+
+
+} // btDX11SIMDAwareSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities
+
 // End kernel dispatches
 /////////////////////////////////////
 
@@ -996,6 +1273,18 @@ btDX11SIMDAwareSoftBodySolver::btAcceleratedSoftBodyInterface *btDX11SIMDAwareSo
 	}
 	return 0;
 }
+
+int btDX11SIMDAwareSoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
+{
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		if( softBodyInterface->getSoftBody() == softBody )
+			return softBodyIndex;
+	}
+	return 1;
+}
+
 
 void btDX11SIMDAwareSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
 {
@@ -1239,8 +1528,9 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 	applyForcesKernel = compileComputeShaderFromString( ApplyForcesHLSLString, "ApplyForcesKernel", sizeof(ApplyForcesCB) );
 	if( !applyForcesKernel.constBuffer )
 		returnVal = false;
-
-	// TODO: Rename to UpdateSoftBodies
+	solveCollisionsAndUpdateVelocitiesKernel = compileComputeShaderFromString( SolveCollisionsAndUpdateVelocitiesHLSLString, "SolveCollisionsAndUpdateVelocitiesKernel", sizeof(SolveCollisionsAndUpdateVelocitiesCB) );
+	if( !solveCollisionsAndUpdateVelocitiesKernel.constBuffer )
+		returnVal = false;
 	resetNormalsAndAreasKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "ResetNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !resetNormalsAndAreasKernel.constBuffer )
 		returnVal = false;
@@ -1256,14 +1546,71 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 	outputToVertexArrayWithoutNormalsKernel = compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithoutNormalsKernel", sizeof(OutputToVertexArrayCB) );
 	if( !outputToVertexArrayWithoutNormalsKernel.constBuffer )
 		returnVal = false;
-
+	
+	computeBoundsKernel = compileComputeShaderFromString( ComputeBoundsHLSLString, "ComputeBoundsKernel", sizeof(ComputeBoundsCB) );
+	if( !computeBoundsKernel.constBuffer )
+		returnVal = false;
 
 	if( returnVal )
 		m_shadersInitialized = true;
 
 	return returnVal;
+} // btDX11SIMDAwareSoftBodySolver::buildShaders
+
+static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
+{
+	Vectormath::Aos::Transform3 outTransform;
+	outTransform.setCol(0, toVector3(transform.getBasis().getColumn(0)));
+	outTransform.setCol(1, toVector3(transform.getBasis().getColumn(1)));
+	outTransform.setCol(2, toVector3(transform.getBasis().getColumn(2)));
+	outTransform.setCol(3, toVector3(transform.getOrigin()));
+	return outTransform;	
 }
 
+void btDX11SIMDAwareSoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( btVector3 lowerBound, btVector3 upperBound )
+{
+	float scalarMargin = this->getSoftBody()->getCollisionShape()->getMargin();
+	btVector3 vectorMargin( scalarMargin, scalarMargin, scalarMargin );
+	m_softBody->m_bounds[0] = lowerBound - vectorMargin;
+	m_softBody->m_bounds[1] = upperBound + vectorMargin;
+}  // btDX11SIMDAwareSoftBodySolver::btDX11AcceleratedSoftBodyInterface::updateBounds
+
+
+// Add the collision object to the set to deal with for a particular soft body
+void btDX11SIMDAwareSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
+{
+	int softBodyIndex = findSoftBodyIndex( softBody );
+
+	if( softBodyIndex >= 0 )
+	{
+		btCollisionShape *collisionShape = collisionObject->getCollisionShape();
+		float friction = collisionObject->getFriction();
+		int shapeType = collisionShape->getShapeType();
+		if( shapeType == CAPSULE_SHAPE_PROXYTYPE )
+		{
+			// Add to the list of expected collision objects
+			CollisionShapeDescription newCollisionShapeDescription;
+			newCollisionShapeDescription.softBodyIdentifier = softBodyIndex;
+			newCollisionShapeDescription.collisionShapeType = shapeType;
+			// TODO: May need to transpose this matrix either here or in HLSL
+			newCollisionShapeDescription.shapeTransform = toTransform3(collisionObject->getWorldTransform());
+			btCapsuleShape *capsule = static_cast<btCapsuleShape*>( collisionShape );
+			newCollisionShapeDescription.radius = capsule->getRadius();
+			newCollisionShapeDescription.halfHeight = capsule->getHalfHeight();
+			newCollisionShapeDescription.margin = capsule->getMargin();
+			newCollisionShapeDescription.friction = friction;
+			btRigidBody* body = static_cast< btRigidBody* >( collisionObject );
+			newCollisionShapeDescription.linearVelocity = toVector3(body->getLinearVelocity());
+			newCollisionShapeDescription.angularVelocity = toVector3(body->getAngularVelocity());
+			m_collisionObjectDetails.push_back( newCollisionShapeDescription );
+
+		} else {
+			btAssert("Unsupported collision shape type\n");
+		}
+	} else {
+		btAssert("Unknown soft body");
+	}
+} // btDX11SIMDAwareSoftBodySolver::processCollision
 
 
 void btDX11SIMDAwareSoftBodySolver::predictMotion( float timeStep )
@@ -1283,6 +1630,12 @@ void btDX11SIMDAwareSoftBodySolver::predictMotion( float timeStep )
 
 	// Itegrate motion for all soft bodies dealt with by the solver
 	integrate( timeStep * getTimeScale() );
+		
+	// Update bounds
+	// Will update the bounds for all softBodies being dealt with by the solver and 
+	// set the values in the btSoftBody object
+	updateBounds();
+
 	// End prediction work for solvers
 }
 
@@ -1406,9 +1759,7 @@ template< typename T > static void insertUniqueAndOrderedIntoVector( btAlignedOb
 		insertAtIndex( vectorToUpdate, index, element );
 }
 
-// Experimental batch generation that we could use in the simulations
-// Attempts to generate larger batches that work on a per-wavefront basis
-void generateLinksPerVertex( int numVertices, btSoftBodyLinkData &linkData, btAlignedObjectArray< int > &listOfLinksPerVertex, btAlignedObjectArray <int> &numLinksPerVertex, int &maxLinks )
+static void generateLinksPerVertex( int numVertices, btSoftBodyLinkData &linkData, btAlignedObjectArray< int > &listOfLinksPerVertex, btAlignedObjectArray <int> &numLinksPerVertex, int &maxLinks )
 {
 	for( int linkIndex = 0; linkIndex < linkData.getNumLinks(); ++linkIndex )
 	{
