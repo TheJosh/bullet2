@@ -162,7 +162,7 @@ protected:
 		/**
 		 * Update the bounds in the btSoftBody object
 		 */
-		void updateBounds( btVector3 lowerBound, btVector3 upperBound );
+		void updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound );
 
 		// TODO: All of these set functions will have to do checks and
 		// update the world because restructuring of the arrays will be necessary

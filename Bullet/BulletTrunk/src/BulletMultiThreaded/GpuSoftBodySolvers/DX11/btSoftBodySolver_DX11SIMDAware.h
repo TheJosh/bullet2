@@ -158,7 +158,7 @@ public:
 		/**
 		 * Update the bounds in the btSoftBody object
 		 */
-		void updateBounds( btVector3 lowerBound, btVector3 upperBound );
+		void updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound );
 
 		void setNumVertices( int numVertices )
 		{

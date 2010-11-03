@@ -1567,7 +1567,7 @@ static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
 	return outTransform;	
 }
 
-void btDX11SIMDAwareSoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( btVector3 lowerBound, btVector3 upperBound )
+void btDX11SIMDAwareSoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound )
 {
 	float scalarMargin = this->getSoftBody()->getCollisionShape()->getMargin();
 	btVector3 vectorMargin( scalarMargin, scalarMargin, scalarMargin );
