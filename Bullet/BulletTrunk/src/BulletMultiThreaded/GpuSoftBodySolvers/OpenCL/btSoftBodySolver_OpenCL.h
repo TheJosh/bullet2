@@ -351,8 +351,6 @@ protected:
 
 	cl_kernel		outputToVertexArrayKernel;
 	cl_kernel		applyForcesKernel;
-	cl_kernel		collideSphereKernel;
-	cl_kernel		collideCylinderKernel;
 
 	cl_command_queue	m_cqCommandQue;
 	cl_context			m_cxMainContext;
@@ -360,10 +358,10 @@ protected:
 
 	/**
 	 * Compile a compute shader kernel from a string and return the appropriate cl_kernel object.
-	 */
-	cl_kernel compileCLKernelFromString( const char *shaderString, const char *shaderName );
+	 */	
+	cl_kernel compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros = "" );
 
-	bool buildShaders();
+	virtual bool buildShaders();
 
 	void resetNormalsAndAreas( int numVertices );
 
@@ -388,7 +386,7 @@ protected:
 	 */
 	virtual void integrate( float solverdt );
 
-	void updateConstants( float timeStep );
+	virtual void updateConstants( float timeStep );
 
 	float computeTriangleArea( 
 		const Vectormath::Aos::Point3 &vertex0,
@@ -404,18 +402,20 @@ protected:
 
 	void updatePositionsFromVelocities( float solverdt );
 
-	void solveLinksForPosition( int startLink, int numLinks, float kst, float ti );
+	virtual void solveLinksForPosition( int startLink, int numLinks, float kst, float ti );
 	
 	void updateVelocitiesFromPositionsWithVelocities( float isolverdt );
 
 	void updateVelocitiesFromPositionsWithoutVelocities( float isolverdt );
 	void computeBounds( );
-	void solveCollisionsAndUpdateVelocities( float isolverdt );
+	virtual void solveCollisionsAndUpdateVelocities( float isolverdt );
 
 	// End kernel dispatches
 	/////////////////////////////////////
 	
 	void updateBounds();
+
+	void releaseKernels();
 
 public:
 	btOpenCLSoftBodySolver(cl_command_queue queue,cl_context	ctx);

@@ -88,7 +88,7 @@ protected:
 	 * within a solver.
 	 * This data addresses the main solver arrays.
 	 */
-	class btDX11AcceleratedSoftBodyInterface
+	class btAcceleratedSoftBodyInterface
 	{
 	protected:
 		/** Current number of vertices that are part of this cloth */
@@ -115,7 +115,7 @@ protected:
 
 
 	public:
-		btDX11AcceleratedSoftBodyInterface( btSoftBody *softBody ) :
+		btAcceleratedSoftBodyInterface( btSoftBody *softBody ) :
 		  m_softBody( softBody )
 		{
 			m_numVertices = 0;
@@ -392,7 +392,7 @@ public:
 	
 
 
-private:
+protected:
 	ID3D11Device *		 m_dx11Device;
 	ID3D11DeviceContext* m_dx11Context;
 
@@ -411,7 +411,7 @@ private:
 	 * Cloths owned by this solver.
 	 * Only our cloths are in this array.
 	 */
-	btAlignedObjectArray< btDX11AcceleratedSoftBodyInterface * > m_softBodySet;
+	btAlignedObjectArray< btAcceleratedSoftBodyInterface * > m_softBodySet;
 
 	/** Acceleration value to be applied to all non-static vertices in the solver. 
 	 * Index n is cloth n, array sized by number of cloths in the world not the solver. 
@@ -499,7 +499,6 @@ private:
 	KernelDesc		outputToVertexArrayWithNormalsKernel;
 	KernelDesc		outputToVertexArrayWithoutNormalsKernel;
 
-	KernelDesc		outputToVertexArrayKernel;
 	KernelDesc		applyForcesKernel;
 
 
@@ -516,9 +515,9 @@ private:
 	/**
 	 * Compile a compute shader kernel from a string and return the appropriate KernelDesc object.
 	 */
-	KernelDesc compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize );
+	KernelDesc compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize, D3D10_SHADER_MACRO *compileMacros = 0 );
 
-	bool buildShaders();
+	virtual bool buildShaders();
 
 	void resetNormalsAndAreas( int numVertices );
 
@@ -534,14 +533,14 @@ private:
 
 	virtual void applyForces( float solverdt );
 	
-	void updateConstants( float timeStep );
+	virtual void updateConstants( float timeStep );
 
-	btDX11AcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
 	int findSoftBodyIndex( const btSoftBody* const softBody );
 
 	//////////////////////////////////////
 	// Kernel dispatches
-	void prepareLinks();
+	virtual void prepareLinks();
 
 	void updatePositionsFromVelocities( float solverdt );
 	void solveLinksForPosition( int startLink, int numLinks, float kst, float ti );
@@ -556,6 +555,9 @@ private:
 	/////////////////////////////////////
 
 	void updateBounds();
+
+	
+	void releaseKernels();
 
 public:
 	btDX11SoftBodySolver(ID3D11Device * dx11Device, ID3D11DeviceContext* dx11Context);

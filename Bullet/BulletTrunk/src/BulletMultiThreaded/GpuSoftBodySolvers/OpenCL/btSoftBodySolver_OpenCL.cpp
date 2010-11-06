@@ -24,6 +24,8 @@ subject to the following restrictions:
 
      static const size_t workGroupSize = 128;
 
+#define RELEASE_CL_KERNEL(kernelName) {if( kernelName ){ clReleaseKernel( kernelName ); kernelName = 0; }}
+
 
 //CL_VERSION_1_1 seems broken on NVidia SDK so just disable it
 
@@ -613,11 +615,56 @@ btOpenCLSoftBodySolver::btOpenCLSoftBodySolver(cl_command_queue queue, cl_contex
 	m_updateSolverConstants = true;
 
 	m_shadersInitialized = false;
+
+	prepareLinksKernel = 0;
+	solvePositionsFromLinksKernel = 0;
+	updateConstantsKernel = 0;
+	integrateKernel = 0;
+	addVelocityKernel = 0;
+	updatePositionsFromVelocitiesKernel = 0;
+	updateVelocitiesFromPositionsWithoutVelocitiesKernel = 0;
+	updateVelocitiesFromPositionsWithVelocitiesKernel = 0;
+	vSolveLinksKernel = 0;
+	solveCollisionsAndUpdateVelocitiesKernel = 0;
+	resetNormalsAndAreasKernel = 0;
+	resetNormalsAndAreasKernel = 0;
+	normalizeNormalsAndAreasKernel = 0;
+	computeBoundsKernel = 0;
+	outputToVertexArrayWithNormalsKernel = 0;
+	outputToVertexArrayWithNormalsKernel = 0;
+	outputToVertexArrayWithoutNormalsKernel = 0;
+	outputToVertexArrayKernel = 0;
+	applyForcesKernel = 0;
 }
 
 btOpenCLSoftBodySolver::~btOpenCLSoftBodySolver()
 {
+	releaseKernels();
 }
+
+void btOpenCLSoftBodySolver::releaseKernels()
+{
+	RELEASE_CL_KERNEL( prepareLinksKernel );
+	RELEASE_CL_KERNEL( solvePositionsFromLinksKernel );
+	RELEASE_CL_KERNEL( updateConstantsKernel );
+	RELEASE_CL_KERNEL( integrateKernel );
+	RELEASE_CL_KERNEL( addVelocityKernel );
+	RELEASE_CL_KERNEL( updatePositionsFromVelocitiesKernel );
+	RELEASE_CL_KERNEL( updateVelocitiesFromPositionsWithoutVelocitiesKernel );
+	RELEASE_CL_KERNEL( updateVelocitiesFromPositionsWithVelocitiesKernel );
+	RELEASE_CL_KERNEL( vSolveLinksKernel );
+	RELEASE_CL_KERNEL( solveCollisionsAndUpdateVelocitiesKernel );
+	RELEASE_CL_KERNEL( resetNormalsAndAreasKernel );
+	RELEASE_CL_KERNEL( normalizeNormalsAndAreasKernel );
+	RELEASE_CL_KERNEL( computeBoundsKernel );
+	RELEASE_CL_KERNEL( outputToVertexArrayWithNormalsKernel );
+	RELEASE_CL_KERNEL( outputToVertexArrayWithoutNormalsKernel );
+	RELEASE_CL_KERNEL( outputToVertexArrayKernel );
+	RELEASE_CL_KERNEL( applyForcesKernel );
+
+	m_shadersInitialized = false;
+}
+
 
 void btOpenCLSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
 {
@@ -753,12 +800,6 @@ btSoftBodyTriangleData &btOpenCLSoftBodySolver::getTriangleData()
 {
 	// TODO: Consider setting triangle data to "changed" here
 	return m_triangleData;
-}
-
-
-bool btOpenCLSoftBodySolver::checkInitialized()
-{
-	return buildShaders();
 }
 
 void btOpenCLSoftBodySolver::resetNormalsAndAreas( int numVertices )
@@ -1452,7 +1493,7 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 } // btCPUSoftBodySolver::outputToVertexBuffers
 
 
-cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelSource, const char* kernelName )
+cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros )
 {
 	printf("compiling kernalName: %s ",kernelName);
 	cl_kernel kernel;
@@ -1463,12 +1504,18 @@ cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelS
 //	oclCHECKERROR(ciErrNum, CL_SUCCESS);
 		
     // Build the program with 'mad' Optimization option
+
+	
 #ifdef MAC
 	char* flags = "-cl-mad-enable -DMAC -DGUID_ARG";
 #else
-	const char* flags = "-DGUID_ARG=";
+	//const char* flags = "-DGUID_ARG= -fno-alias";
+	const char* flags = "-DGUID_ARG= ";
 #endif
-    ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, flags, NULL, NULL);
+
+	char* compileFlags = new char[strlen(additionalMacros) + strlen(flags) + 5];
+	sprintf(compileFlags, "%s %s", flags, additionalMacros);
+    ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, compileFlags, NULL, NULL);
     if (ciErrNum != CL_SUCCESS)
     {
 		size_t numDevices;
@@ -1495,6 +1542,7 @@ cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelS
         exit(0);
     }
 	
+	
     // Create the kernel
     kernel = clCreateKernel(m_cpProgram, kernelName, &ciErrNum);
     if (ciErrNum != CL_SUCCESS)
@@ -1505,6 +1553,7 @@ cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelS
     }
 
 	printf("ready. \n");
+	delete [] compileFlags;
 	return kernel;
 
 }
@@ -1613,8 +1662,20 @@ int btOpenCLSoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody 
 	return 1;
 }
 
+bool btOpenCLSoftBodySolver::checkInitialized()
+{
+	if( !m_shadersInitialized )
+		if( buildShaders() )
+			m_shadersInitialized = true;
+
+	return m_shadersInitialized;
+}
+
 bool btOpenCLSoftBodySolver::buildShaders()
 {
+	// Ensure current kernels are released first
+	releaseKernels();
+
 	bool returnVal = true;
 
 	if( m_shadersInitialized )

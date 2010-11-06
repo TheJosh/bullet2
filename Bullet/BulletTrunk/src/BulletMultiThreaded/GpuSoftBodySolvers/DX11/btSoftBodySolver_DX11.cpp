@@ -575,15 +575,20 @@ btDX11SoftBodySolver::btDX11SoftBodySolver(ID3D11Device * dx11Device, ID3D11Devi
 }
 
 btDX11SoftBodySolver::~btDX11SoftBodySolver()
+{	
+	releaseKernels();
+}
+
+void btDX11SoftBodySolver::releaseKernels()
 {
+	
+	SAFE_RELEASE( prepareLinksKernel.kernel );
+	SAFE_RELEASE( prepareLinksKernel.constBuffer );
+	SAFE_RELEASE( integrateKernel.kernel );
 	SAFE_RELEASE( integrateKernel.constBuffer );
 	SAFE_RELEASE( integrateKernel.kernel );
-	SAFE_RELEASE( prepareLinksKernel.constBuffer );
-	SAFE_RELEASE( prepareLinksKernel.kernel );
 	SAFE_RELEASE( solvePositionsFromLinksKernel.constBuffer );
 	SAFE_RELEASE( solvePositionsFromLinksKernel.kernel );
-	SAFE_RELEASE( vSolveLinksKernel.constBuffer );
-	SAFE_RELEASE( vSolveLinksKernel.kernel );
 	SAFE_RELEASE( updatePositionsFromVelocitiesKernel.constBuffer );
 	SAFE_RELEASE( updatePositionsFromVelocitiesKernel.kernel );
 	SAFE_RELEASE( updateVelocitiesFromPositionsWithoutVelocitiesKernel.constBuffer );
@@ -604,14 +609,15 @@ btDX11SoftBodySolver::~btDX11SoftBodySolver()
 	SAFE_RELEASE( solveCollisionsAndUpdateVelocitiesKernel.constBuffer );
 	SAFE_RELEASE( computeBoundsKernel.kernel );
 	SAFE_RELEASE( computeBoundsKernel.constBuffer );
-
+	SAFE_RELEASE( vSolveLinksKernel.kernel );
+	SAFE_RELEASE( vSolveLinksKernel.constBuffer );
 
 	SAFE_RELEASE( addVelocityKernel.constBuffer );
 	SAFE_RELEASE( addVelocityKernel.kernel );
 	SAFE_RELEASE( applyForcesKernel.constBuffer );
 	SAFE_RELEASE( applyForcesKernel.kernel );
-	SAFE_RELEASE( outputToVertexArrayKernel.constBuffer );
-	SAFE_RELEASE( outputToVertexArrayKernel.kernel );
+
+	m_shadersInitialized = false;
 }
 
 
@@ -634,7 +640,7 @@ void btDX11SoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softB
 			using Vectormath::Aos::Point3;
 
 			// Create SoftBody that will store the information within the solver
-			btDX11AcceleratedSoftBodyInterface *newSoftBody = new btDX11AcceleratedSoftBodyInterface( softBody );
+			btAcceleratedSoftBodyInterface *newSoftBody = new btAcceleratedSoftBodyInterface( softBody );
 			m_softBodySet.push_back( newSoftBody );
 
 			m_perClothAcceleration.push_back( toVector3(softBody->getWorldInfo()->m_gravity) );
@@ -755,7 +761,11 @@ btSoftBodyTriangleData &btDX11SoftBodySolver::getTriangleData()
 
 bool btDX11SoftBodySolver::checkInitialized()
 {
-	return buildShaders();
+	if( !m_shadersInitialized )
+		if( buildShaders() )
+			m_shadersInitialized = true;
+
+	return m_shadersInitialized;
 }
 
 void btDX11SoftBodySolver::resetNormalsAndAreas( int numVertices )
@@ -1635,25 +1645,8 @@ void btDX11SoftBodySolver::computeBounds( )
 	}	
 }
 
-
-
-//#include <iostream>
-//#include <fstream>	
 void btDX11SoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
 {
-	/*std::ofstream outputFile( "C:\\collisionOutput.txt", std::ios::app );
-
-	outputFile << "\n\n\n";
-	if( m_collisionObjectDetails.size() > 0 )
-		outputFile << "Have " << m_perClothCollisionObjects.size() << " collision objects\n";
-
-	outputFile << "Before solve:\n";
-	for( int i = 0; i < 10; ++i )
-	{
-		outputFile << "\tpos: " << m_vertexData.getPosition(i).getX() << ", " << m_vertexData.getPosition(i).getY() << ", " << m_vertexData.getPosition(i).getZ();
-		outputFile << "\tvel: " << m_vertexData.getVelocity(i).getX() << ", " << m_vertexData.getVelocity(i).getY() << ", " << m_vertexData.getVelocity(i).getZ() << "\n";
-	}
-	outputFile << "\n\n";*/
 
 	// Copy kernel parameters to GPU
 	m_vertexData.moveToAccelerator();
@@ -1713,26 +1706,7 @@ void btDX11SoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
 		m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
 	}	
 
-	
-
-	/*
-	m_vertexData.moveFromAccelerator();
-	outputFile << "After solve:\n";
-	if( m_collisionObjectDetails.size() > 0 )
-	for( int i = 0; i < 1600; ++i )
-	{
-		outputFile << "\tpos: " << m_vertexData.getPosition(i).getX() << ", " << m_vertexData.getPosition(i).getY() << ", " << m_vertexData.getPosition(i).getZ() ;
-		outputFile << "\tvel: " << m_vertexData.getVelocity(i).getX() << ", " << m_vertexData.getVelocity(i).getY() << ", " << m_vertexData.getVelocity(i).getZ() << "\n";
-	}
-	outputFile << "\n\n";
-
-	outputFile << "----------------------------------------------------\n\n";
-	outputFile.close();
-	
-	if( m_collisionObjectDetails.size() > 0 )
-		outputFile << "Have " << m_perClothCollisionObjects.size() << " collision objects\n";*/
-
-} // btDX11SoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities
+} // btDX11SoftBodySolver::solveCollisionsAndUpdateVelocities
 
 // End kernel dispatches
 /////////////////////////////////////
@@ -1750,11 +1724,11 @@ void btDX11SoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
 
 
 
-btDX11SoftBodySolver::btDX11AcceleratedSoftBodyInterface *btDX11SoftBodySolver::findSoftBodyInterface( const btSoftBody* const softBody )
+btDX11SoftBodySolver::btAcceleratedSoftBodyInterface *btDX11SoftBodySolver::findSoftBodyInterface( const btSoftBody* const softBody )
 {
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
 	{
-		btDX11AcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
 		if( softBodyInterface->getSoftBody() == softBody )
 			return softBodyInterface;
 	}
@@ -1765,7 +1739,7 @@ int btDX11SoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
 {
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
 	{
-		btDX11AcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
 		if( softBodyInterface->getSoftBody() == softBody )
 			return softBodyIndex;
 	}
@@ -1776,7 +1750,7 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 {
 	checkInitialized();
 	
-	btDX11AcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
+	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
 
 
 	const int firstVertex = currentCloth->getFirstVertex();
@@ -1928,7 +1902,7 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 
 
 
-btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize )
+btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize, D3D10_SHADER_MACRO *compileMacros )
 {
 	const char *cs5String = "cs_5_0";
 
@@ -1936,12 +1910,12 @@ btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromS
 	ID3DBlob* pErrorBlob = NULL;
 	ID3DBlob* pBlob = NULL;
 	ID3D11ComputeShader*		kernelPointer = 0;
-	
+
 	hr = D3DX11CompileFromMemory( 
 		shaderString,
 		strlen(shaderString),
-		shaderName, // file name
-		NULL,
+		shaderName,
+		compileMacros,
 		NULL,
 		shaderName,
 		cs5String,
@@ -1957,7 +1931,8 @@ btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromS
 	{
 		if( pErrorBlob ) {
 			btAssert( "Compilation of compute shader failed\n" );
-			OutputDebugStringA( (char*)pErrorBlob->GetBufferPointer() );
+			char *debugString = (char*)pErrorBlob->GetBufferPointer();
+			OutputDebugStringA( debugString );
 		}
 	
 		SAFE_RELEASE( pErrorBlob );
@@ -2009,12 +1984,17 @@ btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromS
 } // compileComputeShader
 
 
+
 bool btDX11SoftBodySolver::buildShaders()
 {
+	// Ensure current kernels are released first
+	releaseKernels();
+
 	bool returnVal = true;
 
 	if( m_shadersInitialized )
 		return true;
+	
 
 	prepareLinksKernel = compileComputeShaderFromString( PrepareLinksHLSLString, "PrepareLinksKernel", sizeof(PrepareLinksCB) );
 	if( !prepareLinksKernel.constBuffer )
@@ -2085,7 +2065,7 @@ static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
 }
 
 
-void btDX11SoftBodySolver::btDX11AcceleratedSoftBodyInterface::updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound )
+void btDX11SoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound )
 {
 	float scalarMargin = this->getSoftBody()->getCollisionShape()->getMargin();
 	btVector3 vectorMargin( scalarMargin, scalarMargin, scalarMargin );

@@ -194,23 +194,8 @@ bool btSoftBodyLinkDataOpenCLSIMDAware::moveFromAccelerator()
 
 
 btOpenCLSoftBodySolverSIMDAware::btOpenCLSoftBodySolverSIMDAware(cl_command_queue queue, cl_context ctx) :
-	m_linkData(queue, ctx),
-	m_vertexData(queue, ctx),
-	m_triangleData(queue, ctx),
-	m_clPerClothAcceleration(queue, ctx, &m_perClothAcceleration, true ),
-	m_clPerClothWindVelocity(queue, ctx, &m_perClothWindVelocity, true ),
-	m_clPerClothDampingFactor(queue,ctx, &m_perClothDampingFactor, true ),
-	m_clPerClothVelocityCorrectionCoefficient(queue, ctx,&m_perClothVelocityCorrectionCoefficient, true ),
-	m_clPerClothLiftFactor(queue, ctx,&m_perClothLiftFactor, true ),
-	m_clPerClothDragFactor(queue, ctx,&m_perClothDragFactor, true ),
-	m_clPerClothMediumDensity(queue, ctx,&m_perClothMediumDensity, true ),	
-	m_clPerClothCollisionObjects( queue, ctx, &m_perClothCollisionObjects, true ),
-	m_clCollisionObjectDetails( queue, ctx, &m_collisionObjectDetails, true ),
-	m_clPerClothMinBounds( queue, ctx, &m_perClothMinBounds, false ),
-	m_clPerClothMaxBounds( queue, ctx, &m_perClothMaxBounds, false ),
-	m_clPerClothFriction( queue, ctx, &m_perClothFriction, false ),
-	m_cqCommandQue( queue ),
-	m_cxMainContext(ctx)
+	btOpenCLSoftBodySolver( queue, ctx ),
+	m_linkData(queue, ctx)
 {
 	// Initial we will clearly need to update solver constants
 	// For now this is global for the cloths linked with this solver - we should probably make this body specific 
@@ -222,7 +207,7 @@ btOpenCLSoftBodySolverSIMDAware::btOpenCLSoftBodySolverSIMDAware(cl_command_queu
 
 btOpenCLSoftBodySolverSIMDAware::~btOpenCLSoftBodySolverSIMDAware()
 {
-	// TODO: Cleanup kernels, not now being freed as they were in the C++ version
+	releaseKernels();
 }
 
 void btOpenCLSoftBodySolverSIMDAware::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
@@ -253,16 +238,16 @@ void btOpenCLSoftBodySolverSIMDAware::optimize( btAlignedObjectArray< btSoftBody
 			m_perClothDragFactor.push_back( softBody->m_cfg.kDG );
 			m_perClothMediumDensity.push_back(softBody->getWorldInfo()->air_density);
 			// Simple init values. Actually we'll put 0 and -1 into them at the appropriate time
-			//m_perClothMinBounds.push_back( UIntVector3(UINT_MAX, UINT_MAX, UINT_MAX) );
-			//m_perClothMaxBounds.push_back( UIntVector3(0, 0, 0) );
-			m_perClothMinBounds.push_back( UINT_MAX );
+			m_perClothMinBounds.push_back( UIntVector3(UINT_MAX, UINT_MAX, UINT_MAX) );
+			m_perClothMaxBounds.push_back( UIntVector3(0, 0, 0) );
+			/*m_perClothMinBounds.push_back( UINT_MAX );
 			m_perClothMaxBounds.push_back( 0 );
 			m_perClothMinBounds.push_back( UINT_MAX );
 			m_perClothMaxBounds.push_back( 0 );
 			m_perClothMinBounds.push_back( UINT_MAX );
 			m_perClothMaxBounds.push_back( 0 );
 			m_perClothMinBounds.push_back( UINT_MAX );
-			m_perClothMaxBounds.push_back( 0 );
+			m_perClothMaxBounds.push_back( 0 );*/
 
 
 			m_perClothFriction.push_back( softBody->getFriction() );
@@ -366,306 +351,8 @@ btSoftBodyLinkData &btOpenCLSoftBodySolverSIMDAware::getLinkData()
 	return m_linkData;
 }
 
-btSoftBodyVertexData &btOpenCLSoftBodySolverSIMDAware::getVertexData()
-{
-	// TODO: Consider setting vertex data to "changed" here
-	return m_vertexData;
-}
-
-btSoftBodyTriangleData &btOpenCLSoftBodySolverSIMDAware::getTriangleData()
-{
-	// TODO: Consider setting triangle data to "changed" here
-	return m_triangleData;
-}
 
 
-bool btOpenCLSoftBodySolverSIMDAware::checkInitialized()
-{
-	return buildShaders();
-}
-
-void btOpenCLSoftBodySolverSIMDAware::resetNormalsAndAreas( int numVertices )
-{
-	cl_int ciErrNum;
-	ciErrNum = clSetKernelArg(resetNormalsAndAreasKernel, 0, sizeof(numVertices), (void*)&numVertices); //oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	ciErrNum = clSetKernelArg(resetNormalsAndAreasKernel, 1, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexNormal.m_buffer);//oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	ciErrNum = clSetKernelArg(resetNormalsAndAreasKernel,  2, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexArea.m_buffer); //oclCHECKERROR(ciErrNum, CL_SUCCESS);
-	size_t numWorkItems = workGroupSize*((numVertices + (workGroupSize-1)) / workGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, resetNormalsAndAreasKernel, 1, NULL, &numWorkItems, &workGroupSize, 0,0,0 );
-
-	if( ciErrNum != CL_SUCCESS )
-	{
-		btAssert( 0 && "enqueueNDRangeKernel(resetNormalsAndAreasKernel)" );
-	}
-
-}
-
-void btOpenCLSoftBodySolverSIMDAware::normalizeNormalsAndAreas( int numVertices )
-{
-
-	cl_int ciErrNum;
-
-	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 0, sizeof(int),(void*) &numVertices);
-	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 1, sizeof(cl_mem), &m_vertexData.m_clVertexTriangleCount.m_buffer);
-	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 2, sizeof(cl_mem), &m_vertexData.m_clVertexNormal.m_buffer);
-	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 3, sizeof(cl_mem), &m_vertexData.m_clVertexArea.m_buffer);
-	size_t	numWorkItems = workGroupSize*((numVertices + (workGroupSize-1)) / workGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, normalizeNormalsAndAreasKernel, 1, NULL, &numWorkItems, &workGroupSize, 0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 && "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
-	}
-
-}
-
-void btOpenCLSoftBodySolverSIMDAware::executeUpdateSoftBodies( int firstTriangle, int numTriangles )
-{
-
-	cl_int ciErrNum;
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 0, sizeof(int), (void*) &firstTriangle);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 1, sizeof(int), &numTriangles);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 2, sizeof(cl_mem), &m_triangleData.m_clVertexIndices.m_buffer);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 3, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 4, sizeof(cl_mem), &m_vertexData.m_clVertexNormal.m_buffer);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 5, sizeof(cl_mem), &m_vertexData.m_clVertexArea.m_buffer);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 6, sizeof(cl_mem), &m_triangleData.m_clNormal.m_buffer);
-	ciErrNum = clSetKernelArg(updateSoftBodiesKernel, 7, sizeof(cl_mem), &m_triangleData.m_clArea.m_buffer);
-
-	size_t numWorkItems = workGroupSize*((numTriangles + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, updateSoftBodiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
-	}
-
-}
-
-void btOpenCLSoftBodySolverSIMDAware::updateSoftBodies()
-{
-	using namespace Vectormath::Aos;
-
-
-	int numVertices = m_vertexData.getNumVertices();
-	int numTriangles = m_triangleData.getNumTriangles();
-
-	// Ensure data is on accelerator
-	m_vertexData.moveToAccelerator();
-	m_triangleData.moveToAccelerator();
-
-	resetNormalsAndAreas( numVertices );
-
-
-	// Go through triangle batches so updates occur correctly
-	for( int batchIndex = 0; batchIndex < m_triangleData.m_batchStartLengths.size(); ++batchIndex )
-	{
-
-		int startTriangle = m_triangleData.m_batchStartLengths[batchIndex].first;
-		int numTriangles = m_triangleData.m_batchStartLengths[batchIndex].second;
-
-		executeUpdateSoftBodies( startTriangle, numTriangles );
-	}
-
-
-	normalizeNormalsAndAreas( numVertices );
-
-	
-	// Clear the collision shape array for the next frame
-	// Ensure that the DX11 ones are moved off the device so they will be updated correctly
-	m_clCollisionObjectDetails.changedOnCPU();
-	m_clPerClothCollisionObjects.changedOnCPU();
-	m_collisionObjectDetails.clear();
-
-} // btOpenCLSoftBodySolverSIMDAware::updateSoftBodies
-
-
-Vectormath::Aos::Vector3 btOpenCLSoftBodySolverSIMDAware::ProjectOnAxis( const Vectormath::Aos::Vector3 &v, const Vectormath::Aos::Vector3 &a )
-{
-	return a*Vectormath::Aos::dot(v, a);
-}
-
-void btOpenCLSoftBodySolverSIMDAware::ApplyClampedForce( float solverdt, const Vectormath::Aos::Vector3 &force, const Vectormath::Aos::Vector3 &vertexVelocity, float inverseMass, Vectormath::Aos::Vector3 &vertexForce )
-{
-	float dtInverseMass = solverdt*inverseMass;
-	if( Vectormath::Aos::lengthSqr(force * dtInverseMass) > Vectormath::Aos::lengthSqr(vertexVelocity) )
-	{
-		vertexForce -= ProjectOnAxis( vertexVelocity, normalize( force ) )/dtInverseMass;
-	} else {
-		vertexForce += force;
-	}
-}
-
-void btOpenCLSoftBodySolverSIMDAware::applyForces( float solverdt )
-{	
-
-	// Ensure data is on accelerator
-	m_vertexData.moveToAccelerator();
-	m_clPerClothAcceleration.moveToGPU();
-	m_clPerClothLiftFactor.moveToGPU();
-	m_clPerClothDragFactor.moveToGPU();
-	m_clPerClothMediumDensity.moveToGPU();
-	m_clPerClothWindVelocity.moveToGPU();			
-
-	cl_int ciErrNum ;
-	int numVerts = m_vertexData.getNumVertices();
-	ciErrNum = clSetKernelArg(applyForcesKernel, 0, sizeof(int), &numVerts);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 1, sizeof(float), &solverdt);
-	float fl = FLT_EPSILON;
-	ciErrNum = clSetKernelArg(applyForcesKernel, 2, sizeof(float), &fl);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 3, sizeof(cl_mem), &m_vertexData.m_clClothIdentifier.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 4, sizeof(cl_mem), &m_vertexData.m_clVertexNormal.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 5, sizeof(cl_mem), &m_vertexData.m_clVertexArea.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 6, sizeof(cl_mem), &m_vertexData.m_clVertexInverseMass.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 7, sizeof(cl_mem), &m_clPerClothLiftFactor.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 8 ,sizeof(cl_mem), &m_clPerClothDragFactor.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel, 9, sizeof(cl_mem), &m_clPerClothWindVelocity.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel,10, sizeof(cl_mem), &m_clPerClothAcceleration.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel,11, sizeof(cl_mem), &m_clPerClothMediumDensity.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel,12, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
-	ciErrNum = clSetKernelArg(applyForcesKernel,13, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
-	size_t numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,applyForcesKernel, 1, NULL, &numWorkItems, &workGroupSize, 0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(applyForcesKernel)");
-	}
-
-}
-
-/**
- * Integrate motion on the solver.
- */
-void btOpenCLSoftBodySolverSIMDAware::integrate( float solverdt )
-{
-	
-
-	// Ensure data is on accelerator
-	m_vertexData.moveToAccelerator();
-
-	cl_int ciErrNum;
-	int numVerts = m_vertexData.getNumVertices();
-	ciErrNum = clSetKernelArg(integrateKernel, 0, sizeof(int), &numVerts);
-	ciErrNum = clSetKernelArg(integrateKernel, 1, sizeof(float), &solverdt);
-	ciErrNum = clSetKernelArg(integrateKernel, 2, sizeof(cl_mem), &m_vertexData.m_clVertexInverseMass.m_buffer);
-	ciErrNum = clSetKernelArg(integrateKernel, 3, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
-	ciErrNum = clSetKernelArg(integrateKernel, 4, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
-	ciErrNum = clSetKernelArg(integrateKernel, 5, sizeof(cl_mem), &m_vertexData.m_clVertexPreviousPosition.m_buffer);
-	ciErrNum = clSetKernelArg(integrateKernel, 6, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
-
-	size_t numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,integrateKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS )
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(integrateKernel)");
-	}
-
-}
-
-float btOpenCLSoftBodySolverSIMDAware::computeTriangleArea( 
-	const Vectormath::Aos::Point3 &vertex0,
-	const Vectormath::Aos::Point3 &vertex1,
-	const Vectormath::Aos::Point3 &vertex2 )
-{
-	Vectormath::Aos::Vector3 a = vertex1 - vertex0;
-	Vectormath::Aos::Vector3 b = vertex2 - vertex0;
-	Vectormath::Aos::Vector3 crossProduct = cross(a, b);
-	float area = length( crossProduct );
-	return area;
-}
-
-
-void btOpenCLSoftBodySolverSIMDAware::updateBounds()
-{	
-	using Vectormath::Aos::Point3;
-	// Interpretation structure for float and int
-	
-	struct FPRep {
-		unsigned int mantissa  : 23;
-		unsigned int exponent : 8;
-		unsigned int sign    : 1;
-	};
-	union FloatAsInt
-	{
-		float floatValue;
-		int intValue;
-		unsigned int uintValue;
-		FPRep fpRep;
-	};
-
-	
-	// Update bounds array to min and max int values to allow easy atomics
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
-	{
-		//m_perClothMinBounds[softBodyIndex] = UIntVector3( UINT_MAX, UINT_MAX, UINT_MAX );
-		//m_perClothMaxBounds[softBodyIndex] = UIntVector3( 0, 0, 0 );
-		m_perClothMinBounds[softBodyIndex*4] = UINT_MAX;
-		m_perClothMinBounds[softBodyIndex*4+1] = UINT_MAX;
-		m_perClothMinBounds[softBodyIndex*4+2] = UINT_MAX;
-		m_perClothMaxBounds[softBodyIndex*4] = 0;
-		m_perClothMaxBounds[softBodyIndex*4+1] = 0;
-		m_perClothMaxBounds[softBodyIndex*4+2] = 0;
-	}
-	
-	m_clPerClothMinBounds.moveToGPU();
-	m_clPerClothMaxBounds.moveToGPU();
-
-
-	computeBounds( );
-
-
-	m_clPerClothMinBounds.moveFromGPU();
-	m_clPerClothMaxBounds.moveFromGPU();
-
-
-	
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
-	{
-		//UIntVector3 minBoundUInt = m_perClothMinBounds[softBodyIndex];
-		//UIntVector3 maxBoundUInt = m_perClothMaxBounds[softBodyIndex];
-		UIntVector3 minBoundUInt;
-		minBoundUInt.x = m_perClothMinBounds[softBodyIndex*4];
-		minBoundUInt.y = m_perClothMinBounds[softBodyIndex*4+1];	
-		minBoundUInt.z = m_perClothMinBounds[softBodyIndex*4+2];
-		UIntVector3 maxBoundUInt;
-		maxBoundUInt.x = m_perClothMaxBounds[softBodyIndex*4];
-		maxBoundUInt.y = m_perClothMaxBounds[softBodyIndex*4+1];
-		maxBoundUInt.z = m_perClothMaxBounds[softBodyIndex*4+2];
-				
-		// Convert back to float
-		FloatAsInt fai;
-
-		btVector3 minBound;
-		fai.uintValue = minBoundUInt.x;
-	    fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
-		minBound.setX( fai.floatValue );
-		fai.uintValue = minBoundUInt.y;
-		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
-		minBound.setY( fai.floatValue );
-		fai.uintValue = minBoundUInt.z;
-		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
-		minBound.setZ( fai.floatValue );
-
-		btVector3 maxBound;
-		fai.uintValue = maxBoundUInt.x;
-		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
-		maxBound.setX( fai.floatValue );
-		fai.uintValue = maxBoundUInt.y;
-		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
-		maxBound.setY( fai.floatValue );
-		fai.uintValue = maxBoundUInt.z;
-		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
-		maxBound.setZ( fai.floatValue );
-		
-		// And finally assign to the soft body
-		m_softBodySet[softBodyIndex]->updateBounds( minBound, maxBound );
-	}
-} // btOpenCLSoftBodySolverSIMDAware::updateBounds
 
 void btOpenCLSoftBodySolverSIMDAware::updateConstants( float timeStep )
 {			
@@ -698,60 +385,7 @@ void btOpenCLSoftBodySolverSIMDAware::updateConstants( float timeStep )
 }
 
 
-/**
- * Sort the collision object details array and generate indexing into it for the per-cloth collision object array.
- */
-void btOpenCLSoftBodySolverSIMDAware::prepareCollisionConstraints()
-{
-	// First do a simple sort on the collision objects
-	btAlignedObjectArray<int> numObjectsPerClothPrefixSum;
-	btAlignedObjectArray<int> numObjectsPerCloth;
-	numObjectsPerCloth.resize( m_softBodySet.size(), 0 );
-	numObjectsPerClothPrefixSum.resize( m_softBodySet.size(), 0 );
 
-
-	class QuickSortCompare
-	{
-		public:
-
-		bool operator() ( const CollisionShapeDescription& a, const CollisionShapeDescription& b )
-		{
-			return ( a.softBodyIdentifier < b.softBodyIdentifier );
-		}
-	};
-
-	QuickSortCompare comparator;
-	m_collisionObjectDetails.quickSort( comparator );
-
-	// Generating indexing for perClothCollisionObjects
-	// First clear the previous values with the "no collision object for cloth" constant
-	for( int clothIndex = 0; clothIndex < m_perClothCollisionObjects.size(); ++clothIndex )
-	{
-		m_perClothCollisionObjects[clothIndex].firstObject = -1;
-		m_perClothCollisionObjects[clothIndex].endObject = -1;
-	}
-	int currentCloth = 0;
-	int startIndex = 0;
-	for( int collisionObject = 0; collisionObject < m_collisionObjectDetails.size(); ++collisionObject )
-	{
-		int nextCloth = m_collisionObjectDetails[collisionObject].softBodyIdentifier;
-		if( nextCloth != currentCloth )
-		{	
-			// Changed cloth in the array
-			// Set the end index and the range is what we need for currentCloth
-			m_perClothCollisionObjects[currentCloth].firstObject = startIndex;
-			m_perClothCollisionObjects[currentCloth].endObject = collisionObject;
-			currentCloth = nextCloth;
-			startIndex = collisionObject;
-		}
-	}
-
-	// And update last cloth	
-	m_perClothCollisionObjects[currentCloth].firstObject = startIndex;
-	m_perClothCollisionObjects[currentCloth].endObject =  m_collisionObjectDetails.size();
-	
-} // btOpenCLSoftBodySolverSIMDAware::prepareCollisionConstraints
-#include <iostream>
 void btOpenCLSoftBodySolverSIMDAware::solveConstraints( float solverdt )
 {
 
@@ -797,27 +431,6 @@ void btOpenCLSoftBodySolverSIMDAware::solveConstraints( float solverdt )
 //////////////////////////////////////
 // Kernel dispatches
 
-void btOpenCLSoftBodySolverSIMDAware::updatePositionsFromVelocities( float solverdt )
-{
-
-	cl_int ciErrNum;
-	int numVerts = m_vertexData.getNumVertices();
-	ciErrNum = clSetKernelArg(updatePositionsFromVelocitiesKernel,0, sizeof(int), &numVerts);
-	ciErrNum = clSetKernelArg(updatePositionsFromVelocitiesKernel,1, sizeof(float), &solverdt);
-	ciErrNum = clSetKernelArg(updatePositionsFromVelocitiesKernel,2, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
-	ciErrNum = clSetKernelArg(updatePositionsFromVelocitiesKernel,3, sizeof(cl_mem), &m_vertexData.m_clVertexPreviousPosition.m_buffer);
-	ciErrNum = clSetKernelArg(updatePositionsFromVelocitiesKernel,4, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
-
-	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,updatePositionsFromVelocitiesKernel, 1, NULL, &numWorkItems,&workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(updatePositionsFromVelocitiesKernel)");
-	}
-
-}
 
 void btOpenCLSoftBodySolverSIMDAware::solveLinksForPosition( int startWave, int numWaves, float kst, float ti )
 {
@@ -851,86 +464,6 @@ void btOpenCLSoftBodySolverSIMDAware::solveLinksForPosition( int startWave, int 
 	}
 
 } // solveLinksForPosition
-
-
-void btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithVelocities( float isolverdt )
-{
-
-	cl_int ciErrNum;
-	int numVerts = m_vertexData.getNumVertices();
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel,0, sizeof(int), &numVerts);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 1, sizeof(float), &isolverdt);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 2, sizeof(cl_mem), &m_vertexData.m_clVertexPosition.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 3, sizeof(cl_mem), &m_vertexData.m_clVertexPreviousPosition.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 4, sizeof(cl_mem), &m_vertexData.m_clClothIdentifier.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 5, sizeof(cl_mem), &m_clPerClothVelocityCorrectionCoefficient.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 6, sizeof(cl_mem), &m_clPerClothDampingFactor.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 7, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithVelocitiesKernel, 8, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
-
-	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,updateVelocitiesFromPositionsWithVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithVelocitiesKernel)");
-	}
-
-
-} // updateVelocitiesFromPositionsWithVelocities
-
-void btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithoutVelocities( float isolverdt )
-{
-
-	cl_int ciErrNum;
-	int numVerts = m_vertexData.getNumVertices();
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 0, sizeof(int), &numVerts);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 1, sizeof(float), &isolverdt);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 2, sizeof(cl_mem),&m_vertexData.m_clVertexPosition.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 3, sizeof(cl_mem),&m_vertexData.m_clVertexPreviousPosition.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 4, sizeof(cl_mem),&m_vertexData.m_clClothIdentifier.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 5, sizeof(cl_mem),&m_clPerClothDampingFactor.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 6, sizeof(cl_mem),&m_vertexData.m_clVertexVelocity.m_buffer);
-	ciErrNum = clSetKernelArg(updateVelocitiesFromPositionsWithoutVelocitiesKernel, 7, sizeof(cl_mem),&m_vertexData.m_clVertexForceAccumulator.m_buffer);
-
-	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,updateVelocitiesFromPositionsWithoutVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
-	}
-
-} // updateVelocitiesFromPositionsWithoutVelocities
-
-
-void btOpenCLSoftBodySolverSIMDAware::computeBounds( )
-{	
-	m_vertexData.moveToAccelerator();
-
-	cl_int ciErrNum;
-	int numVerts = m_vertexData.getNumVertices();
-	int numSoftBodies = m_softBodySet.size();
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 0, sizeof(int), &numVerts);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 1, sizeof(int), &numSoftBodies);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 2, sizeof(cl_mem),&m_vertexData.m_clClothIdentifier.m_buffer);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 3, sizeof(cl_mem),&m_vertexData.m_clVertexPosition.m_buffer);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 4, sizeof(cl_mem),&m_clPerClothMinBounds.m_buffer);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 5, sizeof(cl_mem),&m_clPerClothMaxBounds.m_buffer);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 6, sizeof(cl_uint4)*256,0);
-	ciErrNum = clSetKernelArg(computeBoundsKernel, 7, sizeof(cl_uint4)*256,0);
-
-	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,computeBoundsKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
-	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(computeBoundsKernel)");
-	}
-} // btOpenCLSoftBodySolverSIMDAware::computeBounds
 
 void btOpenCLSoftBodySolverSIMDAware::solveCollisionsAndUpdateVelocities( float isolverdt )
 {
@@ -967,155 +500,10 @@ void btOpenCLSoftBodySolverSIMDAware::solveCollisionsAndUpdateVelocities( float 
 
 } // btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithoutVelocities
 
-
 // End kernel dispatches
 /////////////////////////////////////
 
 
-void btOpenCLSoftBodySolverSIMDAware::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
-{
-	// Currently only support CPU output buffers
-	// TODO: check for DX11 buffers. Take all offsets into the same DX11 buffer
-	// and use them together on a single kernel call if possible by setting up a
-	// per-cloth target buffer array for the copy kernel.
-
-
-	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
-
-	const int firstVertex = currentCloth->getFirstVertex();
-	const int lastVertex = firstVertex + currentCloth->getNumVertices();
-
-	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
-	{		
-		const btCPUVertexBufferDescriptor *cpuVertexBuffer = static_cast< btCPUVertexBufferDescriptor* >(vertexBuffer);						
-		float *basePointer = cpuVertexBuffer->getBasePointer();						
-
-		m_vertexData.m_clVertexPosition.copyFromGPU();
-		m_vertexData.m_clVertexNormal.copyFromGPU();
-
-		if( vertexBuffer->hasVertexPositions() )
-		{
-			const int vertexOffset = cpuVertexBuffer->getVertexOffset();
-			const int vertexStride = cpuVertexBuffer->getVertexStride();
-			float *vertexPointer = basePointer + vertexOffset;
-
-			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
-			{
-				Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
-				*(vertexPointer + 0) = position.getX();
-				*(vertexPointer + 1) = position.getY();
-				*(vertexPointer + 2) = position.getZ();
-				vertexPointer += vertexStride;
-			}
-		}
-		if( vertexBuffer->hasNormals() )
-		{
-			const int normalOffset = cpuVertexBuffer->getNormalOffset();
-			const int normalStride = cpuVertexBuffer->getNormalStride();
-			float *normalPointer = basePointer + normalOffset;
-
-			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
-			{
-				Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
-				*(normalPointer + 0) = normal.getX();
-				*(normalPointer + 1) = normal.getY();
-				*(normalPointer + 2) = normal.getZ();
-				normalPointer += normalStride;
-			}
-		}
-	}
-
-} // btCPUSoftBodySolver::outputToVertexBuffers
-
-
-
-cl_kernel btOpenCLSoftBodySolverSIMDAware::compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros )
-{
-	printf("compiling kernalName: %s ",kernelName);
-	cl_kernel kernel;
-	cl_int ciErrNum;
-	size_t program_length = strlen(kernelSource);
-
-	cl_program m_cpProgram = clCreateProgramWithSource(m_cxMainContext, 1, (const char**)&kernelSource, &program_length, &ciErrNum);
-//	oclCHECKERROR(ciErrNum, CL_SUCCESS);
-		
-    // Build the program with 'mad' Optimization option
-
-	
-#ifdef MAC
-	char* flags = "-cl-mad-enable -DMAC -DGUID_ARG";
-#else
-	//const char* flags = "-DGUID_ARG= -fno-alias";
-	const char* flags = "-DGUID_ARG= ";
-#endif
-
-	char* compileFlags = new char[strlen(additionalMacros) + strlen(flags) + 5];
-	sprintf(compileFlags, "%s %s", flags, additionalMacros);
-    ciErrNum = clBuildProgram(m_cpProgram, 0, NULL, compileFlags, NULL, NULL);
-    if (ciErrNum != CL_SUCCESS)
-    {
-		size_t numDevices;
-		clGetProgramInfo( m_cpProgram, CL_PROGRAM_DEVICES, 0, 0, &numDevices );
-		cl_device_id *devices = new cl_device_id[numDevices];
-		clGetProgramInfo( m_cpProgram, CL_PROGRAM_DEVICES, numDevices, devices, &numDevices );
-        for( int i = 0; i < numDevices; ++i )
-		{
-			char *build_log;
-			size_t ret_val_size;
-			clGetProgramBuildInfo(m_cpProgram, devices[i], CL_PROGRAM_BUILD_LOG, 0, NULL, &ret_val_size);
-			build_log = new char[ret_val_size+1];
-			clGetProgramBuildInfo(m_cpProgram, devices[i], CL_PROGRAM_BUILD_LOG, ret_val_size, build_log, NULL);
-    
-			// to be carefully, terminate with \0
-			// there's no information in the reference whether the string is 0 terminated or not
-			build_log[ret_val_size] = '\0';
-        
-
-			printf("Error in clBuildProgram, Line %u in file %s, Log: \n%s\n !!!\n\n", __LINE__, __FILE__, build_log);
-			delete[] build_log;
-		}
-		btAssert(0);
-        exit(0);
-    }
-	
-	
-    // Create the kernel
-    kernel = clCreateKernel(m_cpProgram, kernelName, &ciErrNum);
-    if (ciErrNum != CL_SUCCESS)
-    {
-        printf("Error in clCreateKernel, Line %u in file %s !!!\n\n", __LINE__, __FILE__);
-		btAssert(0);
-		exit(0);
-    }
-
-	printf("ready. \n");
-	delete [] compileFlags;
-	return kernel;
-
-}
-
-
-btOpenCLSoftBodySolverSIMDAware::btAcceleratedSoftBodyInterface *btOpenCLSoftBodySolverSIMDAware::findSoftBodyInterface( const btSoftBody* const softBody )
-{
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
-	{
-		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
-		if( softBodyInterface->getSoftBody() == softBody )
-			return softBodyInterface;
-	}
-	return 0;
-}
-
-int btOpenCLSoftBodySolverSIMDAware::findSoftBodyIndex( const btSoftBody* const softBody )
-{
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
-	{
-		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
-		if( softBodyInterface->getSoftBody() == softBody )
-			return softBodyIndex;
-	}
-	return 1;
-}
 
 bool btOpenCLSoftBodySolverSIMDAware::buildShaders()
 {
@@ -1161,27 +549,6 @@ bool btOpenCLSoftBodySolverSIMDAware::buildShaders()
 
 
 
-void btOpenCLSoftBodySolverSIMDAware::predictMotion( float timeStep )
-{
-	// Fill the force arrays with current acceleration data etc
-	m_perClothWindVelocity.resize( m_softBodySet.size() );
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
-	{
-		btSoftBody *softBody = m_softBodySet[softBodyIndex]->getSoftBody();
-		
-		m_perClothWindVelocity[softBodyIndex] = toVector3(softBody->getWindVelocity());
-	}
-	m_clPerClothWindVelocity.changedOnCPU();
-
-	// Apply forces that we know about to the cloths
-	applyForces(  timeStep * getTimeScale() );
-
-	// Itegrate motion for all soft bodies dealt with by the solver
-	integrate( timeStep * getTimeScale() );
-
-	updateBounds();
-	// End prediction work for solvers
-}
 
 static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
 {
@@ -1192,69 +559,6 @@ static Vectormath::Aos::Transform3 toTransform3( const btTransform &transform )
 	outTransform.setCol(3, toVector3(transform.getOrigin()));
 	return outTransform;	
 }
-
-void btOpenCLSoftBodySolverSIMDAware::btAcceleratedSoftBodyInterface::updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound )
-{
-	float scalarMargin = this->getSoftBody()->getCollisionShape()->getMargin();
-	btVector3 vectorMargin( scalarMargin, scalarMargin, scalarMargin );
-	m_softBody->m_bounds[0] = lowerBound - vectorMargin;
-	m_softBody->m_bounds[1] = upperBound + vectorMargin;
-}  // btOpenCLSoftBodySolverSIMDAware::btDX11AcceleratedSoftBodyInterface::updateBounds
-
-
-// Add the collision object to the set to deal with for a particular soft body
-void btOpenCLSoftBodySolverSIMDAware::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
-{
-	int softBodyIndex = findSoftBodyIndex( softBody );
-
-	if( softBodyIndex >= 0 )
-	{
-		btCollisionShape *collisionShape = collisionObject->getCollisionShape();
-		float friction = collisionObject->getFriction();
-		int shapeType = collisionShape->getShapeType();
-		if( shapeType == CAPSULE_SHAPE_PROXYTYPE )
-		{
-			// Add to the list of expected collision objects
-			CollisionShapeDescription newCollisionShapeDescription;
-			newCollisionShapeDescription.softBodyIdentifier = softBodyIndex;
-			newCollisionShapeDescription.collisionShapeType = shapeType;
-			// TODO: May need to transpose this matrix either here or in HLSL
-			newCollisionShapeDescription.shapeTransform = toTransform3(collisionObject->getWorldTransform());
-			btCapsuleShape *capsule = static_cast<btCapsuleShape*>( collisionShape );
-			newCollisionShapeDescription.radius = capsule->getRadius();
-			newCollisionShapeDescription.halfHeight = capsule->getHalfHeight();
-			newCollisionShapeDescription.margin = capsule->getMargin();
-			newCollisionShapeDescription.friction = friction;
-			btRigidBody* body = static_cast< btRigidBody* >( collisionObject );
-			newCollisionShapeDescription.linearVelocity = toVector3(body->getLinearVelocity());
-			newCollisionShapeDescription.angularVelocity = toVector3(body->getAngularVelocity());
-			m_collisionObjectDetails.push_back( newCollisionShapeDescription );
-
-		} else {
-			btAssert("Unsupported collision shape type\n");
-		}
-	} else {
-		btAssert("Unknown soft body");
-	}
-} // btOpenCLSoftBodySolverSIMDAware::processCollision
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 static void generateBatchesOfWavefronts( btAlignedObjectArray < btAlignedObjectArray <int> > &linksForWavefronts, btSoftBodyLinkData &linkData, int numVertices, btAlignedObjectArray < btAlignedObjectArray <int> > &wavefrontBatches )

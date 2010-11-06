@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
 		cloths[flagIndex].z_offset = 0;
 	}
 
-	goGL();
+	//goGL();
 
 	if( g_cpuSolver )
 		delete g_cpuSolver;
