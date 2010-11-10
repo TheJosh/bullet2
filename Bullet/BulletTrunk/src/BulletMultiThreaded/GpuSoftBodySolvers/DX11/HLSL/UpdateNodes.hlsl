@@ -6,6 +6,7 @@ cbuffer UpdateVelocitiesFromPositionsWithVelocitiesCB : register( b0 )
 	float isolverdt;
 	int padding1;
 	int padding2;
+ 
 };
 
 
