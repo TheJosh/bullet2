@@ -30,6 +30,17 @@ cl_command_queue	g_cqCommandQue;
 void initCL( intptr_t glCtx )
 {
 	int ciErrNum = 0;
+
+#if defined(CL_PLATFORM_MINI_CL)
+	cl_device_type deviceType = CL_DEVICE_TYPE_CPU;
+#elif defined(CL_PLATFORM_AMD)
+	cl_device_type deviceType = CL_DEVICE_TYPE_GPU;
+#elif defined(CL_PLATFORM_NVIDIA)
+	cl_device_type deviceType = CL_DEVICE_TYPE_GPU;
+#else
+	cl_device_type deviceType = CL_DEVICE_TYPE_CPU;
+#endif
+
     //g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
 	//g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_GPU, &ciErrNum);
 	//g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_CPU, &ciErrNum);
@@ -37,9 +48,9 @@ void initCL( intptr_t glCtx )
 //#ifdef USE_MINICL
 //	g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_DEBUG, &ciErrNum);
 //#else
-	g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum, (intptr_t)glCtx);
+	g_cxMainContext = btOclCommon::createContextFromType(deviceType, &ciErrNum, (intptr_t)glCtx);
 //#endif
-	
+
 
 	
 	oclCHECKERROR(ciErrNum, CL_SUCCESS);

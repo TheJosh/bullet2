@@ -18,9 +18,13 @@ subject to the following restrictions:
 #endif
 
 
-#define USE_SIMDAWARE_SOLVER
+//#define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
+
+#if !defined(CL_PLATFORM_MINI_CL)
 #define USE_GPU_COPY
+#endif
+
 
 
 #include "clstuff.h"
