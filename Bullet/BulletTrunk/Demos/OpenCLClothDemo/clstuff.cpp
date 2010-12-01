@@ -27,7 +27,7 @@ cl_context			g_cxMainContext;
 cl_device_id		g_cdDevice;
 cl_command_queue	g_cqCommandQue;
 
-void initCL(void)
+void initCL( intptr_t glCtx )
 {
 	int ciErrNum = 0;
     //g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
@@ -37,7 +37,7 @@ void initCL(void)
 //#ifdef USE_MINICL
 //	g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_DEBUG, &ciErrNum);
 //#else
-	g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
+	g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum, (intptr_t)glCtx);
 //#endif
 	
 

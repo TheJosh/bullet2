@@ -29,6 +29,7 @@ SET(BulletSoftBodyOpenCLSolvers_HDRS
 	../btSoftBodySolverLinkData_OpenCL.h
 	../btSoftBodySolverLinkData_OpenCLSIMDAware.h
 	../btSoftBodySolverBuffer_OpenCL.h
+	../btSoftBodySolverVertexBuffer_OpenGL.h
 )
 
 # OpenCL and HLSL Shaders.

@@ -15,6 +15,11 @@ subject to the following restrictions:
 
 MSTRINGIFY(
 
+float mydot3(float4 a, float4 b)
+{
+   return a.x*b.x + a.y*b.y + a.z*b.z;
+}
+
 __kernel void 
 SolvePositionsFromLinksKernel( 
 	const int startWaveInBatch,
@@ -31,9 +36,7 @@ SolvePositionsFromLinksKernel(
 	__local int2 *wavefrontBatchCountsVertexCounts,
 	__local float4 *vertexPositionSharedData,
 	__local float *vertexInverseMassSharedData)
-	
 {
-
 	const int laneInWavefront = (get_global_id(0) & (WAVEFRONT_SIZE-1));
 	const int wavefront = startWaveInBatch + (get_global_id(0) / WAVEFRONT_SIZE);
 	const int firstWavefrontInBlock = startWaveInBatch + get_group_id(0) * WAVEFRONT_BLOCK_MULTIPLIER;
@@ -46,10 +49,14 @@ SolvePositionsFromLinksKernel(
 		// Mask out in case there's a stray "wavefront" at the end that's been forced in through the multiplier
 		if( laneInWavefront == 0 )
 		{
-			int2 batchesAndVertexCountsWithinWavefront = g_wavefrontBatchCountsVertexCounts[firstWavefrontInBlock + localWavefront];
+			int2 batchesAndVertexCountsWithinWavefront = g_wavefrontBatchCountsVertexCounts[wavefront];
 			wavefrontBatchCountsVertexCounts[localWavefront] = batchesAndVertexCountsWithinWavefront;
 		}
+
 		
+		mem_fence(CLK_LOCAL_MEM_FENCE);
+		
+
 		int2 batchesAndVerticesWithinWavefront = wavefrontBatchCountsVertexCounts[localWavefront];
 		int batchesWithinWavefront = batchesAndVerticesWithinWavefront.x;
 		int verticesUsedByWave = batchesAndVerticesWithinWavefront.y;
@@ -62,7 +69,7 @@ SolvePositionsFromLinksKernel(
 			vertexPositionSharedData[localWavefront*MAX_NUM_VERTICES_PER_WAVE + vertex] = g_vertexPositions[vertexAddress];
 			vertexInverseMassSharedData[localWavefront*MAX_NUM_VERTICES_PER_WAVE + vertex] = g_verticesInverseMass[vertexAddress];
 		}
-
+		
 		mem_fence(CLK_LOCAL_MEM_FENCE);
 
 		// Loop through the batches performing the solve on each in LDS
@@ -86,14 +93,14 @@ SolvePositionsFromLinksKernel(
 			int vertexAddress0 = MAX_NUM_VERTICES_PER_WAVE * localWavefront + localVertexIndices.x;
 			int vertexAddress1 = MAX_NUM_VERTICES_PER_WAVE * localWavefront + localVertexIndices.y;
 			
-			float3 position0 = vertexPositionSharedData[vertexAddress0].xyz;
-			float3 position1 = vertexPositionSharedData[vertexAddress1].xyz;
+			float4 position0 = vertexPositionSharedData[vertexAddress0];
+			float4 position1 = vertexPositionSharedData[vertexAddress1];
 
 			float inverseMass0 = vertexInverseMassSharedData[vertexAddress0];
 			float inverseMass1 = vertexInverseMassSharedData[vertexAddress1]; 
 
-			float3 del = position1 - position0;
-			float len = dot(del, del);
+			float4 del = position1 - position0;
+			float len = mydot3(del, del);
 			
 			float k = 0;
 			if( massLSC > 0.0f )
@@ -107,8 +114,8 @@ SolvePositionsFromLinksKernel(
 			// Ensure compiler does not re-order memory operations
 			mem_fence(CLK_LOCAL_MEM_FENCE);
 
-			vertexPositionSharedData[vertexAddress0] = (float4)(position0, 0.f);
-			vertexPositionSharedData[vertexAddress1] = (float4)(position1, 0.f);
+			vertexPositionSharedData[vertexAddress0] = position0;
+			vertexPositionSharedData[vertexAddress1] = position1;
 			
 			// Ensure compiler does not re-order memory operations
 			mem_fence(CLK_LOCAL_MEM_FENCE);
@@ -116,15 +123,17 @@ SolvePositionsFromLinksKernel(
 			
 			++batch;
 		} while( batch < batchesWithinWavefront );
-		
+
 		// Update the global memory vertices for the wavefronts
 		for( int vertex = laneInWavefront; vertex < verticesUsedByWave; vertex+=WAVEFRONT_SIZE )
 		{
 			int vertexAddress = g_vertexAddressesPerWavefront[wavefront*MAX_NUM_VERTICES_PER_WAVE + vertex];
 
-			g_vertexPositions[vertexAddress] = vertexPositionSharedData[localWavefront*MAX_NUM_VERTICES_PER_WAVE + vertex];
-		}
+			g_vertexPositions[vertexAddress] = (float4)(vertexPositionSharedData[localWavefront*MAX_NUM_VERTICES_PER_WAVE + vertex].xyz, 0.f);
+		}		
+		
 	}
+
 }
 
 );

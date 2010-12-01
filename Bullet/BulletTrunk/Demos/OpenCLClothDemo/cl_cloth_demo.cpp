@@ -17,13 +17,17 @@ subject to the following restrictions:
 #include <GL/glew.h>
 #endif
 
+
+#define USE_SIMDAWARE_SOLVER
+#define USE_GPU_SOLVER
+#define USE_GPU_COPY
+
+
 #include "clstuff.h"
 #include "gl_win.h"
 #include "cloth.h"
 
 
-#define USE_SIMDAWARE_SOLVER
-#define USE_GPU_SOLVER
 
 
 const int numFlags = 5;
@@ -47,6 +51,7 @@ using namespace std;
 #include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolver_CPU.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCL.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCLSIMDAware.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolverVertexBuffer_OpenGL.h"
 
 using Vectormath::Aos::Vector3;
 
@@ -85,8 +90,8 @@ btSoftRigidDynamicsWorld* m_dynamicsWorld;
 btAlignedObjectArray<piece_of_cloth> cloths;
 
 extern cl_context			g_cxMainContext;
-extern cl_device_id		g_cdDevice;
-extern cl_command_queue	g_cqCommandQue;
+extern cl_device_id			g_cdDevice;
+extern cl_command_queue		g_cqCommandQue;
 
 
 const float flagSpacing = 30.f;
@@ -398,7 +403,12 @@ void initBullet(void)
 		// In this case we have a DX11 output buffer with a vertex at index 0, 8, 16 and so on as well as a normal at 3, 11, 19 etc.
 		// Copies will be performed GPU-side directly into the output buffer
 
+#ifdef USE_GPU_COPY
+		GLuint targetVBO = cloths[flagIndex].getVBO();
+		btOpenGLInteropVertexBufferDescriptor *vertexBufferDescriptor = new btOpenGLInteropVertexBufferDescriptor(g_cqCommandQue, g_cxMainContext, targetVBO, 0, 8, 3, 8);
+#else
 		btCPUVertexBufferDescriptor *vertexBufferDescriptor = new btCPUVertexBufferDescriptor(reinterpret_cast< float* >(cloths[flagIndex].cpu_buffer), 0, 8, 3, 8);
+#endif
 		cloths[flagIndex].m_vertexBufferDescriptor = vertexBufferDescriptor;
 	}
 
@@ -444,8 +454,23 @@ void doFlags()
 int main(int argc, char *argv[])
 {
 
+	
+	preInitGL(argc, argv);
+	glewInit();
+
+#ifdef USE_GPU_COPY
+#ifdef _WIN32
+    HGLRC glCtx = wglGetCurrentContext();
+#else //!_WIN32
+    GLXContext glCtx = glXGetCurrentContext();
+#endif //!_WIN32
+	
+	initCL((intptr_t)glCtx);
+#else
 
 	initCL();
+
+#endif
 
 	cloths.resize(numFlags);
 
@@ -456,8 +481,6 @@ int main(int argc, char *argv[])
 
 	initBullet();
 	m_dynamicsWorld->stepSimulation(1./60.,0);
-
-	preInitGL(argc, argv);
 
 	std::string flagTexs[] = {
 		"atiFlag.bmp",
@@ -473,7 +496,7 @@ int main(int argc, char *argv[])
 		cloths[flagIndex].z_offset = 0;
 	}
 
-	//goGL();
+	goGL();
 
 	if( g_cpuSolver )
 		delete g_cpuSolver;

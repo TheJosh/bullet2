@@ -1854,49 +1854,6 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 			m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
 		}	
 	}
-
-
-
-
-
-	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
-	{		
-		const int firstVertex = currentCloth->getFirstVertex();
-		const int lastVertex = firstVertex + currentCloth->getNumVertices();
-		const btCPUVertexBufferDescriptor *cpuVertexBuffer = static_cast< btCPUVertexBufferDescriptor* >(vertexBuffer);						
-		float *basePointer = cpuVertexBuffer->getBasePointer();						
-
-		if( vertexBuffer->hasVertexPositions() )
-		{
-			const int vertexOffset = cpuVertexBuffer->getVertexOffset();
-			const int vertexStride = cpuVertexBuffer->getVertexStride();
-			float *vertexPointer = basePointer + vertexOffset;
-
-			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
-			{
-				Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
-				*(vertexPointer + 0) = position.getX();
-				*(vertexPointer + 1) = position.getY();
-				*(vertexPointer + 2) = position.getZ();
-				vertexPointer += vertexStride;
-			}
-		}
-		if( vertexBuffer->hasNormals() )
-		{
-			const int normalOffset = cpuVertexBuffer->getNormalOffset();
-			const int normalStride = cpuVertexBuffer->getNormalStride();
-			float *normalPointer = basePointer + normalOffset;
-
-			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
-			{
-				Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
-				*(normalPointer + 0) = normal.getX();
-				*(normalPointer + 1) = normal.getY();
-				*(normalPointer + 2) = normal.getZ();
-				normalPointer += normalStride;
-			}
-		}
-	}
 } // btDX11SoftBodySolver::outputToVertexBuffers
 
 

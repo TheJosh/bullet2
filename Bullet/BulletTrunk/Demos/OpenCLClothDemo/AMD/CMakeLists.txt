@@ -65,6 +65,8 @@ IF (USE_GLUT)
 		../bmpLoader.h
 		../clstuff.h
 		../gl_win.h
+		../cloth.h
+
 
 	)
 ELSE (USE_GLUT)

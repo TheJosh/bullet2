@@ -57,6 +57,8 @@ static char* ComputeBoundsCLString =
 #include "OpenCLC/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
 #include "OpenCLC/SolveCollisionsAndUpdateVelocitiesSIMDBatched.cl"
+static char* OutputToVertexArrayCLString =
+#include "OpenCLC/OutputToVertexArray.cl"
 #else
 ////OpenCL 1.0 kernels don't use float3
 #define MSTRINGIFY(A) #A
@@ -82,6 +84,8 @@ static char* ComputeBoundsCLString =
 #include "OpenCLC10/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
 #include "OpenCLC10/SolveCollisionsAndUpdateVelocitiesSIMDBatched.cl"
+static char* OutputToVertexArrayCLString =
+#include "OpenCLC10/OutputToVertexArray.cl"
 #endif //CL_VERSION_1_1
 
 
@@ -536,8 +540,8 @@ bool btOpenCLSoftBodySolverSIMDAware::buildShaders()
 	resetNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel", "" );
 	normalizeNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "NormalizeNormalsAndAreasKernel", "" );
 	updateSoftBodiesKernel = compileCLKernelFromString( UpdateNormalsCLString, "UpdateSoftBodiesKernel", "" );
-	//outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
-	//outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
+	outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
+	outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
 
 	delete [] wavefrontMacros;
 

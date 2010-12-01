@@ -20,9 +20,22 @@ subject to the following restrictions:
 #include "btSoftBodySolver_OpenCL.h"
 #include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/btSoftBody.h"
+#include "btSoftBodySolverVertexBuffer_OpenGL.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
+#ifdef USE_MINICL
+	#include "MiniCL/cl.h"
+#else //USE_MINICL
+	#ifdef __APPLE__
+		#include <OpenCL/OpenCL.h>
+	#else
+		#include <CL/cl.h>
+	#endif //__APPLE__
+#endif//USE_MINICL
 
-     static const size_t workGroupSize = 128;
+
+#include <GL/glew.h>
+
+static const size_t workGroupSize = 128;
 
 #define RELEASE_CL_KERNEL(kernelName) {if( kernelName ){ clReleaseKernel( kernelName ); kernelName = 0; }}
 
@@ -56,6 +69,8 @@ static char* ComputeBoundsCLString =
 #include "OpenCLC/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
 #include "OpenCLC/SolveCollisionsAndUpdateVelocities.cl"
+static char* OutputToVertexArrayCLString =
+#include "OpenCLC/OutputToVertexArray.cl"
 #else
 ////OpenCL 1.0 kernels don't use float3
 #define MSTRINGIFY(A) #A
@@ -83,6 +98,8 @@ static char* ComputeBoundsCLString =
 #include "OpenCLC10/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
 #include "OpenCLC10/SolveCollisionsAndUpdateVelocities.cl"
+static char* OutputToVertexArrayCLString =
+#include "OpenCLC10/OutputToVertexArray.cl"
 #endif //CL_VERSION_1_1
 
 
@@ -1488,6 +1505,57 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 				normalPointer += normalStride;
 			}
 		}
+	} else 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::OPENGL_BUFFER ) {		
+
+		const btOpenGLInteropVertexBufferDescriptor *openGLVertexBuffer = static_cast< btOpenGLInteropVertexBufferDescriptor* >(vertexBuffer);						
+		cl_int ciErrNum = CL_SUCCESS;    
+
+		cl_mem clBuffer = openGLVertexBuffer->getBuffer();		
+		cl_kernel outputKernel = outputToVertexArrayWithNormalsKernel;
+		if( !vertexBuffer->hasNormals() )
+			outputKernel = outputToVertexArrayWithoutNormalsKernel;
+
+		ciErrNum = clEnqueueAcquireGLObjects(m_cqCommandQue, 1, &clBuffer, 0, 0, NULL);
+		if( ciErrNum != CL_SUCCESS )
+		{
+			btAssert( 0 &&  "clEnqueueAcquireGLObjects(copySoftBodyToVertexBuffer)");
+		}
+
+		int numVertices = currentCloth->getNumVertices();
+
+		ciErrNum = clSetKernelArg(outputKernel, 0, sizeof(int), &firstVertex );
+		ciErrNum = clSetKernelArg(outputKernel, 1, sizeof(int), &numVertices );
+		ciErrNum = clSetKernelArg(outputKernel, 2, sizeof(cl_mem), (void*)&clBuffer );
+		if( vertexBuffer->hasVertexPositions() )
+		{
+			int vertexOffset = vertexBuffer->getVertexOffset();
+			int vertexStride = vertexBuffer->getVertexStride();
+			ciErrNum = clSetKernelArg(outputKernel, 3, sizeof(int), &vertexOffset );
+			ciErrNum = clSetKernelArg(outputKernel, 4, sizeof(int), &vertexStride );
+			ciErrNum = clSetKernelArg(outputKernel, 5, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexPosition.m_buffer );
+
+		}
+		if( vertexBuffer->hasNormals() )
+		{
+			int normalOffset = vertexBuffer->getNormalOffset();
+			int normalStride = vertexBuffer->getNormalStride();
+			ciErrNum = clSetKernelArg(outputKernel, 6, sizeof(int), &normalOffset );
+			ciErrNum = clSetKernelArg(outputKernel, 7, sizeof(int), &normalStride );
+			ciErrNum = clSetKernelArg(outputKernel, 8, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexNormal.m_buffer );
+
+		}
+		size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, outputKernel, 1, NULL, &numWorkItems, &workGroupSize,0 ,0 ,0);
+		if( ciErrNum != CL_SUCCESS ) 
+		{
+			btAssert( 0 &&  "enqueueNDRangeKernel(copySoftBodyToVertexBuffer)");
+		}
+
+		ciErrNum = clEnqueueReleaseGLObjects(m_cqCommandQue, 1, &clBuffer, 0, 0, 0);
+		if( ciErrNum != CL_SUCCESS )
+		{
+			btAssert( 0 &&  "clEnqueueReleaseGLObjects(copySoftBodyToVertexBuffer)");
+		}
 	}
 
 } // btCPUSoftBodySolver::outputToVertexBuffers
@@ -1695,8 +1763,8 @@ bool btOpenCLSoftBodySolver::buildShaders()
 	resetNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel" );
 	normalizeNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "NormalizeNormalsAndAreasKernel" );
 	updateSoftBodiesKernel = compileCLKernelFromString( UpdateNormalsCLString, "UpdateSoftBodiesKernel" );
-	//outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
-	//outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
+	outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
+	outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
 
 
 	if( returnVal )
