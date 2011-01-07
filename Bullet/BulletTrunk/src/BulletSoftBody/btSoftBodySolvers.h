@@ -72,6 +72,9 @@ public:
 	/** Optimize soft bodies in this solver. */
 	virtual void optimize( btAlignedObjectArray< btSoftBody * > &softBodies ) = 0;
 
+	/** Copy necessary data back to the original soft body source objects. */
+	virtual void copyBackToSoftBodies() = 0;
+
 	/** Predict motion of soft bodies into next timestep */
 	virtual void predictMotion( float solverdt ) = 0;
 

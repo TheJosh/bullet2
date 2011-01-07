@@ -591,6 +591,8 @@ public:
 
 	virtual void optimize( btAlignedObjectArray< btSoftBody * > &softBodies );
 
+	virtual void copyBackToSoftBodies();
+
 	virtual void solveConstraints( float solverdt );
 
 	virtual void predictMotion( float solverdt );

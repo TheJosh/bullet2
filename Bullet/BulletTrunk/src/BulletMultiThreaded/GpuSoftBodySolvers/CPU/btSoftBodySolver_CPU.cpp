@@ -84,6 +84,34 @@ void btCPUSoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( const bt
 }
 
 
+void btCPUSoftBodySolver::copyBackToSoftBodies()
+{
+	// Loop over soft bodies, copying all the vertex positions back for each body in turn
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[ softBodyIndex ];
+		btSoftBody *softBody = softBodyInterface->getSoftBody();
+
+		int firstVertex = softBodyInterface->getFirstVertex();
+		int numVertices = softBodyInterface->getNumVertices();
+
+		// Copy vertices from solver back into the softbody
+		for( int vertex = 0; vertex < numVertices; ++vertex )
+		{
+			using Vectormath::Aos::Point3;
+			Point3 vertexPosition( getVertexData().getVertexPositions()[firstVertex + vertex] );
+
+			softBody->m_nodes[vertex].m_x.setX( vertexPosition.getX() );
+			softBody->m_nodes[vertex].m_x.setY( vertexPosition.getY() );
+			softBody->m_nodes[vertex].m_x.setZ( vertexPosition.getZ() );
+			
+			softBody->m_nodes[vertex].m_n.setX( vertexPosition.getX() );
+			softBody->m_nodes[vertex].m_n.setY( vertexPosition.getY() );
+			softBody->m_nodes[vertex].m_n.setZ( vertexPosition.getZ() );
+		}
+	}
+} // btCPUSoftBodySolver::copyBackToSoftBodies
+
 void btCPUSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
 {
 	if( m_softBodySet.size() != softBodies.size() )

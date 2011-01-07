@@ -34,8 +34,11 @@ btDefaultSoftBodySolver::~btDefaultSoftBodySolver()
 {
 }
 
+// In this case the data is already in the soft bodies so there is no need for us to do anything
+void btDefaultSoftBodySolver::copyBackToSoftBodies()
+{
 
-
+}
 
 void btDefaultSoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
 {
