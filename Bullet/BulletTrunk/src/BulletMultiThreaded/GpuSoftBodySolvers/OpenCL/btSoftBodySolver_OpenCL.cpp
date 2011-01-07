@@ -20,7 +20,6 @@ subject to the following restrictions:
 #include "btSoftBodySolver_OpenCL.h"
 #include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/btSoftBody.h"
-#include "btSoftBodySolverVertexBuffer_OpenGL.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
 #ifdef USE_MINICL
 	#include "MiniCL/cl.h"
@@ -33,7 +32,7 @@ subject to the following restrictions:
 #endif//USE_MINICL
 
 
-#include <GL/glew.h>
+//#include <GL/glew.h>
 
 static const size_t workGroupSize = 128;
 
@@ -69,8 +68,6 @@ static char* ComputeBoundsCLString =
 #include "OpenCLC/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
 #include "OpenCLC/SolveCollisionsAndUpdateVelocities.cl"
-static char* OutputToVertexArrayCLString =
-#include "OpenCLC/OutputToVertexArray.cl"
 #else
 ////OpenCL 1.0 kernels don't use float3
 #define MSTRINGIFY(A) #A
@@ -98,8 +95,6 @@ static char* ComputeBoundsCLString =
 #include "OpenCLC10/ComputeBounds.cl"
 static char* SolveCollisionsAndUpdateVelocitiesCLString =
 #include "OpenCLC10/SolveCollisionsAndUpdateVelocities.cl"
-static char* OutputToVertexArrayCLString =
-#include "OpenCLC10/OutputToVertexArray.cl"
 #endif //CL_VERSION_1_1
 
 
@@ -611,6 +606,7 @@ btOpenCLSoftBodySolver::btOpenCLSoftBodySolver(cl_command_queue queue, cl_contex
 	m_linkData(queue, ctx),
 	m_vertexData(queue, ctx),
 	m_triangleData(queue, ctx),
+	clFunctions(queue, ctx),
 	m_clPerClothAcceleration(queue, ctx, &m_perClothAcceleration, true ),
 	m_clPerClothWindVelocity(queue, ctx, &m_perClothWindVelocity, true ),
 	m_clPerClothDampingFactor(queue,ctx, &m_perClothDampingFactor, true ),
@@ -647,9 +643,6 @@ btOpenCLSoftBodySolver::btOpenCLSoftBodySolver(cl_command_queue queue, cl_contex
 	resetNormalsAndAreasKernel = 0;
 	normalizeNormalsAndAreasKernel = 0;
 	computeBoundsKernel = 0;
-	outputToVertexArrayWithNormalsKernel = 0;
-	outputToVertexArrayWithNormalsKernel = 0;
-	outputToVertexArrayWithoutNormalsKernel = 0;
 	outputToVertexArrayKernel = 0;
 	applyForcesKernel = 0;
 }
@@ -674,8 +667,6 @@ void btOpenCLSoftBodySolver::releaseKernels()
 	RELEASE_CL_KERNEL( resetNormalsAndAreasKernel );
 	RELEASE_CL_KERNEL( normalizeNormalsAndAreasKernel );
 	RELEASE_CL_KERNEL( computeBoundsKernel );
-	RELEASE_CL_KERNEL( outputToVertexArrayWithNormalsKernel );
-	RELEASE_CL_KERNEL( outputToVertexArrayWithoutNormalsKernel );
 	RELEASE_CL_KERNEL( outputToVertexArrayKernel );
 	RELEASE_CL_KERNEL( applyForcesKernel );
 
@@ -1454,15 +1445,16 @@ void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt
 /////////////////////////////////////
 
 
-void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
+void btSoftBodySolverOutputCLtoCPU::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
 {
-	// Currently only support CPU output buffers
-	// TODO: check for DX11 buffers. Take all offsets into the same DX11 buffer
-	// and use them together on a single kernel call if possible by setting up a
-	// per-cloth target buffer array for the copy kernel.
 
+	btSoftBodySolver *solver = softBody->getSoftBodySolver();
+	btAssert( solver->getSolverType() == btSoftBodySolver::CL_SOLVER || solver->getSolverType() == btSoftBodySolver::CL_SIMD_SOLVER );
+	btOpenCLSoftBodySolver *dxSolver = static_cast< btOpenCLSoftBodySolver * >( solver );
 
-	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
+	btOpenCLSoftBodySolver::btAcceleratedSoftBodyInterface * currentCloth = dxSolver->findSoftBodyInterface( softBody );
+	btSoftBodyVertexDataOpenCL &vertexData( dxSolver->m_vertexData );
+	
 
 	const int firstVertex = currentCloth->getFirstVertex();
 	const int lastVertex = firstVertex + currentCloth->getNumVertices();
@@ -1472,8 +1464,8 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 		const btCPUVertexBufferDescriptor *cpuVertexBuffer = static_cast< btCPUVertexBufferDescriptor* >(vertexBuffer);						
 		float *basePointer = cpuVertexBuffer->getBasePointer();						
 
-		m_vertexData.m_clVertexPosition.copyFromGPU();
-		m_vertexData.m_clVertexNormal.copyFromGPU();
+		vertexData.m_clVertexPosition.copyFromGPU();
+		vertexData.m_clVertexNormal.copyFromGPU();
 
 		if( vertexBuffer->hasVertexPositions() )
 		{
@@ -1483,7 +1475,7 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 
 			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
+				Vectormath::Aos::Point3 position = vertexData.getPosition(vertexIndex);
 				*(vertexPointer + 0) = position.getX();
 				*(vertexPointer + 1) = position.getY();
 				*(vertexPointer + 2) = position.getZ();
@@ -1498,14 +1490,14 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 
 			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
+				Vectormath::Aos::Vector3 normal = vertexData.getNormal(vertexIndex);
 				*(normalPointer + 0) = normal.getX();
 				*(normalPointer + 1) = normal.getY();
 				*(normalPointer + 2) = normal.getZ();
 				normalPointer += normalStride;
 			}
 		}
-	} else 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::OPENGL_BUFFER ) {		
+	} /*else 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::OPENGL_BUFFER ) {		
 
 		const btOpenGLInteropVertexBufferDescriptor *openGLVertexBuffer = static_cast< btOpenGLInteropVertexBufferDescriptor* >(vertexBuffer);						
 		cl_int ciErrNum = CL_SUCCESS;    
@@ -1556,12 +1548,13 @@ void btOpenCLSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * cons
 		{
 			btAssert( 0 &&  "clEnqueueReleaseGLObjects(copySoftBodyToVertexBuffer)");
 		}
-	}
+	}*/
 
-} // btCPUSoftBodySolver::outputToVertexBuffers
+} // btSoftBodySolverOutputCLtoCPU::outputToVertexBuffers
 
 
-cl_kernel btOpenCLSoftBodySolver::compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros )
+
+cl_kernel CLFunctions::compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros )
 {
 	printf("compiling kernalName: %s ",kernelName);
 	cl_kernel kernel;
@@ -1749,22 +1742,20 @@ bool btOpenCLSoftBodySolver::buildShaders()
 	if( m_shadersInitialized )
 		return true;
 	
-	prepareLinksKernel = compileCLKernelFromString( PrepareLinksCLString, "PrepareLinksKernel" );
-	updatePositionsFromVelocitiesKernel = compileCLKernelFromString( UpdatePositionsFromVelocitiesCLString, "UpdatePositionsFromVelocitiesKernel" );
-	solvePositionsFromLinksKernel = compileCLKernelFromString( SolvePositionsCLString, "SolvePositionsFromLinksKernel" );
-	updateVelocitiesFromPositionsWithVelocitiesKernel = compileCLKernelFromString( UpdateNodesCLString, "updateVelocitiesFromPositionsWithVelocitiesKernel" );
-	updateVelocitiesFromPositionsWithoutVelocitiesKernel = compileCLKernelFromString( UpdatePositionsCLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel" );
-	computeBoundsKernel = compileCLKernelFromString( ComputeBoundsCLString, "ComputeBoundsKernel" );
-	solveCollisionsAndUpdateVelocitiesKernel = compileCLKernelFromString( SolveCollisionsAndUpdateVelocitiesCLString, "SolveCollisionsAndUpdateVelocitiesKernel" );
-	integrateKernel = compileCLKernelFromString( IntegrateCLString, "IntegrateKernel" );
-	applyForcesKernel = compileCLKernelFromString( ApplyForcesCLString, "ApplyForcesKernel" );
+	prepareLinksKernel = clFunctions.compileCLKernelFromString( PrepareLinksCLString, "PrepareLinksKernel" );
+	updatePositionsFromVelocitiesKernel = clFunctions.compileCLKernelFromString( UpdatePositionsFromVelocitiesCLString, "UpdatePositionsFromVelocitiesKernel" );
+	solvePositionsFromLinksKernel = clFunctions.compileCLKernelFromString( SolvePositionsCLString, "SolvePositionsFromLinksKernel" );
+	updateVelocitiesFromPositionsWithVelocitiesKernel = clFunctions.compileCLKernelFromString( UpdateNodesCLString, "updateVelocitiesFromPositionsWithVelocitiesKernel" );
+	updateVelocitiesFromPositionsWithoutVelocitiesKernel = clFunctions.compileCLKernelFromString( UpdatePositionsCLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel" );
+	computeBoundsKernel = clFunctions.compileCLKernelFromString( ComputeBoundsCLString, "ComputeBoundsKernel" );
+	solveCollisionsAndUpdateVelocitiesKernel = clFunctions.compileCLKernelFromString( SolveCollisionsAndUpdateVelocitiesCLString, "SolveCollisionsAndUpdateVelocitiesKernel" );
+	integrateKernel = clFunctions.compileCLKernelFromString( IntegrateCLString, "IntegrateKernel" );
+	applyForcesKernel = clFunctions.compileCLKernelFromString( ApplyForcesCLString, "ApplyForcesKernel" );
 
 	// TODO: Rename to UpdateSoftBodies
-	resetNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel" );
-	normalizeNormalsAndAreasKernel = compileCLKernelFromString( UpdateNormalsCLString, "NormalizeNormalsAndAreasKernel" );
-	updateSoftBodiesKernel = compileCLKernelFromString( UpdateNormalsCLString, "UpdateSoftBodiesKernel" );
-	outputToVertexArrayWithNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithNormalsKernel" );
-	outputToVertexArrayWithoutNormalsKernel = compileCLKernelFromString( OutputToVertexArrayCLString, "OutputToVertexArrayWithoutNormalsKernel" );
+	resetNormalsAndAreasKernel = clFunctions.compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel" );
+	normalizeNormalsAndAreasKernel = clFunctions.compileCLKernelFromString( UpdateNormalsCLString, "NormalizeNormalsAndAreasKernel" );
+	updateSoftBodiesKernel = clFunctions.compileCLKernelFromString( UpdateNormalsCLString, "UpdateSoftBodiesKernel" );
 
 
 	if( returnVal )

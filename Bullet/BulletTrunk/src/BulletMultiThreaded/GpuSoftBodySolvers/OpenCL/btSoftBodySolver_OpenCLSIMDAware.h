@@ -64,7 +64,10 @@ public:
 
 	virtual ~btOpenCLSoftBodySolverSIMDAware();
 
-
+	virtual SolverTypes getSolverType() const
+	{
+		return CL_SIMD_SOLVER;
+	}
 
 
 	virtual btSoftBodyLinkData &getLinkData();

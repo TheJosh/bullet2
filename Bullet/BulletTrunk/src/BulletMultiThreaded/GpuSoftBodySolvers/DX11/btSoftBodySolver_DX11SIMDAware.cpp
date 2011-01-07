@@ -494,7 +494,7 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 		return true;
 
 	
-	updatePositionsFromVelocitiesKernel = compileComputeShaderFromString( UpdatePositionsFromVelocitiesHLSLString, "UpdatePositionsFromVelocitiesKernel", sizeof(UpdatePositionsFromVelocitiesCB) );
+	updatePositionsFromVelocitiesKernel = dxFunctions.compileComputeShaderFromString( UpdatePositionsFromVelocitiesHLSLString, "UpdatePositionsFromVelocitiesKernel", sizeof(UpdatePositionsFromVelocitiesCB) );
 	if( !updatePositionsFromVelocitiesKernel.constBuffer )
 		returnVal = false;
 	
@@ -512,42 +512,36 @@ bool btDX11SIMDAwareSoftBodySolver::buildShaders()
 	
 	D3D10_SHADER_MACRO solvePositionsMacros[6] = { "MAX_NUM_VERTICES_PER_WAVE", maxVerticesPerWavefront, "MAX_BATCHES_PER_WAVE", maxBatchesPerWavefront, "WAVEFRONT_SIZE", waveFrontSize, "WAVEFRONT_BLOCK_MULTIPLIER", waveFrontBlockMultiplier, "BLOCK_SIZE", blockSize, 0, 0 };
 
-	solvePositionsFromLinksKernel = compileComputeShaderFromString( SolvePositionsSIMDBatchedHLSLString, "SolvePositionsFromLinksKernel", sizeof(SolvePositionsFromLinksKernelCB), solvePositionsMacros );
+	solvePositionsFromLinksKernel = dxFunctions.compileComputeShaderFromString( SolvePositionsSIMDBatchedHLSLString, "SolvePositionsFromLinksKernel", sizeof(SolvePositionsFromLinksKernelCB), solvePositionsMacros );
 	if( !solvePositionsFromLinksKernel.constBuffer )
 		returnVal = false;
 
-	updateVelocitiesFromPositionsWithVelocitiesKernel = compileComputeShaderFromString( UpdateNodesHLSLString, "updateVelocitiesFromPositionsWithVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithVelocitiesCB) );
+	updateVelocitiesFromPositionsWithVelocitiesKernel = dxFunctions.compileComputeShaderFromString( UpdateNodesHLSLString, "updateVelocitiesFromPositionsWithVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithVelocitiesCB) );
 	if( !updateVelocitiesFromPositionsWithVelocitiesKernel.constBuffer )
 		returnVal = false;
-	updateVelocitiesFromPositionsWithoutVelocitiesKernel = compileComputeShaderFromString( UpdatePositionsHLSLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithoutVelocitiesCB));
+	updateVelocitiesFromPositionsWithoutVelocitiesKernel = dxFunctions.compileComputeShaderFromString( UpdatePositionsHLSLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithoutVelocitiesCB));
 	if( !updateVelocitiesFromPositionsWithoutVelocitiesKernel.constBuffer )
 		returnVal = false;
-	integrateKernel = compileComputeShaderFromString( IntegrateHLSLString, "IntegrateKernel", sizeof(IntegrateCB) );
+	integrateKernel = dxFunctions.compileComputeShaderFromString( IntegrateHLSLString, "IntegrateKernel", sizeof(IntegrateCB) );
 	if( !integrateKernel.constBuffer )
 		returnVal = false;
-	applyForcesKernel = compileComputeShaderFromString( ApplyForcesHLSLString, "ApplyForcesKernel", sizeof(ApplyForcesCB) );
+	applyForcesKernel = dxFunctions.compileComputeShaderFromString( ApplyForcesHLSLString, "ApplyForcesKernel", sizeof(ApplyForcesCB) );
 	if( !applyForcesKernel.constBuffer )
 		returnVal = false;
-	solveCollisionsAndUpdateVelocitiesKernel = compileComputeShaderFromString( SolveCollisionsAndUpdateVelocitiesHLSLString, "SolveCollisionsAndUpdateVelocitiesKernel", sizeof(SolveCollisionsAndUpdateVelocitiesCB) );
+	solveCollisionsAndUpdateVelocitiesKernel = dxFunctions.compileComputeShaderFromString( SolveCollisionsAndUpdateVelocitiesHLSLString, "SolveCollisionsAndUpdateVelocitiesKernel", sizeof(SolveCollisionsAndUpdateVelocitiesCB) );
 	if( !solveCollisionsAndUpdateVelocitiesKernel.constBuffer )
 		returnVal = false;
-	resetNormalsAndAreasKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "ResetNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
+	resetNormalsAndAreasKernel = dxFunctions.compileComputeShaderFromString( UpdateNormalsHLSLString, "ResetNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !resetNormalsAndAreasKernel.constBuffer )
 		returnVal = false;
-	normalizeNormalsAndAreasKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "NormalizeNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
+	normalizeNormalsAndAreasKernel = dxFunctions.compileComputeShaderFromString( UpdateNormalsHLSLString, "NormalizeNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !normalizeNormalsAndAreasKernel.constBuffer )
 		returnVal = false;
-	updateSoftBodiesKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "UpdateSoftBodiesKernel", sizeof(UpdateSoftBodiesCB) );
+	updateSoftBodiesKernel = dxFunctions.compileComputeShaderFromString( UpdateNormalsHLSLString, "UpdateSoftBodiesKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !updateSoftBodiesKernel.constBuffer )
 		returnVal = false;
-	outputToVertexArrayWithNormalsKernel = compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithNormalsKernel", sizeof(OutputToVertexArrayCB) );
-	if( !outputToVertexArrayWithNormalsKernel.constBuffer )
-		returnVal = false;
-	outputToVertexArrayWithoutNormalsKernel = compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithoutNormalsKernel", sizeof(OutputToVertexArrayCB) );
-	if( !outputToVertexArrayWithoutNormalsKernel.constBuffer )
-		returnVal = false;
 	
-	computeBoundsKernel = compileComputeShaderFromString( ComputeBoundsHLSLString, "ComputeBoundsKernel", sizeof(ComputeBoundsCB) );
+	computeBoundsKernel = dxFunctions.compileComputeShaderFromString( ComputeBoundsHLSLString, "ComputeBoundsKernel", sizeof(ComputeBoundsCB) );
 	if( !computeBoundsKernel.constBuffer )
 		returnVal = false;
 

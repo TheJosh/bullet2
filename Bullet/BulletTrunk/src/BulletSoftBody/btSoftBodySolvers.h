@@ -29,6 +29,17 @@ class btSoftBody;
 
 class btSoftBodySolver
 {
+public:
+	enum SolverTypes
+	{
+		DEFAULT_SOLVER,
+		CPU_SOLVER,
+		CL_SOLVER,
+		CL_SIMD_SOLVER,
+		DX_SOLVER,
+		DX_SIMD_SOLVER
+	};
+
 
 protected:
 	int m_numberOfPositionIterations;
@@ -48,7 +59,11 @@ public:
 	virtual ~btSoftBodySolver()
 	{
 	}
-
+	
+	/**
+	 * Return the type of the solver.
+	 */
+	virtual SolverTypes getSolverType() const = 0;
 
 
 	/** Ensure that this solver is initialized. */
@@ -65,9 +80,6 @@ public:
 
 	/** Perform necessary per-step updates of soft bodies such as recomputing normals and bounding boxes */
 	virtual void updateSoftBodies() = 0;
-
-	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
-	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer ) = 0;
 
 	/** Process a collision between one of the world's soft bodies and another collision object */
 	virtual void processCollision( btSoftBody *, btCollisionObject* ) = 0;
@@ -108,6 +120,28 @@ public:
 	 */
 	virtual void addCollisionObjectForSoftBody( int clothIdentifier, btCollisionObject *collisionObject ) = 0;
 #endif
+};
+
+/** 
+ * Class to manage movement of data from a solver to a given target.
+ * This version is abstract. Subclasses will have custom pairings for different combinations.
+ */
+class btSoftBodySolverOutput
+{
+protected:
+
+public:
+	btSoftBodySolverOutput()
+	{
+	}
+
+	virtual ~btSoftBodySolverOutput()
+	{
+	}
+
+
+	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
+	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer ) = 0;
 };
 
 

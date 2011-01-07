@@ -550,6 +550,7 @@ void btSoftBodyTriangleDataDX11::generateBatches()
 btDX11SoftBodySolver::btDX11SoftBodySolver(ID3D11Device * dx11Device, ID3D11DeviceContext* dx11Context) :
 	m_dx11Device( dx11Device ),
 	m_dx11Context( dx11Context ),
+	dxFunctions( m_dx11Device, m_dx11Context ),
 	m_linkData(m_dx11Device, m_dx11Context),
 	m_vertexData(m_dx11Device, m_dx11Context),
 	m_triangleData(m_dx11Device, m_dx11Context),
@@ -601,10 +602,6 @@ void btDX11SoftBodySolver::releaseKernels()
 	SAFE_RELEASE( normalizeNormalsAndAreasKernel.kernel );
 	SAFE_RELEASE( updateSoftBodiesKernel.constBuffer );
 	SAFE_RELEASE( updateSoftBodiesKernel.kernel );
-	SAFE_RELEASE( outputToVertexArrayWithNormalsKernel.constBuffer );
-	SAFE_RELEASE( outputToVertexArrayWithNormalsKernel.kernel );
-	SAFE_RELEASE( outputToVertexArrayWithoutNormalsKernel.constBuffer );
-	SAFE_RELEASE( outputToVertexArrayWithoutNormalsKernel.kernel );
 	SAFE_RELEASE( solveCollisionsAndUpdateVelocitiesKernel.kernel );
 	SAFE_RELEASE( solveCollisionsAndUpdateVelocitiesKernel.constBuffer );
 	SAFE_RELEASE( computeBoundsKernel.kernel );
@@ -1735,6 +1732,17 @@ btDX11SoftBodySolver::btAcceleratedSoftBodyInterface *btDX11SoftBodySolver::find
 	return 0;
 }
 
+const btDX11SoftBodySolver::btAcceleratedSoftBodyInterface * const btDX11SoftBodySolver::findSoftBodyInterface( const btSoftBody* const softBody ) const
+{
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btAcceleratedSoftBodyInterface *softBodyInterface = m_softBodySet[softBodyIndex];
+		if( softBodyInterface->getSoftBody() == softBody )
+			return softBodyInterface;
+	}
+	return 0;
+}
+
 int btDX11SoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
 {
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
@@ -1746,12 +1754,18 @@ int btDX11SoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
 	return 1;
 }
 
-void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
-{
-	checkInitialized();
-	
-	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
 
+void btSoftBodySolverOutputDXtoCPU::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
+{
+	
+
+	btSoftBodySolver *solver = softBody->getSoftBodySolver();
+	btAssert( solver->getSolverType() == btSoftBodySolver::DX_SOLVER || solver->getSolverType() == btSoftBodySolver::DX_SIMD_SOLVER );
+	btDX11SoftBodySolver *dxSolver = static_cast< btDX11SoftBodySolver * >( solver );
+
+	btDX11SoftBodySolver::btAcceleratedSoftBodyInterface * currentCloth = dxSolver->findSoftBodyInterface( softBody );
+	btSoftBodyVertexDataDX11 &vertexData( dxSolver->m_vertexData );
+	
 
 	const int firstVertex = currentCloth->getFirstVertex();
 	const int lastVertex = firstVertex + currentCloth->getNumVertices();
@@ -1759,8 +1773,8 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
 	{		
 		// If we're doing a CPU-buffer copy must copy the data back to the host first
-		m_vertexData.m_dx11VertexPosition.copyFromGPU();
-		m_vertexData.m_dx11VertexNormal.copyFromGPU();
+		vertexData.m_dx11VertexPosition.copyFromGPU();
+		vertexData.m_dx11VertexNormal.copyFromGPU();
 
 		const int firstVertex = currentCloth->getFirstVertex();
 		const int lastVertex = firstVertex + currentCloth->getNumVertices();
@@ -1775,7 +1789,7 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 
 			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
+				Vectormath::Aos::Point3 position = vertexData.getPosition(vertexIndex);
 				*(vertexPointer + 0) = position.getX();
 				*(vertexPointer + 1) = position.getY();
 				*(vertexPointer + 2) = position.getZ();
@@ -1790,13 +1804,82 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 
 			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
+				Vectormath::Aos::Vector3 normal = vertexData.getNormal(vertexIndex);
 				*(normalPointer + 0) = normal.getX();
 				*(normalPointer + 1) = normal.getY();
 				*(normalPointer + 2) = normal.getZ();
 				normalPointer += normalStride;
 			}
 		}
+	} 
+} // btDX11SoftBodySolver::outputToVertexBuffers
+
+
+
+bool btSoftBodySolverOutputDXtoDX::checkInitialized()
+{
+	if( !m_shadersInitialized )
+		if( buildShaders() )
+			m_shadersInitialized = true;
+
+	return m_shadersInitialized;
+}
+
+void btSoftBodySolverOutputDXtoDX::releaseKernels()
+{
+	SAFE_RELEASE( outputToVertexArrayWithNormalsKernel.constBuffer );
+	SAFE_RELEASE( outputToVertexArrayWithNormalsKernel.kernel );
+	SAFE_RELEASE( outputToVertexArrayWithoutNormalsKernel.constBuffer );
+	SAFE_RELEASE( outputToVertexArrayWithoutNormalsKernel.kernel );
+
+	m_shadersInitialized = false;
+}
+
+
+bool btSoftBodySolverOutputDXtoDX::buildShaders()
+{
+	// Ensure current kernels are released first
+	releaseKernels();
+
+	bool returnVal = true;
+
+	if( m_shadersInitialized )
+		return true;
+	
+
+	outputToVertexArrayWithNormalsKernel = dxFunctions.compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithNormalsKernel", sizeof(OutputToVertexArrayCB) );
+	if( !outputToVertexArrayWithNormalsKernel.constBuffer)
+		returnVal = false;
+	outputToVertexArrayWithoutNormalsKernel = dxFunctions.compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithoutNormalsKernel", sizeof(OutputToVertexArrayCB) );
+	if( !outputToVertexArrayWithoutNormalsKernel.constBuffer )
+		returnVal = false;
+
+
+	if( returnVal )
+		m_shadersInitialized = true;
+
+	return returnVal;
+}
+
+
+void btSoftBodySolverOutputDXtoDX::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
+{
+	
+
+	btSoftBodySolver *solver = softBody->getSoftBodySolver();
+	btAssert( solver->getSolverType() == btSoftBodySolver::DX_SOLVER || solver->getSolverType() == btSoftBodySolver::DX_SIMD_SOLVER );
+	btDX11SoftBodySolver *dxSolver = static_cast< btDX11SoftBodySolver * >( solver );
+	checkInitialized();
+	btDX11SoftBodySolver::btAcceleratedSoftBodyInterface * currentCloth = dxSolver->findSoftBodyInterface( softBody );
+	btSoftBodyVertexDataDX11 &vertexData( dxSolver->m_vertexData );
+
+
+	const int firstVertex = currentCloth->getFirstVertex();
+	const int lastVertex = firstVertex + currentCloth->getNumVertices();
+
+	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
+	{		
+		btSoftBodySolverOutputDXtoDX::copySoftBodyToVertexBuffer( softBody, vertexBuffer );
 	} else 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::DX11_BUFFER )
 	{
 		// Do a DX11 copy shader DX to DX copy
@@ -1823,35 +1906,35 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 		
 		// TODO: factor this out. Number of nodes is static and sdt might be, too, we can update this just once on setup
 		D3D11_MAPPED_SUBRESOURCE MappedResource = {0};
-		m_dx11Context->Map( outputToVertexArrayConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource );
+		dxFunctions.m_dx11Context->Map( outputToVertexArrayConstBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &MappedResource );
 		memcpy( MappedResource.pData, &constBuffer, sizeof(OutputToVertexArrayCB) );	
-		m_dx11Context->Unmap( outputToVertexArrayConstBuffer, 0 );
-		m_dx11Context->CSSetConstantBuffers( 0, 1, &outputToVertexArrayConstBuffer );
+		dxFunctions.m_dx11Context->Unmap( outputToVertexArrayConstBuffer, 0 );
+		dxFunctions.m_dx11Context->CSSetConstantBuffers( 0, 1, &outputToVertexArrayConstBuffer );
 
 		// Set resources and dispatch
-		m_dx11Context->CSSetShaderResources( 0, 1, &(m_vertexData.m_dx11VertexPosition.getSRV()) );
-		m_dx11Context->CSSetShaderResources( 1, 1, &(m_vertexData.m_dx11VertexNormal.getSRV()) );
+		dxFunctions.m_dx11Context->CSSetShaderResources( 0, 1, &(vertexData.m_dx11VertexPosition.getSRV()) );
+		dxFunctions.m_dx11Context->CSSetShaderResources( 1, 1, &(vertexData.m_dx11VertexNormal.getSRV()) );
 
 		ID3D11UnorderedAccessView* dx11UAV = dx11VertexBuffer->getDX11UAV();
-		m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &(dx11UAV), NULL );
+		dxFunctions.m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &(dx11UAV), NULL );
 
 		// Execute the kernel
-		m_dx11Context->CSSetShader( outputToVertexArrayShader, NULL, 0 );
+		dxFunctions.m_dx11Context->CSSetShader( outputToVertexArrayShader, NULL, 0 );
 
 		int	numBlocks = (constBuffer.numNodes + (128-1)) / 128;
-		m_dx11Context->Dispatch(numBlocks, 1, 1 );
+		dxFunctions.m_dx11Context->Dispatch(numBlocks, 1, 1 );
 
 		{
 			// Tidy up 
 			ID3D11ShaderResourceView* pViewNULL = NULL;
-			m_dx11Context->CSSetShaderResources( 0, 1, &pViewNULL );
-			m_dx11Context->CSSetShaderResources( 1, 1, &pViewNULL );
+			dxFunctions.m_dx11Context->CSSetShaderResources( 0, 1, &pViewNULL );
+			dxFunctions.m_dx11Context->CSSetShaderResources( 1, 1, &pViewNULL );
 
 			ID3D11UnorderedAccessView* pUAViewNULL = NULL;
-			m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &pUAViewNULL, NULL );
+			dxFunctions.m_dx11Context->CSSetUnorderedAccessViews( 0, 1, &pUAViewNULL, NULL );
 
 			ID3D11Buffer *pBufferNull = NULL;
-			m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
+			dxFunctions.m_dx11Context->CSSetConstantBuffers( 0, 1, &pBufferNull );
 		}	
 	}
 } // btDX11SoftBodySolver::outputToVertexBuffers
@@ -1859,7 +1942,7 @@ void btDX11SoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const 
 
 
 
-btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize, D3D10_SHADER_MACRO *compileMacros )
+DXFunctions::KernelDesc DXFunctions::compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize, D3D10_SHADER_MACRO *compileMacros )
 {
 	const char *cs5String = "cs_5_0";
 
@@ -1895,7 +1978,7 @@ btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromS
 		SAFE_RELEASE( pErrorBlob );
 		SAFE_RELEASE( pBlob );    
 
-		btDX11SoftBodySolver::KernelDesc descriptor;
+		DXFunctions::KernelDesc descriptor;
 		descriptor.kernel = 0;
 		descriptor.constBuffer = 0;
 		return descriptor;
@@ -1905,7 +1988,7 @@ btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromS
 	hr = m_dx11Device->CreateComputeShader( pBlob->GetBufferPointer(), pBlob->GetBufferSize(), NULL, &kernelPointer );
 	if( FAILED( hr ) )
 	{
-		btDX11SoftBodySolver::KernelDesc descriptor;
+		DXFunctions::KernelDesc descriptor;
 		descriptor.kernel = 0;
 		descriptor.constBuffer = 0;
 		return descriptor;
@@ -1934,7 +2017,7 @@ btDX11SoftBodySolver::KernelDesc btDX11SoftBodySolver::compileComputeShaderFromS
 	SAFE_RELEASE( pErrorBlob );
 	SAFE_RELEASE( pBlob );
 
-	btDX11SoftBodySolver::KernelDesc descriptor;
+	DXFunctions::KernelDesc descriptor;
 	descriptor.kernel = kernelPointer;
 	descriptor.constBuffer = constBuffer;
 	return descriptor;
@@ -1951,54 +2034,47 @@ bool btDX11SoftBodySolver::buildShaders()
 
 	if( m_shadersInitialized )
 		return true;
-	
 
-	prepareLinksKernel = compileComputeShaderFromString( PrepareLinksHLSLString, "PrepareLinksKernel", sizeof(PrepareLinksCB) );
+	prepareLinksKernel = dxFunctions.compileComputeShaderFromString( PrepareLinksHLSLString, "PrepareLinksKernel", sizeof(PrepareLinksCB) );
 	if( !prepareLinksKernel.constBuffer )
 		returnVal = false;
-	updatePositionsFromVelocitiesKernel = compileComputeShaderFromString( UpdatePositionsFromVelocitiesHLSLString, "UpdatePositionsFromVelocitiesKernel", sizeof(UpdatePositionsFromVelocitiesCB) );
+	updatePositionsFromVelocitiesKernel = dxFunctions.compileComputeShaderFromString( UpdatePositionsFromVelocitiesHLSLString, "UpdatePositionsFromVelocitiesKernel", sizeof(UpdatePositionsFromVelocitiesCB) );
 	if( !updatePositionsFromVelocitiesKernel.constBuffer )
 		returnVal = false;
-	solvePositionsFromLinksKernel = compileComputeShaderFromString( SolvePositionsHLSLString, "SolvePositionsFromLinksKernel", sizeof(SolvePositionsFromLinksKernelCB) );
+	solvePositionsFromLinksKernel = dxFunctions.compileComputeShaderFromString( SolvePositionsHLSLString, "SolvePositionsFromLinksKernel", sizeof(SolvePositionsFromLinksKernelCB) );
 	if( !updatePositionsFromVelocitiesKernel.constBuffer )
 		returnVal = false;
-	vSolveLinksKernel = compileComputeShaderFromString( VSolveLinksHLSLString, "VSolveLinksKernel", sizeof(VSolveLinksCB) );
+	vSolveLinksKernel = dxFunctions.compileComputeShaderFromString( VSolveLinksHLSLString, "VSolveLinksKernel", sizeof(VSolveLinksCB) );
 	if( !vSolveLinksKernel.constBuffer )
 		returnVal = false;
-	updateVelocitiesFromPositionsWithVelocitiesKernel = compileComputeShaderFromString( UpdateNodesHLSLString, "updateVelocitiesFromPositionsWithVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithVelocitiesCB) );
+	updateVelocitiesFromPositionsWithVelocitiesKernel = dxFunctions.compileComputeShaderFromString( UpdateNodesHLSLString, "updateVelocitiesFromPositionsWithVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithVelocitiesCB) );
 	if( !updateVelocitiesFromPositionsWithVelocitiesKernel.constBuffer )
 		returnVal = false;
-	updateVelocitiesFromPositionsWithoutVelocitiesKernel = compileComputeShaderFromString( UpdatePositionsHLSLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithoutVelocitiesCB) );
+	updateVelocitiesFromPositionsWithoutVelocitiesKernel = dxFunctions.compileComputeShaderFromString( UpdatePositionsHLSLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel", sizeof(UpdateVelocitiesFromPositionsWithoutVelocitiesCB) );
 	if( !updateVelocitiesFromPositionsWithoutVelocitiesKernel.constBuffer )
 		returnVal = false;
-	integrateKernel = compileComputeShaderFromString( IntegrateHLSLString, "IntegrateKernel", sizeof(IntegrateCB) );
+	integrateKernel = dxFunctions.compileComputeShaderFromString( IntegrateHLSLString, "IntegrateKernel", sizeof(IntegrateCB) );
 	if( !integrateKernel.constBuffer )
 		returnVal = false;
-	applyForcesKernel = compileComputeShaderFromString( ApplyForcesHLSLString, "ApplyForcesKernel", sizeof(ApplyForcesCB) );
+	applyForcesKernel = dxFunctions.compileComputeShaderFromString( ApplyForcesHLSLString, "ApplyForcesKernel", sizeof(ApplyForcesCB) );
 	if( !applyForcesKernel.constBuffer )
 		returnVal = false;
-	solveCollisionsAndUpdateVelocitiesKernel = compileComputeShaderFromString( SolveCollisionsAndUpdateVelocitiesHLSLString, "SolveCollisionsAndUpdateVelocitiesKernel", sizeof(SolveCollisionsAndUpdateVelocitiesCB) );
+	solveCollisionsAndUpdateVelocitiesKernel = dxFunctions.compileComputeShaderFromString( SolveCollisionsAndUpdateVelocitiesHLSLString, "SolveCollisionsAndUpdateVelocitiesKernel", sizeof(SolveCollisionsAndUpdateVelocitiesCB) );
 	if( !solveCollisionsAndUpdateVelocitiesKernel.constBuffer )
 		returnVal = false;
 
 	// TODO: Rename to UpdateSoftBodies
-	resetNormalsAndAreasKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "ResetNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
+	resetNormalsAndAreasKernel = dxFunctions.compileComputeShaderFromString( UpdateNormalsHLSLString, "ResetNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !resetNormalsAndAreasKernel.constBuffer )
 		returnVal = false;
-	normalizeNormalsAndAreasKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "NormalizeNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
+	normalizeNormalsAndAreasKernel = dxFunctions.compileComputeShaderFromString( UpdateNormalsHLSLString, "NormalizeNormalsAndAreasKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !normalizeNormalsAndAreasKernel.constBuffer )
 		returnVal = false;
-	updateSoftBodiesKernel = compileComputeShaderFromString( UpdateNormalsHLSLString, "UpdateSoftBodiesKernel", sizeof(UpdateSoftBodiesCB) );
+	updateSoftBodiesKernel = dxFunctions.compileComputeShaderFromString( UpdateNormalsHLSLString, "UpdateSoftBodiesKernel", sizeof(UpdateSoftBodiesCB) );
 	if( !updateSoftBodiesKernel.constBuffer )
 		returnVal = false;
-	outputToVertexArrayWithNormalsKernel = compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithNormalsKernel", sizeof(OutputToVertexArrayCB) );
-	if( !outputToVertexArrayWithNormalsKernel.constBuffer )
-		returnVal = false;
-	outputToVertexArrayWithoutNormalsKernel = compileComputeShaderFromString( OutputToVertexArrayHLSLString, "OutputToVertexArrayWithoutNormalsKernel", sizeof(OutputToVertexArrayCB) );
-	if( !outputToVertexArrayWithoutNormalsKernel.constBuffer )
-		returnVal = false;
 
-	computeBoundsKernel = compileComputeShaderFromString( ComputeBoundsHLSLString, "ComputeBoundsKernel", sizeof(ComputeBoundsCB) );
+	computeBoundsKernel = dxFunctions.compileComputeShaderFromString( ComputeBoundsHLSLString, "ComputeBoundsKernel", sizeof(ComputeBoundsCB) );
 	if( !computeBoundsKernel.constBuffer )
 		returnVal = false;
 

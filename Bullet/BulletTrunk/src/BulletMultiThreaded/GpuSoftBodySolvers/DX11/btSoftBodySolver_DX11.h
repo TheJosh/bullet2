@@ -26,7 +26,48 @@ subject to the following restrictions:
 
 
 
+class DXFunctions
+{
+public:
+	
+	ID3D11Device *		 m_dx11Device;
+	ID3D11DeviceContext* m_dx11Context;
 
+	DXFunctions( ID3D11Device *dx11Device, ID3D11DeviceContext* dx11Context) :
+		m_dx11Device( dx11Device ),
+		m_dx11Context( dx11Context )
+	{
+
+	}
+
+	class KernelDesc
+	{
+	protected:
+		
+
+	public:
+		ID3D11ComputeShader* kernel;
+		ID3D11Buffer* constBuffer;
+
+		KernelDesc()
+		{
+			kernel = 0;
+			constBuffer = 0;
+		}
+
+		virtual ~KernelDesc()
+		{
+			// TODO: this should probably destroy its kernel but we need to be careful
+			// in case KernelDescs are copied
+		}
+	}; 
+
+	/**
+	 * Compile a compute shader kernel from a string and return the appropriate KernelDesc object.
+	 */
+	KernelDesc compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize, D3D10_SHADER_MACRO *compileMacros = 0 );
+
+};
 
 class btDX11SoftBodySolver : public btSoftBodySolver
 {
@@ -83,6 +124,9 @@ protected:
 		unsigned int _padding;
 	};
 
+
+
+public:
 	/**
 	 * SoftBody class to maintain information about a soft body instance
 	 * within a solver.
@@ -128,32 +172,32 @@ protected:
 			m_maxLinks = 0;
 			m_numLinks = 0;
 		}
-		int getNumVertices()
+		int getNumVertices() const
 		{
 			return m_numVertices;
 		}
 
-		int getNumTriangles()
+		int getNumTriangles() const
 		{
 			return m_numTriangles;
 		}
 
-		int getMaxVertices()
+		int getMaxVertices() const
 		{
 			return m_maxVertices;
 		}
 
-		int getMaxTriangles()
+		int getMaxTriangles() const
 		{
 			return m_maxTriangles;
 		}
 
-		int getFirstVertex()
+		int getFirstVertex() const
 		{
 			return m_firstVertex;
 		}
 
-		int getFirstTriangle()
+		int getFirstTriangle() const
 		{
 			return m_firstTriangle;
 		}
@@ -246,30 +290,7 @@ protected:
 		int firstObject;
 		int endObject;
 	};
-public:
 
-
-	class KernelDesc
-	{
-	protected:
-		
-
-	public:
-		ID3D11ComputeShader* kernel;
-		ID3D11Buffer* constBuffer;
-
-		KernelDesc()
-		{
-			kernel = 0;
-			constBuffer = 0;
-		}
-
-		virtual ~KernelDesc()
-		{
-			// TODO: this should probably destroy its kernel but we need to be careful
-			// in case KernelDescs are copied
-		}
-	}; 
 
 
 
@@ -331,20 +352,6 @@ public:
 	};
 
 
-	struct OutputToVertexArrayCB
-	{
-		int startNode;
-		int numNodes;
-		int positionOffset;
-		int positionStride;
-		
-		int normalOffset;	
-		int normalStride;
-		int padding1;
-		int padding2;
-	};
-
-
 	struct ApplyForcesCB
 	{
 		unsigned int numNodes;
@@ -395,13 +402,16 @@ public:
 protected:
 	ID3D11Device *		 m_dx11Device;
 	ID3D11DeviceContext* m_dx11Context;
-
-
+	
+	DXFunctions dxFunctions;
+public:
 	/** Link data for all cloths. Note that this will be sorted batch-wise for efficient computation and m_linkAddresses will maintain the addressing. */
 	btSoftBodyLinkDataDX11 m_linkData;
 	btSoftBodyVertexDataDX11 m_vertexData;
 	btSoftBodyTriangleDataDX11 m_triangleData;
-		
+
+protected:
+
 	/** Variable to define whether we need to update solver constants on the next iteration */
 	bool m_updateSolverConstants;
 
@@ -483,23 +493,21 @@ protected:
 	btAlignedObjectArray< float >	m_perClothFriction;
 	btDX11Buffer< float >			m_dx11PerClothFriction;
 
-	KernelDesc		prepareLinksKernel;
-	KernelDesc		solvePositionsFromLinksKernel;
-	KernelDesc		vSolveLinksKernel;
-	KernelDesc		integrateKernel;
-	KernelDesc		addVelocityKernel;
-	KernelDesc		updatePositionsFromVelocitiesKernel;
-	KernelDesc		updateVelocitiesFromPositionsWithoutVelocitiesKernel;
-	KernelDesc		updateVelocitiesFromPositionsWithVelocitiesKernel;
-	KernelDesc		solveCollisionsAndUpdateVelocitiesKernel;
-	KernelDesc		resetNormalsAndAreasKernel;
-	KernelDesc		normalizeNormalsAndAreasKernel;
-	KernelDesc		computeBoundsKernel;
-	KernelDesc		updateSoftBodiesKernel;
-	KernelDesc		outputToVertexArrayWithNormalsKernel;
-	KernelDesc		outputToVertexArrayWithoutNormalsKernel;
+	DXFunctions::KernelDesc		prepareLinksKernel;
+	DXFunctions::KernelDesc		solvePositionsFromLinksKernel;
+	DXFunctions::KernelDesc		vSolveLinksKernel;
+	DXFunctions::KernelDesc		integrateKernel;
+	DXFunctions::KernelDesc		addVelocityKernel;
+	DXFunctions::KernelDesc		updatePositionsFromVelocitiesKernel;
+	DXFunctions::KernelDesc		updateVelocitiesFromPositionsWithoutVelocitiesKernel;
+	DXFunctions::KernelDesc		updateVelocitiesFromPositionsWithVelocitiesKernel;
+	DXFunctions::KernelDesc		solveCollisionsAndUpdateVelocitiesKernel;
+	DXFunctions::KernelDesc		resetNormalsAndAreasKernel;
+	DXFunctions::KernelDesc		normalizeNormalsAndAreasKernel;
+	DXFunctions::KernelDesc		computeBoundsKernel;
+	DXFunctions::KernelDesc		updateSoftBodiesKernel;
 
-	KernelDesc		applyForcesKernel;
+	DXFunctions::KernelDesc		applyForcesKernel;
 
 
 	/**
@@ -511,11 +519,6 @@ protected:
 		const Vectormath::Aos::Point3 &vertex1,
 		const Vectormath::Aos::Point3 &vertex2 );
 
-
-	/**
-	 * Compile a compute shader kernel from a string and return the appropriate KernelDesc object.
-	 */
-	KernelDesc compileComputeShaderFromString( const char* shaderString, const char* shaderName, int constBufferSize, D3D10_SHADER_MACRO *compileMacros = 0 );
 
 	virtual bool buildShaders();
 
@@ -534,8 +537,6 @@ protected:
 	virtual void applyForces( float solverdt );
 	
 	virtual void updateConstants( float timeStep );
-
-	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
 	int findSoftBodyIndex( const btSoftBody* const softBody );
 
 	//////////////////////////////////////
@@ -563,6 +564,12 @@ public:
 	btDX11SoftBodySolver(ID3D11Device * dx11Device, ID3D11DeviceContext* dx11Context);
 
 	virtual ~btDX11SoftBodySolver();
+	
+	
+	virtual SolverTypes getSolverType() const
+	{
+		return DX_SOLVER;
+	}
 
 
 	virtual btSoftBodyLinkData &getLinkData();
@@ -573,6 +580,10 @@ public:
 
 
 
+	
+
+	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	const btAcceleratedSoftBodyInterface * const findSoftBodyInterface( const btSoftBody* const softBody ) const;
 
 	virtual bool checkInitialized();
 
@@ -584,11 +595,75 @@ public:
 
 	virtual void predictMotion( float solverdt );
 
-	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
-
 	
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
+};
+
+
+
+/** 
+ * Class to manage movement of data from a solver to a given target.
+ * This version is the DX to CPU version.
+ */
+class btSoftBodySolverOutputDXtoCPU : public btSoftBodySolverOutput
+{
+protected:
+
+public:
+	btSoftBodySolverOutputDXtoCPU()
+	{
+	}
+
+	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
+	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer );
+};
+
+/** 
+ * Class to manage movement of data from a solver to a given target.
+ * This version is the DX to DX version and subclasses DX to CPU so that it works for that too.
+ */
+class btSoftBodySolverOutputDXtoDX : public btSoftBodySolverOutputDXtoCPU
+{
+protected:
+	struct OutputToVertexArrayCB
+	{
+		int startNode;
+		int numNodes;
+		int positionOffset;
+		int positionStride;
+		
+		int normalOffset;	
+		int normalStride;
+		int padding1;
+		int padding2;
+	};
+	
+	DXFunctions dxFunctions;
+	DXFunctions::KernelDesc outputToVertexArrayWithNormalsKernel;
+	DXFunctions::KernelDesc outputToVertexArrayWithoutNormalsKernel;
+
+	
+	bool m_shadersInitialized;
+
+	bool checkInitialized();
+	bool buildShaders();
+	void releaseKernels();
+
+public:
+	btSoftBodySolverOutputDXtoDX(ID3D11Device *dx11Device, ID3D11DeviceContext* dx11Context) :
+	  dxFunctions( dx11Device, dx11Context )
+	{
+		m_shadersInitialized = false;
+	}
+
+	~btSoftBodySolverOutputDXtoDX()
+	{
+		releaseKernels();
+	}
+
+	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
+	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer );
 };
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_DX11_SOLVER_H

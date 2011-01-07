@@ -786,6 +786,17 @@ btCPUSoftBodySolver::btAcceleratedSoftBodyInterface *btCPUSoftBodySolver::findSo
 	return 0;
 }
 
+const btCPUSoftBodySolver::btAcceleratedSoftBodyInterface * const btCPUSoftBodySolver::findSoftBodyInterface( const btSoftBody* const softBody ) const
+{
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		const btAcceleratedSoftBodyInterface *const softBodyInterface = m_softBodySet[softBodyIndex];
+		if( softBodyInterface->getSoftBody() == softBody )
+			return softBodyInterface;
+	}
+	return 0;
+}
+
 int btCPUSoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
 {
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
@@ -797,14 +808,15 @@ int btCPUSoftBodySolver::findSoftBodyIndex( const btSoftBody* const softBody )
 	return 1;
 }
 
-void btCPUSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
+void btSoftBodySolverOutputCPUtoCPU::copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer )
 {
 	// Currently only support CPU output buffers
-	// TODO: check for DX11 buffers. Take all offsets into the same DX11 buffer
-	// and use them together on a single kernel call if possible by setting up a
-	// per-cloth target buffer array for the copy kernel.
-
-	btAcceleratedSoftBodyInterface *currentCloth = findSoftBodyInterface( softBody );
+	
+	const btSoftBodySolver *solver = softBody->getSoftBodySolver();
+	btAssert( solver->getSolverType() == btSoftBodySolver::CPU_SOLVER );
+	const btCPUSoftBodySolver *cpuSolver = static_cast< const btCPUSoftBodySolver * >( solver );
+	const btCPUSoftBodySolver::btAcceleratedSoftBodyInterface * const currentCloth = cpuSolver->findSoftBodyInterface( softBody );
+	const btSoftBodyVertexData &vertexData( cpuSolver->m_vertexData );
 
 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::CPU_BUFFER )
 	{		
@@ -821,7 +833,7 @@ void btCPUSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const s
 
 			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				Vectormath::Aos::Point3 position = m_vertexData.getPosition(vertexIndex);
+				Vectormath::Aos::Point3 position = vertexData.getPosition(vertexIndex);
 				*(vertexPointer + 0) = position.getX();
 				*(vertexPointer + 1) = position.getY();
 				*(vertexPointer + 2) = position.getZ();
@@ -836,13 +848,15 @@ void btCPUSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody * const s
 
 			for( int vertexIndex = firstVertex; vertexIndex < lastVertex; ++vertexIndex )
 			{
-				Vectormath::Aos::Vector3 normal = m_vertexData.getNormal(vertexIndex);
+				Vectormath::Aos::Vector3 normal = vertexData.getNormal(vertexIndex);
 				*(normalPointer + 0) = normal.getX();
 				*(normalPointer + 1) = normal.getY();
 				*(normalPointer + 2) = normal.getZ();
 				normalPointer += normalStride;
 			}
 		}
+	} else {
+		btAssert( 0=="Invalid vertex buffer descriptor used in CPU output." );
 	}
 } // btCPUSoftBodySolver::outputToVertexBuffers
 

@@ -867,6 +867,14 @@ public:
 		return m_softBodySolver;
 	}
 
+	//
+	// Return the solver that handles this soft body
+	// 
+	btSoftBodySolver *getSoftBodySolver() const
+	{
+		return m_softBodySolver;
+	}
+
 
 	//
 	// Cast

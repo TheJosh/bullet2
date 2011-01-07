@@ -8,6 +8,7 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 
 SET(BulletSoftBodyOpenCLSolvers_SRCS
 	../btSoftBodySolver_OpenCL.cpp
+	../btSoftBodySolverOutputCLtoGL.cpp
 )
 
 SET(BulletSoftBodyOpenCLSolvers_HDRS
@@ -18,6 +19,7 @@ SET(BulletSoftBodyOpenCLSolvers_HDRS
 	../btSoftBodySolverLinkData_OpenCL.h
 	../btSoftBodySolverBuffer_OpenCL.h
 	../btSoftBodySolverVertexBuffer_OpenGL.h
+	../btSoftBodySolverOutputCLtoGL.h
 )
 
 # OpenCL and HLSL Shaders.

@@ -38,7 +38,7 @@ class btDX11SIMDAwareSoftBodySolver;
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 
 #define USE_SIMDAWARE_SOLVER
-//#define USE_GPU_SOLVER
+#define USE_GPU_SOLVER
 #define USE_GPU_COPY
 const int numFlags = 5;
 const int clothWidth = 40;//40;
@@ -206,6 +206,8 @@ btDefaultSoftBodySolver *g_defaultSolver = NULL;
 btCPUSoftBodySolver *g_cpuSolver = NULL;
 btDX11SoftBodySolver *g_dx11Solver = NULL;
 btDX11SIMDAwareSoftBodySolver *g_dx11SIMDSolver = NULL;
+
+btSoftBodySolverOutput *g_softBodyOutput = NULL;
 
 btSoftBodySolver *g_solver = NULL;
 
@@ -467,13 +469,25 @@ void initBullet(void)
 #ifdef USE_GPU_SOLVER
 	g_dx11Solver = new btDX11SoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
 	g_solver = g_dx11Solver;
+#ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputDXtoDX( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
+#else // #ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputDXtoCPU;
+#endif // #ifdef USE_GPU_COPY
 #else
 #ifdef USE_SIMDAWARE_SOLVER
 	g_dx11SIMDSolver = new btDX11SIMDAwareSoftBodySolver( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
 	g_solver = g_dx11SIMDSolver;
+	g_softBodyOutput = new btSoftBodySolverOutputDXtoCPU;
+#ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputDXtoDX( g_pd3dDevice, DXUTGetD3D11DeviceContext() );
+#else // #ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputDXtoCPU;
+#endif // #ifdef USE_GPU_COPY
 #else
 	g_cpuSolver = new btCPUSoftBodySolver;
 	g_solver = g_cpuSolver;
+	g_softBodyOutput = new btSoftBodySolverOutputCPUtoCPU;
 	//g_defaultSolver = new btDefaultSoftBodySolver;
 	//g_solver = g_defaultSolver;
 #endif
@@ -1202,7 +1216,7 @@ void CALLBACK OnD3D11FrameRender( ID3D11Device* pd3dDevice, ID3D11DeviceContext*
 
 	for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
 	{	
-		g_solver->copySoftBodyToVertexBuffer( m_flags[flagIndex], cloths[flagIndex].m_vertexBufferDescriptor );
+		g_softBodyOutput->copySoftBodyToVertexBuffer( m_flags[flagIndex], cloths[flagIndex].m_vertexBufferDescriptor );
 		cloths[flagIndex].draw();
 	}
 
@@ -1285,6 +1299,8 @@ void CALLBACK OnD3D11DestroyDevice( void* pUserContext )
 		delete g_dx11Solver;
 	if( g_dx11SIMDSolver )
 		delete g_dx11SIMDSolver;
+	if( g_softBodyOutput )
+		delete g_softBodyOutput;
 	
 
 	for(int i=0; i< m_collisionShapes.size(); i++)

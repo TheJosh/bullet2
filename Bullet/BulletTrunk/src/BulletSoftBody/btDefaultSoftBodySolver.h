@@ -34,6 +34,11 @@ public:
 	btDefaultSoftBodySolver();
 	
 	virtual ~btDefaultSoftBodySolver();
+	
+	virtual SolverTypes getSolverType() const
+	{
+		return DEFAULT_SOLVER;
+	}
 
 	virtual bool checkInitialized();
 

@@ -69,7 +69,11 @@ public:
 	virtual void optimize( btAlignedObjectArray< btSoftBody * > &softBodies );
 
 	virtual void solveConstraints( float solverdt );
-
+	
+	virtual SolverTypes getSolverType() const
+	{
+		return DX_SIMD_SOLVER;
+	}
 	
 };
 

@@ -25,12 +25,30 @@ subject to the following restrictions:
 #include "btSoftBodySolverVertexData_OpenCL.h"
 #include "btSoftBodySolverTriangleData_OpenCL.h"
 
+class CLFunctions
+{
+protected:
+	cl_command_queue	m_cqCommandQue;
+	cl_context			m_cxMainContext;
+	
+public:
+	CLFunctions(cl_command_queue cqCommandQue, cl_context cxMainContext) :
+		m_cqCommandQue( cqCommandQue ),
+		m_cxMainContext( cxMainContext )
+	{
+	}
 
+
+	/**
+	 * Compile a compute shader kernel from a string and return the appropriate cl_kernel object.
+	 */	
+	cl_kernel compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros = "" );
+};
 
 
 class btOpenCLSoftBodySolver : public btSoftBodySolver
 {
-protected:
+public:
 	/**
 	 * SoftBody class to maintain information about a soft body instance
 	 * within a solver.
@@ -249,6 +267,10 @@ protected:
 	btSoftBodyVertexDataOpenCL m_vertexData;
 	btSoftBodyTriangleDataOpenCL m_triangleData;
 
+protected:
+
+	CLFunctions clFunctions;
+
 	/** Variable to define whether we need to update solver constants on the next iteration */
 	bool m_updateSolverConstants;
 
@@ -346,8 +368,6 @@ protected:
 	cl_kernel		normalizeNormalsAndAreasKernel;
 	cl_kernel		computeBoundsKernel;
 	cl_kernel		updateSoftBodiesKernel;
-	cl_kernel		outputToVertexArrayWithNormalsKernel;
-	cl_kernel		outputToVertexArrayWithoutNormalsKernel;
 
 	cl_kernel		outputToVertexArrayKernel;
 	cl_kernel		applyForcesKernel;
@@ -355,11 +375,6 @@ protected:
 	cl_command_queue	m_cqCommandQue;
 	cl_context			m_cxMainContext;
 
-
-	/**
-	 * Compile a compute shader kernel from a string and return the appropriate cl_kernel object.
-	 */	
-	cl_kernel compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros = "" );
 
 	virtual bool buildShaders();
 
@@ -375,7 +390,6 @@ protected:
 
 	void ApplyClampedForce( float solverdt, const Vectormath::Aos::Vector3 &force, const Vectormath::Aos::Vector3 &vertexVelocity, float inverseMass, Vectormath::Aos::Vector3 &vertexForce );
 	
-	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
 
 	int findSoftBodyIndex( const btSoftBody* const softBody );
 
@@ -423,7 +437,8 @@ public:
 	virtual ~btOpenCLSoftBodySolver();
 
 
-
+	
+	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
 
 	virtual btSoftBodyLinkData &getLinkData();
 
@@ -431,7 +446,10 @@ public:
 
 	virtual btSoftBodyTriangleData &getTriangleData();
 
-
+	virtual SolverTypes getSolverType() const
+	{
+		return CL_SOLVER;
+	}
 
 
 	virtual bool checkInitialized();
@@ -444,10 +462,28 @@ public:
 
 	virtual void predictMotion( float solverdt );
 
-	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
-
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
 }; // btOpenCLSoftBodySolver
+
+
+/** 
+ * Class to manage movement of data from a solver to a given target.
+ * This version is the CL to CPU version.
+ */
+class btSoftBodySolverOutputCLtoCPU : public btSoftBodySolverOutput
+{
+protected:
+
+public:
+	btSoftBodySolverOutputCLtoCPU()
+	{
+	}
+
+	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
+	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer );
+};
+
+
 
 #endif // #ifndef BT_SOFT_BODY_SOLVER_OPENCL_H

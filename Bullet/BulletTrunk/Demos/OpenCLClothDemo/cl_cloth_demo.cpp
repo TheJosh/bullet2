@@ -18,7 +18,7 @@ subject to the following restrictions:
 #endif
 
 
-//#define USE_SIMDAWARE_SOLVER
+#define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
 
 #if !defined(CL_PLATFORM_MINI_CL)
@@ -56,6 +56,7 @@ using namespace std;
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCL.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCLSIMDAware.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolverVertexBuffer_OpenGL.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolverOutputCLtoGL.h"
 
 using Vectormath::Aos::Vector3;
 
@@ -88,6 +89,8 @@ btOpenCLSoftBodySolver *g_openCLSolver = NULL;
 btOpenCLSoftBodySolverSIMDAware *g_openCLSIMDSolver = NULL;
 
 btSoftBodySolver *g_solver = NULL;
+
+btSoftBodySolverOutput *g_softBodyOutput = NULL;
 
 btAlignedObjectArray<btSoftBody *> m_flags;
 btSoftRigidDynamicsWorld* m_dynamicsWorld;
@@ -333,13 +336,24 @@ void initBullet(void)
 #ifdef USE_SIMDAWARE_SOLVER
 	g_openCLSIMDSolver = new btOpenCLSoftBodySolverSIMDAware( g_cqCommandQue, g_cxMainContext);
 	g_solver = g_openCLSIMDSolver;
+#ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputCLtoGL(g_cqCommandQue, g_cxMainContext);
+#else // #ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputCLtoCPU;
+#endif // #ifdef USE_GPU_COPY
 #else
-	g_openCLSolver = new btOpenCLSoftBodySolver( g_cqCommandQue, g_cxMainContext);
+	g_openCLSolver = new btOpenCLSoftBodySolver( g_cqCommandQue, g_cxMainContext );
 	g_solver = g_openCLSolver;
+#ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputCLtoGL(g_cqCommandQue, g_cxMainContext);
+#else // #ifdef USE_GPU_COPY
+	g_softBodyOutput = new btSoftBodySolverOutputCLtoCPU;
+#endif // #ifdef USE_GPU_COPY
 #endif
 #else
 	g_cpuSolver = new btCPUSoftBodySolver;
 	g_solver = g_cpuSolver;
+	g_softBodyOutput = new btSoftBodySolverOutputCPUtoCPU;
 #endif
 
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -449,7 +463,7 @@ void doFlags()
 
 	for( int flagIndex = 0; flagIndex < m_flags.size(); ++flagIndex )
 	{
-		g_solver->copySoftBodyToVertexBuffer( m_flags[flagIndex], cloths[flagIndex].m_vertexBufferDescriptor );
+		g_softBodyOutput->copySoftBodyToVertexBuffer( m_flags[flagIndex], cloths[flagIndex].m_vertexBufferDescriptor );
 		cloths[flagIndex].draw();
 	}
 }
@@ -507,7 +521,9 @@ int main(int argc, char *argv[])
 	if( g_openCLSolver  )
 		delete g_openCLSolver;
 	if( g_openCLSIMDSolver  )
-		delete g_openCLSIMDSolver ;
+		delete g_openCLSIMDSolver;
+	if( g_softBodyOutput )
+		delete g_softBodyOutput;
 
  	return 0;
 }

@@ -473,6 +473,11 @@ public:
 		return m_vertexPosition[vertexIndex];
 	}
 
+	Vectormath::Aos::Point3 getPosition( int vertexIndex ) const
+	{
+		return m_vertexPosition[vertexIndex];
+	}
+
 	/**
 	 * Return a reference to the previous position of vertex vertexIndex as stored on the host.
 	 */
@@ -480,6 +485,7 @@ public:
 	{
 		return m_vertexPreviousPosition[vertexIndex];
 	}
+
 
 	/**
 	 * Return a reference to the velocity of vertex vertexIndex as stored on the host.
@@ -501,6 +507,11 @@ public:
 	 * Return a reference to the normal of vertex vertexIndex as stored on the host.
 	 */
 	Vectormath::Aos::Vector3 &getNormal( int vertexIndex )
+	{
+		return m_vertexNormal[vertexIndex];
+	}
+
+	Vectormath::Aos::Vector3 getNormal( int vertexIndex ) const
 	{
 		return m_vertexNormal[vertexIndex];
 	}

@@ -61,6 +61,22 @@ protected:
 		}
 	};
 
+	// Public because output classes need it. This is a better encapsulation to break in the short term
+	// Than having the solvers themselves need dependencies on DX, CL etc unnecessarily
+public:
+	
+	struct CollisionObjectIndices
+	{
+		CollisionObjectIndices( int f, int e )
+		{
+			firstObject = f;
+			endObject = e;
+		}
+
+		int firstObject;
+		int endObject;
+	};
+
 	/**
 	 * SoftBody class to maintain information about a soft body instance
 	 * within a solver.
@@ -106,32 +122,32 @@ protected:
 			m_maxLinks = 0;
 			m_numLinks = 0;
 		}
-		int getNumVertices()
+		int getNumVertices() const
 		{
 			return m_numVertices;
 		}
 
-		int getNumTriangles()
+		int getNumTriangles() const
 		{
 			return m_numTriangles;
 		}
 
-		int getMaxVertices()
+		int getMaxVertices() const
 		{
 			return m_maxVertices;
 		}
 
-		int getMaxTriangles()
+		int getMaxTriangles() const
 		{
 			return m_maxTriangles;
 		}
 
-		int getFirstVertex()
+		int getFirstVertex() const
 		{
 			return m_firstVertex;
 		}
 
-		int getFirstTriangle()
+		int getFirstTriangle() const
 		{
 			return m_firstTriangle;
 		}
@@ -189,17 +205,17 @@ protected:
 			m_firstLink = firstLink;
 		}
 
-		int getMaxLinks()
+		int getMaxLinks() const
 		{
 			return m_maxLinks;
 		}
 
-		int getNumLinks()
+		int getNumLinks() const
 		{
 			return m_numLinks;
 		}
 
-		int getFirstLink()
+		int getFirstLink() const
 		{
 			return m_firstLink;
 		}
@@ -208,26 +224,21 @@ protected:
 		{
 			return m_softBody;
 		}
-	};
 
-
-	struct CollisionObjectIndices
-	{
-		CollisionObjectIndices( int f, int e )
+		const btSoftBody* const getSoftBody() const
 		{
-			firstObject = f;
-			endObject = e;
+			return m_softBody;
 		}
-
-		int firstObject;
-		int endObject;
 	};
-
-
-
+	
 	btSoftBodyLinkData m_linkData;
 	btSoftBodyVertexData m_vertexData;
 	btSoftBodyTriangleData m_triangleData;
+
+protected:
+
+
+
 		
 	/** Variable to define whether we need to update solver constants on the next iteration */
 	bool m_updateSolverConstants;
@@ -288,7 +299,6 @@ protected:
 	void applyForces( float solverdt );
 	void integrate( float solverdt );
 	void updateConstants( float timeStep );
-	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
 	int findSoftBodyIndex( const btSoftBody* const softBody );
 	
 	/** Update the bounds of the soft body objects in the solver */
@@ -300,6 +310,12 @@ public:
 	
 	virtual ~btCPUSoftBodySolver();
 
+	
+	virtual SolverTypes getSolverType() const
+	{
+		return CPU_SOLVER;
+	}
+
 
 	virtual btSoftBodyLinkData &getLinkData();
 
@@ -309,8 +325,8 @@ public:
 
 
 
-
-
+	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	const btAcceleratedSoftBodyInterface * const findSoftBodyInterface( const btSoftBody* const softBody ) const;
 
 
 
@@ -324,9 +340,25 @@ public:
 
 	virtual void predictMotion( float solverdt );
 
-	virtual void copySoftBodyToVertexBuffer( const btSoftBody *const softBody, btVertexBufferDescriptor *vertexBuffer );
-
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
+};
+
+
+/** 
+ * Class to manage movement of data from a solver to a given target.
+ * This version is the CPU to CPU generic version.
+ */
+class btSoftBodySolverOutputCPUtoCPU : public btSoftBodySolverOutput
+{
+protected:
+
+public:
+	btSoftBodySolverOutputCPUtoCPU()
+	{
+	}
+
+	/** Output current computed vertex data to the vertex buffers for all cloths in the solver. */
+	virtual void copySoftBodyToVertexBuffer( const btSoftBody * const softBody, btVertexBufferDescriptor *vertexBuffer );
 };
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_CPU_SOLVER_H
