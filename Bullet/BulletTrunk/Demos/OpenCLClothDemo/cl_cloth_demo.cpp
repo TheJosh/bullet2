@@ -482,8 +482,9 @@ int main(int argc, char *argv[])
 #else //!_WIN32
     GLXContext glCtx = glXGetCurrentContext();
 #endif //!_WIN32
+	HDC glDC = wglGetCurrentDC();
 	
-	initCL((intptr_t)glCtx);
+	initCL((intptr_t)glCtx, (intptr_t)glDC);
 #else
 
 	initCL();

@@ -32,7 +32,7 @@ static char* spPlatformVendor =
 
 #include "CL/cl_gl.h"
 
-cl_context btOclCommon::createContextFromType(cl_device_type deviceType, cl_int* pErrNum, intptr_t pGLContext )
+cl_context btOclCommon::createContextFromType(cl_device_type deviceType, cl_int* pErrNum, intptr_t pGLContext, intptr_t pGLDC )
 {
     cl_uint numPlatforms;    
 	cl_platform_id platform = NULL;    
@@ -76,13 +76,15 @@ cl_context btOclCommon::createContextFromType(cl_device_type deviceType, cl_int*
 	 * If we could find our platform, use it. Otherwise pass a NULL and get whatever the     
 	 * implementation thinks we should be using.     
 	 */
-    cl_context_properties cps[5] =     
+    cl_context_properties cps[7] =     
 	{        
 		CL_CONTEXT_PLATFORM,         
 		(cl_context_properties)platform, 
 		0,
 		0,
-		0    
+		0,
+		0,
+		0
 	};    
 
 	// If we have a gl context then enable interop
@@ -90,6 +92,8 @@ cl_context btOclCommon::createContextFromType(cl_device_type deviceType, cl_int*
 	{
 		cps[2] = CL_GL_CONTEXT_KHR;
 		cps[3] = pGLContext;
+		cps[4] = CL_WGL_HDC_KHR;
+		cps[5] = pGLDC;
 	}
 
 	/* Use NULL for backward compatibility */    

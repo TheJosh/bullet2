@@ -38,7 +38,7 @@ public:
 	// CL Context optionally takes a GL context. This is a generic type because we don't really want this code
 	// to have to understand GL types.
 	// It is a HGLRC in _WIN32 or a GLXContext otherwise.
-	static cl_context createContextFromType(cl_device_type deviceType, cl_int* pErrNum, intptr_t pGLCtx = 0);
+	static cl_context createContextFromType(cl_device_type deviceType, cl_int* pErrNum, intptr_t pGLCtx = 0, intptr_t pGLDC = 0);
 };
 
 
