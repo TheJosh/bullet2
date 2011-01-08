@@ -51,13 +51,13 @@ ComputeBoundsKernel(
 			positionUInt.z ^= (1+~(positionUInt.z >> 31) | 0x80000000);
 		
 			// Min/max with the LDS values
-			atomic_min(&(clothMinBounds[clothIdentifier*4]), positionUInt.x);
-			atomic_min(&(clothMinBounds[clothIdentifier*4+1]), positionUInt.y);
-			atomic_min(&(clothMinBounds[clothIdentifier*4+2]), positionUInt.z);
+			atom_min(&(clothMinBounds[clothIdentifier*4]), positionUInt.x);
+			atom_min(&(clothMinBounds[clothIdentifier*4+1]), positionUInt.y);
+			atom_min(&(clothMinBounds[clothIdentifier*4+2]), positionUInt.z);
 
-			atomic_max(&(clothMaxBounds[clothIdentifier*4]), positionUInt.x);
-			atomic_max(&(clothMaxBounds[clothIdentifier*4+1]), positionUInt.y);
-			atomic_max(&(clothMaxBounds[clothIdentifier*4+2]), positionUInt.z);
+			atom_max(&(clothMaxBounds[clothIdentifier*4]), positionUInt.x);
+			atom_max(&(clothMaxBounds[clothIdentifier*4+1]), positionUInt.y);
+			atom_max(&(clothMaxBounds[clothIdentifier*4+2]), positionUInt.z);
 		}
 	}
 	
@@ -67,14 +67,14 @@ ComputeBoundsKernel(
 	/* Use global atomics to update the global versions of the data */
 	if( get_local_id(0) < numSoftBodies )
 	{
-		/*atomic_min(&(g_clothMinBounds[get_local_id(0)].x), clothMinBounds[get_local_id(0)].x);*/
-		atomic_min(&(g_clothMinBounds[get_local_id(0)*4]), clothMinBounds[get_local_id(0)*4]);
-		atomic_min(&(g_clothMinBounds[get_local_id(0)*4+1]), clothMinBounds[get_local_id(0)*4+1]);
-		atomic_min(&(g_clothMinBounds[get_local_id(0)*4+2]), clothMinBounds[get_local_id(0)*4+2]);
+		/*atom_min(&(g_clothMinBounds[get_local_id(0)].x), clothMinBounds[get_local_id(0)].x);*/
+		atom_min(&(g_clothMinBounds[get_local_id(0)*4]), clothMinBounds[get_local_id(0)*4]);
+		atom_min(&(g_clothMinBounds[get_local_id(0)*4+1]), clothMinBounds[get_local_id(0)*4+1]);
+		atom_min(&(g_clothMinBounds[get_local_id(0)*4+2]), clothMinBounds[get_local_id(0)*4+2]);
 
-		atomic_max(&(g_clothMaxBounds[get_local_id(0)*4]), clothMaxBounds[get_local_id(0)*4]);		
-		atomic_max(&(g_clothMaxBounds[get_local_id(0)*4+1]), clothMaxBounds[get_local_id(0)*4+1]);
-		atomic_max(&(g_clothMaxBounds[get_local_id(0)*4+2]), clothMaxBounds[get_local_id(0)*4+2]);
+		atom_max(&(g_clothMaxBounds[get_local_id(0)*4]), clothMaxBounds[get_local_id(0)*4]);		
+		atom_max(&(g_clothMaxBounds[get_local_id(0)*4+1]), clothMaxBounds[get_local_id(0)*4+1]);
+		atom_max(&(g_clothMaxBounds[get_local_id(0)*4+2]), clothMaxBounds[get_local_id(0)*4+2]);
 	}
 }
 
