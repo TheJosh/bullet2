@@ -27,7 +27,7 @@ cl_context			g_cxMainContext;
 cl_device_id		g_cdDevice;
 cl_command_queue	g_cqCommandQue;
 
-void initCL( intptr_t glCtx, intptr_t glDC )
+void initCL( void* glCtx, void* glDC )
 {
 	int ciErrNum = 0;
 

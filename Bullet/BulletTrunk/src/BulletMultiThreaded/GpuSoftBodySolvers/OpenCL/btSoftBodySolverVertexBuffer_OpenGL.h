@@ -27,8 +27,9 @@ subject to the following restrictions:
 		#include <CL/cl.h>
 	#endif //__APPLE__
 #endif//USE_MINICL
-
+#ifndef USE_MINICL
 #include <CL/cl_gl.h>
+#endif //USE_MINICL
 
 #ifdef _WIN32
 #include <GL/glew.h>
@@ -85,6 +86,7 @@ public:
 	 */
 	btOpenGLInteropVertexBufferDescriptor( cl_command_queue cqCommandQue, cl_context context, GLuint openGLVBO, int vertexOffset, int vertexStride )
 	{
+#ifndef USE_MINICL
 		cl_int ciErrNum = CL_SUCCESS;
 		m_context = context;
 		m_commandQueue = cqCommandQue;
@@ -101,6 +103,9 @@ public:
 		}
 
 		m_hasVertexPositions = true;
+#else
+		btAssert(0);//MiniCL shouldn't get here
+#endif
 	}
 
 	/**
@@ -114,6 +119,7 @@ public:
 	 */
 	btOpenGLInteropVertexBufferDescriptor( cl_command_queue cqCommandQue, cl_context context, GLuint openGLVBO, int vertexOffset, int vertexStride, int normalOffset, int normalStride )
 	{
+#ifndef USE_MINICL
 		cl_int ciErrNum = CL_SUCCESS;
 		m_context = context;
 		m_commandQueue = cqCommandQue;
@@ -133,7 +139,9 @@ public:
 		m_normalOffset = normalOffset;
 		m_normalStride = normalStride;
 		m_hasNormals = true;
-
+#else
+		btAssert(0);
+#endif //USE_MINICL
 		
 	}
 

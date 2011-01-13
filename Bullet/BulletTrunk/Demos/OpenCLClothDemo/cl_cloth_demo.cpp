@@ -17,13 +17,11 @@ subject to the following restrictions:
 #include <GL/glew.h>
 #endif
 
-
+#ifndef USE_MINICL
 #define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
-
-#if !defined(CL_PLATFORM_MINI_CL)
 #define USE_GPU_COPY
-#endif
+#endif //USE_MINICL
 
 
 
@@ -42,8 +40,8 @@ float _windStrength = 15;
 
 
 
-#include <iostream>
-using namespace std;
+
+
 
 
 
@@ -484,7 +482,7 @@ int main(int argc, char *argv[])
 #endif //!_WIN32
 	HDC glDC = wglGetCurrentDC();
 	
-	initCL((intptr_t)glCtx, (intptr_t)glDC);
+	initCL(glCtx, glDC);
 #else
 
 	initCL();

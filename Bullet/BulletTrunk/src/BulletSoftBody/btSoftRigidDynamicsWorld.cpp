@@ -66,6 +66,7 @@ void	btSoftRigidDynamicsWorld::predictUnconstraintMotion(btScalar timeStep)
 {
 	btDiscreteDynamicsWorld::predictUnconstraintMotion( timeStep );
 
+	BT_PROFILE("SoftBody predictMotion");
 	m_softBodySolver->predictMotion( timeStep );
 }
 

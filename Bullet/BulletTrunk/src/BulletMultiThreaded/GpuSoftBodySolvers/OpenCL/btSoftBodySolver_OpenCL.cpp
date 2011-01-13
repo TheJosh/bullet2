@@ -21,6 +21,8 @@ subject to the following restrictions:
 #include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletSoftBody/btSoftBody.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
+#include "LinearMath/btQuickprof.h"
+
 #ifdef USE_MINICL
 	#include "MiniCL/cl.h"
 #else //USE_MINICL
@@ -1651,23 +1653,39 @@ cl_kernel CLFunctions::compileCLKernelFromString( const char* kernelSource, cons
 
 void btOpenCLSoftBodySolver::predictMotion( float timeStep )
 {
-	// Fill the force arrays with current acceleration data etc
-	m_perClothWindVelocity.resize( m_softBodySet.size() );
-	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	
 	{
-		btSoftBody *softBody = m_softBodySet[softBodyIndex]->getSoftBody();
-		
-		m_perClothWindVelocity[softBodyIndex] = toVector3(softBody->getWindVelocity());
+		BT_PROFILE("perClothWindVelocity");
+		// Fill the force arrays with current acceleration data etc
+		m_perClothWindVelocity.resize( m_softBodySet.size() );
+		for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+		{
+			btSoftBody *softBody = m_softBodySet[softBodyIndex]->getSoftBody();
+			
+			m_perClothWindVelocity[softBodyIndex] = toVector3(softBody->getWindVelocity());
+		}
 	}
-	m_clPerClothWindVelocity.changedOnCPU();
+	{
+		BT_PROFILE("changedOnCPU");
+		m_clPerClothWindVelocity.changedOnCPU();
+	}
 
-	// Apply forces that we know about to the cloths
-	applyForces(  timeStep * getTimeScale() );
+	{
+		BT_PROFILE("applyForces");
+		// Apply forces that we know about to the cloths
+		applyForces(  timeStep * getTimeScale() );
+	}
 
-	// Itegrate motion for all soft bodies dealt with by the solver
-	integrate( timeStep * getTimeScale() );
+	{
+		BT_PROFILE("integrate");
+		// Itegrate motion for all soft bodies dealt with by the solver
+		integrate( timeStep * getTimeScale() );
+	}
 
-	updateBounds();
+	{
+		BT_PROFILE("updateBounds");
+		updateBounds();
+	}
 	// End prediction work for solvers
 }
 

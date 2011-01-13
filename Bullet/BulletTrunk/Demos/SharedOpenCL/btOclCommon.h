@@ -30,7 +30,6 @@ subject to the following restrictions:
 	#endif
 #endif //__APPLE__
 
-#include <cstdint>
 
 class btOclCommon
 {
