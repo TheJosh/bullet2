@@ -25,12 +25,14 @@ subject to the following restrictions:
 
 
 
+
 #include "clstuff.h"
 #include "gl_win.h"
 #include "cloth.h"
 
+#include "../OpenGL/GLDebugDrawer.h"
 
-
+GLDebugDrawer debugDraw;
 
 const int numFlags = 5;
 const int clothWidth = 40;
@@ -56,6 +58,10 @@ float _windStrength = 15;
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolverVertexBuffer_OpenGL.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolverOutputCLtoGL.h"
 
+
+btRigidBody *capCollider;
+
+
 using Vectormath::Aos::Vector3;
 
 class piece_of_cloth;
@@ -66,6 +72,8 @@ class btCollisionDispatcher;
 class btConstraintSolver;
 struct btCollisionAlgorithmCreateFunc;
 class btDefaultCollisionConfiguration;
+
+#include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 
 namespace Vectormath
 {
@@ -354,7 +362,10 @@ void initBullet(void)
 	g_softBodyOutput = new btSoftBodySolverOutputCPUtoCPU;
 #endif
 
-	m_collisionConfiguration = new btDefaultCollisionConfiguration();
+	//m_collisionConfiguration = new btDefaultCollisionConfiguration();
+	m_collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
+	
+
 	m_dispatcher = new	btCollisionDispatcher(m_collisionConfiguration);
 	m_broadphase = new btDbvtBroadphase();
 	btSequentialImpulseConstraintSolver* sol = new btSequentialImpulseConstraintSolver;
@@ -404,6 +415,51 @@ void initBullet(void)
  
 #endif
 
+	#if 1
+	{		
+		btScalar mass(0.);
+
+		//btScalar mass(1.);
+
+		//rigidbody is dynamic if and only if mass is non zero, otherwise static
+		bool isDynamic = (mass != 0.f);
+		
+		btCollisionShape *capsuleShape = new btCapsuleShape(5, 10);
+		capsuleShape->setMargin( 0.5 );
+		
+		
+
+
+		btVector3 localInertia(0,0,0);
+		if (isDynamic)
+			capsuleShape->calculateLocalInertia(mass,localInertia);
+
+		m_collisionShapes.push_back(capsuleShape);
+		btTransform capsuleTransform;
+		capsuleTransform.setIdentity();
+#ifdef TABLETEST
+		capsuleTransform.setOrigin(btVector3(0, 10, -11));
+		const btScalar pi = 3.141592654;
+		capsuleTransform.setRotation(btQuaternion(0, 0, pi/2));
+#else
+		capsuleTransform.setOrigin(btVector3(0, 0, 0));
+		
+		const btScalar pi = 3.141592654;
+		//capsuleTransform.setRotation(btQuaternion(0, 0, pi/2));
+		capsuleTransform.setRotation(btQuaternion(0, 0, 0));
+#endif
+		btDefaultMotionState* myMotionState = new btDefaultMotionState(capsuleTransform);
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,capsuleShape,localInertia);
+		btRigidBody* body = new btRigidBody(rbInfo);
+		body->setFriction( 0.8f );
+
+		m_dynamicsWorld->addRigidBody(body);
+		//cap_1.collisionShape = body;
+		capCollider = body;
+	}
+#endif
+
+
 #ifdef USE_GPU_SOLVER
 	createFlag( *g_openCLSolver, clothWidth, clothHeight, m_flags );
 #else
@@ -448,6 +504,7 @@ void doFlags()
 	if( m_dynamicsWorld )
 	{
 		m_dynamicsWorld->stepSimulation(dt/1000000.);
+
 		static int frameCount = 0;
 		frameCount++;
 		if (frameCount==100)
@@ -456,6 +513,13 @@ void doFlags()
 			CProfileManager::dumpAll();
 		}
 		updatePhysicsWorld();
+
+		m_dynamicsWorld->setDebugDrawer(&debugDraw);
+		debugDraw.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		g_solver->copyBackToSoftBodies();
+
+		m_dynamicsWorld->debugDrawWorld();
+		
 	}
 	
 
