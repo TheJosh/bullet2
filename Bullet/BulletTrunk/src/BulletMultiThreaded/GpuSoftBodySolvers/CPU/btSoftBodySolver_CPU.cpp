@@ -456,6 +456,17 @@ void btCPUSoftBodySolver::updateBounds()
 	}
 }
 
+
+class btCPUSB_QuickSortCompare
+{
+	public:
+
+	bool operator() ( const btCPUCollisionShapeDescription& a, const btCPUCollisionShapeDescription& b )
+	{
+		return ( a.softBodyIdentifier < b.softBodyIdentifier );
+	}
+};
+
 /**
  * Sort the collision object details array and generate indexing into it for the per-cloth collision object array.
  */
@@ -468,18 +479,8 @@ void btCPUSoftBodySolver::prepareCollisionConstraints()
 	numObjectsPerClothPrefixSum.resize( m_softBodySet.size(), 0 );
 
 
-	class QuickSortCompare
-	{
-		public:
 
-		bool operator() ( const CollisionShapeDescription& a, const CollisionShapeDescription& b )
-		{
-			return ( a.softBodyIdentifier < b.softBodyIdentifier );
-		}
-	};
-
-	QuickSortCompare comparator;
-	m_collisionObjectDetails.quickSort( comparator );
+	m_collisionObjectDetails.quickSort( btCPUSB_QuickSortCompare() );
 
 	// Generating indexing for perClothCollisionObjects
 	// First clear the previous values with the "no collision object for cloth" constant
@@ -674,7 +675,7 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 
 			for( int collisionObject = startObject; collisionObject < endObject; ++collisionObject )
 			{
-				CollisionShapeDescription &shapeDescription( m_collisionObjectDetails[collisionObject] );
+				btCPUCollisionShapeDescription &shapeDescription( m_collisionObjectDetails[collisionObject] );
 
 				float colliderFriction = shapeDescription.friction;
 
@@ -901,7 +902,7 @@ void btCPUSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObj
 		if( shapeType == CAPSULE_SHAPE_PROXYTYPE )
 		{
 			// Add to the list of expected collision objects
-			CollisionShapeDescription newCollisionShapeDescription;
+			btCPUCollisionShapeDescription newCollisionShapeDescription;
 			newCollisionShapeDescription.softBodyIdentifier = softBodyIndex;
 			newCollisionShapeDescription.collisionShapeType = shapeType;
 			newCollisionShapeDescription.shapeTransform = toTransform3(collisionObject->getWorldTransform());

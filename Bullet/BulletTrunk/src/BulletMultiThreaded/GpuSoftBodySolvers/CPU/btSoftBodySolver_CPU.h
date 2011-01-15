@@ -21,7 +21,36 @@ subject to the following restrictions:
 #include "BulletSoftBody/btSoftBodySolverVertexBuffer.h"
 #include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolverData.h"
 
+struct btCPUCollisionShapeDescription
+{
+	int softBodyIdentifier;
+	int collisionShapeType;
+	Vectormath::Aos::Transform3 shapeTransform;
+	union
+	{
+		struct Sphere
+		{
+			float radius;
+		} sphere;
+		struct Capsule
+		{
+			float radius;
+			float halfHeight;
+		} capsule;
+	} shapeInformation;
+	
+	float margin;
+	float friction;
+	Vectormath::Aos::Vector3 linearVelocity;
+	Vectormath::Aos::Vector3 angularVelocity;
 
+	btCPUCollisionShapeDescription()
+	{
+		collisionShapeType = 0;
+		margin = 0;
+		friction = 0;
+	}
+};
 
 class btCPUSoftBodySolver : public btSoftBodySolver
 {
@@ -30,36 +59,7 @@ protected:
 	 * Entry in the collision shape array.
 	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
 	 */
-	struct CollisionShapeDescription
-	{
-		int softBodyIdentifier;
-		int collisionShapeType;
-		Vectormath::Aos::Transform3 shapeTransform;
-		union
-		{
-			struct Sphere
-			{
-				float radius;
-			} sphere;
-			struct Capsule
-			{
-				float radius;
-				float halfHeight;
-			} capsule;
-		} shapeInformation;
-		
-		float margin;
-		float friction;
-		Vectormath::Aos::Vector3 linearVelocity;
-		Vectormath::Aos::Vector3 angularVelocity;
 
-		CollisionShapeDescription()
-		{
-			collisionShapeType = 0;
-			margin = 0;
-			friction = 0;
-		}
-	};
 
 	// Public because output classes need it. This is a better encapsulation to break in the short term
 	// Than having the solvers themselves need dependencies on DX, CL etc unnecessarily
@@ -282,7 +282,7 @@ protected:
 	/** 
 	 * Collision shapes being passed across to the cloths in this solver.
 	 */
-	btAlignedObjectArray< CollisionShapeDescription > m_collisionObjectDetails;
+	btAlignedObjectArray< btCPUCollisionShapeDescription > m_collisionObjectDetails;
 
 
 	void prepareCollisionConstraints();
