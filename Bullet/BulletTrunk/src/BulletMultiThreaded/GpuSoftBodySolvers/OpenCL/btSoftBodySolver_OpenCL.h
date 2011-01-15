@@ -45,6 +45,33 @@ public:
 	cl_kernel compileCLKernelFromString( const char* kernelSource, const char* kernelName, const char* additionalMacros = "" );
 };
 
+/**
+ * Entry in the collision shape array.
+ * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
+ */
+struct CollisionShapeDescription
+{
+	Vectormath::Aos::Transform3 shapeTransform;
+	Vectormath::Aos::Vector3 linearVelocity;
+	Vectormath::Aos::Vector3 angularVelocity;
+
+	int softBodyIdentifier;
+	int collisionShapeType;
+
+	// Both needed for capsule
+	float radius;
+	float halfHeight;
+	
+	float margin;
+	float friction;
+
+	CollisionShapeDescription()
+	{
+		collisionShapeType = 0;
+		margin = 0;
+		friction = 0;
+	}
+};
 
 class btOpenCLSoftBodySolver : public btSoftBodySolver
 {
@@ -199,33 +226,7 @@ public:
 
 	};
 
-	/**
-	 * Entry in the collision shape array.
-	 * Specifies the shape type, the transform matrix and the necessary details of the collisionShape.
-	 */
-	struct CollisionShapeDescription
-	{
-		Vectormath::Aos::Transform3 shapeTransform;
-		Vectormath::Aos::Vector3 linearVelocity;
-		Vectormath::Aos::Vector3 angularVelocity;
 
-		int softBodyIdentifier;
-		int collisionShapeType;
-	
-		// Both needed for capsule
-		float radius;
-		float halfHeight;
-		
-		float margin;
-		float friction;
-
-		CollisionShapeDescription()
-		{
-			collisionShapeType = 0;
-			margin = 0;
-			friction = 0;
-		}
-	};
 
 	struct UIntVector3
 	{

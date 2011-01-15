@@ -1149,6 +1149,17 @@ void btOpenCLSoftBodySolver::updateConstants( float timeStep )
 
 }
 
+class QuickSortCompare
+{
+	public:
+
+	bool operator() ( const CollisionShapeDescription& a, const CollisionShapeDescription& b )
+	{
+		return ( a.softBodyIdentifier < b.softBodyIdentifier );
+	}
+};
+
+
 /**
  * Sort the collision object details array and generate indexing into it for the per-cloth collision object array.
  */
@@ -1161,18 +1172,8 @@ void btOpenCLSoftBodySolver::prepareCollisionConstraints()
 	numObjectsPerClothPrefixSum.resize( m_softBodySet.size(), 0 );
 
 
-	class QuickSortCompare
-	{
-		public:
-
-		bool operator() ( const CollisionShapeDescription& a, const CollisionShapeDescription& b )
-		{
-			return ( a.softBodyIdentifier < b.softBodyIdentifier );
-		}
-	};
-
-	QuickSortCompare comparator;
-	m_collisionObjectDetails.quickSort( comparator );
+	
+	m_collisionObjectDetails.quickSort( QuickSortCompare() );
 
 	// Generating indexing for perClothCollisionObjects
 	// First clear the previous values with the "no collision object for cloth" constant
