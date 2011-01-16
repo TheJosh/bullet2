@@ -947,12 +947,6 @@ void btDX11SoftBodySolver::updateSoftBodies()
 
 
 	normalizeNormalsAndAreas( numVertices );
-
-	// Clear the collision shape array for the next frame
-	// Ensure that the DX11 ones are moved off the device so they will be updated correctly
-	m_dx11CollisionObjectDetails.changedOnCPU();
-	m_dx11PerClothCollisionObjects.changedOnCPU();
-	m_collisionObjectDetails.clear();
 	
 
 } // btDX11SoftBodySolver::updateSoftBodies
@@ -2177,6 +2171,12 @@ void btDX11SoftBodySolver::processCollision( btSoftBody *softBody, btCollisionOb
 
 void btDX11SoftBodySolver::predictMotion( float timeStep )
 {
+	// Clear the collision shape array for the next frame
+	// Ensure that the DX11 ones are moved off the device so they will be updated correctly
+	m_dx11CollisionObjectDetails.changedOnCPU();
+	m_dx11PerClothCollisionObjects.changedOnCPU();
+	m_collisionObjectDetails.clear();
+
 	// Fill the force arrays with current acceleration data etc
 	m_perClothWindVelocity.resize( m_softBodySet.size() );
 	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )

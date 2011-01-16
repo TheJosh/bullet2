@@ -18,7 +18,7 @@ subject to the following restrictions:
 #endif
 
 #ifndef USE_MINICL
-#define USE_SIMDAWARE_SOLVER
+//#define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
 #define USE_GPU_COPY
 #endif //USE_MINICL
@@ -514,11 +514,11 @@ void doFlags()
 		}
 		updatePhysicsWorld();
 
-		m_dynamicsWorld->setDebugDrawer(&debugDraw);
-		debugDraw.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
-		g_solver->copyBackToSoftBodies();
+		//m_dynamicsWorld->setDebugDrawer(&debugDraw);
+		//debugDraw.setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+		//g_solver->copyBackToSoftBodies();
 
-		m_dynamicsWorld->debugDrawWorld();
+		//m_dynamicsWorld->debugDrawWorld();
 		
 	}
 	

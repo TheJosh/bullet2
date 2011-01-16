@@ -224,7 +224,6 @@ void	btDiscreteDynamicsWorld::synchronizeMotionStates()
 	}
 }
 
-
 int	btDiscreteDynamicsWorld::stepSimulation( btScalar timeStep,int maxSubSteps, btScalar fixedTimeStep)
 {
 	startProfiling(timeStep);
@@ -292,7 +291,7 @@ int	btDiscreteDynamicsWorld::stepSimulation( btScalar timeStep,int maxSubSteps, 
 #ifndef BT_NO_PROFILE
 	CProfileManager::Increment_Frame_Counter();
 #endif //BT_NO_PROFILE
-	
+
 	return numSimulationSubSteps;
 }
 

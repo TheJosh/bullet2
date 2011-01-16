@@ -37,7 +37,7 @@ class btDX11SIMDAwareSoftBodySolver;
 
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
 
-#define USE_SIMDAWARE_SOLVER
+//#define USE_SIMDAWARE_SOLVER
 #define USE_GPU_SOLVER
 #define USE_GPU_COPY
 const int numFlags = 5;

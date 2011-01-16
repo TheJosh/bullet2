@@ -84,6 +84,7 @@ public:
 	btOpenCLBuffer( cl_command_queue	commandQue,cl_context ctx, btAlignedObjectArray< ElementType >* CPUBuffer, bool readOnly)
 		:m_cqCommandQue(commandQue),
 		m_clContext(ctx),
+		m_buffer(0),
 		m_CPUBuffer(CPUBuffer),
 		m_gpuSize(0),
 		m_onGPU(false),

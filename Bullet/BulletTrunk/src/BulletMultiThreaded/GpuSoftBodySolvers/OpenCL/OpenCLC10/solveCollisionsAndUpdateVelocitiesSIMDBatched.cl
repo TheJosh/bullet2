@@ -200,7 +200,7 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 		float4 difference = position - previousPosition;
 		velocity = difference*velocityCoefficient*isolverdt;			
 	}
-
+	
 	g_vertexVelocities[nodeID] = (float4)(velocity.xyz, 0.f);	
 
 	// Update external force

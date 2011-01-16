@@ -1,5 +1,7 @@
 MSTRINGIFY(
 
+#pragma OPENCL EXTENSION cl_amd_printf : enable\n
+
 float mydot3(float4 a, float4 b)
 {
    return a.x*b.x + a.y*b.y + a.z*b.z;
@@ -87,14 +89,14 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 	
 		if( collisionObjectIndices.firstObject != collisionObjectIndices.endObject )
 		{
-			velocity = (float4)(15, 0, 0, 0);
+			velocity = (float4)(0, 0, 0, 0);
 
 			// We have some possible collisions to deal with
 			for( int collision = collisionObjectIndices.firstObject; collision < collisionObjectIndices.endObject; ++collision )
 			{
 				CollisionShapeDescription shapeDescription = g_collisionObjectDetails[collision];
 				float colliderFriction = shapeDescription.friction;
-		
+
 				if( shapeDescription.collisionShapeType == CAPSULE_SHAPE_PROXYTYPE )
 				{
 					// Colliding with a capsule

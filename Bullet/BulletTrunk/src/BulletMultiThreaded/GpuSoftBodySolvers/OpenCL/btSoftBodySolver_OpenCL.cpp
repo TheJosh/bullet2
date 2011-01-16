@@ -926,12 +926,6 @@ void btOpenCLSoftBodySolver::updateSoftBodies()
 
 	normalizeNormalsAndAreas( numVertices );
 
-	
-	// Clear the collision shape array for the next frame
-	// Ensure that the DX11 ones are moved off the device so they will be updated correctly
-	m_clCollisionObjectDetails.changedOnCPU();
-	m_clPerClothCollisionObjects.changedOnCPU();
-	m_collisionObjectDetails.clear();
 
 } // btOpenCLSoftBodySolver::updateSoftBodies
 
@@ -1439,6 +1433,7 @@ void btOpenCLSoftBodySolver::computeBounds( )
 	}
 } // btOpenCLSoftBodySolver::computeBounds
 
+#include <iostream>
 void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
 {
 
@@ -1448,6 +1443,12 @@ void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt
 	m_clPerClothDampingFactor.moveToGPU();
 	m_clPerClothCollisionObjects.moveToGPU();
 	m_clCollisionObjectDetails.moveToGPU();
+
+	std::cout << "\n\nShape types:\n";
+	for( int i = 0; i < m_collisionObjectDetails.size(); ++i )
+	{
+		std::cout << "\t" << m_collisionObjectDetails[i].collisionShapeType << "\n";
+	} 
 
 	cl_int ciErrNum;
 	int numVerts = m_vertexData.getNumVertices();
@@ -1530,58 +1531,7 @@ void btSoftBodySolverOutputCLtoCPU::copySoftBodyToVertexBuffer( const btSoftBody
 				normalPointer += normalStride;
 			}
 		}
-	} /*else 	if( vertexBuffer->getBufferType() == btVertexBufferDescriptor::OPENGL_BUFFER ) {		
-
-		const btOpenGLInteropVertexBufferDescriptor *openGLVertexBuffer = static_cast< btOpenGLInteropVertexBufferDescriptor* >(vertexBuffer);						
-		cl_int ciErrNum = CL_SUCCESS;    
-
-		cl_mem clBuffer = openGLVertexBuffer->getBuffer();		
-		cl_kernel outputKernel = outputToVertexArrayWithNormalsKernel;
-		if( !vertexBuffer->hasNormals() )
-			outputKernel = outputToVertexArrayWithoutNormalsKernel;
-
-		ciErrNum = clEnqueueAcquireGLObjects(m_cqCommandQue, 1, &clBuffer, 0, 0, NULL);
-		if( ciErrNum != CL_SUCCESS )
-		{
-			btAssert( 0 &&  "clEnqueueAcquireGLObjects(copySoftBodyToVertexBuffer)");
-		}
-
-		int numVertices = currentCloth->getNumVertices();
-
-		ciErrNum = clSetKernelArg(outputKernel, 0, sizeof(int), &firstVertex );
-		ciErrNum = clSetKernelArg(outputKernel, 1, sizeof(int), &numVertices );
-		ciErrNum = clSetKernelArg(outputKernel, 2, sizeof(cl_mem), (void*)&clBuffer );
-		if( vertexBuffer->hasVertexPositions() )
-		{
-			int vertexOffset = vertexBuffer->getVertexOffset();
-			int vertexStride = vertexBuffer->getVertexStride();
-			ciErrNum = clSetKernelArg(outputKernel, 3, sizeof(int), &vertexOffset );
-			ciErrNum = clSetKernelArg(outputKernel, 4, sizeof(int), &vertexStride );
-			ciErrNum = clSetKernelArg(outputKernel, 5, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexPosition.m_buffer );
-
-		}
-		if( vertexBuffer->hasNormals() )
-		{
-			int normalOffset = vertexBuffer->getNormalOffset();
-			int normalStride = vertexBuffer->getNormalStride();
-			ciErrNum = clSetKernelArg(outputKernel, 6, sizeof(int), &normalOffset );
-			ciErrNum = clSetKernelArg(outputKernel, 7, sizeof(int), &normalStride );
-			ciErrNum = clSetKernelArg(outputKernel, 8, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexNormal.m_buffer );
-
-		}
-		size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
-		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, outputKernel, 1, NULL, &numWorkItems, &workGroupSize,0 ,0 ,0);
-		if( ciErrNum != CL_SUCCESS ) 
-		{
-			btAssert( 0 &&  "enqueueNDRangeKernel(copySoftBodyToVertexBuffer)");
-		}
-
-		ciErrNum = clEnqueueReleaseGLObjects(m_cqCommandQue, 1, &clBuffer, 0, 0, 0);
-		if( ciErrNum != CL_SUCCESS )
-		{
-			btAssert( 0 &&  "clEnqueueReleaseGLObjects(copySoftBodyToVertexBuffer)");
-		}
-	}*/
+	}
 
 } // btSoftBodySolverOutputCLtoCPU::outputToVertexBuffers
 
@@ -1654,6 +1604,11 @@ cl_kernel CLFunctions::compileCLKernelFromString( const char* kernelSource, cons
 
 void btOpenCLSoftBodySolver::predictMotion( float timeStep )
 {
+	// Clear the collision shape array for the next frame
+	// Ensure that the DX11 ones are moved off the device so they will be updated correctly
+	m_clCollisionObjectDetails.changedOnCPU();
+	m_clPerClothCollisionObjects.changedOnCPU();
+	m_collisionObjectDetails.clear();
 	
 	{
 		BT_PROFILE("perClothWindVelocity");

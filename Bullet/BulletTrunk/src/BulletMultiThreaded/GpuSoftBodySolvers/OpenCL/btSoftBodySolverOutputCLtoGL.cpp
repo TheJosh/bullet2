@@ -90,6 +90,9 @@ void btSoftBodySolverOutputCLtoGL::copySoftBodyToVertexBuffer( const btSoftBody 
 		btAssert( "Undefined output for this solver output" == false );
 	}
 
+	// clFinish in here may not be the best thing. It's possible that we should have a waitForFrameComplete function.
+	clFinish(m_cqCommandQue);
+
 } // btSoftBodySolverOutputCLtoGL::outputToVertexBuffers
 
 bool btSoftBodySolverOutputCLtoGL::buildShaders()
