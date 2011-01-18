@@ -1444,11 +1444,7 @@ void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt
 	m_clPerClothCollisionObjects.moveToGPU();
 	m_clCollisionObjectDetails.moveToGPU();
 
-	std::cout << "\n\nShape types:\n";
-	for( int i = 0; i < m_collisionObjectDetails.size(); ++i )
-	{
-		std::cout << "\t" << m_collisionObjectDetails[i].collisionShapeType << "\n";
-	} 
+	
 
 	cl_int ciErrNum;
 	int numVerts = m_vertexData.getNumVertices();
