@@ -224,6 +224,7 @@ void	btDiscreteDynamicsWorld::synchronizeMotionStates()
 	}
 }
 
+
 int	btDiscreteDynamicsWorld::stepSimulation( btScalar timeStep,int maxSubSteps, btScalar fixedTimeStep)
 {
 	startProfiling(timeStep);
@@ -291,7 +292,7 @@ int	btDiscreteDynamicsWorld::stepSimulation( btScalar timeStep,int maxSubSteps, 
 #ifndef BT_NO_PROFILE
 	CProfileManager::Increment_Frame_Counter();
 #endif //BT_NO_PROFILE
-
+	
 	return numSimulationSubSteps;
 }
 
@@ -1008,6 +1009,7 @@ void btDiscreteDynamicsWorld::debugDrawConstraint(btTypedConstraint* constraint)
 				}
 			}
 			break;
+		case D6_SPRING_CONSTRAINT_TYPE:
 		case D6_CONSTRAINT_TYPE:
 			{
 				btGeneric6DofConstraint* p6DOF = (btGeneric6DofConstraint*)constraint;
@@ -1126,7 +1128,7 @@ void	btDiscreteDynamicsWorld::serializeRigidBodies(btSerializer* serializer)
 	for (i=0;i<m_collisionObjects.size();i++)
 	{
 		btCollisionObject* colObj = m_collisionObjects[i];
-		if (colObj->getInternalType() == btCollisionObject::CO_RIGID_BODY)
+		if (colObj->getInternalType() & btCollisionObject::CO_RIGID_BODY)
 		{
 			int len = colObj->calculateSerializeBufferSize();
 			btChunk* chunk = serializer->allocate(len,1);

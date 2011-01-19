@@ -232,7 +232,7 @@ void btOpenCLSoftBodySolverSIMDAware::optimize( btAlignedObjectArray< btSoftBody
 			using Vectormath::Aos::Point3;
 
 			// Create SoftBody that will store the information within the solver
-			btAcceleratedSoftBodyInterface *newSoftBody = new btAcceleratedSoftBodyInterface( softBody );
+			btOpenCLAcceleratedSoftBodyInterface* newSoftBody = new btOpenCLAcceleratedSoftBodyInterface( softBody );
 			m_softBodySet.push_back( newSoftBody );
 
 			m_perClothAcceleration.push_back( toVector3(softBody->getWorldInfo()->m_gravity) );

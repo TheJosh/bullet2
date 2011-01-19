@@ -53,8 +53,7 @@ SolvePositionsFromLinksKernel( uint3 Gid : SV_GroupID, uint3 DTid : SV_DispatchT
 			wavefrontBatchCountsVertexCounts[localWavefront] = batchesAndVertexCountsWithinWavefront;
 		}
 
-		AllMemoryBarrier();
-
+		
 		int2 batchesAndVerticesWithinWavefront = wavefrontBatchCountsVertexCounts[localWavefront];
 		int batchesWithinWavefront = batchesAndVerticesWithinWavefront.x;
 		int verticesUsedByWave = batchesAndVerticesWithinWavefront.y;

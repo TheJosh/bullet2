@@ -89,7 +89,7 @@ class btRigidBody  : public btCollisionObject
 	int				m_rigidbodyFlags;
 	
 	int				m_debugBodyId;
-
+	
 
 protected:
 
@@ -188,13 +188,13 @@ public:
 	///but a rigidbody is derived from btCollisionObject, so we can safely perform an upcast
 	static const btRigidBody*	upcast(const btCollisionObject* colObj)
 	{
-		if (colObj->getInternalType()==btCollisionObject::CO_RIGID_BODY)
+		if (colObj->getInternalType()&btCollisionObject::CO_RIGID_BODY)
 			return (const btRigidBody*)colObj;
 		return 0;
 	}
 	static btRigidBody*	upcast(btCollisionObject* colObj)
 	{
-		if (colObj->getInternalType()==btCollisionObject::CO_RIGID_BODY)
+		if (colObj->getInternalType()&btCollisionObject::CO_RIGID_BODY)
 			return (btRigidBody*)colObj;
 		return 0;
 	}
@@ -270,12 +270,12 @@ public:
 		m_totalForce += force*m_linearFactor;
 	}
 
-	const btVector3& getTotalForce()
+	const btVector3& getTotalForce() const
 	{
 		return m_totalForce;
 	};
 
-	const btVector3& getTotalTorque()
+	const btVector3& getTotalTorque() const
 	{
 		return m_totalTorque;
 	};
@@ -504,7 +504,7 @@ public:
 		return m_constraintRefs[index];
 	}
 
-	int getNumConstraintRefs()
+	int getNumConstraintRefs() const
 	{
 		return m_constraintRefs.size();
 	}
@@ -617,6 +617,7 @@ public:
 
 
 	void	internalWritebackVelocity(btScalar timeStep);
+
 	
 
 	///////////////////////////////////////////////

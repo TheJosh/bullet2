@@ -38,6 +38,8 @@ namespace bParse {
 				
 	public:
 
+		btAlignedObjectArray<bStructHandle*>	m_softBodies;
+
 		btAlignedObjectArray<bStructHandle*>	m_rigidBodies;
 
 		btAlignedObjectArray<bStructHandle*>	m_collisionObjects;
@@ -50,6 +52,7 @@ namespace bParse {
 
 		btAlignedObjectArray<bStructHandle*>	m_triangleInfoMaps;
 		
+		btAlignedObjectArray<char*>				m_dataBlocks;
 		btBulletFile();
 
 		btBulletFile(const char* fileName);

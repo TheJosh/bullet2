@@ -73,160 +73,162 @@ struct CollisionShapeDescription
 	}
 };
 
-class btOpenCLSoftBodySolver : public btSoftBodySolver
-{
-public:
-	/**
+/**
 	 * SoftBody class to maintain information about a soft body instance
 	 * within a solver.
 	 * This data addresses the main solver arrays.
 	 */
-	class btAcceleratedSoftBodyInterface
+class btOpenCLAcceleratedSoftBodyInterface
+{
+protected:
+	/** Current number of vertices that are part of this cloth */
+	int m_numVertices;
+	/** Maximum number of vertices allocated to be part of this cloth */
+	int m_maxVertices;
+	/** Current number of triangles that are part of this cloth */
+	int m_numTriangles;
+	/** Maximum number of triangles allocated to be part of this cloth */
+	int m_maxTriangles;
+	/** Index of first vertex in the world allocated to this cloth */
+	int m_firstVertex;
+	/** Index of first triangle in the world allocated to this cloth */
+	int m_firstTriangle;
+	/** Index of first link in the world allocated to this cloth */
+	int m_firstLink;
+	/** Maximum number of links allocated to this cloth */
+	int m_maxLinks;
+	/** Current number of links allocated to this cloth */
+	int m_numLinks;
+
+	/** The actual soft body this data represents */
+	btSoftBody *m_softBody;
+
+
+public:
+	btOpenCLAcceleratedSoftBodyInterface( btSoftBody *softBody ) :
+	  m_softBody( softBody )
 	{
-	protected:
-		/** Current number of vertices that are part of this cloth */
-		int m_numVertices;
-		/** Maximum number of vertices allocated to be part of this cloth */
-		int m_maxVertices;
-		/** Current number of triangles that are part of this cloth */
-		int m_numTriangles;
-		/** Maximum number of triangles allocated to be part of this cloth */
-		int m_maxTriangles;
-		/** Index of first vertex in the world allocated to this cloth */
-		int m_firstVertex;
-		/** Index of first triangle in the world allocated to this cloth */
-		int m_firstTriangle;
-		/** Index of first link in the world allocated to this cloth */
-		int m_firstLink;
-		/** Maximum number of links allocated to this cloth */
-		int m_maxLinks;
-		/** Current number of links allocated to this cloth */
-		int m_numLinks;
+		m_numVertices = 0;
+		m_maxVertices = 0;
+		m_numTriangles = 0;
+		m_maxTriangles = 0;
+		m_firstVertex = 0;
+		m_firstTriangle = 0;
+		m_firstLink = 0;
+		m_maxLinks = 0;
+		m_numLinks = 0;
+	}
+	int getNumVertices()
+	{
+		return m_numVertices;
+	}
 
-		/** The actual soft body this data represents */
-		btSoftBody *m_softBody;
+	int getNumTriangles()
+	{
+		return m_numTriangles;
+	}
 
+	int getMaxVertices()
+	{
+		return m_maxVertices;
+	}
 
-	public:
-		btAcceleratedSoftBodyInterface( btSoftBody *softBody ) :
-		  m_softBody( softBody )
-		{
-			m_numVertices = 0;
-			m_maxVertices = 0;
-			m_numTriangles = 0;
-			m_maxTriangles = 0;
-			m_firstVertex = 0;
-			m_firstTriangle = 0;
-			m_firstLink = 0;
-			m_maxLinks = 0;
-			m_numLinks = 0;
-		}
-		int getNumVertices()
-		{
-			return m_numVertices;
-		}
+	int getMaxTriangles()
+	{
+		return m_maxTriangles;
+	}
 
-		int getNumTriangles()
-		{
-			return m_numTriangles;
-		}
+	int getFirstVertex()
+	{
+		return m_firstVertex;
+	}
 
-		int getMaxVertices()
-		{
-			return m_maxVertices;
-		}
-
-		int getMaxTriangles()
-		{
-			return m_maxTriangles;
-		}
-
-		int getFirstVertex()
-		{
-			return m_firstVertex;
-		}
-
-		int getFirstTriangle()
-		{
-			return m_firstTriangle;
-		}
-		
-		/**
-		 * Update the bounds in the btSoftBody object
-		 */
-		void updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound );
-
-		// TODO: All of these set functions will have to do checks and
-		// update the world because restructuring of the arrays will be necessary
-		// Reasonable use of "friend"?
-		void setNumVertices( int numVertices )
-		{
-			m_numVertices = numVertices;
-		}	
+	int getFirstTriangle()
+	{
+		return m_firstTriangle;
+	}
 	
-		void setNumTriangles( int numTriangles )
-		{
-			m_numTriangles = numTriangles;
-		}
+	/**
+	 * Update the bounds in the btSoftBody object
+	 */
+	void updateBounds( const btVector3 &lowerBound, const btVector3 &upperBound );
 
-		void setMaxVertices( int maxVertices )
-		{
-			m_maxVertices = maxVertices;
-		}
+	// TODO: All of these set functions will have to do checks and
+	// update the world because restructuring of the arrays will be necessary
+	// Reasonable use of "friend"?
+	void setNumVertices( int numVertices )
+	{
+		m_numVertices = numVertices;
+	}	
 
-		void setMaxTriangles( int maxTriangles )
-		{
-			m_maxTriangles = maxTriangles;
-		}
+	void setNumTriangles( int numTriangles )
+	{
+		m_numTriangles = numTriangles;
+	}
 
-		void setFirstVertex( int firstVertex )
-		{
-			m_firstVertex = firstVertex;
-		}
+	void setMaxVertices( int maxVertices )
+	{
+		m_maxVertices = maxVertices;
+	}
 
-		void setFirstTriangle( int firstTriangle )
-		{
-			m_firstTriangle = firstTriangle;
-		}
+	void setMaxTriangles( int maxTriangles )
+	{
+		m_maxTriangles = maxTriangles;
+	}
 
-		void setMaxLinks( int maxLinks )
-		{
-			m_maxLinks = maxLinks;
-		}
+	void setFirstVertex( int firstVertex )
+	{
+		m_firstVertex = firstVertex;
+	}
 
-		void setNumLinks( int numLinks )
-		{
-			m_numLinks = numLinks;
-		}
+	void setFirstTriangle( int firstTriangle )
+	{
+		m_firstTriangle = firstTriangle;
+	}
 
-		void setFirstLink( int firstLink )
-		{
-			m_firstLink = firstLink;
-		}
+	void setMaxLinks( int maxLinks )
+	{
+		m_maxLinks = maxLinks;
+	}
 
-		int getMaxLinks()
-		{
-			return m_maxLinks;
-		}
+	void setNumLinks( int numLinks )
+	{
+		m_numLinks = numLinks;
+	}
 
-		int getNumLinks()
-		{
-			return m_numLinks;
-		}
+	void setFirstLink( int firstLink )
+	{
+		m_firstLink = firstLink;
+	}
 
-		int getFirstLink()
-		{
-			return m_firstLink;
-		}
+	int getMaxLinks()
+	{
+		return m_maxLinks;
+	}
 
-		btSoftBody* getSoftBody()
-		{
-			return m_softBody;
-		}
+	int getNumLinks()
+	{
+		return m_numLinks;
+	}
 
-	};
+	int getFirstLink()
+	{
+		return m_firstLink;
+	}
+
+	btSoftBody* getSoftBody()
+	{
+		return m_softBody;
+	}
+
+};
 
 
+
+class btOpenCLSoftBodySolver : public btSoftBodySolver
+{
+public:
+	
 
 	struct UIntVector3
 	{
@@ -281,7 +283,7 @@ protected:
 	 * Cloths owned by this solver.
 	 * Only our cloths are in this array.
 	 */
-	btAlignedObjectArray< btAcceleratedSoftBodyInterface * > m_softBodySet;
+	btAlignedObjectArray< btOpenCLAcceleratedSoftBodyInterface * > m_softBodySet;
 
 	/** Acceleration value to be applied to all non-static vertices in the solver. 
 	 * Index n is cloth n, array sized by number of cloths in the world not the solver. 
@@ -375,6 +377,8 @@ protected:
 
 	cl_command_queue	m_cqCommandQue;
 	cl_context			m_cxMainContext;
+	
+	size_t				m_defaultWorkGroupSize;
 
 
 	virtual bool buildShaders();
@@ -439,7 +443,7 @@ public:
 
 
 	
-	btAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
+	btOpenCLAcceleratedSoftBodyInterface *findSoftBodyInterface( const btSoftBody* const softBody );
 
 	virtual btSoftBodyLinkData &getLinkData();
 
@@ -467,6 +471,15 @@ public:
 
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
+	virtual void	setDefaultWorkgroupSize(size_t workGroupSize)
+	{
+		m_defaultWorkGroupSize = workGroupSize;
+	}
+	virtual size_t	getDefaultWorkGroupSize() const
+	{
+		return m_defaultWorkGroupSize;
+	}
+	
 }; // btOpenCLSoftBodySolver
 
 

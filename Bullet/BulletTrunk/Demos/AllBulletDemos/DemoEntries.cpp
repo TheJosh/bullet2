@@ -32,6 +32,8 @@ subject to the following restrictions:
 #include "../ConstraintDemo/ConstraintDemo.h"
 //#include "../Benchmarks/BenchmarkDemo.h"
 #include "../SoftDemo/SoftDemo.h"
+//#include "../Box2dDemo/Box2dDemo.h"
+
 #include "GLDebugFont.h"
 
 #include "GlutStuff.h"//OpenGL stuff
@@ -104,15 +106,17 @@ public:
 
 btDemoEntry g_demoEntries[] =
 {
-
-	{"ConstraintDemo",ConstraintDemo::Create},
+//	{"Box2dDemo",Box2dDemo::Create},
 	{"ForkLift Demo",ForkLiftDemo::Create},
+	{"Dynamic Control Demo",MotorDemo::Create},
+	{"ConstraintDemo",ConstraintDemo::Create},
+
 	{"Ragdoll Demo",RagdollDemo::Create},
 	{"Basic Demo", BasicDemo::Create},	
 	{"CcdPhysicsDemo", CcdPhysicsDemo::Create},
 	{"Convex Decomposition",ConvexDecompositionDemo::Create},
 	{"Concave Moving", GimpactConcaveDemo::Create},
-	{"Dynamic Control Demo",MotorDemo::Create},
+	
 	{"ConcaveDemo",ConcaveDemo::Create},
 	{"Concave Convexcast Demo",ConcaveConvexcastDemo::Create},
 	{"SoftBody Cluster Collide1",SoftDemo19::Create},
@@ -122,7 +126,7 @@ btDemoEntry g_demoEntries[] =
 	{"SoftBody Cloth Attach",SoftDemo5::Create},
 
 	{"SoftBody Cloth",SoftDemo0::Create},
-		
+	
 //	{"SoftBody Volume",SoftDemo2::Create},
 	{"SoftBody Pressure",SoftDemo1::Create},
 	{"SoftBody Cluster Car",SoftDemo24::Create},

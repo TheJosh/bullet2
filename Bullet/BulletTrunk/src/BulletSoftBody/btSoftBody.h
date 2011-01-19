@@ -27,9 +27,16 @@ subject to the following restrictions:
 #include "btSparseSDF.h"
 #include "BulletCollision/BroadphaseCollision/btDbvt.h"
 
+//#ifdef BT_USE_DOUBLE_PRECISION
+//#define btRigidBodyData	btRigidBodyDoubleData
+//#define btRigidBodyDataName	"btRigidBodyDoubleData"
+//#else
+#define btSoftBodyData	btSoftBodyFloatData
+#define btSoftBodyDataName	"btSoftBodyFloatData"
+//#endif //BT_USE_DOUBLE_PRECISION
+
 class btBroadphaseInterface;
 class btDispatcher;
-
 class btSoftBodySolver;
 
 /* btSoftBodyWorldInfo	*/ 
@@ -187,12 +194,14 @@ public:
 		btScalar				m_kAST;			// Area/Angular stiffness coefficient [0,1]
 		btScalar				m_kVST;			// Volume stiffness coefficient [0,1]
 		int						m_flags;		// Flags
+		Material() : Element() {}
 	};
 
 	/* Feature		*/ 
 	struct	Feature : Element
 	{
 		Material*				m_material;		// Material
+		Feature() : Element() {}
 	};
 	/* Node			*/ 
 	struct	Node : Feature
@@ -206,6 +215,7 @@ public:
 		btScalar				m_area;			// Area
 		btDbvtNode*				m_leaf;			// Leaf data
 		int						m_battach:1;	// Attached
+		Node() : Feature() {}
 	};
 	/* Link			*/ 
 	struct	Link : Feature
@@ -217,6 +227,7 @@ public:
 		btScalar				m_c1;			// rl^2
 		btScalar				m_c2;			// |gradient|^2/c0
 		btVector3				m_c3;			// gradient
+		Link() : Feature() {}
 	};
 	/* Face			*/ 
 	struct	Face : Feature
@@ -225,6 +236,7 @@ public:
 		btVector3				m_normal;		// Normal
 		btScalar				m_ra;			// Rest area
 		btDbvtNode*				m_leaf;			// Leaf data
+		Face() : Feature() {}
 	};
 	/* Tetra		*/ 
 	struct	Tetra : Feature
@@ -235,6 +247,7 @@ public:
 		btVector3				m_c0[4];		// gradients
 		btScalar				m_c1;			// (4*kVST)/(im0+im1+im2+im3)
 		btScalar				m_c2;			// m_c1/sum(|g0..3|^2)
+		Tetra() : Feature() {}
 	};
 	/* RContact		*/ 
 	struct	RContact
@@ -276,6 +289,7 @@ public:
 		int						m_rank;			// Rank
 		Node*					m_nodes[4];		// Nodes
 		btScalar				m_coords[4];	// Coordinates
+		Note() : Element() {}
 	};	
 	/* Pose			*/ 
 	struct	Pose
@@ -292,9 +306,9 @@ public:
 	};
 	/* Cluster		*/ 
 	struct	Cluster
-	{		
-		btAlignedObjectArray<Node*>	m_nodes;		
+	{
 		tScalarArray				m_masses;
+		btAlignedObjectArray<Node*>	m_nodes;		
 		tVector3Array				m_framerefs;
 		btTransform					m_framexform;
 		btScalar					m_idmass;
@@ -363,7 +377,11 @@ public:
 
 		void						activate() const
 		{
-			if(m_rigid) m_rigid->activate();
+			if(m_rigid) 
+				m_rigid->activate();
+			if (m_collisionObject)
+				m_collisionObject->activate();
+
 		}
 		const btMatrix3x3&			invWorldInertia() const
 		{
@@ -381,7 +399,7 @@ public:
 		const btTransform&			xform() const
 		{
 			static const btTransform	identity=btTransform::getIdentity();		
-			if(m_collisionObject) return(m_collisionObject->getInterpolationWorldTransform());
+			if(m_collisionObject) return(m_collisionObject->getWorldTransform());
 			if(m_soft)	return(m_soft->m_framexform);
 			return(identity);
 		}
@@ -455,7 +473,7 @@ public:
 	struct	Joint
 	{
 		struct eType { enum _ {
-			Linear,
+			Linear=0,
 			Angular,
 			Contact
 		};};
@@ -650,9 +668,13 @@ public:
 	//
 
 	/* ctor																	*/ 
-	btSoftBody(	btSoftBodyWorldInfo* worldInfo,int node_count,
-		const btVector3* x,
-		const btScalar* m);
+	btSoftBody(	btSoftBodyWorldInfo* worldInfo,int node_count,		const btVector3* x,		const btScalar* m);
+
+	/* ctor																	*/ 
+	btSoftBody(	btSoftBodyWorldInfo* worldInfo);
+
+	void	initDefaults();
+
 	/* dtor																	*/ 
 	virtual ~btSoftBody();
 	/* Check for existing link												*/ 
@@ -727,6 +749,7 @@ public:
 	/* Append anchor														*/ 
 	void				appendAnchor(	int node,
 		btRigidBody* body, bool disableCollisionBetweenLinkedBodies=false);
+	void			appendAnchor(int node,btRigidBody* body, const btVector3& localPivot,bool disableCollisionBetweenLinkedBodies=false);
 	/* Append linear joint													*/ 
 	void				appendLinearJoint(const LJoint::Specs& specs,Cluster* body0,Body body1);
 	void				appendLinearJoint(const LJoint::Specs& specs,Body body=Body());
@@ -933,7 +956,17 @@ public:
 	static psolver_t	getSolver(ePSolver::_ solver);
 	static vsolver_t	getSolver(eVSolver::_ solver);
 
+
+	virtual	int	calculateSerializeBufferSize()	const;
+
+	///fills the dataBuffer and returns the struct name (and 0 on failure)
+	virtual	const char*	serialize(void* dataBuffer,  class btSerializer* serializer) const;
+
+	//virtual void serializeSingleObject(class btSerializer* serializer) const;
+
+
 };
+
 
 
 

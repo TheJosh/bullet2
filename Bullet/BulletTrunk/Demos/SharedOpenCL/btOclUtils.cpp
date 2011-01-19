@@ -78,7 +78,6 @@ cl_device_id btOclGetMaxFlopsDev(cl_context cxMainContext)
 	int max_flops = 0;
 	
 	size_t current_device = 0;
-	int SIMDmultiplier = 1;
 	
     // CL_DEVICE_MAX_COMPUTE_UNITS
     cl_uint compute_units;
@@ -90,6 +89,8 @@ cl_device_id btOclGetMaxFlopsDev(cl_context cxMainContext)
     
 	cl_device_type device_type;
     clGetDeviceInfo(cdDevices[current_device], CL_DEVICE_TYPE, sizeof(device_type), &device_type, NULL);
+
+	int SIMDmultiplier = 1;
 
 	if( device_type == CL_DEVICE_TYPE_CPU )
 	{
@@ -154,18 +155,11 @@ char* btOclLoadProgSource(const char* cFilename, const char* cPreamble, size_t* 
     size_t szSourceLength;
 
     // open the OpenCL source code file
-    #ifdef _WIN32   // Windows version
-        if(fopen_s(&pFileStream, cFilename, "rb") != 0) 
-        {       
-            return NULL;
-        }
-    #else           // Linux version
-        pFileStream = fopen(cFilename, "rb");
-        if(pFileStream == 0) 
-        {       
-            return NULL;
-        }
-    #endif
+	pFileStream = fopen(cFilename, "rb");
+	if(pFileStream == 0) 
+	{       
+		return NULL;
+	}
 
     size_t szPreambleLength = strlen(cPreamble);
 

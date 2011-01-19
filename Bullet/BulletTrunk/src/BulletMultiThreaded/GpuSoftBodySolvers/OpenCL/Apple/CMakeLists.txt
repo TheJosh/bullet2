@@ -8,7 +8,6 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 
 SET(BulletSoftBodyOpenCLSolvers_SRCS
 	../btSoftBodySolver_OpenCL.cpp
-	../btSoftBodySolverOutputCLtoGL.cpp
 )
 
 SET(BulletSoftBodyOpenCLSolvers_HDRS
@@ -18,8 +17,6 @@ SET(BulletSoftBodyOpenCLSolvers_HDRS
 	../btSoftBodySolverTriangleData_OpenCL.h
 	../btSoftBodySolverLinkData_OpenCL.h
 	../btSoftBodySolverBuffer_OpenCL.h
-	../btSoftBodySolverVertexBuffer_OpenGL.h
-	../btSoftBodySolverOutputCLtoGL.h
 )
 
 # OpenCL and HLSL Shaders.
@@ -53,7 +50,10 @@ ADD_LIBRARY(BulletSoftBodySolvers_OpenCL_Apple
 SET_TARGET_PROPERTIES(BulletSoftBodySolvers_OpenCL_Apple PROPERTIES VERSION ${BULLET_VERSION})
 SET_TARGET_PROPERTIES(BulletSoftBodySolvers_OpenCL_Apple PROPERTIES SOVERSION ${BULLET_VERSION})
 IF (BUILD_SHARED_LIBS)
-	TARGET_LINK_LIBRARIES(BulletSoftBody BulletDynamics)
+	IF (APPLE AND (BUILD_SHARED_LIBS OR FRAMEWORK) )
+		SET_TARGET_PROPERTIES(BulletSoftBodySolvers_OpenCL_Apple PROPERTIES LINK_FLAGS "-framework OpenCL")
+	ENDIF (APPLE AND (BUILD_SHARED_LIBS OR FRAMEWORK) )
+	TARGET_LINK_LIBRARIES(BulletSoftBodySolvers_OpenCL_Apple BulletSoftBody)
 ENDIF (BUILD_SHARED_LIBS)
 
 
@@ -63,8 +63,8 @@ IF (INSTALL_LIBS)
 			IF (APPLE AND BUILD_SHARED_LIBS AND FRAMEWORK)
 				INSTALL(TARGETS BulletSoftBodySolvers_OpenCL_Apple  DESTINATION .)
 			ELSE (APPLE AND BUILD_SHARED_LIBS AND FRAMEWORK)
-			INSTALL(TARGETS BulletSoftBodySolvers_OpenCL_Apple  DESTINATION lib${LIB_SUFFIX})
-				INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} DESTINATION include FILES_MATCHING PATTERN "*.h")
+				INSTALL(TARGETS BulletSoftBodySolvers_OpenCL_Apple  DESTINATION lib${LIB_SUFFIX})
+#headers are already installed by BulletMultiThreaded library
 			ENDIF (APPLE AND BUILD_SHARED_LIBS AND FRAMEWORK)
 		ENDIF (${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION} GREATER 2.5)
 

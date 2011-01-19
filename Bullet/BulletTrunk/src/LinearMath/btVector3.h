@@ -148,6 +148,19 @@ public:
    * This is symantically treating the vector like a point */
 	SIMD_FORCE_INLINE btScalar distance(const btVector3& v) const;
 
+	SIMD_FORCE_INLINE btVector3& safeNormalize() 
+	{
+		btVector3 absVec = this->absolute();
+		int maxIndex = absVec.maxAxis();
+		if (absVec[maxIndex]>0)
+		{
+			*this /= absVec[maxIndex];
+			return *this /= length();
+		}
+		setValue(1,0,0);
+		return *this;
+	}
+
   /**@brief Normalize this vector 
    * x^2 + y^2 + z^2 = 1 */
 	SIMD_FORCE_INLINE btVector3& normalize() 
@@ -158,10 +171,10 @@ public:
   /**@brief Return a normalized version of this vector */
 	SIMD_FORCE_INLINE btVector3 normalized() const;
 
-  /**@brief Rotate this vector 
+  /**@brief Return a rotated version of this vector
    * @param wAxis The axis to rotate about 
    * @param angle The angle to rotate by */
-	SIMD_FORCE_INLINE btVector3 rotate( const btVector3& wAxis, const btScalar angle );
+	SIMD_FORCE_INLINE btVector3 rotate( const btVector3& wAxis, const btScalar angle ) const;
 
   /**@brief Return the angle between this and another vector
    * @param v The other vector */
@@ -478,7 +491,7 @@ SIMD_FORCE_INLINE btVector3 btVector3::normalized() const
 	return *this / length();
 } 
 
-SIMD_FORCE_INLINE btVector3 btVector3::rotate( const btVector3& wAxis, const btScalar angle )
+SIMD_FORCE_INLINE btVector3 btVector3::rotate( const btVector3& wAxis, const btScalar angle ) const
 {
 	// wAxis must be a unit lenght vector
 

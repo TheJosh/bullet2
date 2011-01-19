@@ -29,7 +29,7 @@ void btSoftBodySolverOutputCLtoGL::copySoftBodyToVertexBuffer( const btSoftBody 
 	btAssert( solver->getSolverType() == btSoftBodySolver::CL_SOLVER || solver->getSolverType() == btSoftBodySolver::CL_SIMD_SOLVER );
 	btOpenCLSoftBodySolver *dxSolver = static_cast< btOpenCLSoftBodySolver * >( solver );
 	checkInitialized();
-	btOpenCLSoftBodySolver::btAcceleratedSoftBodyInterface * currentCloth = dxSolver->findSoftBodyInterface( softBody );
+	btOpenCLAcceleratedSoftBodyInterface* currentCloth = dxSolver->findSoftBodyInterface( softBody );
 	btSoftBodyVertexDataOpenCL &vertexData( dxSolver->m_vertexData );	
 
 	const int firstVertex = currentCloth->getFirstVertex();

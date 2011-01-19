@@ -46,7 +46,8 @@ using namespace bParse;
 btBulletFile::btBulletFile()
 :bFile("", "BULLET ")
 {
-	mMemoryDNA = new bDNA();
+	mMemoryDNA = new bDNA(); //this memory gets released in the bFile::~bFile destructor,@todo not consistent with the rule 'who allocates it, has to deallocate it"
+
 	m_DnaCopy = 0;
 
 
@@ -97,6 +98,15 @@ btBulletFile::~btBulletFile()
 {
 	if (m_DnaCopy)
 		btAlignedFree(m_DnaCopy);
+
+	
+	while (m_dataBlocks.size())
+	{
+		char* dataBlock = m_dataBlocks[m_dataBlocks.size()-1];
+		delete[] dataBlock;
+		m_dataBlocks.pop_back();
+	}
+
 }
 
 
@@ -144,6 +154,7 @@ void btBulletFile::parseData()
 				// lookup maps
 				if (id)
 				{
+					m_chunkPtrPtrMap.insert(dataChunk.oldPtr, dataChunk);
 					mLibPointers.insert(dataChunk.oldPtr, (bStructHandle*)id);
 
 					m_chunks.push_back(dataChunk);
@@ -153,6 +164,11 @@ void btBulletFile::parseData()
 					//	listID->push_back((bStructHandle*)id);
 				}
 
+				if (dataChunk.code == BT_SOFTBODY_CODE)
+				{
+					m_softBodies.push_back((bStructHandle*) id);
+				}
+				
 				if (dataChunk.code == BT_RIGIDBODY_CODE)
 				{
 					m_rigidBodies.push_back((bStructHandle*) id);
@@ -210,7 +226,8 @@ void btBulletFile::parseData()
 
 void	btBulletFile::addDataBlock(char* dataBlock)
 {
-	//mMain->addDatablock(dataBlock);
+	m_dataBlocks.push_back(dataBlock);
+
 }
 
 

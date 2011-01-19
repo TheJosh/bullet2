@@ -19,18 +19,20 @@ subject to the following restrictions:
 class btRigidBody;
 #include "LinearMath/btScalar.h"
 #include "btSolverConstraint.h"
-#include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 
 class btSerializer;
 
+//Don't change any of the existing enum values, so add enum types at the end for serialization compatibility
 enum btTypedConstraintType
 {
-	POINT2POINT_CONSTRAINT_TYPE=MAX_CONTACT_MANIFOLD_TYPE+1,
+	POINT2POINT_CONSTRAINT_TYPE=3,
 	HINGE_CONSTRAINT_TYPE,
 	CONETWIST_CONSTRAINT_TYPE,
 	D6_CONSTRAINT_TYPE,
 	SLIDER_CONSTRAINT_TYPE,
-	CONTACT_CONSTRAINT_TYPE
+	CONTACT_CONSTRAINT_TYPE,
+	D6_SPRING_CONSTRAINT_TYPE,
+	MAX_CONSTRAINT_TYPE
 };
 
 
@@ -53,7 +55,13 @@ enum btConstraintParams
 class btTypedConstraint : public btTypedObject
 {
 	int	m_userConstraintType;
-	int	m_userConstraintId;
+
+	union
+	{
+		int	m_userConstraintId;
+		void* m_userConstraintPtr;
+	};
+
 	bool m_needsFeedback;
 
 	btTypedConstraint&	operator=(btTypedConstraint&	other)
@@ -72,13 +80,7 @@ protected:
 	///internal method used by the constraint solver, don't use them directly
 	btScalar getMotorFactor(btScalar pos, btScalar lowLim, btScalar uppLim, btScalar vel, btScalar timeFact);
 	
-	static btRigidBody& getFixedBody()
-	{
-		static btRigidBody s_fixed(0, 0,0);
-		s_fixed.setMassProps(btScalar(0.),btVector3(btScalar(0.),btScalar(0.),btScalar(0.)));
-		return s_fixed;
-	}	
-
+	static btRigidBody& getFixedBody();
 
 public:
 
@@ -119,6 +121,9 @@ public:
 		int *findex;
 		// number of solver iterations
 		int m_numIterations;
+
+		//damping of the velocity
+		btScalar	m_damping;
 	};
 
 	///internal method used by the constraint solver, don't use them directly
@@ -192,6 +197,16 @@ public:
 		return m_userConstraintId;
 	}
 
+	void	setUserConstraintPtr(void* ptr)
+	{
+		m_userConstraintPtr = ptr;
+	}
+
+	void*	getUserConstraintPtr()
+	{
+		return m_userConstraintPtr;
+	}
+
 	int getUid() const
 	{
 		return m_userConstraintId;   
@@ -255,13 +270,13 @@ SIMD_FORCE_INLINE btScalar btAdjustAngleToLimits(btScalar angleInRadians, btScal
 	}
 	else if(angleInRadians < angleLowerLimitInRadians)
 	{
-		btScalar diffLo = btNormalizeAngle(angleLowerLimitInRadians - angleInRadians); // this is positive
+		btScalar diffLo = btFabs(btNormalizeAngle(angleLowerLimitInRadians - angleInRadians));
 		btScalar diffHi = btFabs(btNormalizeAngle(angleUpperLimitInRadians - angleInRadians));
 		return (diffLo < diffHi) ? angleInRadians : (angleInRadians + SIMD_2_PI);
 	}
 	else if(angleInRadians > angleUpperLimitInRadians)
 	{
-		btScalar diffHi = btNormalizeAngle(angleInRadians - angleUpperLimitInRadians); // this is positive
+		btScalar diffHi = btFabs(btNormalizeAngle(angleInRadians - angleUpperLimitInRadians));
 		btScalar diffLo = btFabs(btNormalizeAngle(angleInRadians - angleLowerLimitInRadians));
 		return (diffLo < diffHi) ? (angleInRadians - SIMD_2_PI) : angleInRadians;
 	}

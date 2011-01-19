@@ -454,9 +454,12 @@ void updatePhysicsWorld()
 		}
 	}
 #ifndef TABLETEST
-	btVector3 origin( capCollider->getWorldTransform().getOrigin() );
-	origin.setZ( origin.getZ() + 0.01 );
-	capCollider->getWorldTransform().setOrigin( origin );
+	if (capCollider)
+	{
+		btVector3 origin( capCollider->getWorldTransform().getOrigin() );
+		origin.setZ( origin.getZ() + 0.01 );
+		capCollider->getWorldTransform().setOrigin( origin );
+	}
 #endif
 
 	counter++;
@@ -539,7 +542,7 @@ void initBullet(void)
 	}
  
 #endif
-#if 1
+#if 0
 	{		
 		btScalar mass(0.);
 
@@ -684,6 +687,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
     // Enable run-time memory check for debug builds.
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+	_CrtSetReportMode ( _CRT_ERROR,   _CRTDBG_MODE_DEBUG);
 #endif
 
     // DXUT will create and use the best device (either D3D9 or D3D11) 

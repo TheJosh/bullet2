@@ -108,6 +108,9 @@ bFile::~bFile()
 // ----------------------------------------------------- //
 void bFile::parseHeader()
 {
+	if (!mFileLen || !mFileBuffer)
+		return;
+
 	char *blenderBuf = mFileBuffer;
 	char header[SIZEOFBLENDERHEADER+1] ;
 	memcpy(header, blenderBuf, SIZEOFBLENDERHEADER);
@@ -180,7 +183,8 @@ void bFile::parseInternal(bool verboseDumpAllTypes, char* memDna,int memDnaLengt
 		return;
 
 	char *blenderData = mFileBuffer;
-	int sdnaPos=0;
+	bChunkInd dna;
+	dna.oldPtr = 0;
 
 	char *tempBuffer = blenderData;
 	for (int i=0; i<mFileLen; i++)
@@ -190,15 +194,43 @@ void bFile::parseInternal(bool verboseDumpAllTypes, char* memDna,int memDnaLengt
 
 		if (!mDataStart && strncmp(tempBuffer, "REND", 4)==0)
 			mDataStart = i;
-		if (!sdnaPos && strncmp(tempBuffer, "SDNA", 4)==0)
-			sdnaPos = i;
 
-		if (mDataStart && sdnaPos) break;
+		if (strncmp(tempBuffer, "DNA1", 4)==0)
+		{
+			// read the DNA1 block and extract SDNA
+			if (getNextBlock(&dna, tempBuffer, mFlags) > 0)
+			{
+				if (strncmp((tempBuffer + ChunkUtils::getOffset(mFlags)), "SDNANAME", 8) ==0) 
+					dna.oldPtr = (tempBuffer + ChunkUtils::getOffset(mFlags));
+				else dna.oldPtr = 0;
+			}
+			else dna.oldPtr = 0;
+		} 
+		// Some Bullet files are missing the DNA1 block
+		// In Blender it's DNA1 + ChunkUtils::getOffset() + SDNA + NAME
+		// In Bullet tests its SDNA + NAME
+		else if (strncmp(tempBuffer, "SDNANAME", 8) ==0)
+		{
+			dna.oldPtr = blenderData + i;
+			dna.len = mFileLen-i;
+
+			// Also no REND block, so exit now.  
+			if (mVersion==276) break;
+		}
+
+        if (mDataStart && dna.oldPtr) break;
 		tempBuffer++;
 	}
+	if (!dna.oldPtr || !dna.len)
+	{
+		printf("Failed to find DNA1+SDNA pair\n");
+		mFlags &= ~FD_OK;
+		return;
+	}
+
 
 	mFileDNA = new bDNA();
-	mFileDNA->init(blenderData+sdnaPos, mFileLen-sdnaPos, (mFlags & FD_ENDIAN_SWAP)!=0);
+	mFileDNA->init((char*)dna.oldPtr, dna.len, (mFlags & FD_ENDIAN_SWAP)!=0);
 
 	if (mVersion==276)
 	{
@@ -345,9 +377,10 @@ char* bFile::readStruct(char *head, bChunkInd&  dataChunk)
 
 				numallocs++;
 				// numBlocks * length
-                int allocLen = curLen > oldLen ? curLen : oldLen;
+
+                int allocLen = (curLen);
     			char *dataAlloc = new char[(dataChunk.nr*allocLen)+1];
-				memset(dataAlloc, 0, (dataChunk.nr*allocLen)+1);
+				memset(dataAlloc, 0, (dataChunk.nr*allocLen));
 
 				// track allocated
 				addDataBlock(dataAlloc);
@@ -775,8 +808,6 @@ void bFile::swapStruct(int dna_nr, char *data)
 	}
 }
 
-
-
 void bFile::resolvePointersMismatch()
 {
 //	printf("resolvePointersStructMismatch\n");
@@ -798,44 +829,46 @@ void bFile::resolvePointersMismatch()
 //			printf("pointer not found: %x\n",cur);
 		}
 	}
-		for (i=0;i<	m_pointerPtrFixupArray.size();i++)
+
+	 
+	for (i=0; i<m_pointerPtrFixupArray.size(); i++)
 	{
 		char* cur= m_pointerPtrFixupArray.at(i);
 		void** ptrptr = (void**)cur;
-		void *ptr = findLibPointer(*ptrptr);
-		if (ptr)
-		{
-			(*ptrptr) = ptr;
 
-			void **array= (void**)(*(ptrptr));
-			//int ptrMem = mMemoryDNA->getPointerSize();
+		bChunkInd *block = m_chunkPtrPtrMap.find(*ptrptr);
+		if (block)
+		{
+			int ptrMem = mMemoryDNA->getPointerSize();
 			int ptrFile = mFileDNA->getPointerSize();
 
-			int n=0;
-			void *lookup = array[n];
 
-			if (lookup)
+			int blockLen = block->len / ptrFile;
+
+			void *onptr = findLibPointer(*ptrptr);
+			if (onptr)
 			{
-				char *oldPtr = (char*)array;
-				btAlignedObjectArray<btPointerUid> pointers;
+				char *newPtr = new char[blockLen * ptrMem];
+				addDataBlock(newPtr);
+				memset(newPtr, 0, blockLen * ptrMem);
 
-				while(lookup)
+				void **onarray = (void**)onptr;
+				char *oldPtr = (char*)onarray;
+
+				int p = 0;
+				while (blockLen-- > 0)
 				{
 					btPointerUid dp = {0};
-					safeSwapPtr((char*)dp.m_uniqueIds, (char*)(oldPtr + (n * ptrFile)));
+					safeSwapPtr((char*)dp.m_uniqueIds, oldPtr);
 
-					lookup = findLibPointer(dp.m_ptr);
-					if (!lookup) break;
+					void **tptr = (void**)(newPtr + p * ptrMem);
+					*tptr = findLibPointer(dp.m_ptr);
 
-					pointers.push_back(dp);
-					++n;
+					oldPtr += ptrFile;
+					++p;
 				}
-				
-				for (int j=0; j<n; ++j)
-				{
-					array[j] = findLibPointer(pointers[j].m_ptr);
-					assert(array[j]);
-				}
+
+				*ptrptr = newPtr;
 			}
 		}
 	}
@@ -1041,7 +1074,7 @@ void bFile::resolvePointers(bool verboseDumpAllBlocks)
 				
 				if (verboseDumpAllBlocks)
 					printf("<%s>\n",oldType);
-				
+
 				resolvePointersChunk(dataChunk, verboseDumpAllBlocks);
 
 				if (verboseDumpAllBlocks)
@@ -1319,4 +1352,3 @@ int bFile::getNextBlock(bChunkInd *dataChunk,  const char *dataPtr, const int fl
 
 
 //eof
-

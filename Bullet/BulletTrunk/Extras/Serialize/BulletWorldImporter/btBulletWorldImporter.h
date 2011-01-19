@@ -43,6 +43,7 @@ class btPoint2PointConstraint;
 class btHingeConstraint;
 class btConeTwistConstraint;
 class btGeneric6DofConstraint;
+class btGeneric6DofSpringConstraint;
 class btSliderConstraint;
 
 
@@ -72,6 +73,12 @@ protected:
 	btAlignedObjectArray<btTriangleIndexVertexArray*> m_allocatedTriangleIndexArrays;
 	btAlignedObjectArray<char*>				m_allocatedNames;
 
+	btAlignedObjectArray<int*>				m_indexArrays;
+	btAlignedObjectArray<short int*>		m_shortIndexArrays;
+	btAlignedObjectArray<btVector3FloatData*>	m_floatVertexArrays;
+	btAlignedObjectArray<btVector3DoubleData*>	m_doubleVertexArrays;
+
+
 	btHashMap<btHashPtr,btOptimizedBvh*>	m_bvhMap;
 	btHashMap<btHashPtr,btTriangleInfoMap*>	m_timMap;
 	
@@ -80,9 +87,13 @@ protected:
 	btHashMap<btHashString,btTypedConstraint*>	m_nameConstraintMap;
 	btHashMap<btHashPtr,const char*>	m_objectNameMap;
 
+	btHashMap<btHashPtr,btCollisionShape*>	m_shapeMap;
+	btHashMap<btHashPtr,btCollisionObject*>	m_bodyMap;
+
+
 	//methods
 
-	btTriangleIndexVertexArray* createMeshInterface(btStridingMeshInterfaceData& meshData);
+	
 
 	static btRigidBody& getFixedBody();
 
@@ -96,7 +107,7 @@ public:
 
 	///delete all memory collision shapes, rigid bodies, constraints etc. allocated during the load.
 	///make sure you don't use the dynamics world containing objects after you call this method
-	void deleteAllData();
+	virtual void deleteAllData();
 
 	bool	loadFile(const char* fileName);
 
@@ -104,6 +115,9 @@ public:
 	bool	loadFileFromMemory(char *memoryBuffer, int len);
 
 	bool	loadFileFromMemory(bParse::btBulletFile* file);
+
+	//call make sure bulletFile2 has been parsed, either using btBulletFile::parse or btBulletWorldImporter::loadFileFromMemory
+	virtual	bool	convertAllObjects(bParse::btBulletFile* file);
 
 	void	setVerboseMode(bool verboseDumpAllTypes)
 	{
@@ -157,6 +171,7 @@ public:
 	virtual btGImpactMeshShape* createGimpactShape(btStridingMeshInterface* trimesh);
 	virtual class btConvexHullShape* createConvexHullShape();
 	virtual class btCompoundShape* createCompoundShape();
+	virtual btTriangleIndexVertexArray* createMeshInterface(btStridingMeshInterfaceData& meshData);
 
 	///acceleration and connectivity structures
 	virtual btOptimizedBvh*	createOptimizedBvh();
@@ -171,6 +186,7 @@ public:
 	virtual btConeTwistConstraint* createConeTwistConstraint(btRigidBody& rbA,const btTransform& rbAFrame);
 	virtual btGeneric6DofConstraint* createGeneric6DofConstraint(btRigidBody& rbA, btRigidBody& rbB, const btTransform& frameInA, const btTransform& frameInB ,bool useLinearReferenceFrameA);
     virtual btGeneric6DofConstraint* createGeneric6DofConstraint(btRigidBody& rbB, const btTransform& frameInB, bool useLinearReferenceFrameB);
+	virtual btGeneric6DofSpringConstraint* createGeneric6DofSpringConstraint(btRigidBody& rbA, btRigidBody& rbB, const btTransform& frameInA, const btTransform& frameInB ,bool useLinearReferenceFrameA);
 	virtual btSliderConstraint* createSliderConstraint(btRigidBody& rbA, btRigidBody& rbB, const btTransform& frameInA, const btTransform& frameInB ,bool useLinearReferenceFrameA);
     virtual btSliderConstraint* createSliderConstraint(btRigidBody& rbB, const btTransform& frameInB, bool useLinearReferenceFrameA);
 

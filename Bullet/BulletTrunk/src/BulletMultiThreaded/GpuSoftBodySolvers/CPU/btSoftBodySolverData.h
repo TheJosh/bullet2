@@ -457,7 +457,7 @@ public:
 		m_vertexArea.resize( newSize );
 		m_vertexTriangleCount.resize( newSize );
 
-		for( int vertexIndex = previousSize; vertexIndex < (previousSize + numVertices); ++vertexIndex )
+		for( int vertexIndex = previousSize; vertexIndex < newSize; ++vertexIndex )
 			m_clothIdentifier[vertexIndex] = clothIdentifier;
 		for( int vertexIndex = (previousSize + numVertices); vertexIndex < newSize; ++vertexIndex )
 			m_clothIdentifier[vertexIndex] = -1;
@@ -485,7 +485,6 @@ public:
 	{
 		return m_vertexPreviousPosition[vertexIndex];
 	}
-
 
 	/**
 	 * Return a reference to the velocity of vertex vertexIndex as stored on the host.
@@ -742,3 +741,4 @@ public:
 
 
 #endif // #ifndef BT_SOFT_BODY_SOLVER_DATA_H
+
