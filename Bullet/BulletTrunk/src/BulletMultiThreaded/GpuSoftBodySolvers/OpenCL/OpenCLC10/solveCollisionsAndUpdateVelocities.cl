@@ -87,7 +87,9 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 		float velocityCoefficient = (1.f - dampingFactor);		
 		CollisionObjectIndices collisionObjectIndices = g_perClothCollisionObjectIndices[clothIdentifier];
 	
-		if( collisionObjectIndices.firstObject != collisionObjectIndices.endObject )
+	int numObjects = collisionObjectIndices.endObject - collisionObjectIndices.firstObject;
+
+		if( numObjects > 0 )
 		{
 			velocity = (float4)(0, 0, 0, 0);
 

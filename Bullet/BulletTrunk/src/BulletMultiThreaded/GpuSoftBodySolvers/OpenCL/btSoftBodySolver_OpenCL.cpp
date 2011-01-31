@@ -1432,7 +1432,6 @@ void btOpenCLSoftBodySolver::computeBounds( )
 	}
 } // btOpenCLSoftBodySolver::computeBounds
 
-#include <iostream>
 void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
 {
 
@@ -1443,7 +1442,6 @@ void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt
 	m_clPerClothCollisionObjects.moveToGPU();
 	m_clCollisionObjectDetails.moveToGPU();
 
-	
 
 	cl_int ciErrNum;
 	int numVerts = m_vertexData.getNumVertices();

@@ -414,6 +414,11 @@ void btOpenCLSoftBodySolverSIMDAware::solveConstraints( float solverdt )
 	m_linkData.moveToAccelerator();
 	m_vertexData.moveToAccelerator();
 
+	
+	//prepareLinks();	
+
+	prepareCollisionConstraints();
+
 	// Solve drift
 	for( int iteration = 0; iteration < m_numberOfPositionIterations ; ++iteration )
 	{
@@ -478,7 +483,7 @@ void btOpenCLSoftBodySolverSIMDAware::solveCollisionsAndUpdateVelocities( float 
 	m_clPerClothDampingFactor.moveToGPU();
 	m_clPerClothCollisionObjects.moveToGPU();
 	m_clCollisionObjectDetails.moveToGPU();
-
+	
 	cl_int ciErrNum;
 	int numVerts = m_vertexData.getNumVertices();
 	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 0, sizeof(int), &numVerts);
