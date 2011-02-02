@@ -2762,12 +2762,18 @@ void				btSoftBody::PSolve_Anchors(btSoftBody* psb,btScalar kst,btScalar ti)
 		const btTransform&	t=a.m_body->getWorldTransform();
 		Node&				n=*a.m_node;
 		const btVector3		wa=t*a.m_local;
-		const btVector3		va=a.m_body->getVelocityInLocalPoint(a.m_c1)*dt;
-		const btVector3		vb=n.m_x-n.m_q;
-		const btVector3		vr=(va-vb)+(wa-n.m_x)*kAHR;
-		const btVector3		impulse=a.m_c0*vr;
-		n.m_x+=impulse*a.m_c2;
-		a.m_body->applyImpulse(-impulse,a.m_c1);
+		if (a.m_body->isStaticOrKinematicObject())
+		{
+			n.m_x=wa;
+		} else
+		{
+			const btVector3		va=a.m_body->getVelocityInLocalPoint(a.m_c1)*dt;
+			const btVector3		vb=n.m_x-n.m_q;
+			const btVector3		vr=(va-vb)+(wa-n.m_x)*kAHR;
+			const btVector3		impulse=a.m_c0*vr;
+			n.m_x+=impulse*a.m_c2;
+			a.m_body->applyImpulse(-impulse,a.m_c1);
+		}
 	}
 }
 
@@ -2844,10 +2850,12 @@ void				btSoftBody::PSolve_Links(btSoftBody* psb,btScalar kst,btScalar ti)
 			Node&			b=*l.m_n[1];
 			const btVector3	del=b.m_x-a.m_x;
 			const btScalar	len=del.length2();
-			const btScalar	k=((l.m_c1-len)/(l.m_c0*(l.m_c1+len)))*kst;
-			//const btScalar	t=k*a.m_im;
-			a.m_x-=del*(k*a.m_im);
-			b.m_x+=del*(k*b.m_im);
+			if (l.m_c1+len > SIMD_EPSILON)
+			{
+				const btScalar	k=((l.m_c1-len)/(l.m_c0*(l.m_c1+len)))*kst;
+				a.m_x-=del*(k*a.m_im);
+				b.m_x+=del*(k*b.m_im);
+			}
 		}
 	}
 }
