@@ -650,9 +650,9 @@ void btDX11SoftBodySolver::copyBackToSoftBodies()
 } // btDX11SoftBodySolver::copyBackToSoftBodies
 
 
-void btDX11SoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies )
+void btDX11SoftBodySolver::optimize( btAlignedObjectArray< btSoftBody * > &softBodies, bool forceUpdate )
 {
-	if( m_softBodySet.size() != softBodies.size() )
+	if( forceUpdate || m_softBodySet.size() != softBodies.size() )
 	{
 		// Have a change in the soft body set so update, reloading all the data
 		getVertexData().clear();
