@@ -20,7 +20,8 @@ float mydot3(float4 a, float4 b)
    return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
-__kernel void 
+__kernel __attribute__((reqd_work_group_size(WAVEFRONT_BLOCK_MULTIPLIER*WAVEFRONT_SIZE, 1, 1)))
+void 
 SolvePositionsFromLinksKernel( 
 	const int startWaveInBatch,
 	const int numWaves,
@@ -54,7 +55,7 @@ SolvePositionsFromLinksKernel(
 		}
 
 		
-		mem_fence(CLK_LOCAL_MEM_FENCE);
+		barrier(CLK_LOCAL_MEM_FENCE);
 		
 
 		int2 batchesAndVerticesWithinWavefront = wavefrontBatchCountsVertexCounts[localWavefront];
@@ -70,7 +71,7 @@ SolvePositionsFromLinksKernel(
 			vertexInverseMassSharedData[localWavefront*MAX_NUM_VERTICES_PER_WAVE + vertex] = g_verticesInverseMass[vertexAddress];
 		}
 		
-		mem_fence(CLK_LOCAL_MEM_FENCE);
+		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// Loop through the batches performing the solve on each in LDS
 		int baseDataLocationForWave = WAVEFRONT_SIZE * wavefront * MAX_BATCHES_PER_WAVE;	
@@ -112,13 +113,13 @@ SolvePositionsFromLinksKernel(
 			position1 = position1 + del*(k*inverseMass1);
 			
 			// Ensure compiler does not re-order memory operations
-			mem_fence(CLK_LOCAL_MEM_FENCE);
+			barrier(CLK_LOCAL_MEM_FENCE);
 
 			vertexPositionSharedData[vertexAddress0] = position0;
 			vertexPositionSharedData[vertexAddress1] = position1;
 			
 			// Ensure compiler does not re-order memory operations
-			mem_fence(CLK_LOCAL_MEM_FENCE);
+			barrier(CLK_LOCAL_MEM_FENCE);
 				
 			
 			++batch;
