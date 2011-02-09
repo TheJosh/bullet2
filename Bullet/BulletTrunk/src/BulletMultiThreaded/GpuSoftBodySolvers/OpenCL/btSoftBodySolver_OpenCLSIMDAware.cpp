@@ -463,7 +463,7 @@ void btOpenCLSoftBodySolverSIMDAware::solveLinksForPosition( int startWave, int 
 	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,12, m_linkData.getMaxVerticesPerWavefront()*WAVEFRONT_BLOCK_MULTIPLIER*sizeof(cl_float4), 0);
 	ciErrNum = clSetKernelArg(solvePositionsFromLinksKernel,13, m_linkData.getMaxVerticesPerWavefront()*WAVEFRONT_BLOCK_MULTIPLIER*sizeof(cl_float), 0);
 
-	size_t	numWorkItems = workGroupSize*((numWaves*WAVEFRONT_SIZE*WAVEFRONT_BLOCK_MULTIPLIER + (workGroupSize-1)) / workGroupSize);
+	size_t	numWorkItems = workGroupSize*((numWaves*WAVEFRONT_SIZE + (workGroupSize-1)) / workGroupSize);
 	
 	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solvePositionsFromLinksKernel,1,NULL,&numWorkItems,&workGroupSize,0,0,0);
 	

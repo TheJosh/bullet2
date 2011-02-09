@@ -44,7 +44,7 @@ const int numFlags = 5;
 const int clothWidth = 40;//40;
 const int clothHeight = 60;//60;
 float _windAngle = 1.0;//0.4;
-float _windStrength = 0;//15;
+float _windStrength = 15;
 
 
 //#define TABLETEST

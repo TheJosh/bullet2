@@ -82,13 +82,14 @@ void	btSoftRigidDynamicsWorld::predictUnconstraintMotion(btScalar timeStep)
 
 void	btSoftRigidDynamicsWorld::internalSingleStepSimulation( btScalar timeStep )
 {
+
+	// Let the solver grab the soft bodies and if necessary optimize for it
+	m_softBodySolver->optimize( getSoftBodyArray() );
+
 	if( !m_softBodySolver->checkInitialized() )
 	{
 		btAssert( "Solver initialization failed\n" );
 	}
-
-	// Let the solver grab the soft bodies and if necessary optimize for it
-	m_softBodySolver->optimize( getSoftBodyArray() );
 
 	btDiscreteDynamicsWorld::internalSingleStepSimulation( timeStep );
 
