@@ -889,6 +889,11 @@ void btSoftBodySolverOutputCPUtoCPU::copySoftBodyToVertexBuffer( const btSoftBod
 	}
 } // btCPUSoftBodySolver::outputToVertexBuffers
 
+void btCPUSoftBodySolver::processCollision( btSoftBody*, btSoftBody *)
+{
+
+}
+
 // Add the collision object to the set to deal with for a particular soft body
 void btCPUSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
 {

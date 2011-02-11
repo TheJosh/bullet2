@@ -600,6 +600,8 @@ public:
 	
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
+	virtual void processCollision( btSoftBody*, btSoftBody* );
+
 };
 
 

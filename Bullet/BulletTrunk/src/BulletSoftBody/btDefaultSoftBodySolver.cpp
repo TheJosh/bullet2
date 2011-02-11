@@ -124,6 +124,11 @@ void btDefaultSoftBodySolver::copySoftBodyToVertexBuffer( const btSoftBody *cons
 	}
 } // btDefaultSoftBodySolver::copySoftBodyToVertexBuffer
 
+void btDefaultSoftBodySolver::processCollision( btSoftBody* softBody, btSoftBody* otherSoftBody)
+{
+	softBody->defaultCollisionHandler( otherSoftBody);
+}
+
 // For the default solver just leave the soft body to do its collision processing
 void btDefaultSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
 {

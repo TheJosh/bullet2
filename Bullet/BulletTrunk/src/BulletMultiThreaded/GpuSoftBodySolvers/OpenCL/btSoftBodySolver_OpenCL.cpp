@@ -850,11 +850,15 @@ void btOpenCLSoftBodySolver::resetNormalsAndAreas( int numVertices )
 	ciErrNum = clSetKernelArg(resetNormalsAndAreasKernel, 1, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexNormal.m_buffer);//oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	ciErrNum = clSetKernelArg(resetNormalsAndAreasKernel,  2, sizeof(cl_mem), (void*)&m_vertexData.m_clVertexArea.m_buffer); //oclCHECKERROR(ciErrNum, CL_SUCCESS);
 	size_t numWorkItems = m_defaultWorkGroupSize*((numVertices + (m_defaultWorkGroupSize-1)) / m_defaultWorkGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, resetNormalsAndAreasKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize, 0,0,0 );
 
-	if( ciErrNum != CL_SUCCESS )
+	if (numWorkItems)
 	{
-		btAssert( 0 && "enqueueNDRangeKernel(resetNormalsAndAreasKernel)" );
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, resetNormalsAndAreasKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize, 0,0,0 );
+
+		if( ciErrNum != CL_SUCCESS )
+		{
+			btAssert( 0 && "enqueueNDRangeKernel(resetNormalsAndAreasKernel)" );
+		}
 	}
 
 }
@@ -869,10 +873,13 @@ void btOpenCLSoftBodySolver::normalizeNormalsAndAreas( int numVertices )
 	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 2, sizeof(cl_mem), &m_vertexData.m_clVertexNormal.m_buffer);
 	ciErrNum = clSetKernelArg(normalizeNormalsAndAreasKernel, 3, sizeof(cl_mem), &m_vertexData.m_clVertexArea.m_buffer);
 	size_t	numWorkItems = m_defaultWorkGroupSize*((numVertices + (m_defaultWorkGroupSize-1)) / m_defaultWorkGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, normalizeNormalsAndAreasKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize, 0,0,0);
-	if( ciErrNum != CL_SUCCESS ) 
+	if (numWorkItems)
 	{
-		btAssert( 0 && "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue, normalizeNormalsAndAreasKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize, 0,0,0);
+		if( ciErrNum != CL_SUCCESS ) 
+		{
+			btAssert( 0 && "enqueueNDRangeKernel(normalizeNormalsAndAreasKernel)");
+		}
 	}
 
 }
@@ -974,10 +981,13 @@ void btOpenCLSoftBodySolver::applyForces( float solverdt )
 	ciErrNum = clSetKernelArg(applyForcesKernel,12, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
 	ciErrNum = clSetKernelArg(applyForcesKernel,13, sizeof(cl_mem), &m_vertexData.m_clVertexVelocity.m_buffer);
 	size_t numWorkItems = m_defaultWorkGroupSize*((m_vertexData.getNumVertices() + (m_defaultWorkGroupSize-1)) / m_defaultWorkGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,applyForcesKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize, 0,0,0);
-	if( ciErrNum != CL_SUCCESS ) 
+	if (numWorkItems)
 	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(applyForcesKernel)");
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,applyForcesKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize, 0,0,0);
+		if( ciErrNum != CL_SUCCESS ) 
+		{
+			btAssert( 0 &&  "enqueueNDRangeKernel(applyForcesKernel)");
+		}
 	}
 
 }
@@ -1003,10 +1013,13 @@ void btOpenCLSoftBodySolver::integrate( float solverdt )
 	ciErrNum = clSetKernelArg(integrateKernel, 6, sizeof(cl_mem), &m_vertexData.m_clVertexForceAccumulator.m_buffer);
 
 	size_t numWorkItems = m_defaultWorkGroupSize*((m_vertexData.getNumVertices() + (m_defaultWorkGroupSize-1)) / m_defaultWorkGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,integrateKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize,0,0,0);
-	if( ciErrNum != CL_SUCCESS )
+	if (numWorkItems)
 	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(integrateKernel)");
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,integrateKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize,0,0,0);
+		if( ciErrNum != CL_SUCCESS )
+		{
+			btAssert( 0 &&  "enqueueNDRangeKernel(integrateKernel)");
+		}
 	}
 
 }
@@ -1167,6 +1180,9 @@ void btOpenCLSoftBodySolver::prepareCollisionConstraints()
 
 	
 	m_collisionObjectDetails.quickSort( QuickSortCompare() );
+
+	if (!m_perClothCollisionObjects.size())
+		return;
 
 	// Generating indexing for perClothCollisionObjects
 	// First clear the previous values with the "no collision object for cloth" constant
@@ -1425,10 +1441,13 @@ void btOpenCLSoftBodySolver::computeBounds( )
 	ciErrNum = clSetKernelArg(computeBoundsKernel, 7, sizeof(cl_uint4)*256,0);
 
 	size_t	numWorkItems = m_defaultWorkGroupSize*((m_vertexData.getNumVertices() + (m_defaultWorkGroupSize-1)) / m_defaultWorkGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,computeBoundsKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize,0,0,0);
-	if( ciErrNum != CL_SUCCESS ) 
+	if (numWorkItems)
 	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(computeBoundsKernel)");
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,computeBoundsKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize,0,0,0);
+		if( ciErrNum != CL_SUCCESS ) 
+		{
+			btAssert( 0 &&  "enqueueNDRangeKernel(computeBoundsKernel)");
+		}
 	}
 } // btOpenCLSoftBodySolver::computeBounds
 
@@ -1458,10 +1477,13 @@ void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt
 	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 10, sizeof(cl_mem),&m_vertexData.m_clVertexPosition.m_buffer);
 
 	size_t	numWorkItems = m_defaultWorkGroupSize*((m_vertexData.getNumVertices() + (m_defaultWorkGroupSize-1)) / m_defaultWorkGroupSize);
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solveCollisionsAndUpdateVelocitiesKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize,0,0,0);
-	if( ciErrNum != CL_SUCCESS ) 
+	if (numWorkItems)
 	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solveCollisionsAndUpdateVelocitiesKernel, 1, NULL, &numWorkItems, &m_defaultWorkGroupSize,0,0,0);
+		if( ciErrNum != CL_SUCCESS ) 
+		{
+			btAssert( 0 &&  "enqueueNDRangeKernel(updateVelocitiesFromPositionsWithoutVelocitiesKernel)");
+		}
 	}
 
 } // btOpenCLSoftBodySolver::updateVelocitiesFromPositionsWithoutVelocities
@@ -1656,6 +1678,10 @@ void btOpenCLAcceleratedSoftBodyInterface::updateBounds( const btVector3 &lowerB
 	m_softBody->m_bounds[1] = upperBound + vectorMargin;
 }  // btOpenCLSoftBodySolver::btDX11AcceleratedSoftBodyInterface::updateBounds
 
+void btOpenCLSoftBodySolver::processCollision( btSoftBody*, btSoftBody* )
+{
+
+}
 
 // Add the collision object to the set to deal with for a particular soft body
 void btOpenCLSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )

@@ -471,6 +471,8 @@ public:
 
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
+	virtual void processCollision( btSoftBody*, btSoftBody* );
+
 	virtual void	setDefaultWorkgroupSize(size_t workGroupSize)
 	{
 		m_defaultWorkGroupSize = workGroupSize;

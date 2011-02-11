@@ -500,11 +500,14 @@ void btOpenCLSoftBodySolverSIMDAware::solveCollisionsAndUpdateVelocities( float 
 	ciErrNum = clSetKernelArg(solveCollisionsAndUpdateVelocitiesKernel, 11, sizeof(CollisionShapeDescription)*16,0);
 	size_t	numWorkItems = workGroupSize*((m_vertexData.getNumVertices() + (workGroupSize-1)) / workGroupSize);
 	
-	ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solveCollisionsAndUpdateVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
-	
-	if( ciErrNum != CL_SUCCESS ) 
+	if (numWorkItems)
 	{
-		btAssert( 0 &&  "enqueueNDRangeKernel(solveCollisionsAndUpdateVelocitiesKernel)");
+		ciErrNum = clEnqueueNDRangeKernel(m_cqCommandQue,solveCollisionsAndUpdateVelocitiesKernel, 1, NULL, &numWorkItems, &workGroupSize,0,0,0);
+		
+		if( ciErrNum != CL_SUCCESS ) 
+		{
+			btAssert( 0 &&  "enqueueNDRangeKernel(solveCollisionsAndUpdateVelocitiesKernel)");
+		}
 	}
 
 } // btOpenCLSoftBodySolverSIMDAware::updateVelocitiesFromPositionsWithoutVelocities

@@ -2131,6 +2131,11 @@ void btDX11SoftBodySolver::btAcceleratedSoftBodyInterface::updateBounds( const b
 	m_softBody->m_bounds[1] = upperBound + vectorMargin;
 }
 
+void btDX11SoftBodySolver::processCollision( btSoftBody*, btSoftBody* )
+{
+
+}
+
 // Add the collision object to the set to deal with for a particular soft body
 void btDX11SoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
 {

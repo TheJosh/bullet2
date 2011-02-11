@@ -56,6 +56,8 @@ public:
 
 	virtual void processCollision( btSoftBody *, btCollisionObject* );
 
+	virtual void processCollision( btSoftBody*, btSoftBody* );
+
 };
 
 #endif // #ifndef BT_ACCELERATED_SOFT_BODY_CPU_SOLVER_H
