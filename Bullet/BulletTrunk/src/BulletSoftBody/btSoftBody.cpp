@@ -2762,18 +2762,12 @@ void				btSoftBody::PSolve_Anchors(btSoftBody* psb,btScalar kst,btScalar ti)
 		const btTransform&	t=a.m_body->getWorldTransform();
 		Node&				n=*a.m_node;
 		const btVector3		wa=t*a.m_local;
-		if (a.m_body->isStaticOrKinematicObject())
-		{
-			n.m_x=wa;
-		} else
-		{
-			const btVector3		va=a.m_body->getVelocityInLocalPoint(a.m_c1)*dt;
-			const btVector3		vb=n.m_x-n.m_q;
-			const btVector3		vr=(va-vb)+(wa-n.m_x)*kAHR;
-			const btVector3		impulse=a.m_c0*vr;
-			n.m_x+=impulse*a.m_c2;
-			a.m_body->applyImpulse(-impulse,a.m_c1);
-		}
+		const btVector3		va=a.m_body->getVelocityInLocalPoint(a.m_c1)*dt;
+		const btVector3		vb=n.m_x-n.m_q;
+		const btVector3		vr=(va-vb)+(wa-n.m_x)*kAHR;
+		const btVector3		impulse=a.m_c0*vr;
+		n.m_x+=impulse*a.m_c2;
+		a.m_body->applyImpulse(-impulse,a.m_c1);
 	}
 }
 
@@ -2916,7 +2910,7 @@ void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 		{
 			btSoftColliders::CollideSDF_RS	docollide;		
 			btRigidBody*		prb1=btRigidBody::upcast(pco);
-			btTransform	wtr=prb1 ? prb1->getInterpolationWorldTransform() : pco->getWorldTransform();
+			btTransform	wtr=pco->getWorldTransform();
 
 			const btTransform	ctr=pco->getWorldTransform();
 			const btScalar		timemargin=(wtr.getOrigin()-ctr.getOrigin()).length();
@@ -2924,7 +2918,7 @@ void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 			btVector3			mins;
 			btVector3			maxs;
 			ATTRIBUTE_ALIGNED16(btDbvtVolume)		volume;
-			pco->getCollisionShape()->getAabb(	pco->getInterpolationWorldTransform(),
+			pco->getCollisionShape()->getAabb(	pco->getWorldTransform(),
 				mins,
 				maxs);
 			volume=btDbvtVolume::FromMM(mins,maxs);
