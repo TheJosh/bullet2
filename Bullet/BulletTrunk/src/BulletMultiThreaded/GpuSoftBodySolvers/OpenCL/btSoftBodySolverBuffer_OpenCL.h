@@ -95,6 +95,7 @@ public:
 
 	~btOpenCLBuffer()
 	{
+		clReleaseMemObject(m_buffer);
 	}
 
 
