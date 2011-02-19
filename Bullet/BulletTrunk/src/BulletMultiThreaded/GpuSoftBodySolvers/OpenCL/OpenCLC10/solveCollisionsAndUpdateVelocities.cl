@@ -81,18 +81,19 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 
 		float4 position = (float4)(g_vertexPositions[nodeID].xyz, 1.f);
 		float4 previousPosition = (float4)(g_vertexPreviousPositions[nodeID].xyz, 1.f);
-		float4 velocity;
+			
 		float clothFriction = g_perClothFriction[clothIdentifier];
 		float dampingFactor = g_clothDampingFactor[clothIdentifier];
 		float velocityCoefficient = (1.f - dampingFactor);		
+		float4 difference = position - previousPosition;
+		float4 velocity = difference*velocityCoefficient*isolverdt;
+		
 		CollisionObjectIndices collisionObjectIndices = g_perClothCollisionObjectIndices[clothIdentifier];
 	
-	int numObjects = collisionObjectIndices.endObject - collisionObjectIndices.firstObject;
+		int numObjects = collisionObjectIndices.endObject - collisionObjectIndices.firstObject;
 
 		if( numObjects > 0 )
 		{
-			velocity = (float4)(0, 0, 0, 0);
-
 			// We have some possible collisions to deal with
 			for( int collision = collisionObjectIndices.firstObject; collision < collisionObjectIndices.endObject; ++collision )
 			{
@@ -174,13 +175,8 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 						if( approachSpeed <= 0.0f )
 							forceOnVertex -= frictionVector;
 					}
-					
 				}
 			}
-		} else {
-			// Update velocity	
-			float4 difference = position - previousPosition;
-			velocity = difference*velocityCoefficient*isolverdt;			
 		}
 
 		g_vertexVelocities[nodeID] = (float4)(velocity.xyz, 0.f);	

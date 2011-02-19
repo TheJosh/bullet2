@@ -754,6 +754,9 @@ static void computeBatchingIntoWavefronts(
 
 	generateLinksPerVertex( numVertices, linkData, listOfLinksPerVertex, numLinksPerVertex, maxLinksPerVertex );
 
+	if (!numVertices)
+		return;
+
 	for( int vertex = 0; vertex < 10; ++vertex )
 	{
 		for( int link = 0; link < numLinksPerVertex[vertex]; ++link )

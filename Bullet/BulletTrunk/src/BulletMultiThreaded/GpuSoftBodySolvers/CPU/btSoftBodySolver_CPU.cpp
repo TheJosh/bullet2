@@ -478,7 +478,8 @@ void btCPUSoftBodySolver::prepareCollisionConstraints()
 	numObjectsPerCloth.resize( m_softBodySet.size(), 0 );
 	numObjectsPerClothPrefixSum.resize( m_softBodySet.size(), 0 );
 
-
+	if (!m_perClothCollisionObjects.size())
+		return;
 
 	m_collisionObjectDetails.quickSort( btCPUSB_QuickSortCompare() );
 
