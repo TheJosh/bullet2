@@ -80,10 +80,13 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 
 	float4 position = (float4)(g_vertexPositions[nodeID].xyz, 1.f);
 	float4 previousPosition = (float4)(g_vertexPreviousPositions[nodeID].xyz, 1.f);
-	float4 velocity;
 	float clothFriction = g_perClothFriction[clothIdentifier];
 	float dampingFactor = g_clothDampingFactor[clothIdentifier];
 	float velocityCoefficient = (1.f - dampingFactor);		
+	
+	// Update velocity	
+	float4 difference = position - previousPosition;
+	float4 velocity = difference*velocityCoefficient*isolverdt;			
 	CollisionObjectIndices collisionObjectIndices = g_perClothCollisionObjectIndices[clothIdentifier];
 	
 	int numObjects = collisionObjectIndices.endObject - collisionObjectIndices.firstObject;
@@ -105,7 +108,6 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 	// Annoyingly, even though I know the flow control is not varying, the compiler will not let me skip this
 	if( numObjects > 0 )
 	{
-		velocity = (float4)(0, 0, 0, 0);
 		
 		
 		// We have some possible collisions to deal with
@@ -193,10 +195,6 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 					
 			}
 		}
-	} else {
-		// Update velocity	
-		float4 difference = position - previousPosition;
-		velocity = difference*velocityCoefficient*isolverdt;			
 	}
 	
 	g_vertexVelocities[nodeID] = (float4)(velocity.xyz, 0.f);	
