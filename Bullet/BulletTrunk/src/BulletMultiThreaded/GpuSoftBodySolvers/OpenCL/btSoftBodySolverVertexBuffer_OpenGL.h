@@ -31,10 +31,6 @@ subject to the following restrictions:
 #include <CL/cl_gl.h>
 #endif //USE_MINICL
 
-#ifdef _WIN32
-#include <GL/glew.h>
-#endif
-
 
 #ifdef _WIN32//for glut.h
 #include <windows.h>
