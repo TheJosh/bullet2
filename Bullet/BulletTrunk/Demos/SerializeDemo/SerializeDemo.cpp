@@ -49,11 +49,64 @@ subject to the following restrictions:
 #include <stdio.h> //printf debugging
 
 
+#include "GLDebugDrawer.h"
+GLDebugDrawer	gDebugDrawer;
 
 #ifdef DESERIALIZE_SOFT_BODIES
 #include "BulletSoftBody/btSoftBodyHelpers.h"
 #include "BulletSoftBody/btSoftRigidDynamicsWorld.h"
 #include "BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h"
+
+#ifdef USE_AMD_OPENCL
+
+#include "btOclCommon.h"
+#include "btOclUtils.h"
+#include <LinearMath/btScalar.h>
+
+#include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCL.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCLSIMDAware.h"
+#include "BulletMultiThreaded/GpuSoftBodySolvers/CPU/btSoftBodySolver_CPU.h"
+
+cl_context			g_cxMainContext;
+cl_device_id		g_cdDevice;
+cl_command_queue	g_cqCommandQue;
+btSoftBodySolver* sbsolver = 0;
+
+void initCL( void* glCtx, void* glDC )
+{
+	int ciErrNum = 0;
+
+#if defined(CL_PLATFORM_MINI_CL)
+	cl_device_type deviceType = CL_DEVICE_TYPE_CPU;
+#elif defined(CL_PLATFORM_AMD)
+	cl_device_type deviceType = CL_DEVICE_TYPE_GPU;
+#elif defined(CL_PLATFORM_NVIDIA)
+	cl_device_type deviceType = CL_DEVICE_TYPE_GPU;
+#else
+	cl_device_type deviceType = CL_DEVICE_TYPE_CPU;
+#endif
+
+    //g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_ALL, &ciErrNum);
+	//g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_GPU, &ciErrNum);
+	//g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_CPU, &ciErrNum);
+	//try CL_DEVICE_TYPE_DEBUG for sequential, non-threaded execution, when using MiniCL on CPU, it gives a full callstack at the crash in the kernel
+//#ifdef USE_MINICL
+//	g_cxMainContext = btOclCommon::createContextFromType(CL_DEVICE_TYPE_DEBUG, &ciErrNum);
+//#else
+	g_cxMainContext = btOclCommon::createContextFromType(deviceType, &ciErrNum, (intptr_t)glCtx, (intptr_t)glDC);
+//#endif
+	
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+	g_cdDevice = btOclGetMaxFlopsDev(g_cxMainContext);
+	
+	btOclPrintDevInfo(g_cdDevice);
+
+	// create a command-queue
+	g_cqCommandQue = clCreateCommandQueue(g_cxMainContext, g_cdDevice, 0, &ciErrNum);
+	oclCHECKERROR(ciErrNum, CL_SUCCESS);
+}
+
+#endif //#ifdef USE_AMD_OPENCL
 #endif
 
 
@@ -69,10 +122,13 @@ void SerializeDemo::clientMoveAndDisplay()
 	{
 		
 		m_dynamicsWorld->stepSimulation(ms / 1000000.f);
+		if (sbsolver)
+			sbsolver->copyBackToSoftBodies();
 		//optional but useful: debug drawing
 		m_dynamicsWorld->debugDrawWorld();
 	}
-		
+	
+
 	renderme(); 
 
 	glFlush();
@@ -98,10 +154,10 @@ void SerializeDemo::displayCallback(void) {
 }
 
 
-
-
 void	SerializeDemo::setupEmptyDynamicsWorld()
 {
+	initCL(0,0);
+
 	///collision configuration contains default setup for memory, collision setup
 	//m_collisionConfiguration = new btDefaultCollisionConfiguration();
 #ifdef DESERIALIZE_SOFT_BODIES
@@ -123,8 +179,21 @@ void	SerializeDemo::setupEmptyDynamicsWorld()
 	m_solver = sol;
 
 #ifdef DESERIALIZE_SOFT_BODIES
-	btSoftRigidDynamicsWorld* world = new btSoftRigidDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
+	static bool toggleSolver = 0;
+	toggleSolver = 1 - toggleSolver;
+	if (toggleSolver)
+	{
+		sbsolver = new btOpenCLSoftBodySolverSIMDAware( g_cqCommandQue, g_cxMainContext);
+		//sbsolver = new btOpenCLSoftBodySolver( g_cqCommandQue, g_cxMainContext);
+		//sbsolver =  new btCPUSoftBodySolver( );
+	}
+	//sbsolver = new btCPUSoftBodySolver();
+	
+	btSoftRigidDynamicsWorld* world = new btSoftRigidDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration,sbsolver);
 	m_dynamicsWorld = world;
+
+	world->setDebugDrawer(&gDebugDrawer);
+
 	//world->setDrawFlags(world->getDrawFlags()^fDrawFlags::Clusters);
 #else
 	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher,m_broadphase,m_solver,m_collisionConfiguration);
@@ -501,6 +570,8 @@ public:
 };
 #endif //DESERIALIZE_SOFT_BODIES
 
+btBulletWorldImporter* fileLoader=0;
+
 
 void	SerializeDemo::initPhysics()
 {
@@ -519,133 +590,21 @@ void	SerializeDemo::initPhysics()
 //	fileLoader->setVerboseMode(true);
 
 	if (!fileLoader->loadFile("testFile.bullet"))
-//	if (!fileLoader->loadFile("../SoftDemo/testFile.bullet"))
 	{
-		///create a few basic rigid bodies and save them to testFile.bullet
-		btCollisionShape* groundShape = new btBoxShape(btVector3(btScalar(50.),btScalar(50.),btScalar(50.)));
-	//	btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),50);
-		btCollisionObject* groundObject = 0;
-
-		
-		m_collisionShapes.push_back(groundShape);
-
-		btTransform groundTransform;
-		groundTransform.setIdentity();
-		groundTransform.setOrigin(btVector3(0,-50,0));
-
-		//We can also use DemoApplication::localCreateRigidBody, but for clarity it is provided here:
-		{
-			btScalar mass(0.);
-
-			//rigidbody is dynamic if and only if mass is non zero, otherwise static
-			bool isDynamic = (mass != 0.f);
-
-			btVector3 localInertia(0,0,0);
-			if (isDynamic)
-				groundShape->calculateLocalInertia(mass,localInertia);
-
-			//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-			btDefaultMotionState* myMotionState = new btDefaultMotionState(groundTransform);
-			btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,groundShape,localInertia);
-			btRigidBody* body = new btRigidBody(rbInfo);
-
-			//add the body to the dynamics world
-			m_dynamicsWorld->addRigidBody(body);
-			groundObject = body;
-		}
-
-
-		{
-			//create a few dynamic rigidbodies
-			// Re-using the same collision is better for memory usage and performance
-
-			int numSpheres = 2;
-			btVector3 positions[2] = {btVector3(0.1f,0.2f,0.3f),btVector3(0.4f,0.5f,0.6f)};
-			btScalar	radii[2] = {0.3f,0.4f};
-
-			btMultiSphereShape* colShape = new btMultiSphereShape(positions,radii,numSpheres);
-
-			//btCollisionShape* colShape = new btCapsuleShapeZ(SCALING*1,SCALING*1);
-			//btCollisionShape* colShape = new btCylinderShapeZ(btVector3(SCALING*1,SCALING*1,SCALING*1));
-			//btCollisionShape* colShape = new btBoxShape(btVector3(SCALING*1,SCALING*1,SCALING*1));
-			//btCollisionShape* colShape = new btSphereShape(btScalar(1.));
-			m_collisionShapes.push_back(colShape);
-
-			/// Create Dynamic Objects
-			btTransform startTransform;
-			startTransform.setIdentity();
-
-			btScalar	mass(1.f);
-
-			//rigidbody is dynamic if and only if mass is non zero, otherwise static
-			bool isDynamic = (mass != 0.f);
-
-			btVector3 localInertia(0,0,0);
-			if (isDynamic)
-				colShape->calculateLocalInertia(mass,localInertia);
-
-			float start_x = START_POS_X - ARRAY_SIZE_X/2;
-			float start_y = START_POS_Y;
-			float start_z = START_POS_Z - ARRAY_SIZE_Z/2;
-
-			for (int k=0;k<ARRAY_SIZE_Y;k++)
-			{
-				for (int i=0;i<ARRAY_SIZE_X;i++)
-				{
-					for(int j = 0;j<ARRAY_SIZE_Z;j++)
-					{
-						startTransform.setOrigin(SCALING*btVector3(
-											btScalar(2.0*i + start_x),
-											btScalar(20+2.0*k + start_y),
-											btScalar(2.0*j + start_z)));
-
-				
-						//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-						btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-						btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,colShape,localInertia);
-						btRigidBody* body = new btRigidBody(rbInfo);
-						
-						body->setActivationState(ISLAND_SLEEPING);
-
-						m_dynamicsWorld->addRigidBody(body);
-						body->setActivationState(ISLAND_SLEEPING);
-					}
-				}
-			}
-		}
-
-		int maxSerializeBufferSize = 1024*1024*5;
-
-		btDefaultSerializer*	serializer = new btDefaultSerializer(maxSerializeBufferSize);
-
-		static char* groundName = "GroundName";
-		serializer->registerNameForPointer(groundObject, groundName);
-
-		for (int i=0;i<m_collisionShapes.size();i++)
-		{
-			char* name = new char[20];
-			
-			sprintf(name,"name%d",i);
-			serializer->registerNameForPointer(m_collisionShapes[i],name);
-		}
-
-		btPoint2PointConstraint* p2p = new btPoint2PointConstraint(*(btRigidBody*)getDynamicsWorld()->getCollisionObjectArray()[2],btVector3(0,1,0));
-		m_dynamicsWorld->addConstraint(p2p);
-		
-		const char* name = "constraintje";
-		serializer->registerNameForPointer(p2p,name);
-
-		m_dynamicsWorld->serialize(serializer);
-		
-		FILE* f2 = fopen("testFile.bullet","wb");
-		fwrite(serializer->getBufferPointer(),serializer->getCurrentBufferSize(),1,f2);
-		fclose(f2);
+		btAssert(0);
+		exit(0);
 	}
 
-	//clientResetScene();
 
 }
 	
+
+void	SerializeDemo::clientResetScene()
+{
+	exitPhysics();
+
+	initPhysics();
+}
 
 void	SerializeDemo::exitPhysics()
 {
@@ -677,6 +636,11 @@ void	SerializeDemo::exitPhysics()
 
 	delete m_dynamicsWorld;
 	
+#ifdef DESERIALIZE_SOFT_BODIES
+	delete sbsolver;
+	sbsolver = 0;
+#endif
+
 	delete m_solver;
 	
 	delete m_broadphase;

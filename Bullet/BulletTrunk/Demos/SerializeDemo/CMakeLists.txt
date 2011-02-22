@@ -16,18 +16,24 @@ ${BULLET_PHYSICS_SOURCE_DIR}/src
 ${BULLET_PHYSICS_SOURCE_DIR}/Demos/OpenGL 
 ${BULLET_PHYSICS_SOURCE_DIR}/Extras/Serialize/BulletFileLoader
 ${BULLET_PHYSICS_SOURCE_DIR}/Extras/Serialize/BulletWorldImporter
+${AMD_OPENCL_INCLUDES}
 )
 
 ADD_DEFINITIONS(-DDESERIALIZE_SOFT_BODIES)
+ADD_DEFINITIONS(-DCL_PLATFORM_AMD)
+ADD_DEFINITIONS(-DUSE_AMD_OPENCL)
+
 
 IF (USE_GLUT)
 	LINK_LIBRARIES(
-	OpenGLSupport  BulletWorldImporter BulletSoftBody BulletDynamics  BulletCollision BulletFileLoader LinearMath   ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY}
+	OpenGLSupport  BulletSoftBodySolvers_CPU BulletSoftBodySolvers_OpenCL_AMD BulletWorldImporter BulletSoftBody BulletDynamics  BulletCollision BulletFileLoader LinearMath   ${GLUT_glut_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} ${CMAKE_ATISTREAMSDK_LIBPATH}/OpenCL.lib
 	)
 
 	IF (WIN32)
 		ADD_EXECUTABLE(AppSerializeDemo
 			main.cpp
+			btOclCommon.cpp
+			btOclUtils.cpp
 			SerializeDemo.cpp 
 			SerializeDemo.h
 			${BULLET_PHYSICS_SOURCE_DIR}/msvc/bullet.rc

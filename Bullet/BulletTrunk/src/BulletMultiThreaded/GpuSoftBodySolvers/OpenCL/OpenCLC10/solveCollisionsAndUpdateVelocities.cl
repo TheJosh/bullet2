@@ -28,12 +28,12 @@ typedef struct
 	// Compressed from the union
 	float radius;
 	float halfHeight;
+	int upAxis;
 		
 	float margin;
 	float friction;
 
 	int padding0;
-	int padding1;
 	
 } CollisionShapeDescription;
 
@@ -71,6 +71,7 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 {
 	int nodeID = get_global_id(0);
 	float4 forceOnVertex = (float4)(0.f, 0.f, 0.f, 0.f);
+	
 	if( get_global_id(0) < numNodes )
 	{	
 		int clothIdentifier = g_vertexClothIdentifier[nodeID];
@@ -78,6 +79,7 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 		// Abort if this is not a valid cloth
 		if( clothIdentifier < 0 )
 			return;
+
 
 		float4 position = (float4)(g_vertexPositions[nodeID].xyz, 1.f);
 		float4 previousPosition = (float4)(g_vertexPreviousPositions[nodeID].xyz, 1.f);
@@ -91,7 +93,7 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 		CollisionObjectIndices collisionObjectIndices = g_perClothCollisionObjectIndices[clothIdentifier];
 	
 		int numObjects = collisionObjectIndices.endObject - collisionObjectIndices.firstObject;
-
+		
 		if( numObjects > 0 )
 		{
 			// We have some possible collisions to deal with
@@ -107,6 +109,8 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 					float capsuleHalfHeight = shapeDescription.halfHeight;
 					float capsuleRadius = shapeDescription.radius;
 					float capsuleMargin = shapeDescription.margin;
+					int capsuleupAxis = shapeDescription.upAxis;
+
 					// Four columns of worldTransform matrix
 					float4 worldTransform[4];
 					worldTransform[0] = shapeDescription.shapeTransform[0];
@@ -114,8 +118,17 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 					worldTransform[2] = shapeDescription.shapeTransform[2];
 					worldTransform[3] = shapeDescription.shapeTransform[3];
 
-					float4 c1 = (float4)(0.f, -capsuleHalfHeight, 0.f, 1.f); 
-					float4 c2 = (float4)(0.f, +capsuleHalfHeight, 0.f, 1.f);
+					// Correctly define capsule centerline vector 
+					float4 c1 = (float4)(0.f, 0.f, 0.f, 1.f); 
+					float4 c2 = (float4)(0.f, 0.f, 0.f, 1.f);
+					c1.x = select( 0.f, -capsuleHalfHeight, capsuleupAxis == 0 );
+					c1.y = select( 0.f, -capsuleHalfHeight, capsuleupAxis == 1 );
+					c1.z = select( 0.f, -capsuleHalfHeight, capsuleupAxis == 2 );
+					c2.x = -c1.x;
+					c2.y = -c1.y;
+					c2.z = -c1.z;
+
+
 					float4 worldC1 = matrixVectorMul(worldTransform, c1);
 					float4 worldC2 = matrixVectorMul(worldTransform, c2);
 					float4 segment = (worldC2 - worldC1);

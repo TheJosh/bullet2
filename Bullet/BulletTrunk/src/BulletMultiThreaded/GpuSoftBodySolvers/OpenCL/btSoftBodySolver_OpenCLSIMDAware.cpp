@@ -476,7 +476,6 @@ void btOpenCLSoftBodySolverSIMDAware::solveLinksForPosition( int startWave, int 
 
 void btOpenCLSoftBodySolverSIMDAware::solveCollisionsAndUpdateVelocities( float isolverdt )
 {
-
 	// Copy kernel parameters to GPU
 	m_vertexData.moveToAccelerator();
 	m_clPerClothFriction.moveToGPU();
@@ -541,8 +540,8 @@ bool btOpenCLSoftBodySolverSIMDAware::buildShaders()
 	updateVelocitiesFromPositionsWithoutVelocitiesKernel = clFunctions.compileCLKernelFromString( UpdatePositionsCLString, "updateVelocitiesFromPositionsWithoutVelocitiesKernel", "" );
 	integrateKernel = clFunctions.compileCLKernelFromString( IntegrateCLString, "IntegrateKernel", "" );
 	applyForcesKernel = clFunctions.compileCLKernelFromString( ApplyForcesCLString, "ApplyForcesKernel", "" );
-	computeBoundsKernel = clFunctions.compileCLKernelFromString( ComputeBoundsCLString, "ComputeBoundsKernel", "" );
 	solveCollisionsAndUpdateVelocitiesKernel = clFunctions.compileCLKernelFromString( SolveCollisionsAndUpdateVelocitiesCLString, "SolveCollisionsAndUpdateVelocitiesKernel", "" );
+	computeBoundsKernel = clFunctions.compileCLKernelFromString( ComputeBoundsCLString, "ComputeBoundsKernel" );
 
 	// TODO: Rename to UpdateSoftBodies
 	resetNormalsAndAreasKernel = clFunctions.compileCLKernelFromString( UpdateNormalsCLString, "ResetNormalsAndAreasKernel", "" );

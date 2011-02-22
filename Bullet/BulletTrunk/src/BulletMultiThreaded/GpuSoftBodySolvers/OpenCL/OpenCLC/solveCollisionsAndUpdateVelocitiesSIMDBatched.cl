@@ -16,16 +16,16 @@ typedef struct
 	int collisionShapeType;
 	
 
-	/* Shape information
-	   Compressed from the union */
+	// Shape information
+	// Compressed from the union
 	float radius;
 	float halfHeight;
+	int upAxis;
 		
 	float margin;
 	float friction;
 
 	int padding0;
-	int padding1;
 	
 } CollisionShapeDescription;
 
@@ -115,6 +115,7 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 				float capsuleHalfHeight = localCollisionShapes[collision].halfHeight;
 				float capsuleRadius = localCollisionShapes[collision].radius;
 				float capsuleMargin = localCollisionShapes[collision].margin;
+				int capsuleupAxis = localCollisionShapes[collision].upAxis;
 
 				float4 worldTransform[4];
 				worldTransform[0] = localCollisionShapes[collision].shapeTransform[0];
@@ -122,8 +123,16 @@ SolveCollisionsAndUpdateVelocitiesKernel(
 				worldTransform[2] = localCollisionShapes[collision].shapeTransform[2];
 				worldTransform[3] = localCollisionShapes[collision].shapeTransform[3];
 
-				float4 c1 = (float4)(0.f, -capsuleHalfHeight, 0.f, 1.f); 
-				float4 c2 = (float4)(0.f, +capsuleHalfHeight, 0.f, 1.f);
+				// Correctly define capsule centerline vector 
+				float4 c1 = (float4)(0.f, 0.f, 0.f, 1.f); 
+				float4 c2 = (float4)(0.f, 0.f, 0.f, 1.f);
+				c1.x = select( 0.f, -capsuleHalfHeight, capsuleupAxis == 0 );
+				c1.y = select( 0.f, -capsuleHalfHeight, capsuleupAxis == 1 );
+				c1.z = select( 0.f, -capsuleHalfHeight, capsuleupAxis == 2 );
+				c2.x = -c1.x;
+				c2.y = -c1.y;
+				c2.z = -c1.z;
+
 				float4 worldC1 = matrixVectorMul(worldTransform, c1);
 				float4 worldC2 = matrixVectorMul(worldTransform, c2);
 				float3 segment = (worldC2 - worldC1).xyz;

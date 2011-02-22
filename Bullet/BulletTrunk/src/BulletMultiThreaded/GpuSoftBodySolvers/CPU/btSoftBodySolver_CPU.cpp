@@ -633,7 +633,7 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 			m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
 		}
 	}
-
+	 
 
 	
 
@@ -686,7 +686,9 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 
 					float capsuleHalfHeight = shapeDescription.shapeInformation.capsule.halfHeight;
 					float capsuleRadius = shapeDescription.shapeInformation.capsule.radius;
+					int capsuleUpAxis = shapeDescription.shapeInformation.capsule.upAxis;
 					float capsuleMargin = shapeDescription.margin;
+					
 					Transform3 worldTransform = shapeDescription.shapeTransform;
 
 					// As this is a GPU comparison solver just iterate over the vertices
@@ -696,8 +698,21 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 						m_vertexData.getForceAccumulator( vertexIndex ) = Vector3(0.f, 0.f, 0.f);
 
 						Point3 vertex( m_vertexData.getPosition( vertexIndex ) );
-						Point3 c1(0.f, -capsuleHalfHeight, 0.f); 
-						Point3 c2(0.f, +capsuleHalfHeight, 0.f);
+
+						// Correctly define the centerline depending on the upAxis
+						Point3 c1(0.f, 0.f, 0.f); 
+						Point3 c2(0.f, 0.f, 0.f);
+						if( capsuleUpAxis == 0 ) {
+							c1.setX(-capsuleHalfHeight);
+							c2.setX(capsuleHalfHeight);
+						} else if( capsuleUpAxis == 1 ) {							
+							c1.setY(-capsuleHalfHeight);
+							c2.setY(capsuleHalfHeight);
+						} else {
+							c1.setZ(-capsuleHalfHeight);
+							c2.setZ(capsuleHalfHeight);						
+						}
+
 						Point3 worldC1 = worldTransform * c1;
 						Point3 worldC2 = worldTransform * c2;
 						Vector3 segment = worldC2 - worldC1;
@@ -740,7 +755,14 @@ void btCPUSoftBodySolver::solveConstraints( float solverdt )
 						if( distance < minDistance )
 						{
 							// Project back to surface along normal
-							m_vertexData.getPosition( vertexIndex ) = m_vertexData.getPosition( vertexIndex ) + (minDistance - distance)*normalVector*0.9;
+							Vectormath::Aos::Point3 sourcePos = m_vertexData.getPosition( vertexIndex );
+							Vectormath::Aos::Vector3 posChange = (minDistance - distance)*normalVector*0.9;
+							if( length(posChange) > 1 )
+								std::cerr << "Poschange: " << length(posChange) << "\n";
+							
+							Vectormath::Aos::Point3 newPos = sourcePos + posChange;
+							m_vertexData.getPosition( vertexIndex ) = newPos;
+							//m_vertexData.getPosition( vertexIndex ) = m_vertexData.getPosition( vertexIndex )  + (minDistance - distance)*normalVector*0.9;
 
 							// Experiment with moving back along source vector.
 							// Removes all ability to slide because it projects back along the vector length so it would undo lateral movement.
@@ -915,6 +937,7 @@ void btCPUSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObj
 			btCapsuleShape *capsule = static_cast<btCapsuleShape*>( collisionShape );
 			newCollisionShapeDescription.shapeInformation.capsule.radius = capsule->getRadius();
 			newCollisionShapeDescription.shapeInformation.capsule.halfHeight = capsule->getHalfHeight();
+			newCollisionShapeDescription.shapeInformation.capsule.upAxis = capsule->getUpAxis();
 			newCollisionShapeDescription.margin = capsule->getMargin();
 			newCollisionShapeDescription.friction = friction;
 			btRigidBody* body = static_cast< btRigidBody* >( collisionObject );

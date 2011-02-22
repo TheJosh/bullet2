@@ -36,6 +36,7 @@ struct btCPUCollisionShapeDescription
 		{
 			float radius;
 			float halfHeight;
+			int upAxis;
 		} capsule;
 	} shapeInformation;
 	

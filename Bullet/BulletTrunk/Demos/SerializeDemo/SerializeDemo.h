@@ -60,9 +60,10 @@ class SerializeDemo : public PlatformDemoApplication
 	}
 	void	initPhysics();
 
+	void	exitPhysics();
+
 	void	setupEmptyDynamicsWorld();
 
-	void	exitPhysics();
 
 	virtual void clientMoveAndDisplay();
 
@@ -76,7 +77,8 @@ class SerializeDemo : public PlatformDemoApplication
 		return demo;
 	}
 
-	
+	virtual void	clientResetScene();
+
 };
 
 #endif //SERIALIZE_DEMO_H

@@ -61,6 +61,7 @@ struct CollisionShapeDescription
 	// Both needed for capsule
 	float radius;
 	float halfHeight;
+	int upAxis;
 	
 	float margin;
 	float friction;

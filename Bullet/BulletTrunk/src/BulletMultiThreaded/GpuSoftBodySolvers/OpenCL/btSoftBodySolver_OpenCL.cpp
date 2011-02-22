@@ -1061,14 +1061,9 @@ void btOpenCLSoftBodySolver::updateBounds()
 	{
 		m_perClothMinBounds[softBodyIndex] = UIntVector3( UINT_MAX, UINT_MAX, UINT_MAX );
 		m_perClothMaxBounds[softBodyIndex] = UIntVector3( 0, 0, 0 );
-		/*m_perClothMinBounds[softBodyIndex*4] = UINT_MAX;
-		m_perClothMinBounds[softBodyIndex*4+1] = UINT_MAX;
-		m_perClothMinBounds[softBodyIndex*4+2] = UINT_MAX;
-		m_perClothMaxBounds[softBodyIndex*4] = 0;
-		m_perClothMaxBounds[softBodyIndex*4+1] = 0;
-		m_perClothMaxBounds[softBodyIndex*4+2] = 0;*/
 	}
 	
+	m_vertexData.moveToAccelerator();
 	m_clPerClothMinBounds.moveToGPU();
 	m_clPerClothMaxBounds.moveToGPU();
 
@@ -1109,7 +1104,7 @@ void btOpenCLSoftBodySolver::updateBounds()
 		minBound.setZ( fai.floatValue );
 
 		btVector3 maxBound;
-		fai.uintValue = maxBoundUInt.x;
+		fai.uintValue = maxBoundUInt.x; 
 		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
 		maxBound.setX( fai.floatValue );
 		fai.uintValue = maxBoundUInt.y;
@@ -1118,6 +1113,7 @@ void btOpenCLSoftBodySolver::updateBounds()
 		fai.uintValue = maxBoundUInt.z;
 		fai.uintValue ^= (((fai.uintValue >> 31) - 1) | 0x80000000);
 		maxBound.setZ( fai.floatValue );
+
 		
 		// And finally assign to the soft body
 		m_softBodySet[softBodyIndex]->updateBounds( minBound, maxBound );
@@ -1449,6 +1445,7 @@ void btOpenCLSoftBodySolver::computeBounds( )
 			btAssert( 0 &&  "enqueueNDRangeKernel(computeBoundsKernel)");
 		}
 	}
+	clFinish(m_cqCommandQue);
 } // btOpenCLSoftBodySolver::computeBounds
 
 void btOpenCLSoftBodySolver::solveCollisionsAndUpdateVelocities( float isolverdt )
@@ -1581,7 +1578,7 @@ cl_kernel CLFunctions::compileCLKernelFromString( const char* kernelSource, cons
 		clGetProgramInfo( m_cpProgram, CL_PROGRAM_DEVICES, 0, 0, &numDevices );
 		cl_device_id *devices = new cl_device_id[numDevices];
 		clGetProgramInfo( m_cpProgram, CL_PROGRAM_DEVICES, numDevices, devices, &numDevices );
-        for( int i = 0; i < numDevices; ++i )
+        for( int i = 0; i < 2; ++i )
 		{
 			char *build_log;
 			size_t ret_val_size;
@@ -1686,7 +1683,7 @@ void btOpenCLSoftBodySolver::processCollision( btSoftBody*, btSoftBody* )
 // Add the collision object to the set to deal with for a particular soft body
 void btOpenCLSoftBodySolver::processCollision( btSoftBody *softBody, btCollisionObject* collisionObject )
 {
-	int softBodyIndex = findSoftBodyIndex( softBody );
+ 	int softBodyIndex = findSoftBodyIndex( softBody );
 
 	if( softBodyIndex >= 0 )
 	{
@@ -1705,6 +1702,7 @@ void btOpenCLSoftBodySolver::processCollision( btSoftBody *softBody, btCollision
 			newCollisionShapeDescription.radius = capsule->getRadius();
 			newCollisionShapeDescription.halfHeight = capsule->getHalfHeight();
 			newCollisionShapeDescription.margin = capsule->getMargin();
+			newCollisionShapeDescription.upAxis = capsule->getUpAxis();
 			newCollisionShapeDescription.friction = friction;
 			btRigidBody* body = static_cast< btRigidBody* >( collisionObject );
 			newCollisionShapeDescription.linearVelocity = toVector3(body->getLinearVelocity());

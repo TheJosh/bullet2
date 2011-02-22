@@ -15,7 +15,7 @@ subject to the following restrictions:
 
 #include "SerializeDemo.h"
 #include "GlutStuff.h"
-#include "GLDebugDrawer.h"
+
 #include "btBulletDynamicsCommon.h"
 #include "LinearMath/btHashMap.h"
 
@@ -42,7 +42,7 @@ class OurValue
 	
 int main(int argc,char** argv)
 {
-	GLDebugDrawer	gDebugDrawer;
+	
 
 	///testing the btHashMap	
 	btHashMap<btHashKey<OurValue>,OurValue> map;
@@ -75,7 +75,7 @@ int main(int argc,char** argv)
 	
 	SerializeDemo ccdDemo;
 	ccdDemo.initPhysics();
-	ccdDemo.getDynamicsWorld()->setDebugDrawer(&gDebugDrawer);
+	
 
 
 #ifdef CHECK_MEMORY_LEAKS
