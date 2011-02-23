@@ -1039,6 +1039,9 @@ float btOpenCLSoftBodySolver::computeTriangleArea(
 
 void btOpenCLSoftBodySolver::updateBounds()
 {	
+
+//#define	USE_GPU_BOUNDS_COMPUTATION
+#ifdef USE_GPU_BOUNDS_COMPUTATION
 	using Vectormath::Aos::Point3;
 	// Interpretation structure for float and int
 	
@@ -1118,6 +1121,14 @@ void btOpenCLSoftBodySolver::updateBounds()
 		// And finally assign to the soft body
 		m_softBodySet[softBodyIndex]->updateBounds( minBound, maxBound );
 	}
+#else	
+	for( int softBodyIndex = 0; softBodyIndex < m_softBodySet.size(); ++softBodyIndex )
+	{
+		btVector3 minBound(-1e30,-1e30,-1e30), maxBound(1e30,1e30,1e30);
+		m_softBodySet[softBodyIndex]->updateBounds( minBound, maxBound );
+	}
+#endif//USE_GPU_BOUNDS_COMPUTATION
+
 } // btOpenCLSoftBodySolver::updateBounds
 
 
