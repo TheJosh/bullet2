@@ -32,8 +32,8 @@ IF (USE_GLUT)
 	IF (WIN32)
 		ADD_EXECUTABLE(AppSerializeDemo
 			main.cpp
-			btOclCommon.cpp
-			btOclUtils.cpp
+			../SharedOpenCL/btOclCommon.cpp
+			../SharedOpenCL/btOclUtils.cpp
 			SerializeDemo.cpp 
 			SerializeDemo.h
 			${BULLET_PHYSICS_SOURCE_DIR}/msvc/bullet.rc

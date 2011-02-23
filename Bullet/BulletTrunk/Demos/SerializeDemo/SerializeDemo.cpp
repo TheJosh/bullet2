@@ -59,8 +59,8 @@ GLDebugDrawer	gDebugDrawer;
 
 #ifdef USE_AMD_OPENCL
 
-#include "btOclCommon.h"
-#include "btOclUtils.h"
+#include "../SharedOpenCL/btOclCommon.h"
+#include "../SharedOpenCL/btOclUtils.h"
 #include <LinearMath/btScalar.h>
 
 #include "BulletMultiThreaded/GpuSoftBodySolvers/OpenCL/btSoftBodySolver_OpenCL.h"
