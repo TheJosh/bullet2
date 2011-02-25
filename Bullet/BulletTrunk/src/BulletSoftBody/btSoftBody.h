@@ -50,6 +50,17 @@ struct	btSoftBodyWorldInfo
 	btDispatcher*	m_dispatcher;
 	btVector3				m_gravity;
 	btSparseSdf<3>			m_sparsesdf;
+
+	btSoftBodyWorldInfo()
+		:air_density((btScalar)1.2),
+		water_density(0),
+		water_offset(0),
+		water_normal(0,0,0),
+		m_broadphase(0),
+		m_dispatcher(0),
+		m_gravity(0,-10,0)
+	{
+	}
 };	
 
 
