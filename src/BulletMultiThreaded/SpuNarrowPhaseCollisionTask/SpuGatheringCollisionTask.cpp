@@ -274,7 +274,7 @@ SIMD_FORCE_INLINE void small_cache_read_triple(	void* ls0, ppu_address_t ea0,
 
 
 
-class spuNodeCallback : public btNodeOverlapCallback
+class spuNodeCallback
 {
 	SpuCollisionPairInput* m_wuInput;
 	SpuContactResult&		m_spuContacts;
@@ -294,7 +294,7 @@ public:
 	{
 	}
 
-	virtual void processNode(int subPart, int triangleIndex)
+	void processNode(int subPart, int triangleIndex)
 	{
 		///Create a triangle on the stack, call process collision, with GJK
 		///DMA the vertices, can benefit from software caching

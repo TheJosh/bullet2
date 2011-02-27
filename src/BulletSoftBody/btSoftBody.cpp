@@ -1976,14 +1976,14 @@ btVector3		btSoftBody::evaluateCom() const
 }
 
 //
-bool				btSoftBody::checkContact(	btCollisionObject* colObj,
+bool				btSoftBody::checkContact(	const btCollider* colObj,
 											 const btVector3& x,
 											 btScalar margin,
 											 btSoftBody::sCti& cti) const
 {
 	btVector3 nrm;
-	btCollisionShape *shp = colObj->getCollisionShape();
-	btRigidBody *tmpRigid = btRigidBody::upcast(colObj);
+	const btCollisionShape *shp = colObj->getCollisionShape();
+	const btRigidBody *tmpRigid = btRigidBody::upcast(colObj->getCollisionObject());
 	const btTransform &wtr = tmpRigid ? tmpRigid->getWorldTransform() : colObj->getWorldTransform();
 	btScalar dst = 
 		m_worldInfo->m_sparsesdf.Evaluate(	
@@ -1993,7 +1993,7 @@ bool				btSoftBody::checkContact(	btCollisionObject* colObj,
 			margin);
 	if(dst<0)
 	{
-		cti.m_colObj = colObj;
+		cti.m_colObj = colObj->getCollisionObject();
 		cti.m_normal = wtr.getBasis()*nrm;
 		cti.m_offset = -btDot( cti.m_normal, x - cti.m_normal * dst );
 		return(true);
@@ -2780,7 +2780,7 @@ void btSoftBody::PSolve_RContacts(btSoftBody* psb, btScalar kst, btScalar ti)
 	{
 		const RContact&		c = psb->m_rcontacts[i];
 		const sCti&			cti = c.m_cti;	
-		btRigidBody* tmpRigid = btRigidBody::upcast(cti.m_colObj);
+		const btRigidBody* tmpRigid = btRigidBody::upcast(cti.m_colObj);
 
 		const btVector3		va = tmpRigid ? tmpRigid->getVelocityInLocalPoint(c.m_c1)*dt : btVector3(0,0,0);
 		const btVector3		vb = c.m_node->m_x-c.m_node->m_q;	
@@ -2793,8 +2793,8 @@ void btSoftBody::PSolve_RContacts(btSoftBody* psb, btScalar kst, btScalar ti)
 			// c0 is the impulse matrix, c3 is 1 - the friction coefficient or 0, c4 is the contact hardness coefficient
 			const btVector3		impulse = c.m_c0 * ( (vr - (fv * c.m_c3) + (cti.m_normal * (dp * c.m_c4))) * kst );
 			c.m_node->m_x -= impulse * c.m_c2;
-			if (tmpRigid)
-				tmpRigid->applyImpulse(impulse,c.m_c1);
+			if (tmpRigid) // Hack, to avoid const-issues. Should impulses really be solved in contact-detection?
+				const_cast<btRigidBody*>(tmpRigid)->applyImpulse(impulse,c.m_c1);
 		}
 	}
 }
@@ -2899,7 +2899,7 @@ btSoftBody::vsolver_t	btSoftBody::getSolver(eVSolver::_ solver)
 }
 
 //
-void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
+void			btSoftBody::defaultCollisionHandler(const btCollider* pco)
 {
 #if 0
 	// If we have a solver, skip this work.
@@ -2920,7 +2920,7 @@ void			btSoftBody::defaultCollisionHandler(btCollisionObject* pco)
 		case	fCollision::SDF_RS:
 			{
 				btSoftColliders::CollideSDF_RS	docollide;		
-				btRigidBody*		prb1=btRigidBody::upcast(pco);
+				const btRigidBody*		prb1=btRigidBody::upcast(pco->getCollisionObject());
 				//btTransform	wtr=prb1 ? prb1->getWorldTransform() : pco->getWorldTransform();
 				btTransform	wtr=pco->getWorldTransform();
 

@@ -24,27 +24,15 @@ subject to the following restrictions:
 
 //#include <stdio.h>
 
-btSoftRigidCollisionAlgorithm::btSoftRigidCollisionAlgorithm(btPersistentManifold* /*mf*/,const btCollisionAlgorithmConstructionInfo& ci,btCollisionObject* /*col0*/,btCollisionObject* /*col1*/, bool isSwapped)
+btSoftRigidCollisionAlgorithm::btSoftRigidCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci, bool isSwapped)
 : btCollisionAlgorithm(ci),
-//m_ownManifold(false),
-//m_manifoldPtr(mf),
 m_isSwapped(isSwapped)
 {
 }
 
 
-btSoftRigidCollisionAlgorithm::~btSoftRigidCollisionAlgorithm()
+void btSoftRigidCollisionAlgorithm::nihilize(btDispatcher* dispatcher)
 {
-
-	//m_softBody->m_overlappingRigidBodies.remove(m_rigidCollisionObject);
-
-	/*if (m_ownManifold)
-	{
-	if (m_manifoldPtr)
-	m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
-	*/
-
 }
 
 
@@ -52,19 +40,10 @@ btSoftRigidCollisionAlgorithm::~btSoftRigidCollisionAlgorithm()
 
 void btSoftRigidCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
 {
-	processCollision((btCollisionObject*)processInfo.m_body0.getCollisionObject(),(btCollisionObject*)processInfo.m_body1.getCollisionObject(),processInfo.m_dispatchInfo,processInfo.m_result);
-}
-
-void btSoftRigidCollisionAlgorithm::processCollision (btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut)
-{
-	(void)dispatchInfo;
-	(void)resultOut;
-	//printf("btSoftRigidCollisionAlgorithm\n");
-
-	btSoftBody* softBody =  m_isSwapped? (btSoftBody*)body1 : (btSoftBody*)body0;
-	btCollisionObject* rigidCollisionObject = m_isSwapped? body0 : body1;
+	btSoftBody* softBody =  m_isSwapped? (btSoftBody*)processInfo.m_body1.getCollisionObject(): (btSoftBody*)processInfo.m_body0.getCollisionObject();
+	const btCollider* rigidCollisionObject = &(m_isSwapped? processInfo.m_body0 : processInfo.m_body1);
 	
-	if (softBody->m_collisionDisabledObjects.findLinearSearch(rigidCollisionObject)==softBody->m_collisionDisabledObjects.size())
+	if (softBody->m_collisionDisabledObjects.findLinearSearch(rigidCollisionObject->getCollisionObject())==softBody->m_collisionDisabledObjects.size())
 	{
 		softBody->defaultCollisionHandler(rigidCollisionObject);
 	}

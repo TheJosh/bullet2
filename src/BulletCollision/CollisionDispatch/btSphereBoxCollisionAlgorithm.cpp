@@ -20,33 +20,16 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 //#include <stdio.h>
 
-btSphereBoxCollisionAlgorithm::btSphereBoxCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* col0,const btCollider* col1, bool isSwapped)
-: btActivatingCollisionAlgorithm(ci,col0,col1),
-m_ownManifold(false),
-m_manifoldPtr(mf),
-m_isSwapped(isSwapped)
+btSphereBoxCollisionAlgorithm::btSphereBoxCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci)
+, m_isSwapped(ci.m_isSwapped)
 {
-	const btCollider* sphereObj = m_isSwapped? col1 : col0;
-	const btCollider* boxObj = m_isSwapped? col0 : col1;
-	
-	if (!m_manifoldPtr && m_dispatcher->needsCollision(sphereObj->getCollisionObject(),boxObj->getCollisionObject()))
-	{
-		m_manifoldPtr = m_dispatcher->getNewManifold(sphereObj->getCollisionObject(),boxObj->getCollisionObject());
-		m_ownManifold = true;
-	}
 }
 
 
 btSphereBoxCollisionAlgorithm::~btSphereBoxCollisionAlgorithm()
 {
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
 }
-
-
 
 void btSphereBoxCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
 {

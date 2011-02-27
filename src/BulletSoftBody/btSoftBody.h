@@ -24,6 +24,7 @@ subject to the following restrictions:
 
 #include "BulletCollision/CollisionShapes/btConcaveShape.h"
 #include "BulletCollision/CollisionDispatch/btCollisionCreateFunc.h"
+#include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 #include "btSparseSDF.h"
 #include "BulletCollision/BroadphaseCollision/btDbvt.h"
 
@@ -58,7 +59,7 @@ struct	btSoftBodyWorldInfo
 class	btSoftBody : public btCollisionObject
 {
 public:
-	btAlignedObjectArray<class btCollisionObject*> m_collisionDisabledObjects;
+	btAlignedObjectArray<const btCollisionObject*> m_collisionDisabledObjects;
 
 	//
 	// Enumerations
@@ -165,7 +166,7 @@ public:
 	/* sCti is Softbody contact info	*/ 
 	struct	sCti
 	{
-		btCollisionObject*	m_colObj;		/* Rigid body			*/ 
+		const btCollisionObject*	m_colObj;		/* Rigid body			*/ 
 		btVector3		m_normal;	/* Outward normal		*/ 
 		btScalar		m_offset;	/* Offset from origin	*/ 
 	};	
@@ -363,13 +364,14 @@ public:
 	{
 		Cluster*			m_soft;
 		btRigidBody*		m_rigid;
-		btCollisionObject*	m_collisionObject;
+		const btCollisionObject*	m_collisionObject;
 
 		Body() : m_soft(0),m_rigid(0),m_collisionObject(0)				{}
 		Body(Cluster* p) : m_soft(p),m_rigid(0),m_collisionObject(0)	{}
-		Body(btCollisionObject* colObj) : m_soft(0),m_collisionObject(colObj)
+		Body(const btCollisionObject* colObj) : m_soft(0),m_collisionObject(colObj)
 		{
-			m_rigid = btRigidBody::upcast(m_collisionObject);
+			// Hack: We need write-access to the rigidbody inside the softbody CD.
+			m_rigid = const_cast<btRigidBody*>(btRigidBody::upcast(m_collisionObject));
 		}
 
 		void						activate() const
@@ -850,7 +852,7 @@ public:
 	/* integrateMotion														*/ 
 	void				integrateMotion();
 	/* defaultCollisionHandlers												*/ 
-	void				defaultCollisionHandler(btCollisionObject* pco);
+	void				defaultCollisionHandler(const btCollider* pco);
 	void				defaultCollisionHandler(btSoftBody* psb);
 
 
@@ -907,7 +909,7 @@ public:
 		btScalar& mint,eFeature::_& feature,int& index,bool bcountonly) const;
 	void				initializeFaceTree();
 	btVector3			evaluateCom() const;
-	bool				checkContact(btCollisionObject* colObj,const btVector3& x,btScalar margin,btSoftBody::sCti& cti) const;
+	bool				checkContact(const btCollider* colObj,const btVector3& x,btScalar margin,btSoftBody::sCti& cti) const;
 	void				updateNormals();
 	void				updateBounds();
 	void				updatePose();

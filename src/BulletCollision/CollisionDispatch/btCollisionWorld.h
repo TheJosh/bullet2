@@ -306,7 +306,8 @@ public:
 
 	struct LocalConvexResult
 	{
-		LocalConvexResult(btCollisionObject*	hitCollisionObject, 
+		LocalConvexResult(
+			const btCollisionObject* hitCollisionObject, 
 			LocalShapeInfo*	localShapeInfo,
 			const btVector3&		hitNormalLocal,
 			const btVector3&		hitPointLocal,
@@ -320,7 +321,7 @@ public:
 		{
 		}
 
-		btCollisionObject*		m_hitCollisionObject;
+		const btCollisionObject* m_hitCollisionObject;
 		LocalShapeInfo*			m_localShapeInfo;
 		btVector3				m_hitNormalLocal;
 		btVector3				m_hitPointLocal;
@@ -376,7 +377,7 @@ public:
 
 		btVector3	m_hitNormalWorld;
 		btVector3	m_hitPointWorld;
-		btCollisionObject*	m_hitCollisionObject;
+		const btCollisionObject*	m_hitCollisionObject;
 		
 		virtual	btScalar	addSingleResult(LocalConvexResult& convexResult,bool normalInWorldSpace)
 		{
@@ -396,6 +397,25 @@ public:
 			m_hitPointWorld = convexResult.m_hitPointLocal;
 			return convexResult.m_hitFraction;
 		}
+	};
+
+
+	struct ConvexCastInfo
+	{
+		const btConvexShape* m_castShape;
+		const btTransform& m_convexFromTrans;
+		const btTransform& m_convexToTrans;
+		ConvexResultCallback& m_resultCallback;
+		btScalar m_allowedPenetration;
+		ConvexCastInfo( const btConvexShape* castShape, const btTransform& convexFromTrans, 
+			const btTransform& convexToTrans, ConvexResultCallback& resultCallback,
+			btScalar allowedPenetration)
+			: m_castShape(castShape)
+			, m_convexFromTrans(convexFromTrans)
+			, m_convexToTrans(convexToTrans)
+			, m_resultCallback(resultCallback)
+			, m_allowedPenetration(allowedPenetration)
+		{}
 	};
 
 	///ContactResultCallback is used to report contact points
@@ -458,11 +478,14 @@ public:
 					  RayResultCallback& resultCallback);
 
 	/// objectQuerySingle performs a collision detection query and calls the resultCallback. It is used internally by rayTest.
-	static void	objectQuerySingle(const btConvexShape* castShape, const btTransform& rayFromTrans,const btTransform& rayToTrans,
-					  btCollisionObject* collisionObject,
-					  const btCollisionShape* collisionShape,
-					  const btTransform& colObjWorldTransform,
-					  ConvexResultCallback& resultCallback, btScalar	allowedPenetration);
+	static void	objectQuerySingle(
+		const btConvexShape* castShape,
+		const btTransform& convexFromTrans,
+		const btTransform& convexToTrans,
+		const btCollider& collisionObject,
+		ConvexResultCallback& resultCallback,
+		btScalar allowedPenetration
+	);
 
 	virtual void	addCollisionObject(btCollisionObject* collisionObject,short int collisionFilterGroup=btBroadphaseProxy::DefaultFilter,short int collisionFilterMask=btBroadphaseProxy::AllFilter);
 

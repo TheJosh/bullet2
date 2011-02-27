@@ -17,31 +17,36 @@ subject to the following restrictions:
 #include "btCollisionDispatcher.h"
 #include "btCollisionObject.h"
 
-btActivatingCollisionAlgorithm::btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci)
+btActivatingCollisionAlgorithm::btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci, bool allocateManifold)
 :btCollisionAlgorithm(ci)
-//,
-//m_colObj0(0),
-//m_colObj1(0)
+, m_ownManifold(false)
+, m_manifoldPtr(ci.m_manifold)
 {
-}
-btActivatingCollisionAlgorithm::btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci, const btCollider* colObj0,const btCollider* colObj1)
-:btCollisionAlgorithm(ci)
-//,
-//m_colObj0(0),
-//m_colObj1(0)
-{
-//	if (ci.m_dispatcher1->needsCollision(colObj0,colObj1))
-//	{
-//		m_colObj0 = colObj0;
-//		m_colObj1 = colObj1;
-//		
-//		m_colObj0->activate();
-//		m_colObj1->activate();
-//	}
+	const btCollisionObject* collider0 = ci.m_colObj0->getCollisionObject();
+	const btCollisionObject* collider1 = ci.m_colObj1->getCollisionObject();
+	if( ci.m_isSwapped )
+	{
+		collider0 = ci.m_colObj1->getCollisionObject();
+		collider1 = ci.m_colObj0->getCollisionObject();
+	}
+
+	if (!m_manifoldPtr && allocateManifold)
+	{
+		m_manifoldPtr = ci.m_dispatcher1->getNewManifold(collider0,collider1);
+		m_ownManifold = true;
+	}
 }
 
 btActivatingCollisionAlgorithm::~btActivatingCollisionAlgorithm()
 {
-//		m_colObj0->activate();
-//		m_colObj1->activate();
+	btAssert(m_manifoldPtr == 0x0);
+}
+
+void btActivatingCollisionAlgorithm::nihilize( btDispatcher* dispatcher )
+{
+	if (m_ownManifold && m_manifoldPtr)
+	{
+		dispatcher->releaseManifold(m_manifoldPtr);
+	}
+	m_manifoldPtr = 0x0;
 }

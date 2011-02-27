@@ -24,7 +24,8 @@ class btRigidBody;
 struct btCollider;
 class btCollisionObject;
 class btOverlappingPairCache;
-
+class btVoronoiSimplexSolver;
+class btConvexPenetrationDepthSolver;
 
 class btPersistentManifold;
 class btStackAlloc;
@@ -74,35 +75,39 @@ struct btDispatcherInfo
 ///For example for pairwise collision detection, calculating contact points stored in btPersistentManifold or user callbacks (game logic).
 class btDispatcher
 {
-
-
 public:
-	virtual ~btDispatcher() ;
+	virtual ~btDispatcher();
 
-	virtual btCollisionAlgorithm* findAlgorithm(const btCollider* body0,const btCollider* body1,btPersistentManifold* sharedManifold=0) = 0;
+	virtual btCollisionAlgorithm* findAlgorithm(const btCollider* body0,const btCollider* body1,btPersistentManifold* sharedManifold=0, bool isSwapped=false) = 0;
 
-	virtual btPersistentManifold*	getNewManifold(const btCollisionObject* body0,const btCollisionObject* body1)=0;
+	virtual btPersistentManifold* getNewManifold(const btCollisionObject* body0,const btCollisionObject* body1)=0;
 
 	virtual void releaseManifold(btPersistentManifold* manifold)=0;
 
 	virtual void clearManifold(btPersistentManifold* manifold)=0;
 
-	virtual bool	needsCollision(const btCollisionObject* body0,const btCollisionObject* body1) = 0;
+	virtual bool needsCollision(const btCollisionObject* body0,const btCollisionObject* body1) = 0;
 
-	virtual bool	needsResponse(const btCollisionObject* body0,const btCollisionObject* body1)=0;
+	virtual bool needsResponse(const btCollisionObject* body0,const btCollisionObject* body1)=0;
 
-	virtual void	dispatchAllCollisionPairs(btOverlappingPairCache* pairCache,const btDispatcherInfo& dispatchInfo,btDispatcher* dispatcher)  =0;
+	virtual void dispatchAllCollisionPairs(btOverlappingPairCache* pairCache,const btDispatcherInfo& dispatchInfo,btDispatcher* dispatcher, bool singleThread=false)  =0;
 
 	virtual int getNumManifolds() const = 0;
 
 	virtual btPersistentManifold* getManifoldByIndexInternal(int index) = 0;
 
-	virtual	btPersistentManifold**	getInternalManifoldPointer() = 0;
+	virtual	btPersistentManifold** getInternalManifoldPointer() = 0;
 
 	virtual	void* allocateCollisionAlgorithm(int size)  = 0;
 
 	virtual	void freeCollisionAlgorithm(void* ptr) = 0;
 
+	virtual btVoronoiSimplexSolver* getSimplexSolver() = 0;
+
+	virtual btConvexPenetrationDepthSolver* getDepthSolver() = 0;
+
+	virtual int getFreeAlgorithms() const { return 0; }
+	virtual int getFreeManifolds() const { return 0; }
 };
 
 

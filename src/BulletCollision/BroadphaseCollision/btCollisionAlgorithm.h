@@ -27,27 +27,49 @@ class btCollisionShape;
 struct btDispatcherInfo;
 class btPersistentManifold;
 class btTransform;
+struct btCollider;
+class btVoronoiSimplexSolver;
+class btConvexPenetrationDepthSolver;
 
 typedef btAlignedObjectArray<btPersistentManifold*>	btManifoldArray;
 
 struct btCollisionAlgorithmConstructionInfo
 {
+private:
 	btCollisionAlgorithmConstructionInfo()
-		:m_dispatcher1(0),
-		m_manifold(0)
+		: m_dispatcher1(0)
+		, m_isSwapped(false)
+		, m_manifold(0)
+		, m_colObj0(0x0)
+		, m_colObj1(0x0)
 	{
 	}
-	btCollisionAlgorithmConstructionInfo(btDispatcher* dispatcher,int temp)
-		:m_dispatcher1(dispatcher)
+public:
+	btCollisionAlgorithmConstructionInfo(
+		btDispatcher* dispatcher, 
+		bool isSwapped, 
+		btPersistentManifold* manifold, 
+		const btCollider* colObj0, 
+		const btCollider* colObj1,
+		btVoronoiSimplexSolver* simplexSolver,
+		btConvexPenetrationDepthSolver* pdSolver)
+		: m_dispatcher1(dispatcher)
+		, m_isSwapped(isSwapped)
+		, m_manifold(manifold)
+		, m_colObj0(colObj0)
+		, m_colObj1(colObj1)
+		, m_simplexSolver(simplexSolver)
+		, m_pdSolver(pdSolver)
 	{
-		(void)temp;
 	}
 
-	btDispatcher*	m_dispatcher1;
+	btDispatcher*			m_dispatcher1;
+	bool					m_isSwapped;
 	btPersistentManifold*	m_manifold;
-
-//	int	getDispatcherId();
-
+	const btCollider*		m_colObj0;
+	const btCollider*		m_colObj1;
+	mutable btVoronoiSimplexSolver*	m_simplexSolver;
+	mutable btConvexPenetrationDepthSolver* m_pdSolver;
 };
 
 #define BT_DECLARE_STACK_ONLY_OBJECT \
@@ -103,27 +125,19 @@ public:
 ///It is persistent over frames
 class btCollisionAlgorithm
 {
-
-protected:
-
-	btDispatcher*	m_dispatcher;
-
-protected:
-//	int	getDispatcherId();
-	
 public:
-
-	btCollisionAlgorithm() {};
 
 	btCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
-	virtual ~btCollisionAlgorithm() {};
+	virtual ~btCollisionAlgorithm() { }
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo) = 0;
 
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut) = 0;
 
 	virtual	void	getAllContactManifolds(btManifoldArray&	manifoldArray) = 0;
+
+	virtual void nihilize(btDispatcher* dispatcher) =0;
 };
 
 

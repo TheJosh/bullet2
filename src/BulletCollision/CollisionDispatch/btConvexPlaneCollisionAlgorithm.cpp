@@ -22,32 +22,17 @@ subject to the following restrictions:
 
 //#include <stdio.h>
 
-btConvexPlaneCollisionAlgorithm::btConvexPlaneCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* col0,const btCollider* col1, bool isSwapped, int numPerturbationIterations,int minimumPointsPerturbationThreshold)
-: btCollisionAlgorithm(ci),
-m_ownManifold(false),
-m_manifoldPtr(mf),
-m_isSwapped(isSwapped),
-m_numPerturbationIterations(numPerturbationIterations),
-m_minimumPointsPerturbationThreshold(minimumPointsPerturbationThreshold)
+btConvexPlaneCollisionAlgorithm::btConvexPlaneCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci),
+m_numPerturbationIterations(1),
+m_minimumPointsPerturbationThreshold(1),
+m_isSwapped(ci.m_isSwapped)
 {
-	const btCollider* convexObj = m_isSwapped? col1 : col0;
-	const btCollider* planeObj = m_isSwapped? col0 : col1;
-
-	if (!m_manifoldPtr && m_dispatcher->needsCollision(convexObj->getCollisionObject(),planeObj->getCollisionObject()))
-	{
-		m_manifoldPtr = m_dispatcher->getNewManifold(convexObj->getCollisionObject(),planeObj->getCollisionObject());
-		m_ownManifold = true;
-	}
 }
 
 
 btConvexPlaneCollisionAlgorithm::~btConvexPlaneCollisionAlgorithm()
 {
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
 }
 
 void btConvexPlaneCollisionAlgorithm::collideSingleContact (const btQuaternion& perturbeRot, const btCollider& body0,const btCollider& body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut)

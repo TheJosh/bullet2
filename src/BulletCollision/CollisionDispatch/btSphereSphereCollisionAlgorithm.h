@@ -28,14 +28,8 @@ class btPersistentManifold;
 /// Also provides the most basic sample for custom/user btCollisionAlgorithm
 class btSphereSphereCollisionAlgorithm : public btActivatingCollisionAlgorithm
 {
-	bool	m_ownManifold;
-	btPersistentManifold*	m_manifoldPtr;
-	
 public:
-	btSphereSphereCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1);
-
-	btSphereSphereCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
-		: btActivatingCollisionAlgorithm(ci) {}
+	btSphereSphereCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
 
@@ -53,10 +47,10 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btSphereSphereCollisionAlgorithm));
-			return new(mem) btSphereSphereCollisionAlgorithm(0,ci,body0,body1);
+			return new(mem) btSphereSphereCollisionAlgorithm(ci);
 		}
 	};
 

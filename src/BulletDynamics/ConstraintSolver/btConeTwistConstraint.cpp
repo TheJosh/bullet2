@@ -1114,12 +1114,4 @@ btScalar btConeTwistConstraint::getParam(int num, int axis) const
 }
 
 
-void btConeTwistConstraint::setFrames(const btTransform & frameA, const btTransform & frameB)
-{
-	m_rbAFrame = frameA;
-	m_rbBFrame = frameB;
-	buildJacobian();
-	//calculateTransforms();
-}
-
 

@@ -62,8 +62,8 @@ struct btTriIndex
 ///For each triangle in the concave mesh that overlaps with the AABB of a soft body (m_softBody), processTriangle is called.
 class btSoftBodyTriangleCallback : public btTriangleCallback
 {
-	btSoftBody* m_softBody;
-	btCollisionObject* m_triBody;
+	const btCollider* m_softBody;
+	const btCollider* m_triBody;
 
 	btVector3	m_aabbMin;
 	btVector3	m_aabbMax ;
@@ -81,9 +81,10 @@ public:
 
 	//	btPersistentManifold*	m_manifoldPtr;
 
-	btSoftBodyTriangleCallback(btDispatcher* dispatcher,btCollisionObject* body0,btCollisionObject* body1,bool isSwapped);
+	btSoftBodyTriangleCallback(btDispatcher* dispatcher, const btCollider* body0, const btCollider* body1,bool isSwapped);
 
 	void	setTimeStepAndCounters(btScalar collisionMarginTriangle,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
+	void	setColliders(const btCollider* triBody, const btCollider* softBody);
 
 	virtual ~btSoftBodyTriangleCallback();
 
@@ -115,13 +116,11 @@ class btSoftBodyConcaveCollisionAlgorithm  : public btCollisionAlgorithm
 
 public:
 
-	btSoftBodyConcaveCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci,btCollisionObject* body0,btCollisionObject* body1,bool isSwapped);
+	btSoftBodyConcaveCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci, bool isSwapped);
 
 	virtual ~btSoftBodyConcaveCollisionAlgorithm();
-
+	virtual void nihilize(btDispatcher* dispatcher);
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
-
-	virtual void processCollision (btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
 
 	btScalar	calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
 
@@ -134,29 +133,19 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0, const btCollider* body1)
-		{
-			return CreateCollisionAlgorithm(ci, (btCollisionObject*)body0->getCollisionObject(), (btCollisionObject*)body1->getCollisionObject());
-		}
-
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, btCollisionObject* body0,btCollisionObject* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btSoftBodyConcaveCollisionAlgorithm));
-			return new(mem) btSoftBodyConcaveCollisionAlgorithm(ci,body0,body1,false);
+			return new(mem) btSoftBodyConcaveCollisionAlgorithm(ci, false);
 		}
 	};
 
 	struct SwappedCreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0, const btCollider* body1)
-		{
-			return CreateCollisionAlgorithm(ci, (btCollisionObject*)body0->getCollisionObject(), (btCollisionObject*)body1->getCollisionObject());
-		}
-
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, btCollisionObject* body0,btCollisionObject* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btSoftBodyConcaveCollisionAlgorithm));
-			return new(mem) btSoftBodyConcaveCollisionAlgorithm(ci,body0,body1,true);
+			return new(mem) btSoftBodyConcaveCollisionAlgorithm(ci, true);
 		}
 	};
 

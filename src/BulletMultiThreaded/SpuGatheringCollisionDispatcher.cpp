@@ -121,10 +121,6 @@ public:
 				btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
 				btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
 
-				btCollisionAlgorithmConstructionInfo ci;
-				ci.m_dispatcher1 = m_dispatcher;
-				ci.m_manifold = 0;
-
 				if (m_dispatcher->needsCollision(colObj0,colObj1))
 				{
 					int	proxyType0 = colObj0->getCollisionShape()->getShapeType();
@@ -162,11 +158,16 @@ public:
 #else
 						void* mem = m_dispatcher->allocateCollisionAlgorithm(so);
 #endif
-						collisionPair.m_algorithm = new(mem) SpuContactManifoldCollisionAlgorithm(ci,colObj0,colObj1);
+						btCollider collider(0, colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform() );
+						btCollider otherCollider(0, colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform() );
+						btCollisionAlgorithmConstructionInfo ci(m_dispatcher, false, 0x0, &collider, &otherCollider, 0x0, 0x0);
+						collisionPair.m_algorithm = new(mem) SpuContactManifoldCollisionAlgorithm(ci);
 						collisionPair.m_internalTmpValue =  2;
 					} else
 					{
-						collisionPair.m_algorithm = 0;//m_dispatcher->findAlgorithm(colObj0,colObj1);
+						btCollider collider(0, colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform() );
+						btCollider otherCollider(0, colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform() );
+						collisionPair.m_algorithm = m_dispatcher->findAlgorithm(&collider, &otherCollider);
 						collisionPair.m_internalTmpValue = 3;
 					}
 				} 
@@ -241,12 +242,15 @@ void	SpuGatheringCollisionDispatcher::dispatchAllCollisionPairs(btOverlappingPai
 
 						if (dispatcher->needsCollision(colObj0,colObj1))
 						{
+							btCollider collider(0, colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform() );
+							btCollider otherCollider(0, colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform() );
 							btManifoldResult contactPointResult(colObj0,colObj1);
 							
 							if (dispatchInfo.m_dispatchFunc == 		btDispatcherInfo::DISPATCH_DISCRETE)
 							{
 								//discrete collision detection query
-								//collisionPair.m_algorithm->processCollision(colObj0,colObj1,dispatchInfo,&contactPointResult);
+								btCollisionProcessInfo collisionProcessInfo(collider, otherCollider, dispatchInfo, &contactPointResult, dispatcher);
+								collisionPair.m_algorithm->processCollision(collisionProcessInfo);
 							} else
 							{
 								//continuous collision detection query, time of impact (toi)

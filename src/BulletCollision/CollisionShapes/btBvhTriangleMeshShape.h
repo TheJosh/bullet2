@@ -33,17 +33,18 @@ ATTRIBUTE_ALIGNED16(class) btBvhTriangleMeshShape : public btTriangleMeshShape
 
 	bool m_useQuantizedAabbCompression;
 	bool m_ownsBvh;
-	bool m_pad[11];////need padding due to alignment
+	bool m_ownShape;
+	bool m_pad[10];////need padding due to alignment
 
 public:
 
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
 	btBvhTriangleMeshShape() : btTriangleMeshShape(0),m_bvh(0),m_triangleInfoMap(0),m_ownsBvh(false) {m_shapeType = TRIANGLE_MESH_SHAPE_PROXYTYPE;};
-	btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression, bool buildBvh = true);
+	btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression, bool buildBvh = true, bool ownShape = false);
 
 	///optionally pass in a larger bvh aabb, used for quantization. This allows for deformations within this aabb
-	btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression,const btVector3& bvhAabbMin,const btVector3& bvhAabbMax, bool buildBvh = true);
+	btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression,const btVector3& bvhAabbMin,const btVector3& bvhAabbMax, bool buildBvh = true, bool ownShape = false);
 	
 	virtual ~btBvhTriangleMeshShape();
 

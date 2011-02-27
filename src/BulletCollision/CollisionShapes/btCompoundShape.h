@@ -25,6 +25,7 @@ subject to the following restrictions:
 #include "LinearMath/btAlignedObjectArray.h"
 
 //class btOptimizedBvh;
+class btQuantizedBvh;
 struct btDbvt;
 
 ATTRIBUTE_ALIGNED16(struct) btCompoundShapeChild
@@ -63,6 +64,8 @@ ATTRIBUTE_ALIGNED16(class) btCompoundShape	: public btCollisionShape
 	int								m_updateRevision;
 
 	btScalar	m_collisionMargin;
+
+	btQuantizedBvh*	m_bvh;
 
 protected:
 	btVector3	m_localScaling;
@@ -165,10 +168,14 @@ public:
 
 	virtual	int	calculateSerializeBufferSize() const;
 
+	void buildBvhTree();
+
+	btQuantizedBvh* getBvhTree() { return m_bvh; }
+
+	const btQuantizedBvh* getBvhTree() const { return m_bvh; }
+
 	///fills the dataBuffer and returns the struct name (and 0 on failure)
 	virtual	const char*	serialize(void* dataBuffer, btSerializer* serializer) const;
-
-
 };
 
 ///do not change those serialization structures, it requires an updated sBulletDNAstr/sBulletDNAstr64

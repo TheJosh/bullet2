@@ -18,7 +18,6 @@ subject to the following restrictions:
 
 #include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
-#include "BulletCollision/CollisionDispatch/btCollisionCreateFunc.h"
 #include "BulletCollision/BroadphaseCollision/btDispatcher.h"
 #include "LinearMath/btTransformUtil.h"
 
@@ -31,34 +30,24 @@ ATTRIBUTE_ALIGNED16(class) SpuContactManifoldCollisionAlgorithm : public btColli
 {
 	btVector3	m_shapeDimensions0;
 	btVector3	m_shapeDimensions1;
-	btPersistentManifold*	m_manifoldPtr;
 	int		m_shapeType0;
 	int		m_shapeType1;
 	float	m_collisionMargin0;
 	float	m_collisionMargin1;
 
-	btCollisionObject*	m_collisionObject0;
-	btCollisionObject*	m_collisionObject1;
-	
-	
-
-	
+	const btCollisionObject*	m_collisionObject0;
+	const btCollisionObject*	m_collisionObject1;
+	btPersistentManifold*	m_manifoldPtr;	
 public:
-	
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
-
-	virtual void processCollision (btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
-
+	virtual void nihilize(btDispatcher* dispatcher);
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
-
 	
-	SpuContactManifoldCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci,btCollisionObject* body0,btCollisionObject* body1);
+	SpuContactManifoldCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
+	virtual ~SpuContactManifoldCollisionAlgorithm() {}
 #ifdef USE_SEPDISTANCE_UTIL
 	btConvexSeparatingDistanceUtil	m_sepDistance;
 #endif //USE_SEPDISTANCE_UTIL
-
-	virtual ~SpuContactManifoldCollisionAlgorithm();
-
 	virtual	void	getAllContactManifolds(btManifoldArray&	manifoldArray)
 	{
 		if (m_manifoldPtr)
@@ -70,12 +59,12 @@ public:
 		return m_manifoldPtr;
 	}
 
-	btCollisionObject*	getCollisionObject0()
+	const btCollisionObject*	getCollisionObject0() const 
 	{
 		return m_collisionObject0;
 	}
 	
-	btCollisionObject*	getCollisionObject1()
+	const btCollisionObject*	getCollisionObject1() const
 	{
 		return m_collisionObject1;
 	}
@@ -107,16 +96,6 @@ public:
 	{
 		return m_shapeDimensions1;
 	}
-
-	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
-	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, btCollisionObject* body0,btCollisionObject* body1)
-		{
-			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(SpuContactManifoldCollisionAlgorithm));
-			return new(mem) SpuContactManifoldCollisionAlgorithm(ci,body0,body1);
-		}
-	};
-
 };
 
 #endif //SPU_CONTACTMANIFOLD_COLLISION_ALGORITHM_H

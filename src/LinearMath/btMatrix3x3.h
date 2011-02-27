@@ -110,8 +110,8 @@ public:
 	* Equivilant to this = this * m */
 	btMatrix3x3& operator*=(const btMatrix3x3& m); 
 
-	/** @brief Set from the rotational part of a 4x4 OpenGL matrix
-	*  @param m A pointer to the beginning of the array of scalars*/
+	/** @brief Set from a carray of btScalars 
+	*  @param m A pointer to the beginning of an array of 9 btScalars */
 	void setFromOpenGLSubMatrix(const btScalar *m)
 	{
 		m_el[0].setValue(m[0],m[4],m[8]);
@@ -208,7 +208,7 @@ public:
 		return identityMatrix;
 	}
 
-	/**@brief Fill the rotational part of an OpenGL matrix and clear the shear/perspective
+	/**@brief Fill the values of the matrix into a 9 element array 
 	* @param m The array to be filled */
 	void getOpenGLSubMatrix(btScalar *m) const 
 	{
@@ -387,15 +387,21 @@ public:
 
 	SIMD_FORCE_INLINE btScalar tdotx(const btVector3& v) const 
 	{
-		return m_el[0].x() * v.x() + m_el[1].x() * v.y() + m_el[2].x() * v.z();
+		btVector3 c1(m_el[0].x(), m_el[1].x(), m_el[2].x());
+		return c1.dot(v);
+		//return m_el[0].x() * v.x() + m_el[1].x() * v.y() + m_el[2].x() * v.z();
 	}
 	SIMD_FORCE_INLINE btScalar tdoty(const btVector3& v) const 
 	{
-		return m_el[0].y() * v.x() + m_el[1].y() * v.y() + m_el[2].y() * v.z();
+		btVector3 c2(m_el[0].y(), m_el[1].y(), m_el[2].y());
+		return c2.dot(v);
+		//return m_el[0].y() * v.x() + m_el[1].y() * v.y() + m_el[2].y() * v.z();
 	}
 	SIMD_FORCE_INLINE btScalar tdotz(const btVector3& v) const 
 	{
-		return m_el[0].z() * v.x() + m_el[1].z() * v.y() + m_el[2].z() * v.z();
+		btVector3 c3(m_el[0].z(), m_el[1].z(), m_el[2].z());
+		return c3.dot(v);
+		//return m_el[0].z() * v.x() + m_el[1].z() * v.y() + m_el[2].z() * v.z();
 	}
 
 
@@ -533,18 +539,21 @@ btMatrix3x3::determinant() const
 SIMD_FORCE_INLINE btMatrix3x3 
 btMatrix3x3::absolute() const
 {
-	return btMatrix3x3(
-		btFabs(m_el[0].x()), btFabs(m_el[0].y()), btFabs(m_el[0].z()),
-		btFabs(m_el[1].x()), btFabs(m_el[1].y()), btFabs(m_el[1].z()),
-		btFabs(m_el[2].x()), btFabs(m_el[2].y()), btFabs(m_el[2].z()));
+	btMatrix3x3 m;
+	m.m_el[0] = m_el[0].absolute();
+	m.m_el[1] = m_el[1].absolute();
+	m.m_el[2] = m_el[2].absolute();
+	return m;
 }
 
 SIMD_FORCE_INLINE btMatrix3x3 
 btMatrix3x3::transpose() const 
 {
-	return btMatrix3x3(m_el[0].x(), m_el[1].x(), m_el[2].x(),
+	return btMatrix3x3(
+		m_el[0].x(), m_el[1].x(), m_el[2].x(),
 		m_el[0].y(), m_el[1].y(), m_el[2].y(),
-		m_el[0].z(), m_el[1].z(), m_el[2].z());
+		m_el[0].z(), m_el[1].z(), m_el[2].z()
+	);
 }
 
 SIMD_FORCE_INLINE btMatrix3x3 
@@ -562,9 +571,11 @@ btMatrix3x3::inverse() const
 	btScalar det = (*this)[0].dot(co);
 	btFullAssert(det != btScalar(0.0));
 	btScalar s = btScalar(1.0) / det;
-	return btMatrix3x3(co.x() * s, cofac(0, 2, 2, 1) * s, cofac(0, 1, 1, 2) * s,
+	return btMatrix3x3(
+		co.x() * s, cofac(0, 2, 2, 1) * s, cofac(0, 1, 1, 2) * s,
 		co.y() * s, cofac(0, 0, 2, 2) * s, cofac(0, 2, 1, 0) * s,
-		co.z() * s, cofac(0, 1, 2, 0) * s, cofac(0, 0, 1, 1) * s);
+		co.z() * s, cofac(0, 1, 2, 0) * s, cofac(0, 0, 1, 1) * s
+	);
 }
 
 SIMD_FORCE_INLINE btMatrix3x3 

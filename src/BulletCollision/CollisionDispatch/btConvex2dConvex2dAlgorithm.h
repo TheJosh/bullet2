@@ -32,12 +32,9 @@ class btConvexPenetrationDepthSolver;
 ///Currently it requires the btMinkowskiPenetrationDepthSolver, it has support for 2d penetration depth computation
 class btConvex2dConvex2dAlgorithm : public btActivatingCollisionAlgorithm
 {
-	btSimplexSolverInterface*		m_simplexSolver;
+	btVoronoiSimplexSolver*		m_simplexSolver;
 	btConvexPenetrationDepthSolver* m_pdSolver;
 
-	
-	bool	m_ownManifold;
-	btPersistentManifold*	m_manifoldPtr;
 	bool			m_lowLevelOfDetail;
 	
 	int m_numPerturbationIterations;
@@ -45,9 +42,7 @@ class btConvex2dConvex2dAlgorithm : public btActivatingCollisionAlgorithm
 
 public:
 
-	btConvex2dConvex2dAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1, btSimplexSolverInterface* simplexSolver, btConvexPenetrationDepthSolver* pdSolver, int numPerturbationIterations, int minimumPointsPerturbationThreshold);
-
-
+	btConvex2dConvex2dAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 	virtual ~btConvex2dConvex2dAlgorithm();
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
@@ -72,20 +67,10 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-
-		btConvexPenetrationDepthSolver*		m_pdSolver;
-		btSimplexSolverInterface*			m_simplexSolver;
-		int m_numPerturbationIterations;
-		int m_minimumPointsPerturbationThreshold;
-
-		CreateFunc(btSimplexSolverInterface*			simplexSolver, btConvexPenetrationDepthSolver* pdSolver);
-		
-		virtual ~CreateFunc();
-
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btConvex2dConvex2dAlgorithm));
-			return new(mem) btConvex2dConvex2dAlgorithm(ci.m_manifold,ci,body0,body1,m_simplexSolver,m_pdSolver,m_numPerturbationIterations,m_minimumPointsPerturbationThreshold);
+			return new(mem) btConvex2dConvex2dAlgorithm(ci);
 		}
 	};
 

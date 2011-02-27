@@ -31,17 +31,16 @@ btSoftSoftCollisionAlgorithm::btSoftSoftCollisionAlgorithm(btPersistentManifold*
 btSoftSoftCollisionAlgorithm::~btSoftSoftCollisionAlgorithm()
 {
 }
+void btSoftSoftCollisionAlgorithm::nihilize(btDispatcher* dispatcher)
+{
+}
 
 void btSoftSoftCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
 {
-	processCollision((btCollisionObject*)processInfo.m_body0.getCollisionObject(),(btCollisionObject*)processInfo.m_body1.getCollisionObject(),processInfo.m_dispatchInfo,processInfo.m_result);
-}
-
-void btSoftSoftCollisionAlgorithm::processCollision (btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& /*dispatchInfo*/,btManifoldResult* /*resultOut*/)
-{
-	btSoftBody* soft0 =	(btSoftBody*)body0;
-	btSoftBody* soft1 =	(btSoftBody*)body1;
+	btSoftBody* soft0 =	(btSoftBody*)processInfo.m_body0.getCollisionObject();
+	btSoftBody* soft1 =	(btSoftBody*)processInfo.m_body1.getCollisionObject();
 	soft0->defaultCollisionHandler(soft1);
+	
 }
 
 btScalar btSoftSoftCollisionAlgorithm::calculateTimeOfImpact(btCollisionObject* /*body0*/,btCollisionObject* /*body1*/,const btDispatcherInfo& /*dispatchInfo*/,btManifoldResult* /*resultOut*/)

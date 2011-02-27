@@ -15,6 +15,12 @@ subject to the following restrictions:
 
 #include "btDefaultCollisionConfiguration.h"
 
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+#include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
+#include "LinearMath/btPoolAllocator.h"
+#include "BulletCollision/CollisionDispatch/btCollisionConfiguration.h"
+
 #include "BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.h"
 #include "BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h"
 #include "BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.h"
@@ -26,6 +32,7 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.h"
 #endif //USE_BUGGY_SPHERE_BOX_ALGORITHM
 #include "BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.h"
+
 #include "BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.h"
 #include "BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.h"
@@ -35,12 +42,7 @@ subject to the following restrictions:
 #include "LinearMath/btStackAlloc.h"
 #include "LinearMath/btPoolAllocator.h"
 
-
-
-
-
 btDefaultCollisionConfiguration::btDefaultCollisionConfiguration(const btDefaultCollisionConstructionInfo& constructionInfo)
-//btDefaultCollisionConfiguration::btDefaultCollisionConfiguration(btStackAlloc*	stackAlloc,btPoolAllocator*	persistentManifoldPool,btPoolAllocator*	collisionAlgorithmPool)
 {
 
 	void* mem = btAlignedAlloc(sizeof(btVoronoiSimplexSolver),16);
@@ -58,7 +60,7 @@ btDefaultCollisionConfiguration::btDefaultCollisionConfiguration(const btDefault
 	
 	//default CreationFunctions, filling the m_doubleDispatch table
 	mem = btAlignedAlloc(sizeof(btConvexConvexAlgorithm::CreateFunc),16);
-	m_convexConvexCreateFunc = new(mem) btConvexConvexAlgorithm::CreateFunc(m_simplexSolver,m_pdSolver);
+	m_convexConvexCreateFunc = new(mem) btConvexConvexAlgorithm::CreateFunc();
 	mem = btAlignedAlloc(sizeof(btConvexConcaveCollisionAlgorithm::CreateFunc),16);
 	m_convexConcaveCreateFunc = new (mem)btConvexConcaveCollisionAlgorithm::CreateFunc;
 	mem = btAlignedAlloc(sizeof(btConvexConcaveCollisionAlgorithm::CreateFunc),16);

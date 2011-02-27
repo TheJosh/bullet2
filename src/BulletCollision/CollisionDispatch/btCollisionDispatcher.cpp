@@ -17,7 +17,6 @@ subject to the following restrictions:
 
 #include "btCollisionDispatcher.h"
 
-
 #include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
@@ -25,6 +24,19 @@ subject to the following restrictions:
 #include "BulletCollision/BroadphaseCollision/btOverlappingPairCache.h"
 #include "LinearMath/btPoolAllocator.h"
 #include "BulletCollision/CollisionDispatch/btCollisionConfiguration.h"
+
+#include "BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.h"
+#include "BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.h"
+#ifdef USE_BUGGY_SPHERE_BOX_ALGORITHM
+#include "BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.h"
+#endif //USE_BUGGY_SPHERE_BOX_ALGORITHM
+#include "BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.h"
+
 
 int gNumManifold = 0;
 
@@ -37,15 +49,12 @@ btCollisionDispatcher::btCollisionDispatcher (btCollisionConfiguration* collisio
 m_dispatcherFlags(btCollisionDispatcher::CD_USE_RELATIVE_CONTACT_BREAKING_THRESHOLD),
 	m_collisionConfiguration(collisionConfiguration)
 {
-	int i;
-
-	setNearCallback(defaultNearCallback);
+	setNearCallback(defaultNearCallbackDiscrete);
 	
 	m_collisionAlgorithmPoolAllocator = collisionConfiguration->getCollisionAlgorithmPool();
-
 	m_persistentManifoldPoolAllocator = collisionConfiguration->getPersistentManifoldPool();
 
-	for (i=0;i<MAX_BROADPHASE_COLLISION_TYPES;i++)
+	for (int i=0;i<MAX_BROADPHASE_COLLISION_TYPES;i++)
 	{
 		for (int j=0;j<MAX_BROADPHASE_COLLISION_TYPES;j++)
 		{
@@ -87,11 +96,12 @@ btPersistentManifold*	btCollisionDispatcher::getNewManifold(const btCollisionObj
 	if (m_persistentManifoldPoolAllocator->getFreeCount())
 	{
 		mem = m_persistentManifoldPoolAllocator->allocate(sizeof(btPersistentManifold));
-	} else
+	}
+	else
 	{
 		mem = btAlignedAlloc(sizeof(btPersistentManifold),16);
-
 	}
+
 	btPersistentManifold* manifold = new(mem) btPersistentManifold (body0,body1,0,contactBreakingThreshold,contactProcessingThreshold);
 	manifold->m_index1a = m_manifoldsPtr.size();
 	m_manifoldsPtr.push_back(manifold);
@@ -123,23 +133,22 @@ void btCollisionDispatcher::releaseManifold(btPersistentManifold* manifold)
 	if (m_persistentManifoldPoolAllocator->validPtr(manifold))
 	{
 		m_persistentManifoldPoolAllocator->freeMemory(manifold);
-	} else
+	}
+	else
 	{
 		btAlignedFree(manifold);
 	}
-	
 }
-
 	
 
-btCollisionAlgorithm* btCollisionDispatcher::findAlgorithm(const btCollider* body0,const btCollider* body1,btPersistentManifold* sharedManifold)
+btCollisionAlgorithm* btCollisionDispatcher::findAlgorithm(const btCollider* body0,const btCollider* body1,btPersistentManifold* sharedManifold, bool isSwapped)
 {
 	
-	btCollisionAlgorithmConstructionInfo ci;
+	btCollisionAlgorithmConstructionInfo ci(this, isSwapped, sharedManifold, body0, body1, getSimplexSolver(), getDepthSolver());
 
 	ci.m_dispatcher1 = this;
 	ci.m_manifold = sharedManifold;
-	btCollisionAlgorithm* algo = m_doubleDispatch[body0->getCollisionShape()->getShapeType()][body1->getCollisionShape()->getShapeType()]->CreateCollisionAlgorithm(ci,body0,body1);
+	btCollisionAlgorithm* algo = m_doubleDispatch[body0->getCollisionShape()->getShapeType()][body1->getCollisionShape()->getShapeType()]->CreateCollisionAlgorithm(ci);
 
 	return algo;
 }
@@ -191,94 +200,103 @@ bool	btCollisionDispatcher::needsCollision(const btCollisionObject* body0,const 
 
 ///interface for iterating all overlapping collision pairs, no matter how those pairs are stored (array, set, map etc)
 ///this is useful for the collision dispatcher.
-class btCollisionPairCallback : public btOverlapCallback
+class btDiscreteCollisionPairCallback : public btOverlapCallback
 {
 	const btDispatcherInfo& m_dispatchInfo;
-	btCollisionDispatcher*	m_dispatcher;
+	btCollisionDispatcher* m_dispatcher;
 
 public:
-
-	btCollisionPairCallback(const btDispatcherInfo& dispatchInfo,btCollisionDispatcher*	dispatcher)
-	:m_dispatchInfo(dispatchInfo),
-	m_dispatcher(dispatcher)
+	btDiscreteCollisionPairCallback(const btDispatcherInfo& dispatchInfo, btCollisionDispatcher* dispatcher)
+	:	m_dispatchInfo(dispatchInfo)
+	,	m_dispatcher(dispatcher)
 	{
 	}
 
-	/*btCollisionPairCallback& operator=(btCollisionPairCallback& other)
+	virtual bool processOverlap(btBroadphasePair& pair)
 	{
-		m_dispatchInfo = other.m_dispatchInfo;
-		m_dispatcher = other.m_dispatcher;
-		return *this;
-	}
-	*/
-
-
-	virtual ~btCollisionPairCallback() {}
-
-
-	virtual bool	processOverlap(btBroadphasePair& pair)
-	{
-		(*m_dispatcher->getNearCallback())(pair,*m_dispatcher,m_dispatchInfo);
-
+		m_dispatcher->defaultNearCallbackDiscrete(pair, *m_dispatcher, m_dispatchInfo);
 		return false;
 	}
 };
 
-
-
-void	btCollisionDispatcher::dispatchAllCollisionPairs(btOverlappingPairCache* pairCache,const btDispatcherInfo& dispatchInfo,btDispatcher* dispatcher) 
+class btContinuousCollisionPairCallback : public btOverlapCallback
 {
-	//m_blockedForChanges = true;
+	const btDispatcherInfo& m_dispatchInfo;
+	btCollisionDispatcher* m_dispatcher;
 
-	btCollisionPairCallback	collisionCallback(dispatchInfo,this);
+public:
+	btContinuousCollisionPairCallback(const btDispatcherInfo& dispatchInfo, btCollisionDispatcher* dispatcher)
+	:	m_dispatchInfo(dispatchInfo)
+	,	m_dispatcher(dispatcher)
+	{
+	}
 
-	pairCache->processAllOverlappingPairs(&collisionCallback,dispatcher);
+	virtual bool processOverlap(btBroadphasePair& pair)
+	{
+		m_dispatcher->defaultNearCallbackContinuous(pair, *m_dispatcher, m_dispatchInfo);
+		return false;
+	}
+};
 
-	//m_blockedForChanges = false;
-
+void btCollisionDispatcher::dispatchAllCollisionPairs(btOverlappingPairCache* pairCache,const btDispatcherInfo& dispatchInfo,btDispatcher* dispatcher, bool singleThread) 
+{
+	if (dispatchInfo.m_dispatchFunc == btDispatcherInfo::DISPATCH_DISCRETE)
+	{
+		btDiscreteCollisionPairCallback	collisionCallback(dispatchInfo, this);
+		pairCache->processAllOverlappingPairs(&collisionCallback, dispatcher);
+	}
+	else
+	{
+		btContinuousCollisionPairCallback collisionCallback(dispatchInfo, this);
+		pairCache->processAllOverlappingPairs(&collisionCallback, dispatcher);
+	}
 }
 
-
-
-
-//by default, Bullet will use this near callback
-void btCollisionDispatcher::defaultNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+void btCollisionDispatcher::defaultNearCallbackDiscrete(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
 {
-		btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
-		btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
+	btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
+	btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
 
-		if (dispatcher.needsCollision(colObj0,colObj1))
+	if (checkCollisionBetween(colObj0,colObj1))
+	{
+		btCollider collider0(0, colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform());
+		btCollider collider1(0, colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform());
+
+		if (!collisionPair.m_algorithm)
+		{
+			collisionPair.m_algorithm = dispatcher.findAlgorithm(&collider0, &collider1);
+			if (!collisionPair.m_algorithm)
+				return;
+		}
+
+		btManifoldResult contactPointResult(colObj0,colObj1);
+		btCollisionProcessInfo processInfo(collider0, collider1, dispatchInfo, &contactPointResult, &dispatcher);
+		collisionPair.m_algorithm->processCollision(processInfo);
+	}
+}
+
+void btCollisionDispatcher::defaultNearCallbackContinuous(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo)
+{
+	btCollisionObject* colObj0 = (btCollisionObject*)collisionPair.m_pProxy0->m_clientObject;
+	btCollisionObject* colObj1 = (btCollisionObject*)collisionPair.m_pProxy1->m_clientObject;
+
+	if (checkCollisionBetween(colObj0,colObj1))
+	{
+		if (!collisionPair.m_algorithm)
 		{
 			btCollider collider0(0, colObj0->getCollisionShape(), colObj0, colObj0->getWorldTransform());
 			btCollider collider1(0, colObj1->getCollisionShape(), colObj1, colObj1->getWorldTransform());
 
-			//dispatcher will keep algorithms persistent in the collision pair
+			collisionPair.m_algorithm = dispatcher.findAlgorithm(&collider0, &collider1);
 			if (!collisionPair.m_algorithm)
-			{
-				collisionPair.m_algorithm = dispatcher.findAlgorithm(&collider0, &collider1);
-			}
-
-			if (collisionPair.m_algorithm)
-			{
-				btManifoldResult contactPointResult(colObj0,colObj1);
-				
-				if (dispatchInfo.m_dispatchFunc == 		btDispatcherInfo::DISPATCH_DISCRETE)
-				{
-					//discrete collision detection query
-					btCollisionProcessInfo processInfo(collider0, collider1, dispatchInfo, &contactPointResult, &dispatcher);
-					collisionPair.m_algorithm->processCollision(processInfo);
-				}
-				else
-				{
-					//continuous collision detection query, time of impact (toi)
-					btScalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0,colObj1,dispatchInfo,&contactPointResult);
-					if (dispatchInfo.m_timeOfImpact > toi)
-						dispatchInfo.m_timeOfImpact = toi;
-
-				}
-			}
+				return;
 		}
 
+		btManifoldResult contactPointResult(colObj0, colObj1);
+		btScalar toi = collisionPair.m_algorithm->calculateTimeOfImpact(colObj0, colObj1, dispatchInfo, &contactPointResult);
+		if (dispatchInfo.m_timeOfImpact > toi)
+			dispatchInfo.m_timeOfImpact = toi;
+	}
 }
 
 
@@ -302,4 +320,14 @@ void btCollisionDispatcher::freeCollisionAlgorithm(void* ptr)
 	{
 		btAlignedFree(ptr);
 	}
+}
+
+btVoronoiSimplexSolver* btCollisionDispatcher::getSimplexSolver()
+{
+	return m_collisionConfiguration->getSimplexSolver();
+}
+
+btConvexPenetrationDepthSolver* btCollisionDispatcher::getDepthSolver()
+{
+	return m_collisionConfiguration->getDepthSolver();
 }

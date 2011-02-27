@@ -17,18 +17,16 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/BroadphaseCollision/btDbvt.h"
+#include "BulletCollision/BroadphaseCollision/btQuantizedBvh.h"
 #include "LinearMath/btIDebugDraw.h"
 #include "LinearMath/btAabbUtil2.h"
 #include "btManifoldResult.h"
 
-btCompoundCollisionAlgorithm::btCompoundCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1,bool isSwapped)
-:btActivatingCollisionAlgorithm(ci,body0,body1),
-m_isSwapped(isSwapped),
-m_sharedManifold(ci.m_manifold)
+btCompoundCollisionAlgorithm::btCompoundCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci)
+:btActivatingCollisionAlgorithm(ci, false),
+m_isSwapped(ci.m_isSwapped)
 {
-	m_ownsManifold = false;
-
-	const btCollider* colObj = m_isSwapped? body1 : body0;
+	const btCollider* colObj = m_isSwapped? ci.m_colObj1 : ci.m_colObj0;
 	btAssert (colObj->getCollisionShape()->isCompound());
 	
 	const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(colObj->getCollisionShape());
@@ -52,7 +50,7 @@ void	btCompoundCollisionAlgorithm::preallocateChildAlgorithms(btDispatcher* disp
 	m_childCollisionAlgorithms.resize(numChildren);
 	for (i=0;i<numChildren;i++)
 	{
-		if (compoundShape->getDynamicAabbTree())
+		if (compoundShape->getDynamicAabbTree() || compoundShape->getBvhTree())
 		{
 			m_childCollisionAlgorithms[i] = 0;
 		} else
@@ -60,12 +58,12 @@ void	btCompoundCollisionAlgorithm::preallocateChildAlgorithms(btDispatcher* disp
 			const btCollisionShape* tmpShape = colObj.getCollisionShape();
 			const btCollisionShape* childShape = compoundShape->getChildShape(i);
 			btCollider localCollider(&colObj, childShape, colObj.getCollisionObject(), colObj.getWorldTransform());
-			m_childCollisionAlgorithms[i] = m_dispatcher->findAlgorithm(&localCollider,&otherObj,m_sharedManifold);
+			m_childCollisionAlgorithms[i] = dispatcher->findAlgorithm(&localCollider,&otherObj, m_manifoldPtr);
 		}
 	}
 }
 
-void	btCompoundCollisionAlgorithm::removeChildAlgorithms()
+void	btCompoundCollisionAlgorithm::removeChildAlgorithms(btDispatcher* dispatcher)
 {
 	int numChildren = m_childCollisionAlgorithms.size();
 	int i;
@@ -73,18 +71,22 @@ void	btCompoundCollisionAlgorithm::removeChildAlgorithms()
 	{
 		if (m_childCollisionAlgorithms[i])
 		{
+			m_childCollisionAlgorithms[i]->nihilize(dispatcher);
 			m_childCollisionAlgorithms[i]->~btCollisionAlgorithm();
-			m_dispatcher->freeCollisionAlgorithm(m_childCollisionAlgorithms[i]);
+			dispatcher->freeCollisionAlgorithm(m_childCollisionAlgorithms[i]);
 		}
 	}
 }
 
 btCompoundCollisionAlgorithm::~btCompoundCollisionAlgorithm()
 {
-	removeChildAlgorithms();
 }
 
-
+void btCompoundCollisionAlgorithm::nihilize(btDispatcher* dispatcher)
+{
+	removeChildAlgorithms(dispatcher);
+	btActivatingCollisionAlgorithm::nihilize(dispatcher);
+}
 
 
 struct	btCompoundLeafCallback : btDbvt::ICollide
@@ -175,68 +177,126 @@ public:
 };
 
 
+struct	MyCompoundNodeOverlapCallback : public btNodeOverlapCallback
+{
+	const btCollider& m_compoundCollider;
+	const btCollider& m_collidingObj;
+	btDispatcher* m_dispatcher;
+	const btDispatcherInfo& m_dispatchInfo;
+	btManifoldResult*	m_resultOut;
+	btCollisionAlgorithm**	m_childCollisionAlgorithms;
+	btPersistentManifold*	m_sharedManifold;
 
 
+	MyCompoundNodeOverlapCallback(const btCollider& compoundCollider, 
+		const btCollider& collidingObj, 
+		btDispatcher* dispatcher,
+		const btDispatcherInfo& dispatchInfo,
+		btManifoldResult* resultOut,
+		btCollisionAlgorithm** childCollisionAlgorithms,
+		btPersistentManifold* sharedManifold)
+		: m_compoundCollider(compoundCollider)
+		, m_collidingObj(collidingObj)
+		, m_dispatcher(dispatcher)
+		, m_dispatchInfo(dispatchInfo)
+		, m_resultOut(resultOut)
+		, m_childCollisionAlgorithms(childCollisionAlgorithms)
+		, m_sharedManifold(sharedManifold)
 
+	{
+	}
+
+	virtual void processNode(int nodeSubPart, int nodeShapeIndex)
+	{
+		const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(m_compoundCollider.getCollisionShape());
+		const btCollisionShape* childShape = compoundShape->getChildShape(nodeShapeIndex);
+
+		//backup
+		btTransform	orgTrans = m_compoundCollider.getWorldTransform();
+		const btTransform& childTrans = compoundShape->getChildTransform(nodeShapeIndex);
+		btTransform	newChildWorldTrans = orgTrans*childTrans ;
+
+		//the contactpoint is still projected back using the original inverted worldtrans
+		btCollider childCollider(&m_compoundCollider, childShape,m_compoundCollider.getCollisionObject(), newChildWorldTrans);
+
+		if (!m_childCollisionAlgorithms[nodeShapeIndex])
+			m_childCollisionAlgorithms[nodeShapeIndex] = m_dispatcher->findAlgorithm(&childCollider,&m_collidingObj,m_sharedManifold);
+
+		///detect swapping case
+		if (m_resultOut->getBody0Internal() == m_compoundCollider.getCollisionObject())
+		{
+			m_resultOut->setShapeIdentifiersA(-1,nodeShapeIndex);
+		} else
+		{
+			m_resultOut->setShapeIdentifiersB(-1,nodeShapeIndex);
+		}
+		btCollisionProcessInfo processInfo(childCollider, m_collidingObj, m_dispatchInfo, m_resultOut, m_dispatcher);
+		m_childCollisionAlgorithms[nodeShapeIndex]->processCollision(processInfo);
+	}
+};
 
 void btCompoundCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
 {
 	const btCollider& colObj = m_isSwapped ? processInfo.m_body1 : processInfo.m_body0;
 	const btCollider& otherObj = m_isSwapped ? processInfo.m_body0 : processInfo.m_body1;
-
-	btAssert (colObj.getCollisionShape()->isCompound());
 	const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(colObj.getCollisionShape());
 
 	///btCompoundShape might have changed:
 	////make sure the internal child collision algorithm caches are still valid
-	if (compoundShape->getUpdateRevision() != m_compoundShapeRevision)
+	if (compoundShape->getUpdateRevision() != m_compoundShapeRevision && !compoundShape->getBvhTree())
 	{
 		///clear and update all
-		removeChildAlgorithms();
+		removeChildAlgorithms(processInfo.m_dispatcher);
 		
 		preallocateChildAlgorithms(processInfo.m_dispatcher, processInfo.m_body0, processInfo.m_body1);
 	}
-
-
-	const btDbvt* tree = compoundShape->getDynamicAabbTree();
-	//use a dynamic aabb tree to cull potential child-overlaps
-	btCompoundLeafCallback  callback(
-		&colObj,
-		&otherObj,
-		processInfo.m_dispatcher,
-		processInfo.m_dispatchInfo,
-		processInfo.m_result,
-		&m_childCollisionAlgorithms[0],
-		m_sharedManifold
-	);
 
 	///we need to refresh all contact manifolds
 	///note that we should actually recursively traverse all children, btCompoundShape can nested more then 1 level deep
 	///so we should add a 'refreshManifolds' in the btCollisionAlgorithm
 	{
-		int i;
-		btManifoldArray manifoldArray;
-		for (i=0;i<m_childCollisionAlgorithms.size();i++)
+		for (int i=0; i < m_childCollisionAlgorithms.size(); i++)
 		{
 			if (m_childCollisionAlgorithms[i])
 			{
-				m_childCollisionAlgorithms[i]->getAllContactManifolds(manifoldArray);
-				for (int m=0;m<manifoldArray.size();m++)
+				m_childCollisionAlgorithms[i]->getAllContactManifolds(m_manifoldArray);
+				for (int m = 0; m < m_manifoldArray.size(); m++)
 				{
-					if (manifoldArray[m]->getNumContacts())
+					if (m_manifoldArray[m]->getNumContacts())
 					{
-						processInfo.m_result->setPersistentManifold(manifoldArray[m]);
+						processInfo.m_result->setPersistentManifold(m_manifoldArray[m]);
 						processInfo.m_result->refreshContactPoints();
 						processInfo.m_result->setPersistentManifold(0);//??necessary?
 					}
 				}
-				manifoldArray.resize(0); //better than clear()
+				m_manifoldArray.resize(0);
 			}
 		}
 	}
 
-	if (tree)
+	const btDbvt* tree = compoundShape->getDynamicAabbTree();
+	const btQuantizedBvh* obvh = compoundShape->getBvhTree();
+	if (obvh)
 	{
+		btVector3 aabbMin, aabbMax;
+		MyCompoundNodeOverlapCallback myCallback(colObj, otherObj, processInfo.m_dispatcher, processInfo.m_dispatchInfo, processInfo.m_result, &m_childCollisionAlgorithms[0], m_manifoldPtr);
+		btTransform collidingInCompoundSpace = colObj.getWorldTransform().inverse() * otherObj.getWorldTransform();
+		otherObj.getCollisionShape()->getAabb(collidingInCompoundSpace, aabbMin, aabbMax);
+		// Query bvh-tree here.
+		obvh->reportAabbOverlappingNodex(&myCallback,aabbMin,aabbMax);
+	}
+	else if (tree)
+	{
+		//use a dynamic aabb tree to cull potential child-overlaps
+		btCompoundLeafCallback  callback(
+			&colObj,
+			&otherObj,
+			processInfo.m_dispatcher,
+			processInfo.m_dispatchInfo,
+			processInfo.m_result,
+			&m_childCollisionAlgorithms[0],
+			m_manifoldPtr
+			);
 
 		btVector3 localAabbMin,localAabbMax;
 		btTransform otherInCompoundSpace;
@@ -250,6 +310,15 @@ void btCompoundCollisionAlgorithm::processCollision (const btCollisionProcessInf
 	} else
 	{
 		//iterate over all children, perform an AABB check inside ProcessChildShape
+		btCompoundLeafCallback  callback(
+			&colObj,
+			&otherObj,
+			processInfo.m_dispatcher,
+			processInfo.m_dispatchInfo,
+			processInfo.m_result,
+			&m_childCollisionAlgorithms[0],
+			m_manifoldPtr
+			);
 		int numChildren = m_childCollisionAlgorithms.size();
 		int i;
 		for (i=0;i<numChildren;i++)
@@ -285,8 +354,9 @@ void btCompoundCollisionAlgorithm::processCollision (const btCollisionProcessInf
 
 				if (!TestAabbAgainstAabb2(aabbMin0,aabbMax0,aabbMin1,aabbMax1))
 				{
+					m_childCollisionAlgorithms[i]->nihilize(processInfo.m_dispatcher);
 					m_childCollisionAlgorithms[i]->~btCollisionAlgorithm();
-					m_dispatcher->freeCollisionAlgorithm(m_childCollisionAlgorithms[i]);
+					processInfo.m_dispatcher->freeCollisionAlgorithm(m_childCollisionAlgorithms[i]);
 					m_childCollisionAlgorithms[i] = 0;
 				}
 			}
@@ -344,5 +414,55 @@ btScalar	btCompoundCollisionAlgorithm::calculateTimeOfImpact(btCollisionObject* 
 
 }
 
+
+
+struct CompoundConvexCastNodeOverlapCallback : public btNodeOverlapCallback
+{
+	const btCollider& m_compoundCollider;
+	btCollisionWorld::ConvexCastInfo& m_convexCastInfo;
+
+	CompoundConvexCastNodeOverlapCallback(
+		const btCollider& compoundCollider,
+		btCollisionWorld::ConvexCastInfo& convexCastInfo
+		)
+		:	m_compoundCollider(compoundCollider)
+		,	m_convexCastInfo(convexCastInfo)
+	{
+	}
+
+	virtual void processNode(int nodeSubPart, int nodeShapeIndex)
+	{
+		const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(m_compoundCollider.getCollisionShape());
+		const btCollisionShape* childShape = compoundShape->getChildShape(nodeShapeIndex);
+
+		const btTransform& orgTrans = m_compoundCollider.getWorldTransform();
+		const btTransform& childTrans = compoundShape->getChildTransform(nodeShapeIndex);
+		btTransform	newChildWorldTrans = orgTrans * childTrans;
+
+		btCollider childCollider(&m_compoundCollider, childShape, m_compoundCollider.getCollisionObject(), newChildWorldTrans);
+		btCollisionWorld::objectQuerySingle(
+			m_convexCastInfo.m_castShape,
+			m_convexCastInfo.m_convexFromTrans, 
+			m_convexCastInfo.m_convexToTrans, 
+			childCollider, 
+			m_convexCastInfo.m_resultCallback, 
+			m_convexCastInfo.m_allowedPenetration
+			);
+	}
+};
+
+void btCompoundCollisionAlgorithm::performConvexcast (
+	btCollisionWorld::ConvexCastInfo& convexCastInfo,
+	const btCollider& compoundCollider,
+	const btVector3& boxSource, 
+	const btVector3& boxTarget, 
+	const btVector3& aabbMin, 
+	const btVector3& aabbMax)
+{
+	const btCompoundShape* compoundShape = static_cast<const btCompoundShape*>(compoundCollider.getCollisionShape());
+	const btQuantizedBvh* bvh = compoundShape->getBvhTree();
+	CompoundConvexCastNodeOverlapCallback myNodeCallback(compoundCollider, convexCastInfo);
+	bvh->reportBoxCastOverlappingNodex (&myNodeCallback, boxSource, boxTarget, aabbMin, aabbMax);
+}
 
 

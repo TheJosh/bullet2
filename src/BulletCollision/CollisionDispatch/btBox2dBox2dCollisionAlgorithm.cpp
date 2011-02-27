@@ -25,27 +25,13 @@ subject to the following restrictions:
 
 #define USE_PERSISTENT_CONTACTS 1
 
-btBox2dBox2dCollisionAlgorithm::btBox2dBox2dCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1)
-: btActivatingCollisionAlgorithm(ci,body0,body1),
-m_ownManifold(false),
-m_manifoldPtr(mf)
+btBox2dBox2dCollisionAlgorithm::btBox2dBox2dCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci)
 {
-	if (!m_manifoldPtr && m_dispatcher->needsCollision(body0->getCollisionObject(),body1->getCollisionObject()))
-	{
-		m_manifoldPtr = m_dispatcher->getNewManifold(body0->getCollisionObject(),body1->getCollisionObject());
-		m_ownManifold = true;
-	}
 }
 
 btBox2dBox2dCollisionAlgorithm::~btBox2dBox2dCollisionAlgorithm()
 {
-	
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
-	
 }
 
 

@@ -19,12 +19,12 @@ subject to the following restrictions:
 #include "btActivatingCollisionAlgorithm.h"
 #include "BulletCollision/BroadphaseCollision/btDispatcher.h"
 #include "BulletCollision/BroadphaseCollision/btBroadphaseInterface.h"
-
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
-class btDispatcher;
 #include "BulletCollision/BroadphaseCollision/btBroadphaseProxy.h"
 #include "btCollisionCreateFunc.h"
 #include "LinearMath/btAlignedObjectArray.h"
+#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
+
 class btDispatcher;
 struct btCollider;
 class btCollisionObject;
@@ -34,22 +34,19 @@ class btCompoundCollisionAlgorithm  : public btActivatingCollisionAlgorithm
 {
 	btAlignedObjectArray<btCollisionAlgorithm*> m_childCollisionAlgorithms;
 	bool m_isSwapped;
-
-	class btPersistentManifold*	m_sharedManifold;
-	bool					m_ownsManifold;
-
 	int	m_compoundShapeRevision;//to keep track of changes, so that childAlgorithm array can be updated
+	btManifoldArray m_manifoldArray;
 	
-	void	removeChildAlgorithms();
+	void	removeChildAlgorithms(btDispatcher* dispatcher);
 	
 	void	preallocateChildAlgorithms(btDispatcher* dispatcher, const btCollider& body0,const btCollider& body1);
 
 public:
 
-	btCompoundCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci,const btCollider* colObj0,const btCollider* colObj1,bool isSwapped);
+	btCompoundCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual ~btCompoundCollisionAlgorithm();
-
+	virtual void nihilize(btDispatcher* dispatcher);
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
 
 	btScalar	calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
@@ -64,21 +61,30 @@ public:
 		}
 	}
 
+	static void performConvexcast (
+		btCollisionWorld::ConvexCastInfo& convexCastInfo,
+		const btCollider& compoundCollider,
+		const btVector3& boxSource, 
+		const btVector3& boxTarget, 
+		const btVector3& aabbMin, 
+		const btVector3& aabbMax);
+
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0, const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btCompoundCollisionAlgorithm));
-			return new(mem) btCompoundCollisionAlgorithm(ci,body0,body1,false);
+			return new(mem) btCompoundCollisionAlgorithm(ci);
 		}
 	};
 
 	struct SwappedCreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0, const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
+			ci.m_isSwapped = true;
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btCompoundCollisionAlgorithm));
-			return new(mem) btCompoundCollisionAlgorithm(ci,body0,body1,true);
+			return new(mem) btCompoundCollisionAlgorithm(ci);
 		}
 	};
 

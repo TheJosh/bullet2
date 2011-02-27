@@ -1,6 +1,6 @@
 #define STRINGIFY(A) #A
 
-#ifdef USE_AMD_OPENCL
+#if 0
 // vertex shader
 const char *vertexShader = STRINGIFY(
 uniform float pointRadius;  // point size in world space

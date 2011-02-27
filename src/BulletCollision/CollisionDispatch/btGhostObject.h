@@ -43,7 +43,7 @@ public:
 
 	virtual ~btGhostObject();
 
-	void	convexSweepTest(const class btConvexShape* castShape, const btTransform& convexFromWorld, const btTransform& convexToWorld, btCollisionWorld::ConvexResultCallback& resultCallback, btScalar allowedCcdPenetration = 0.f) const;
+	void	convexSweepTest(const class btConvexShape* castShape, const btTransform& convexFromWorld, const btTransform& convexToWorld, btCollisionWorld::ClosestConvexResultCallback& resultCallback, btScalar allowedCcdPenetration = 0.f) const;
 
 	void	rayTest(const btVector3& rayFromWorld, const btVector3& rayToWorld, btCollisionWorld::RayResultCallback& resultCallback) const; 
 
@@ -72,7 +72,7 @@ public:
 		return m_overlappingObjects;
 	}
 
-	const btAlignedObjectArray<btCollisionObject*>	getOverlappingPairs() const
+	const btAlignedObjectArray<btCollisionObject*>&	getOverlappingPairs() const
 	{
 		return m_overlappingObjects;
 	}

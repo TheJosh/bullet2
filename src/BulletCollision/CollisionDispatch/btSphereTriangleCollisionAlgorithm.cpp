@@ -21,26 +21,14 @@ subject to the following restrictions:
 #include "SphereTriangleDetector.h"
 
 
-btSphereTriangleCollisionAlgorithm::btSphereTriangleCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* col0,const btCollider* col1,bool swapped)
-: btActivatingCollisionAlgorithm(ci,col0,col1),
-m_ownManifold(false),
-m_manifoldPtr(mf),
-m_swapped(swapped)
+btSphereTriangleCollisionAlgorithm::btSphereTriangleCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci),
+m_swapped(ci.m_isSwapped)
 {
-	if (!m_manifoldPtr)
-	{
-		m_manifoldPtr = m_dispatcher->getNewManifold(col0->getCollisionObject(),col1->getCollisionObject());
-		m_ownManifold = true;
-	}
 }
 
 btSphereTriangleCollisionAlgorithm::~btSphereTriangleCollisionAlgorithm()
 {
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
 }
 
 void btSphereTriangleCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)

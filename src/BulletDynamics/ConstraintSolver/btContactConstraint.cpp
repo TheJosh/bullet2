@@ -21,8 +21,8 @@ subject to the following restrictions:
 #include "btContactSolverInfo.h"
 #include "LinearMath/btMinMax.h"
 #include "BulletCollision/NarrowPhaseCollision/btManifoldPoint.h"
-
-
+#include "BulletDynamics/Character/btKinematicCharacterController.h"
+#include "BulletCollision/CollisionDispatch/btGhostObject.h"
 
 btContactConstraint::btContactConstraint(btPersistentManifold* contactManifold,btRigidBody& rbA,btRigidBody& rbB)
 :btTypedConstraint(CONTACT_CONSTRAINT_TYPE,rbA,rbB),
@@ -55,8 +55,6 @@ void	btContactConstraint::buildJacobian()
 {
 
 }
-
-
 
 
 
@@ -129,6 +127,50 @@ void resolveSingleBilateral(btRigidBody& body1, const btVector3& pos1,
 #endif
 }
 
+//bilateral constraint between a character and a (dynamic) object
+void resolveSingleBilateralCharacter(const singleBilateralInput& input, singleBilateralOutput& output)
+{
+	btScalar normalLenSqr = input.m_normal.length2();
+	ASSERT2(btFabs(normalLenSqr) < btScalar(1.1));
+	if (normalLenSqr > btScalar(1.1))
+	{
+		output.m_impulse = btScalar(0.);
+		return;
+	}
+	btVector3 rel_pos1 = input.m_position - input.m_transform1.getOrigin();
+	btVector3 rel_pos2 = input.m_position - input.m_transform2.getOrigin();
 
+	//this jacobian entry could be re-used for all iterations
+
+	btJacobianEntry jac(input.m_transform1.getBasis().transpose(),
+		input.m_transform2.getBasis().transpose(),
+		rel_pos1, rel_pos2, input.m_normal, btVector3(1.f, 1.f, 2.f), 1.f / 80.f,
+		btVector3(0.f, 0.f, 0.f), 0);
+
+	btScalar jacDiagAB = jac.getDiagonal();
+	btScalar jacDiagABInv = btScalar(1.) / jacDiagAB;
+
+	btScalar rel_vel = jac.getRelativeVelocity(
+		input.m_velocity,
+		btVector3(0.f, 0.f, 0.f),
+		btVector3(0.f, 0.f, 0.f),
+		btVector3(0.f, 0.f, 0.f)); 
+	btScalar a;
+	a=jacDiagABInv;
+
+
+	rel_vel = input.m_normal.dot(input.m_velocity);
+
+	//todo: move this into proper structure
+	btScalar contactDamping = btScalar(0.2);
+
+#ifdef ONLY_USE_LINEAR_MASS
+	btScalar massTerm = btScalar(1.) / (body1.getInvMass() + body2.getInvMass());
+	impulse = - contactDamping * rel_vel * massTerm;
+#else	
+	btScalar velocityImpulse = -contactDamping * rel_vel * jacDiagABInv;
+	output.m_impulse = velocityImpulse;
+#endif
+}
 
 

@@ -21,6 +21,8 @@ subject to the following restrictions:
 #include "btTypedConstraint.h"
 #include "BulletCollision/NarrowPhaseCollision/btPersistentManifold.h"
 
+class btKinematicCharacterController;
+
 ///btContactConstraint can be automatically created to solve contact constraints using the unified btTypedConstraint interface
 ATTRIBUTE_ALIGNED16(class) btContactConstraint : public btTypedConstraint
 {
@@ -29,8 +31,6 @@ protected:
 	btPersistentManifold m_contactManifold;
 
 public:
-
-
 	btContactConstraint(btPersistentManifold* contactManifold,btRigidBody& rbA,btRigidBody& rbB);
 
 	void	setContactManifold(btPersistentManifold* contactManifold);
@@ -53,8 +53,6 @@ public:
 
 	///obsolete methods
 	virtual void	buildJacobian();
-
-
 };
 
 
@@ -63,6 +61,35 @@ void resolveSingleBilateral(btRigidBody& body1, const btVector3& pos1,
                       btRigidBody& body2, const btVector3& pos2,
                       btScalar distance, const btVector3& normal,btScalar& impulse ,btScalar timeStep);
 
+struct singleBilateralInput
+{
+	btTransform	m_transform1;
+	btTransform m_transform2;
+	btVector3	m_position;
+	btVector3	m_velocity;
+	btScalar	m_friction;
+	btVector3	m_normal;
+	btScalar	m_timeStep;
+	//int			m_num
+};
+
+struct btSurfaceConstraintInfo
+{
+	btVector3	m_planeNormal;
+	btScalar	m_distance;
+	btScalar	m_friction;
+	btVector3	m_velocity;
+};
+
+struct singleBilateralOutput
+{
+	btVector3	m_position;
+	btVector3	m_velocity;
+	btScalar	m_timeStep;
+	btScalar	m_impulse;
+};
+
+void resolveSingleBilateralCharacter(const singleBilateralInput& input, singleBilateralOutput& output);
 
 
 #endif //CONTACT_CONSTRAINT_H

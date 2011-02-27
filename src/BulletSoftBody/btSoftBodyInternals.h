@@ -667,7 +667,7 @@ struct btSoftColliders
 			threshold	=(btScalar)0;
 		}
 		bool				SolveContact(	const btGjkEpaSolver2::sResults& res,
-			btSoftBody::Body ba,btSoftBody::Body bb,
+			btSoftBody::Body ba, btSoftBody::Body bb,
 			btSoftBody::CJoint& joint)
 		{
 			if(res.distance<m_margin)
@@ -719,16 +719,16 @@ struct btSoftColliders
 	{
 		btSoftBody*		psb;
 		
-		btCollisionObject*	m_colObj;
+		const btCollider*	m_colObj;
 		void		Process(const btDbvtNode* leaf)
 		{
 			btSoftBody::Cluster*		cluster=(btSoftBody::Cluster*)leaf->data;
 			btSoftClusterCollisionShape	cshape(cluster);
 			
-			const btConvexShape*		rshape=(const btConvexShape*)m_colObj->getCollisionShape();
+			const btConvexShape*		rshape=static_cast<const btConvexShape*>(m_colObj->getCollisionShape());
 
 			///don't collide an anchored cluster with a static/kinematic object
-			if(m_colObj->isStaticOrKinematicObject() && cluster->m_containsAnchor)
+			if(m_colObj->getCollisionObject()->isStaticOrKinematicObject() && cluster->m_containsAnchor)
 				return;
 
 			btGjkEpaSolver2::sResults	res;		
@@ -737,11 +737,11 @@ struct btSoftColliders
 				btVector3(1,0,0),res))
 			{
 				btSoftBody::CJoint	joint;
-				if(SolveContact(res,cluster,m_colObj,joint))//prb,joint))
+				if(SolveContact(res, cluster, m_colObj->getCollisionObject(), joint))//prb,joint))
 				{
 					btSoftBody::CJoint*	pj=new(btAlignedAlloc(sizeof(btSoftBody::CJoint),16)) btSoftBody::CJoint();
 					*pj=joint;psb->m_joints.push_back(pj);
-					if(m_colObj->isStaticOrKinematicObject())
+					if(m_colObj->getCollisionObject()->isStaticOrKinematicObject())
 					{
 						pj->m_erp	*=	psb->m_cfg.kSKHR_CL;
 						pj->m_split	*=	psb->m_cfg.kSK_SPLT_CL;
@@ -754,14 +754,14 @@ struct btSoftColliders
 				}
 			}
 		}
-		void		Process(btSoftBody* ps,btCollisionObject* colOb)
+		void		Process(btSoftBody* ps,const btCollider* colOb)
 		{
 			psb			=	ps;
-			m_colObj			=	colOb;
+			m_colObj	=	colOb;
 			idt			=	ps->m_sst.isdt;
-			m_margin		=	m_colObj->getCollisionShape()->getMargin()+psb->getCollisionShape()->getMargin();
+			m_margin	=	m_colObj->getCollisionShape()->getMargin()+psb->getCollisionShape()->getMargin();
 			///Bullet rigid body uses multiply instead of minimum to determine combined friction. Some customization would be useful.
-			friction	=	btMin(psb->m_cfg.kDF,m_colObj->getFriction());
+			friction	=	btMin(psb->m_cfg.kDF,m_colObj->getCollisionObject()->getFriction());
 			btVector3			mins;
 			btVector3			maxs;
 
@@ -858,13 +858,13 @@ struct btSoftColliders
 					const btVector3		vr=vb-va;
 					const btScalar		dn=btDot(vr,c.m_cti.m_normal);
 					const btVector3		fv=vr-c.m_cti.m_normal*dn;
-					const btScalar		fc=psb->m_cfg.kDF*m_colObj1->getFriction();
+					const btScalar		fc=psb->m_cfg.kDF*m_colObj1->getCollisionObject()->getFriction();
 					c.m_node	=	&n;
 					c.m_c0		=	ImpulseMatrix(psb->m_sst.sdt,ima,imb,iwi,ra);
 					c.m_c1		=	ra;
 					c.m_c2		=	ima*psb->m_sst.sdt;
 					c.m_c3		=	fv.length2()<(btFabs(dn)*fc)?0:1-fc;
-					c.m_c4		=	m_colObj1->isStaticOrKinematicObject()?psb->m_cfg.kKHR:psb->m_cfg.kCHR;
+					c.m_c4		=	m_colObj1->getCollisionObject()->isStaticOrKinematicObject()?psb->m_cfg.kKHR:psb->m_cfg.kCHR;
 					psb->m_rcontacts.push_back(c);
 					if (m_rigidBody)
 						m_rigidBody->activate();
@@ -872,8 +872,8 @@ struct btSoftColliders
 			}
 		}
 		btSoftBody*		psb;
-		btCollisionObject*	m_colObj1;
-		btRigidBody*	m_rigidBody;
+		const btCollider*		m_colObj1;
+		const btRigidBody*	m_rigidBody;
 		btScalar		dynmargin;
 		btScalar		stamargin;
 	};

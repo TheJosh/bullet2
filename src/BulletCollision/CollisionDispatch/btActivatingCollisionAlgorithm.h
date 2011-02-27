@@ -23,16 +23,14 @@ struct btCollider;
 ///This class is not enabled yet (work-in-progress) to more aggressively activate objects.
 class btActivatingCollisionAlgorithm : public btCollisionAlgorithm
 {
-//	btCollisionObject* m_colObj0;
-//	btCollisionObject* m_colObj1;
-
+protected:
+	bool	m_ownManifold;
+	btPersistentManifold*	m_manifoldPtr;
 public:
-
-	btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci);
-
-	btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci, const btCollider* colObj0,const btCollider* colObj1);
+	btActivatingCollisionAlgorithm (const btCollisionAlgorithmConstructionInfo& ci, bool allocateManifold = true);
 
 	virtual ~btActivatingCollisionAlgorithm();
+	void nihilize( btDispatcher* dispatcher );
 
 };
 #endif //__BT_ACTIVATING_COLLISION_ALGORITHM_H

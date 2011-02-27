@@ -13,6 +13,9 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+//#pragma optimize( "", off )
+//#pragma inline_depth(0)
+
 #include "btConvexShape.h"
 #include "btTriangleShape.h"
 #include "btSphereShape.h"
@@ -20,6 +23,7 @@ subject to the following restrictions:
 #include "btCapsuleShape.h"
 #include "btConvexHullShape.h"
 #include "btConvexPointCloudShape.h"
+#include "LinearMath/btSimdVector3.h"
 
 ///not supported on IBM SDK, until we fix the alignment of btVector3
 #if defined (__CELLOS_LV2__) && defined (__SPU__)
@@ -90,6 +94,27 @@ static btVector3 convexHullSupport (const btVector3& localDirOrg, const btVector
 	int ptIndex = spu_extract(v_idxMax,0);
 	const btVector3& supVec= points[ptIndex] * localScaling;
 	return supVec;
+
+#elif defined (__CELLOS_LV2__)
+
+	int i = 0;
+
+	vec_float4 distMax = (vec_float4)(-BT_LARGE_FLOAT);
+	vec_int4 indexMax = (vec_int4)(-1);
+
+	btSimdVector3 svec(vec);
+
+	for (; i < numPoints; ++i)
+	{
+		btSimdVector3 dist = btSimdVector3(points[i]).dot(svec);
+		vec_uint4 mask = (vec_uint4)vec_cmpgt(distMax, dist.m_floats);
+		distMax = vec_sel(dist.m_floats, distMax, mask);
+		indexMax = vec_sel((vec_int4){ i, 0, 0, 0 }, indexMax, mask);
+	}
+
+	int index = indexMax[0];
+	return points[index] * localScaling;
+
 #else
 
 	btScalar newDot,maxDot = btScalar(-BT_LARGE_FLOAT);
@@ -108,7 +133,45 @@ static btVector3 convexHullSupport (const btVector3& localDirOrg, const btVector
 	btAssert(ptIndex >= 0);
 	btVector3 supVec = points[ptIndex] * localScaling;
 	return supVec;
+
 #endif //__SPU__
+}
+
+namespace
+{
+
+const static btSimdVector3 c_upAxisMasks[] =
+{
+	btSimdVector3(1.0f, 0.0f, 0.0f),
+	btSimdVector3(0.0f, 1.0f, 0.0f),
+	btSimdVector3(0.0f, 0.0f, 1.0f)
+};
+
+btVector3 lgsvwmnv_caseCapsule(const btCapsuleShape* capsuleShape, const btSimdVector3& localDir)
+{
+	btVector3 implicitShapeDim = capsuleShape->getImplicitShapeDimensions();
+	btScalar radius = capsuleShape->getRadius();
+
+	btSimdVector3 capsuleUpAxis = implicitShapeDim * c_upAxisMasks[capsuleShape->getUpAxis()];
+	btSimdVector3 vec = localDir;
+	btSimdVector3 lenSqr = vec.length2();
+	btSimdVector3 rlen = recipSquareRoot(lenSqr);
+	vec *= rlen.x();
+
+	btSimdVector3 capVec = vec * capsuleShape->getLocalScalingNV() * (radius) - vec * capsuleShape->getMarginNV();
+
+	btSimdVector3 vtx1 = capsuleUpAxis + capVec;
+	btSimdVector3 vtx2 = -capsuleUpAxis + capVec;
+
+	btSimdVector3 newDot1 = vec.dot(vtx1);
+	btSimdVector3 newDot2 = vec.dot(vtx2);
+
+	if (compareSingleGreater(newDot2, newDot1))
+		return vtx2.asVector3();
+	else
+		return vtx1.asVector3();
+}
+
 }
 
 btVector3 btConvexShape::localGetSupportVertexWithoutMarginNonVirtual (const btVector3& localDir) const
@@ -122,11 +185,14 @@ btVector3 btConvexShape::localGetSupportVertexWithoutMarginNonVirtual (const btV
 	case BOX_SHAPE_PROXYTYPE:
 	{
 		btBoxShape* convexShape = (btBoxShape*)this;
-		const btVector3& halfExtents = convexShape->getImplicitShapeDimensions();
+		btSimdVector3 halfExtents = convexShape->getImplicitShapeDimensions();
+		return select(localDir, -halfExtents, halfExtents).asVector3();
 
-		return btVector3(btFsels(localDir.x(), halfExtents.x(), -halfExtents.x()),
-			btFsels(localDir.y(), halfExtents.y(), -halfExtents.y()),
-			btFsels(localDir.z(), halfExtents.z(), -halfExtents.z()));
+		//return btVector3(
+		//	btFsels(localDir.x(), halfExtents.x(), -halfExtents.x()),
+		//	btFsels(localDir.y(), halfExtents.y(), -halfExtents.y()),
+		//	btFsels(localDir.z(), halfExtents.z(), -halfExtents.z())
+		//);
 	}
 	case TRIANGLE_SHAPE_PROXYTYPE:
 	{
@@ -199,58 +265,60 @@ btVector3 btConvexShape::localGetSupportVertexWithoutMarginNonVirtual (const btV
 	}
 	case CAPSULE_SHAPE_PROXYTYPE:
 	{
-		btVector3 vec0(localDir.getX(),localDir.getY(),localDir.getZ());
+		const btCapsuleShape* capsuleShape = (const btCapsuleShape*)this;
+		return lgsvwmnv_caseCapsule(capsuleShape, localDir);
 
-		btCapsuleShape* capsuleShape = (btCapsuleShape*)this;
-		btScalar halfHeight = capsuleShape->getHalfHeight();
-		int capsuleUpAxis = capsuleShape->getUpAxis();
+		//btVector3 vec0(localDir.getX(),localDir.getY(),localDir.getZ());
+		//  
+		//btCapsuleShape* capsuleShape = (btCapsuleShape*)this;
+		//btScalar halfHeight = capsuleShape->getHalfHeight();
+		//int capsuleUpAxis = capsuleShape->getUpAxis();
+		//  
+		//btScalar radius = capsuleShape->getRadius();
+		//btVector3 supVec(0,0,0);
+		//  
+		//btScalar maxDot(btScalar(-BT_LARGE_FLOAT));
+		//  
+		//btVector3 vec = vec0;
+		//btScalar lenSqr = vec.length2();
+		//if (lenSqr < btScalar(0.0001))
+		//{
+		//	vec.setValue(1,0,0);
+		//} else
+		//{
+		//	btScalar rlen = btScalar(1.) / btSqrt(lenSqr );
+		//	vec *= rlen;
+		//}
+		//btVector3 vtx;
+		//btScalar newDot;
+		//{
+		//	btVector3 pos(0,0,0);
+		//	pos[capsuleUpAxis] = halfHeight;
 
-		btScalar radius = capsuleShape->getRadius();
-		btVector3 supVec(0,0,0);
+		//	//vtx = pos +vec*(radius);
+		//	vtx = pos +vec*capsuleShape->getLocalScalingNV()*(radius) - vec * capsuleShape->getMarginNV();
+		//	newDot = vec.dot(vtx);
+		//	
+		//	if (newDot > maxDot)
+		//	{
+		//		maxDot = newDot;
+		//		supVec = vtx;
+		//	}
+		//}
+		//{
+		//	btVector3 pos(0,0,0);
+		//	pos[capsuleUpAxis] = -halfHeight;
 
-		btScalar maxDot(btScalar(-BT_LARGE_FLOAT));
-
-		btVector3 vec = vec0;
-		btScalar lenSqr = vec.length2();
-		if (lenSqr < btScalar(0.0001))
-		{
-			vec.setValue(1,0,0);
-		} else
-		{
-			btScalar rlen = btScalar(1.) / btSqrt(lenSqr );
-			vec *= rlen;
-		}
-		btVector3 vtx;
-		btScalar newDot;
-		{
-			btVector3 pos(0,0,0);
-			pos[capsuleUpAxis] = halfHeight;
-
-			//vtx = pos +vec*(radius);
-			vtx = pos +vec*capsuleShape->getLocalScalingNV()*(radius) - vec * capsuleShape->getMarginNV();
-			newDot = vec.dot(vtx);
-			
-
-			if (newDot > maxDot)
-			{
-				maxDot = newDot;
-				supVec = vtx;
-			}
-		}
-		{
-			btVector3 pos(0,0,0);
-			pos[capsuleUpAxis] = -halfHeight;
-
-			//vtx = pos +vec*(radius);
-			vtx = pos +vec*capsuleShape->getLocalScalingNV()*(radius) - vec * capsuleShape->getMarginNV();
-			newDot = vec.dot(vtx);
-			if (newDot > maxDot)
-			{
-				maxDot = newDot;
-				supVec = vtx;
-			}
-		}
-		return btVector3(supVec.getX(),supVec.getY(),supVec.getZ());	
+		//	//vtx = pos +vec*(radius);
+		//	vtx = pos +vec*capsuleShape->getLocalScalingNV()*(radius) - vec * capsuleShape->getMarginNV();
+		//	newDot = vec.dot(vtx);
+		//	if (newDot > maxDot)
+		//	{
+		//		maxDot = newDot;
+		//		supVec = vtx;
+		//	}
+		//}
+		//return btVector3(supVec.getX(),supVec.getY(),supVec.getZ());
 	}
 	case CONVEX_POINT_CLOUD_SHAPE_PROXYTYPE:
 	{

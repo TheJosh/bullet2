@@ -19,6 +19,8 @@ struct btCollisionAlgorithmCreateFunc;
 
 class btStackAlloc;
 class btPoolAllocator;
+class btVoronoiSimplexSolver;
+class btConvexPenetrationDepthSolver;
 
 ///btCollisionConfiguration allows to configure Bullet collision detection
 ///stack allocator size, default collision algorithms and persistent manifold pool size
@@ -41,6 +43,9 @@ public:
 
 	virtual btCollisionAlgorithmCreateFunc* getCollisionAlgorithmCreateFunc(int proxyType0,int proxyType1) =0;
 
+	virtual btVoronoiSimplexSolver* getSimplexSolver() = 0;
+
+	virtual btConvexPenetrationDepthSolver* getDepthSolver() = 0;
 };
 
 #endif //BT_COLLISION_CONFIGURATION

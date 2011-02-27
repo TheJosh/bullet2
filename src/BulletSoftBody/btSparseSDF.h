@@ -58,7 +58,7 @@ struct	btSparseSdf
 		int					c[3];
 		int					puid;
 		unsigned			hash;
-		btCollisionShape*	pclient;
+		const btCollisionShape*	pclient;
 		Cell*				next;
 	};
 	//
@@ -152,7 +152,7 @@ struct	btSparseSdf
 	}
 	//
 	btScalar				Evaluate(	const btVector3& x,
-		btCollisionShape* shape,
+		const btCollisionShape* shape,
 		btVector3& normal,
 		btScalar margin)
 	{
@@ -248,14 +248,14 @@ struct	btSparseSdf
 	}
 	//
 	static inline btScalar	DistanceToShape(const btVector3& x,
-		btCollisionShape* shape)
+		const btCollisionShape* shape)
 	{
 		btTransform	unit;
 		unit.setIdentity();
 		if(shape->isConvex())
 		{
 			btGjkEpaSolver2::sResults	res;
-			btConvexShape*				csh=static_cast<btConvexShape*>(shape);
+			const btConvexShape*				csh=static_cast<const btConvexShape*>(shape);
 			return(btGjkEpaSolver2::SignedDistance(x,0,csh,unit,res));
 		}
 		return(0);
@@ -282,12 +282,12 @@ struct	btSparseSdf
 
 
 	//
-	static inline unsigned int	Hash(int x,int y,int z,btCollisionShape* shape)
+	static inline unsigned int	Hash(int x,int y,int z, const btCollisionShape* shape)
 	{
 		struct btS
 		{ 
 			int x,y,z;
-			void* p;
+			const void* p;
 		};
 
 		btS myset;

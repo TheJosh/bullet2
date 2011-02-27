@@ -42,7 +42,6 @@ typedef btAlignedObjectArray<class btCollisionObject*> btCollisionObjectArray;
 #define btCollisionObjectDataName "btCollisionObjectFloatData"
 #endif
 
-
 /// btCollisionObject can be used to manage collision detection objects. 
 /// btCollisionObject maintains all information that is needed for a collision detection: Shape, Transform and AABB proxy.
 /// They can be added to the btCollisionWorld.
@@ -449,6 +448,23 @@ public:
 	virtual void serializeSingleObject(class btSerializer* serializer) const;
 
 };
+
+static bool SIMD_FORCE_INLINE checkCollisionBetween(const btCollisionObject* lhs, const btCollisionObject* rhs)
+{
+	if ((!lhs->isActive()) && (!rhs->isActive()))
+		return false;
+	else if (!lhs->checkCollideWith(rhs))
+		return false;
+	else
+		return true;
+}
+
+static bool SIMD_FORCE_INLINE checkContactResponseBetween(const btCollisionObject* lhs, const btCollisionObject* rhs)
+{
+	bool hasResponse = (lhs->hasContactResponse() && rhs->hasContactResponse());
+	hasResponse = hasResponse && ((!lhs->isStaticOrKinematicObject()) || (!rhs->isStaticOrKinematicObject()));
+	return hasResponse;
+}
 
 ///do not change those serialization structures, it requires an updated sBulletDNAstr/sBulletDNAstr64
 struct	btCollisionObjectDoubleData

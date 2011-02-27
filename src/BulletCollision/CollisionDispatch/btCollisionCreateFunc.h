@@ -33,7 +33,7 @@ struct btCollisionAlgorithmCreateFunc
 	}
 	virtual ~btCollisionAlgorithmCreateFunc(){};
 
-	virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& , const btCollider* body0,const btCollider* body1)=0;
+	virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo&)=0;
 };
 #endif //COLLISION_CREATE_FUNC
 

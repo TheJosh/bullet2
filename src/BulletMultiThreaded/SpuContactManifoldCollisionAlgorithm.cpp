@@ -21,12 +21,8 @@ subject to the following restrictions:
 
 
 
-void SpuContactManifoldCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
-{
-	btAssert(0);
-}
 
-void SpuContactManifoldCollisionAlgorithm::processCollision (btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut)
+void SpuContactManifoldCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
 {
 	btAssert(0);
 }
@@ -38,36 +34,35 @@ btScalar SpuContactManifoldCollisionAlgorithm::calculateTimeOfImpact(btCollision
 }
 
 #ifndef __SPU__
-SpuContactManifoldCollisionAlgorithm::SpuContactManifoldCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci,btCollisionObject* body0,btCollisionObject* body1)
+SpuContactManifoldCollisionAlgorithm::SpuContactManifoldCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
 :btCollisionAlgorithm(ci)
 #ifdef USE_SEPDISTANCE_UTIL
 ,m_sepDistance(body0->getCollisionShape()->getAngularMotionDisc(),body1->getCollisionShape()->getAngularMotionDisc())
 #endif //USE_SEPDISTANCE_UTIL
 {
-	m_manifoldPtr = m_dispatcher->getNewManifold(body0,body1);
-	m_shapeType0 = body0->getCollisionShape()->getShapeType();
-	m_shapeType1 = body1->getCollisionShape()->getShapeType();
-	m_collisionMargin0 = body0->getCollisionShape()->getMargin();
-	m_collisionMargin1 = body1->getCollisionShape()->getMargin();
-	m_collisionObject0 = body0;
-	m_collisionObject1 = body1;
+	m_manifoldPtr = ci.m_dispatcher1->getNewManifold(ci.m_colObj0->getCollisionObject(),ci.m_colObj1->getCollisionObject());
+	m_shapeType0 = ci.m_colObj0->getCollisionShape()->getShapeType();
+	m_shapeType1 = ci.m_colObj1->getCollisionShape()->getShapeType();
+	m_collisionMargin0 = ci.m_colObj0->getCollisionShape()->getMargin();
+	m_collisionMargin1 = ci.m_colObj1->getCollisionShape()->getMargin();
+	m_collisionObject0 = ci.m_colObj0->getCollisionObject();
+	m_collisionObject1 = ci.m_colObj1->getCollisionObject();
 
-	if (body0->getCollisionShape()->isPolyhedral())
+	if (ci.m_colObj0->getCollisionShape()->isPolyhedral())
 	{
-		btPolyhedralConvexShape* convex0 = (btPolyhedralConvexShape*)body0->getCollisionShape();
+		btPolyhedralConvexShape* convex0 = (btPolyhedralConvexShape*)ci.m_colObj0->getCollisionShape();
 		m_shapeDimensions0 = convex0->getImplicitShapeDimensions();
 	}
-	if (body1->getCollisionShape()->isPolyhedral())
+	if (ci.m_colObj1->getCollisionShape()->isPolyhedral())
 	{
-		btPolyhedralConvexShape* convex1 = (btPolyhedralConvexShape*)body1->getCollisionShape();
+		btPolyhedralConvexShape* convex1 = (btPolyhedralConvexShape*)ci.m_colObj1->getCollisionShape();
 		m_shapeDimensions1 = convex1->getImplicitShapeDimensions();
 	}
 }
 #endif //__SPU__
 
-
-SpuContactManifoldCollisionAlgorithm::~SpuContactManifoldCollisionAlgorithm()
+void SpuContactManifoldCollisionAlgorithm::nihilize(btDispatcher* dispatcher)
 {
 	if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
+		dispatcher->releaseManifold(m_manifoldPtr);
 }

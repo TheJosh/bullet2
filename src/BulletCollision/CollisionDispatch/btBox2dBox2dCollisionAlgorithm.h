@@ -26,18 +26,12 @@ class btPersistentManifold;
 ///box-box collision detection
 class btBox2dBox2dCollisionAlgorithm : public btActivatingCollisionAlgorithm
 {
-	bool	m_ownManifold;
-	btPersistentManifold*	m_manifoldPtr;
-	
 public:
-	btBox2dBox2dCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
-		: btActivatingCollisionAlgorithm(ci) {}
+	btBox2dBox2dCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
 
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
-
-	btBox2dBox2dCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1);
 
 	virtual ~btBox2dBox2dCollisionAlgorithm();
 
@@ -52,11 +46,11 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			int bbsize = sizeof(btBox2dBox2dCollisionAlgorithm);
 			void* ptr = ci.m_dispatcher1->allocateCollisionAlgorithm(bbsize);
-			return new(ptr) btBox2dBox2dCollisionAlgorithm(0,ci,body0,body1);
+			return new(ptr) btBox2dBox2dCollisionAlgorithm(ci);
 		}
 	};
 

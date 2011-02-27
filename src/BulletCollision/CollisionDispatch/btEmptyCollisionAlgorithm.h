@@ -31,19 +31,18 @@ public:
 	btEmptyAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
-
+	virtual void nihilize(btDispatcher* dispatcher)
+	{
+	}
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
-
 	virtual	void	getAllContactManifolds(btManifoldArray&	manifoldArray)
 	{
 	}
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
-			(void)body0;
-			(void)body1;
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btEmptyAlgorithm));
 			return new(mem) btEmptyAlgorithm(ci);
 		}

@@ -174,7 +174,7 @@ public:
 	void setIdentity()
 	{
 		m_basis.setIdentity();
-		m_origin.setValue(btScalar(0.0), btScalar(0.0), btScalar(0.0));
+		m_origin.setZero();
 	}
 
   /**@brief Multiply this Transform by another(this = this * another) 

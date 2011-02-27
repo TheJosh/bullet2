@@ -41,6 +41,7 @@ class btDispatcher;
 #include "BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.h"
 #include "LinearMath/btIDebugDraw.h"
 
+class btDispatcher;
 
 
 //! Collision Algorithm for GImpact Shapes
@@ -65,33 +66,33 @@ protected:
 
 
 	//! Creates a new contact point
-	SIMD_FORCE_INLINE btPersistentManifold* newContactManifold(const btCollider* body0,const btCollider* body1)
+	SIMD_FORCE_INLINE btPersistentManifold* newContactManifold(btDispatcher* dispatcher, const btCollider* body0,const btCollider* body1)
 	{
-		m_manifoldPtr = m_dispatcher->getNewManifold(body0->getCollisionObject(),body1->getCollisionObject());
+		m_manifoldPtr = dispatcher->getNewManifold(body0->getCollisionObject(),body1->getCollisionObject());
 		return m_manifoldPtr;
 	}
 
-	SIMD_FORCE_INLINE void destroyConvexAlgorithm()
+	SIMD_FORCE_INLINE void destroyConvexAlgorithm(btDispatcher* dispatcher)
 	{
 		if(m_convex_algorithm)
 		{
 			m_convex_algorithm->~btCollisionAlgorithm();
-			m_dispatcher->freeCollisionAlgorithm( m_convex_algorithm);
+			dispatcher->freeCollisionAlgorithm( m_convex_algorithm);
 			m_convex_algorithm = NULL;
 		}
 	}
 
-	SIMD_FORCE_INLINE void destroyContactManifolds()
+	SIMD_FORCE_INLINE void destroyContactManifolds(btDispatcher* dispatcher)
 	{
 		if(m_manifoldPtr == NULL) return;
-		m_dispatcher->releaseManifold(m_manifoldPtr);
+		dispatcher->releaseManifold(m_manifoldPtr);
 		m_manifoldPtr = NULL;
 	}
 
-	SIMD_FORCE_INLINE void clearCache()
+	SIMD_FORCE_INLINE void clearCache(btDispatcher* dispatcher)
 	{
-		destroyContactManifolds();
-		destroyConvexAlgorithm();
+		destroyContactManifolds(dispatcher);
+		destroyConvexAlgorithm(dispatcher);
 
 		m_triface0 = -1;
 		m_part0 = -1;
@@ -106,37 +107,38 @@ protected:
 
 
 	// Call before process collision
-	SIMD_FORCE_INLINE void checkManifold(const btCollider* body0,const btCollider* body1)
+	SIMD_FORCE_INLINE void checkManifold(btDispatcher* dispatcher, const btCollider* body0,const btCollider* body1)
 	{
 		if(getLastManifold() == 0)
 		{
-			newContactManifold(body0,body1);
+			newContactManifold(dispatcher, body0,body1);
 		}
 
 		m_resultOut->setPersistentManifold(getLastManifold());
 	}
 
 	// Call before process collision
-	SIMD_FORCE_INLINE btCollisionAlgorithm * newAlgorithm(const btCollider* body0,const btCollider* body1)
+	SIMD_FORCE_INLINE btCollisionAlgorithm * newAlgorithm(btDispatcher* dispatcher, const btCollider* body0,const btCollider* body1)
 	{
-		checkManifold(body0,body1);
+		checkManifold(dispatcher, body0, body1);
 
-		btCollisionAlgorithm * convex_algorithm = m_dispatcher->findAlgorithm(
+		btCollisionAlgorithm * convex_algorithm = dispatcher->findAlgorithm(
 				body0,body1,getLastManifold());
 		return convex_algorithm ;
 	}
 
 	// Call before process collision
-	SIMD_FORCE_INLINE void checkConvexAlgorithm(const btCollider* body0,const btCollider* body1)
+	SIMD_FORCE_INLINE void checkConvexAlgorithm(btDispatcher* dispatcher, const btCollider* body0,const btCollider* body1)
 	{
 		if(m_convex_algorithm) return;
-		m_convex_algorithm = newAlgorithm(body0,body1);
+		m_convex_algorithm = newAlgorithm(dispatcher, body0,body1);
 	}
 
 
 
 
-	void addContactPoint(const btCollider * body0,
+	void addContactPoint(btDispatcher* dispatcher, 
+					const btCollider * body0,
 					const btCollider * body1,
 					const btVector3 & point,
 					const btVector3 & normal,
@@ -189,6 +191,7 @@ protected:
 	);
 
 	void gimpact_vs_shape_find_pairs(
+		btDispatcher* dispatcher,
 		const btTransform& trans0,
 		const btTransform& trans1,
 		const btGImpactShapeInterface* shape0,
@@ -197,6 +200,7 @@ protected:
 	);
 
 	void gimpacttrimeshpart_vs_plane_collision(
+		btDispatcher* dispatcher, 
 		const btCollider* body0,
 		const btCollider* body1,
 		const btGImpactMeshShapePart* shape0,
@@ -206,9 +210,9 @@ protected:
 
 public:
 
-	btGImpactCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1);
+	btGImpactCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci);
 
-	virtual ~btGImpactCollisionAlgorithm();
+	virtual void nihilize(btDispatcher* dispatcher);
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
 
@@ -223,10 +227,10 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btGImpactCollisionAlgorithm));
-			return new(mem) btGImpactCollisionAlgorithm(ci,body0,body1);
+			return new(mem) btGImpactCollisionAlgorithm(ci);
 		}
 	};
 

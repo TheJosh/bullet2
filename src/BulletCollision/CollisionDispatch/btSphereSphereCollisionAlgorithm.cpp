@@ -18,25 +18,13 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionShapes/btSphereShape.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
 
-btSphereSphereCollisionAlgorithm::btSphereSphereCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* col0,const btCollider* col1)
-: btActivatingCollisionAlgorithm(ci,col0,col1),
-m_ownManifold(false),
-m_manifoldPtr(mf)
+btSphereSphereCollisionAlgorithm::btSphereSphereCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci)
 {
-	if (!m_manifoldPtr)
-	{
-		m_manifoldPtr = m_dispatcher->getNewManifold(col0->getCollisionObject(),col1->getCollisionObject());
-		m_ownManifold = true;
-	}
 }
 
 btSphereSphereCollisionAlgorithm::~btSphereSphereCollisionAlgorithm()
 {
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
 }
 
 void btSphereSphereCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)

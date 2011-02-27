@@ -16,6 +16,7 @@ subject to the following restrictions:
 #include "btGhostObject.h"
 #include "btCollisionWorld.h"
 #include "BulletCollision/CollisionShapes/btConvexShape.h"
+#include "BulletCollision/BroadphaseCollision/btCollisionAlgorithm.h"
 #include "LinearMath/btAabbUtil2.h"
 
 btGhostObject::btGhostObject()
@@ -99,7 +100,7 @@ void btPairCachingGhostObject::removeOverlappingObjectInternal(btBroadphaseProxy
 }
 
 
-void	btGhostObject::convexSweepTest(const btConvexShape* castShape, const btTransform& convexFromWorld, const btTransform& convexToWorld, btCollisionWorld::ConvexResultCallback& resultCallback, btScalar allowedCcdPenetration) const
+void	btGhostObject::convexSweepTest(const btConvexShape* castShape, const btTransform& convexFromWorld, const btTransform& convexToWorld, btCollisionWorld::ClosestConvexResultCallback& resultCallback, btScalar allowedCcdPenetration) const
 {
 	btTransform	convexFromTrans,convexToTrans;
 	convexFromTrans = convexFromWorld;
@@ -131,12 +132,15 @@ void	btGhostObject::convexSweepTest(const btConvexShape* castShape, const btTran
 			btVector3 hitNormal;
 			if (btRayAabb(convexFromWorld.getOrigin(),convexToWorld.getOrigin(),collisionObjectAabbMin,collisionObjectAabbMax,hitLambda,hitNormal))
 			{
-				btCollisionWorld::objectQuerySingle(castShape, convexFromTrans,convexToTrans,
-					collisionObject,
-						collisionObject->getCollisionShape(),
-						collisionObject->getWorldTransform(),
-						resultCallback,
-						allowedCcdPenetration);
+				btCollider collider(0x0, collisionObject->getCollisionShape(), collisionObject, collisionObject->getWorldTransform());
+				btCollisionWorld::objectQuerySingle(
+					castShape,
+					convexFromTrans,
+					convexToTrans,
+					collider,
+					resultCallback,
+					allowedCcdPenetration
+				);
 			}
 		}
 	}

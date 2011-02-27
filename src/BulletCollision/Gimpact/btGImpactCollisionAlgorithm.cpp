@@ -193,16 +193,17 @@ float btGImpactCollisionAlgorithm::getAverageTriangleCollisionTime()
 
 
 
-btGImpactCollisionAlgorithm::btGImpactCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
-: btActivatingCollisionAlgorithm(ci,body0,body1)
+btGImpactCollisionAlgorithm::btGImpactCollisionAlgorithm( const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci)
 {
 	m_manifoldPtr = NULL;
 	m_convex_algorithm = NULL;
 }
 
-btGImpactCollisionAlgorithm::~btGImpactCollisionAlgorithm()
+void btGImpactCollisionAlgorithm::nihilize(btDispatcher* dispatcher)
 {
-	clearCache();
+	clearCache(dispatcher);
+	btActivatingCollisionAlgorithm::nihilize(dispatcher);
 }
 
 
@@ -210,6 +211,7 @@ btGImpactCollisionAlgorithm::~btGImpactCollisionAlgorithm()
 
 
 void btGImpactCollisionAlgorithm::addContactPoint(
+	btDispatcher* dispatcher,
 	const btCollider * body0,
 	const btCollider * body1,
 	const btVector3 & point,
@@ -219,7 +221,7 @@ void btGImpactCollisionAlgorithm::addContactPoint(
 {
 	m_resultOut->setShapeIdentifiersA(m_part0,m_triface0);
 	m_resultOut->setShapeIdentifiersB(m_part1,m_triface1);
-	checkManifold(body0,body1);
+	checkManifold(dispatcher, body0,body1);
 	m_resultOut->addContactPoint(normal,point,distance);
 }
 
@@ -239,14 +241,14 @@ void btGImpactCollisionAlgorithm::shape_vs_shape_collision(
 	btCollider new1(body1, tmpShape1, body1->getCollisionObject(), body1->getWorldTransform());
 
 	{
-		btCollisionAlgorithm* algor = newAlgorithm(body0, body1);
+		btCollisionAlgorithm* algor = newAlgorithm(dispatcher, body0, body1);
 		// post :	checkManifold is called
 
 		m_resultOut->setShapeIdentifiersA(m_part0,m_triface0);
 		m_resultOut->setShapeIdentifiersB(m_part1,m_triface1);
 		btCollisionProcessInfo processInfo(new0, new1, *m_dispatchInfo, m_resultOut, dispatcher);
 		algor->processCollision(processInfo);
-
+		algor->nihilize(dispatcher);
 		algor->~btCollisionAlgorithm();
 		dispatcher->freeCollisionAlgorithm(algor);
 	}
@@ -269,7 +271,7 @@ void btGImpactCollisionAlgorithm::convex_vs_convex_collision(
 	m_resultOut->setShapeIdentifiersA(m_part0,m_triface0);
 	m_resultOut->setShapeIdentifiersB(m_part1,m_triface1);
 	btCollisionProcessInfo processInfo(new0, new1, *m_dispatchInfo, m_resultOut, dispatcher);
-	checkConvexAlgorithm(&new0, &new1);
+	checkConvexAlgorithm(dispatcher, &new0, &new1);
 	m_convex_algorithm->processCollision(processInfo);
 }
 
@@ -314,6 +316,7 @@ void btGImpactCollisionAlgorithm::gimpact_vs_gimpact_find_pairs(
 
 
 void btGImpactCollisionAlgorithm::gimpact_vs_shape_find_pairs(
+	btDispatcher* dispatcher,
 	const btTransform& trans0,
 	const btTransform& trans1,
 	const btGImpactShapeInterface* shape0,
@@ -454,7 +457,7 @@ void btGImpactCollisionAlgorithm::collide_sat_triangles(
 				while(j--)
 				{
 
-					addContactPoint(body0, body1,
+					addContactPoint(dispatcher, body0, body1,
 								contact_data.m_points[j],
 								contact_data.m_separating_normal,
 								-contact_data.m_penetration_depth);
@@ -612,7 +615,7 @@ void btGImpactCollisionAlgorithm::gimpact_vs_shape(
 	{
 		const btGImpactMeshShapePart * shapepart = static_cast<const btGImpactMeshShapePart *>(shape0);
 		const btStaticPlaneShape * planeshape = static_cast<const btStaticPlaneShape * >(shape1);
-		gimpacttrimeshpart_vs_plane_collision(body0,body1,shapepart,planeshape,swapped);
+		gimpacttrimeshpart_vs_plane_collision(dispatcher, body0,body1,shapepart,planeshape,swapped);
 		return;
 	}
 
@@ -640,7 +643,7 @@ void btGImpactCollisionAlgorithm::gimpact_vs_shape(
 
 	btAlignedObjectArray<int> collided_results;
 
-	gimpact_vs_shape_find_pairs(orgtrans0,orgtrans1,shape0,shape1,collided_results);
+	gimpact_vs_shape_find_pairs(dispatcher, orgtrans0,orgtrans1,shape0,shape1,collided_results);
 
 	if(collided_results.size() == 0) return;
 
@@ -718,6 +721,7 @@ void btGImpactCollisionAlgorithm::gimpact_vs_compoundshape(
 }
 
 void btGImpactCollisionAlgorithm::gimpacttrimeshpart_vs_plane_collision(
+	btDispatcher* dispatcher, 
 	const btCollider* body0,
 	const btCollider* body1,
 	const btGImpactMeshShapePart* shape0,
@@ -759,14 +763,14 @@ void btGImpactCollisionAlgorithm::gimpacttrimeshpart_vs_plane_collision(
 		{
 			if(swapped)
 			{
-				addContactPoint(body1, body0,
+				addContactPoint(dispatcher, body1, body0,
 					vertex,
 					-plane,
 					distance);
 			}
 			else
 			{
-				addContactPoint(body0, body1,
+				addContactPoint(dispatcher, body0, body1,
 					vertex,
 					plane,
 					distance);
@@ -854,7 +858,7 @@ void btGImpactCollisionAlgorithm::gimpact_vs_concave(
 
 void btGImpactCollisionAlgorithm::processCollision (const btCollisionProcessInfo& processInfo)
 {
-    clearCache();
+    clearCache(processInfo.m_dispatcher);
 
     m_resultOut = processInfo.m_result;
 	m_dispatchInfo = &processInfo.m_dispatchInfo;

@@ -21,12 +21,13 @@ subject to the following restrictions:
 
 ///Bvh Concave triangle mesh is a static-triangle mesh shape with Bounding Volume Hierarchy optimization.
 ///Uses an interface to access the triangles to allow for sharing graphics/physics triangles.
-btBvhTriangleMeshShape::btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression, bool buildBvh)
-:btTriangleMeshShape(meshInterface),
-m_bvh(0),
-m_triangleInfoMap(0),
-m_useQuantizedAabbCompression(useQuantizedAabbCompression),
-m_ownsBvh(false)
+btBvhTriangleMeshShape::btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression, bool buildBvh, bool ownShape)
+:	btTriangleMeshShape(meshInterface)
+,	m_bvh(0)
+,	m_triangleInfoMap(0)
+,	m_useQuantizedAabbCompression(useQuantizedAabbCompression)
+,	m_ownsBvh(false)
+,	m_ownShape(ownShape)
 {
 	m_shapeType = TRIANGLE_MESH_SHAPE_PROXYTYPE;
 	//construct bvh from meshInterface
@@ -41,12 +42,13 @@ m_ownsBvh(false)
 
 }
 
-btBvhTriangleMeshShape::btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression,const btVector3& bvhAabbMin,const btVector3& bvhAabbMax,bool buildBvh)
+btBvhTriangleMeshShape::btBvhTriangleMeshShape(btStridingMeshInterface* meshInterface, bool useQuantizedAabbCompression,const btVector3& bvhAabbMin,const btVector3& bvhAabbMax,bool buildBvh, bool ownShape)
 :btTriangleMeshShape(meshInterface),
 m_bvh(0),
 m_triangleInfoMap(0),
 m_useQuantizedAabbCompression(useQuantizedAabbCompression),
-m_ownsBvh(false)
+m_ownsBvh(false),
+m_ownShape(ownShape)
 {
 	m_shapeType = TRIANGLE_MESH_SHAPE_PROXYTYPE;
 	//construct bvh from meshInterface
@@ -87,6 +89,11 @@ btBvhTriangleMeshShape::~btBvhTriangleMeshShape()
 	{
 		m_bvh->~btOptimizedBvh();
 		btAlignedFree(m_bvh);
+	}
+	if (m_ownShape)
+	{
+		m_meshInterface->~btStridingMeshInterface();
+		btAlignedFree(m_meshInterface);
 	}
 }
 

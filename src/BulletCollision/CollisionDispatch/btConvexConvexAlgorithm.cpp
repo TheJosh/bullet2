@@ -18,6 +18,9 @@ subject to the following restrictions:
 ///with reproduction case
 //define BT_DISABLE_CAPSULE_CAPSULE_COLLIDER 1
 
+//#pragma optimize("", off)
+//#pragma inline_depth(0)
+
 #include "btConvexConvexAlgorithm.h"
 
 //#include <stdio.h>
@@ -174,36 +177,20 @@ static SIMD_FORCE_INLINE btScalar capsuleCapsuleDistance(
 
 
 
-
-
-btConvexConvexAlgorithm::CreateFunc::CreateFunc(btSimplexSolverInterface*			simplexSolver, btConvexPenetrationDepthSolver* pdSolver)
-{
-	m_numPerturbationIterations = 0;
-	m_minimumPointsPerturbationThreshold = 3;
-	m_simplexSolver = simplexSolver;
-	m_pdSolver = pdSolver;
-}
-
-btConvexConvexAlgorithm::CreateFunc::~CreateFunc() 
-{ 
-}
-
-btConvexConvexAlgorithm::btConvexConvexAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1,btSimplexSolverInterface* simplexSolver, btConvexPenetrationDepthSolver* pdSolver,int numPerturbationIterations, int minimumPointsPerturbationThreshold)
-: btActivatingCollisionAlgorithm(ci,body0,body1),
-m_simplexSolver(simplexSolver),
-m_pdSolver(pdSolver),
-m_ownManifold (false),
-m_manifoldPtr(mf),
-m_lowLevelOfDetail(false),
+btConvexConvexAlgorithm::btConvexConvexAlgorithm(
+	const btCollisionAlgorithmConstructionInfo& ci,
+	int numPerturbationIterations,
+	int minimumPointsPerturbationThreshold
+)
+:	btActivatingCollisionAlgorithm(ci)
+,	m_lowLevelOfDetail(false)
 #ifdef USE_SEPDISTANCE_UTIL2
-m_sepDistance((static_cast<btConvexShape*>(body0->getCollisionShape()))->getAngularMotionDisc(),
-			  (static_cast<btConvexShape*>(body1->getCollisionShape()))->getAngularMotionDisc()),
+,	m_sepDistance((static_cast<btConvexShape*>(ci.m_body0->getCollisionShape()))->getAngularMotionDisc(),
+			  (static_cast<btConvexShape*>(ci.m_body1->getCollisionShape()))->getAngularMotionDisc())
 #endif
-m_numPerturbationIterations(numPerturbationIterations),
-m_minimumPointsPerturbationThreshold(minimumPointsPerturbationThreshold)
+,	m_numPerturbationIterations(numPerturbationIterations)
+,	m_minimumPointsPerturbationThreshold(minimumPointsPerturbationThreshold)
 {
-	(void)body0;
-	(void)body1;
 }
 
 
@@ -211,11 +198,6 @@ m_minimumPointsPerturbationThreshold(minimumPointsPerturbationThreshold)
 
 btConvexConvexAlgorithm::~btConvexConvexAlgorithm()
 {
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
 }
 
 void	btConvexConvexAlgorithm ::setLowLevelOfDetail(bool useLowLevel)
@@ -292,7 +274,7 @@ void btConvexConvexAlgorithm ::processCollision (const btCollisionProcessInfo& p
 	if (!m_manifoldPtr)
 	{
 		//swapped?
-		m_manifoldPtr = m_dispatcher->getNewManifold(processInfo.m_body0.getCollisionObject(),processInfo.m_body1.getCollisionObject());
+		m_manifoldPtr = processInfo.m_dispatcher->getNewManifold(processInfo.m_body0.getCollisionObject(),processInfo.m_body1.getCollisionObject());
 		m_ownManifold = true;
 	}
 	processInfo.m_result->setPersistentManifold(m_manifoldPtr);
@@ -355,7 +337,12 @@ void btConvexConvexAlgorithm ::processCollision (const btCollisionProcessInfo& p
 	
 	btGjkPairDetector::ClosestPointInput input;
 
-	btGjkPairDetector	gjkPairDetector(min0,min1,m_simplexSolver,m_pdSolver);
+	btGjkPairDetector gjkPairDetector(
+		min0,
+		min1,
+		processInfo.m_dispatcher->getSimplexSolver(),
+		processInfo.m_dispatcher->getDepthSolver()
+	);
 	//TODO: if (dispatchInfo.m_useContinuous)
 	gjkPairDetector.setMinkowskiA(min0);
 	gjkPairDetector.setMinkowskiB(min1);

@@ -21,25 +21,23 @@ subject to the following restrictions:
 #include "BulletCollision/CollisionDispatch/btCollisionCreateFunc.h"
 class btPersistentManifold;
 #include "btCollisionDispatcher.h"
+#include "btActivatingCollisionAlgorithm.h"
 
 #include "LinearMath/btVector3.h"
 
 /// btSphereBoxCollisionAlgorithm  provides sphere-box collision detection.
 /// Other features are frame-coherency (persistent data) and collision response.
-class btConvexPlaneCollisionAlgorithm : public btCollisionAlgorithm
+class btConvexPlaneCollisionAlgorithm : public btActivatingCollisionAlgorithm
 {
-	bool		m_ownManifold;
-	btPersistentManifold*	m_manifoldPtr;
 	bool		m_isSwapped;
 	int			m_numPerturbationIterations;
 	int			m_minimumPointsPerturbationThreshold;
 
 public:
 
-	btConvexPlaneCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* col0,const btCollider* col1, bool isSwapped, int numPerturbationIterations,int minimumPointsPerturbationThreshold);
+	btConvexPlaneCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual ~btConvexPlaneCollisionAlgorithm();
-
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
 
 	void collideSingleContact (const btQuaternion& perturbeRot, const btCollider& body0,const btCollider& body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
@@ -56,25 +54,11 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		int	m_numPerturbationIterations;
-		int m_minimumPointsPerturbationThreshold;
-			
-		CreateFunc() 
-			: m_numPerturbationIterations(1),
-			m_minimumPointsPerturbationThreshold(1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
-		}
-		
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
-		{
+			ci.m_isSwapped = m_swapped; 
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btConvexPlaneCollisionAlgorithm));
-			if (!m_swapped)
-			{
-				return new(mem) btConvexPlaneCollisionAlgorithm(0,ci,body0,body1,false,m_numPerturbationIterations,m_minimumPointsPerturbationThreshold);
-			} else
-			{
-				return new(mem) btConvexPlaneCollisionAlgorithm(0,ci,body0,body1,true,m_numPerturbationIterations,m_minimumPointsPerturbationThreshold);
-			}
+			return new(mem) btConvexPlaneCollisionAlgorithm(ci);
 		}
 	};
 

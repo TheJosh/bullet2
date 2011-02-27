@@ -27,18 +27,12 @@ class btPersistentManifold;
 /// Also provides the most basic sample for custom/user btCollisionAlgorithm
 class btSphereTriangleCollisionAlgorithm : public btActivatingCollisionAlgorithm
 {
-	bool	m_ownManifold;
-	btPersistentManifold*	m_manifoldPtr;
 	bool	m_swapped;
 	
 public:
-	btSphereTriangleCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1,bool swapped);
-
-	btSphereTriangleCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
-		: btActivatingCollisionAlgorithm(ci) {}
+	btSphereTriangleCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
-
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
 
 	virtual	void	getAllContactManifolds(btManifoldArray&	manifoldArray)
@@ -54,12 +48,12 @@ public:
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
 		
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btSphereTriangleCollisionAlgorithm));
 
-			return new(mem) btSphereTriangleCollisionAlgorithm(ci.m_manifold,ci,body0,body1,m_swapped);
+			return new(mem) btSphereTriangleCollisionAlgorithm(ci);
 		}
 	};
 

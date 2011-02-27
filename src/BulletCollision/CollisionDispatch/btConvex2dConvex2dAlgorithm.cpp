@@ -45,30 +45,14 @@ subject to the following restrictions:
 #include "BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.h"
 
 
-btConvex2dConvex2dAlgorithm::CreateFunc::CreateFunc(btSimplexSolverInterface*			simplexSolver, btConvexPenetrationDepthSolver* pdSolver)
-{
-	m_numPerturbationIterations = 0;
-	m_minimumPointsPerturbationThreshold = 3;
-	m_simplexSolver = simplexSolver;
-	m_pdSolver = pdSolver;
-}
-
-btConvex2dConvex2dAlgorithm::CreateFunc::~CreateFunc() 
-{ 
-}
-
-btConvex2dConvex2dAlgorithm::btConvex2dConvex2dAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* body0,const btCollider* body1,btSimplexSolverInterface* simplexSolver, btConvexPenetrationDepthSolver* pdSolver,int numPerturbationIterations, int minimumPointsPerturbationThreshold)
-: btActivatingCollisionAlgorithm(ci,body0,body1),
-m_simplexSolver(simplexSolver),
-m_pdSolver(pdSolver),
-m_ownManifold (false),
-m_manifoldPtr(mf),
+btConvex2dConvex2dAlgorithm::btConvex2dConvex2dAlgorithm(const btCollisionAlgorithmConstructionInfo& ci)
+: btActivatingCollisionAlgorithm(ci),
+m_simplexSolver(ci.m_simplexSolver),
+m_pdSolver(ci.m_pdSolver),
 m_lowLevelOfDetail(false),
- m_numPerturbationIterations(numPerturbationIterations),
-m_minimumPointsPerturbationThreshold(minimumPointsPerturbationThreshold)
+ m_numPerturbationIterations(0),
+m_minimumPointsPerturbationThreshold(3)
 {
-	(void)body0;
-	(void)body1;
 }
 
 
@@ -76,11 +60,7 @@ m_minimumPointsPerturbationThreshold(minimumPointsPerturbationThreshold)
 
 btConvex2dConvex2dAlgorithm::~btConvex2dConvex2dAlgorithm()
 {
-	if (m_ownManifold)
-	{
-		if (m_manifoldPtr)
-			m_dispatcher->releaseManifold(m_manifoldPtr);
-	}
+	btAssert(m_manifoldPtr == 0x0);
 }
 
 void	btConvex2dConvex2dAlgorithm ::setLowLevelOfDetail(bool useLowLevel)

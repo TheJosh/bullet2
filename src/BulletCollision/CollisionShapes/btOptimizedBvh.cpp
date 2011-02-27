@@ -389,3 +389,85 @@ btOptimizedBvh* btOptimizedBvh::deSerializeInPlace(void *i_alignedDataBuffer, un
 	//we don't add additional data so just do a static upcast
 	return static_cast<btOptimizedBvh*>(bvh);
 }
+
+void	btOptimizedBvh::disableWithAabb(btStridingMeshInterface* meshInterface,const btVector3& aabbMin,const btVector3& aabbMax)
+{
+	//incrementally initialize quantization values
+	btAssert(m_useQuantization);
+
+	btAssert(aabbMin.getX() > m_bvhAabbMin.getX());
+	btAssert(aabbMin.getY() > m_bvhAabbMin.getY());
+	btAssert(aabbMin.getZ() > m_bvhAabbMin.getZ());
+
+	btAssert(aabbMax.getX() < m_bvhAabbMax.getX());
+	btAssert(aabbMax.getY() < m_bvhAabbMax.getY());
+	btAssert(aabbMax.getZ() < m_bvhAabbMax.getZ());
+
+	///we should update all quantization values, using updateBvhNodes(meshInterface);
+	///but we only update chunks that overlap the given aabb
+
+	unsigned short	quantizedQueryAabbMin[3];
+	unsigned short	quantizedQueryAabbMax[3];
+
+	quantize(&quantizedQueryAabbMin[0],aabbMin,0);
+	quantize(&quantizedQueryAabbMax[0],aabbMax,1);
+
+	int i;
+	for (i=0;i<this->m_SubtreeHeaders.size();i++)
+	{
+		btBvhSubtreeInfo& subtree = m_SubtreeHeaders[i];
+
+		//PCK: unsigned instead of bool
+		unsigned overlap = testQuantizedAabbAgainstQuantizedAabb(quantizedQueryAabbMin,quantizedQueryAabbMax,subtree.m_quantizedAabbMin,subtree.m_quantizedAabbMax);
+		if (overlap != 0)
+		{
+			disableBvhNodes(meshInterface,subtree.m_rootNodeIndex,subtree.m_rootNodeIndex+subtree.m_subtreeSize,i, quantizedQueryAabbMin, quantizedQueryAabbMax);
+
+			subtree.setAabbFromQuantizeNode(m_quantizedContiguousNodes[subtree.m_rootNodeIndex]);
+		}
+	}
+
+}
+
+void	btOptimizedBvh::disableBvhNodes(btStridingMeshInterface* meshInterface,int firstNode,int endNode,int index, unsigned short* quantizedQueryAabbMin, unsigned short* quantizedQueryAabbMax)
+{
+	(void)index;
+
+	btAssert(m_useQuantization);
+
+	int curNodeSubPart=-1;
+
+	//get access info to trianglemesh data
+	const unsigned char *vertexbase = 0;
+	int numverts = 0;
+	PHY_ScalarType type = PHY_INTEGER;
+	int stride = 0;
+	const unsigned char *indexbase = 0;
+	int indexstride = 0;
+	int numfaces = 0;
+	PHY_ScalarType indicestype = PHY_INTEGER;
+
+	btVector3	triangleVerts[3];
+	btVector3	aabbMin,aabbMax;
+	const btVector3& meshScaling = meshInterface->getScaling();
+
+	int i;
+	for (i=endNode-1;i>=firstNode;i--)
+	{
+
+
+		btQuantizedBvhNode& curNode = m_quantizedContiguousNodes[i];
+		if (curNode.isLeafNode())
+		{
+			//recalc aabb from triangle data
+			int nodeSubPart = curNode.getPartId();
+			int nodeTriangleIndex = curNode.getTriangleIndex();
+			curNode.m_escapeIndexOrTriangleIndex = -1;
+
+		} else
+		{
+			// Not leaf node.
+		}
+
+	}	
+}

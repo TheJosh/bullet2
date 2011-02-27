@@ -28,16 +28,13 @@ class btPersistentManifold;
 /// Other features are frame-coherency (persistent data) and collision response.
 class btSphereBoxCollisionAlgorithm : public btActivatingCollisionAlgorithm
 {
-	bool	m_ownManifold;
-	btPersistentManifold*	m_manifoldPtr;
 	bool	m_isSwapped;
 	
 public:
 
-	btSphereBoxCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,const btCollider* col0,const btCollider* col1, bool isSwapped);
+	btSphereBoxCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci);
 
 	virtual ~btSphereBoxCollisionAlgorithm();
-
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
 
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
@@ -59,13 +56,7 @@ public:
 		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0,const btCollider* body1)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btSphereBoxCollisionAlgorithm));
-			if (!m_swapped)
-			{
-				return new(mem) btSphereBoxCollisionAlgorithm(0,ci,body0,body1,false);
-			} else
-			{
-				return new(mem) btSphereBoxCollisionAlgorithm(0,ci,body0,body1,true);
-			}
+			return new(mem) btSphereBoxCollisionAlgorithm(ci);
 		}
 	};
 

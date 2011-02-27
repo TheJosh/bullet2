@@ -42,17 +42,17 @@ typedef void (*btNearCallback)(btBroadphasePair& collisionPair, btCollisionDispa
 ///Time of Impact, Closest Points and Penetration Depth.
 class btCollisionDispatcher : public btDispatcher
 {
+protected:
 	int		m_dispatcherFlags;
 	
 	btAlignedObjectArray<btPersistentManifold*>	m_manifoldsPtr;
 
 	btManifoldResult	m_defaultManifoldResult;
 
-	btNearCallback		m_nearCallback;
-	
-	btPoolAllocator*	m_collisionAlgorithmPoolAllocator;
+	btPoolAllocator* m_collisionAlgorithmPoolAllocator;
+    btNearCallback m_nearCallback;
 
-	btPoolAllocator*	m_persistentManifoldPoolAllocator;
+	btPoolAllocator* m_persistentManifoldPoolAllocator;
 
 	btCollisionAlgorithmCreateFunc* m_doubleDispatch[MAX_BROADPHASE_COLLISION_TYPES][MAX_BROADPHASE_COLLISION_TYPES];
 
@@ -113,13 +113,13 @@ public:
 	virtual void clearManifold(btPersistentManifold* manifold);
 
 			
-	btCollisionAlgorithm* findAlgorithm(const btCollider* body0,const btCollider* body1,btPersistentManifold* sharedManifold = 0);
+	btCollisionAlgorithm* findAlgorithm(const btCollider* body0,const btCollider* body1,btPersistentManifold* sharedManifold = 0, bool isSwapped = false);
 		
 	virtual bool	needsCollision(const btCollisionObject* body0,const btCollisionObject* body1);
 	
 	virtual bool	needsResponse(const btCollisionObject* body0,const btCollisionObject* body1);
 	
-	virtual void	dispatchAllCollisionPairs(btOverlappingPairCache* pairCache,const btDispatcherInfo& dispatchInfo,btDispatcher* dispatcher) ;
+	virtual void	dispatchAllCollisionPairs(btOverlappingPairCache* pairCache,const btDispatcherInfo& dispatchInfo,btDispatcher* dispatcher, bool singleThread=false);
 
 	void	setNearCallback(btNearCallback	nearCallback)
 	{
@@ -131,12 +131,17 @@ public:
 		return m_nearCallback;
 	}
 
-	//by default, Bullet will use this near callback
-	static void  defaultNearCallback(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+	static void  defaultNearCallbackDiscrete(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
+
+	static void  defaultNearCallbackContinuous(btBroadphasePair& collisionPair, btCollisionDispatcher& dispatcher, const btDispatcherInfo& dispatchInfo);
 
 	virtual	void* allocateCollisionAlgorithm(int size);
 
 	virtual	void freeCollisionAlgorithm(void* ptr);
+
+	virtual btVoronoiSimplexSolver* getSimplexSolver();
+
+	virtual btConvexPenetrationDepthSolver* getDepthSolver();
 
 	btCollisionConfiguration*	getCollisionConfiguration()
 	{

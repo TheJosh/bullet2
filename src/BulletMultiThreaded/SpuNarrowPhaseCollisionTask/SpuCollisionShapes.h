@@ -123,6 +123,45 @@ SIMD_FORCE_INLINE unsigned int spuTestQuantizedAabbAgainstQuantizedAabb(const un
 }
 #endif
 
-void	spuWalkStacklessQuantizedTree(btNodeOverlapCallback* nodeCallback,unsigned short int* quantizedQueryAabbMin,unsigned short int* quantizedQueryAabbMax,const btQuantizedBvhNode* rootNode,int startNodeIndex,int endNodeIndex);
+template<typename T>
+void	spuWalkStacklessQuantizedTree(T* nodeCallback,unsigned short int* quantizedQueryAabbMin,unsigned short int* quantizedQueryAabbMax,const btQuantizedBvhNode* rootNode,int startNodeIndex,int endNodeIndex)
+{
+	int curIndex = startNodeIndex;
+	int walkIterations = 0;
+	#ifdef BT_DEBUG
+	int subTreeSize = endNodeIndex - startNodeIndex;
+	#endif
 
+	int escapeIndex;
+
+	unsigned int aabbOverlap, isLeafNode;
+
+	while (curIndex < endNodeIndex)
+	{
+		//catch bugs in tree data
+		btAssert (walkIterations < subTreeSize);
+
+		walkIterations++;
+		aabbOverlap = spuTestQuantizedAabbAgainstQuantizedAabb(quantizedQueryAabbMin,quantizedQueryAabbMax,rootNode->m_quantizedAabbMin,rootNode->m_quantizedAabbMax);
+		isLeafNode = rootNode->isLeafNode();
+
+		if (isLeafNode && aabbOverlap)
+		{
+			//printf("overlap with node %d\n",rootNode->getTriangleIndex());
+			nodeCallback->processNode(0,rootNode->getTriangleIndex());
+			//			spu_printf("SPU: overlap detected with triangleIndex:%d\n",rootNode->getTriangleIndex());
+		} 
+
+		if (aabbOverlap || isLeafNode)
+		{
+			rootNode++;
+			curIndex++;
+		} else
+		{
+			escapeIndex = rootNode->getEscapeIndex();
+			rootNode += escapeIndex;
+			curIndex += escapeIndex;
+		}
+	}
+}
 #endif

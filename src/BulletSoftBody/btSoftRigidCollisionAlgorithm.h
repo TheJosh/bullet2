@@ -39,13 +39,11 @@ class btSoftRigidCollisionAlgorithm : public btCollisionAlgorithm
 
 public:
 
-	btSoftRigidCollisionAlgorithm(btPersistentManifold* mf,const btCollisionAlgorithmConstructionInfo& ci,btCollisionObject* col0,btCollisionObject* col1, bool isSwapped);
+	btSoftRigidCollisionAlgorithm(const btCollisionAlgorithmConstructionInfo& ci, bool isSwapped);
 
-	virtual ~btSoftRigidCollisionAlgorithm();
+	virtual void nihilize(btDispatcher* dispatcher);
 
 	virtual void processCollision (const btCollisionProcessInfo& processInfo);
-
-	virtual void processCollision (btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
 
 	virtual btScalar calculateTimeOfImpact(btCollisionObject* body0,btCollisionObject* body1,const btDispatcherInfo& dispatchInfo,btManifoldResult* resultOut);
 
@@ -57,20 +55,15 @@ public:
 
 	struct CreateFunc :public 	btCollisionAlgorithmCreateFunc
 	{
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, const btCollider* body0, const btCollider* body1)
-		{
-			return CreateCollisionAlgorithm(ci, (btCollisionObject*)body0->getCollisionObject(), (btCollisionObject*)body1->getCollisionObject());
-		}
-
-		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci, btCollisionObject* body0,btCollisionObject* body1)
+		virtual	btCollisionAlgorithm* CreateCollisionAlgorithm(btCollisionAlgorithmConstructionInfo& ci)
 		{
 			void* mem = ci.m_dispatcher1->allocateCollisionAlgorithm(sizeof(btSoftRigidCollisionAlgorithm));
 			if (!m_swapped)
 			{
-				return new(mem) btSoftRigidCollisionAlgorithm(0,ci,body0,body1,false);
+				return new(mem) btSoftRigidCollisionAlgorithm(ci, false);
 			} else
 			{
-				return new(mem) btSoftRigidCollisionAlgorithm(0,ci,body0,body1,true);
+				return new(mem) btSoftRigidCollisionAlgorithm(ci, true);
 			}
 		}
 	};

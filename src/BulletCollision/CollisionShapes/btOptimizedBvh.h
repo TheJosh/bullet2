@@ -30,10 +30,6 @@ ATTRIBUTE_ALIGNED16(class) btOptimizedBvh : public btQuantizedBvh
 public:
 	BT_DECLARE_ALIGNED_ALLOCATOR();
 
-protected:
-
-public:
-
 	btOptimizedBvh();
 
 	virtual ~btOptimizedBvh();
@@ -46,6 +42,9 @@ public:
 
 	void	updateBvhNodes(btStridingMeshInterface* meshInterface,int firstNode,int endNode,int index);
 
+	void	disableWithAabb(btStridingMeshInterface* meshInterface,const btVector3& aabbMin,const btVector3& aabbMax);
+
+
 	/// Data buffer MUST be 16 byte aligned
 	virtual bool serializeInPlace(void *o_alignedDataBuffer, unsigned i_dataBufferSize, bool i_swapEndian) const
 	{
@@ -56,6 +55,8 @@ public:
 	///deSerializeInPlace loads and initializes a BVH from a buffer in memory 'in place'
 	static btOptimizedBvh *deSerializeInPlace(void *i_alignedDataBuffer, unsigned int i_dataBufferSize, bool i_swapEndian);
 
+private:
+	void disableBvhNodes(btStridingMeshInterface* meshInterface,int firstNode,int endNode,int index, unsigned short* quantizedQueryAabbMin, unsigned short* quantizedQueryAabbMax);
 
 };
 

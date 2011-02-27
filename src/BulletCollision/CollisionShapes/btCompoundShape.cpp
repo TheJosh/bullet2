@@ -16,6 +16,7 @@ subject to the following restrictions:
 #include "btCompoundShape.h"
 #include "btCollisionShape.h"
 #include "BulletCollision/BroadphaseCollision/btDbvt.h"
+#include "BulletCollision/BroadphaseCollision/btQuantizedBvh.h"
 #include "LinearMath/btSerializer.h"
 
 btCompoundShape::btCompoundShape(bool enableDynamicAabbTree)
@@ -24,7 +25,8 @@ m_localAabbMax(btScalar(-BT_LARGE_FLOAT),btScalar(-BT_LARGE_FLOAT),btScalar(-BT_
 m_dynamicAabbTree(0),
 m_updateRevision(1),
 m_collisionMargin(btScalar(0.)),
-m_localScaling(btScalar(1.),btScalar(1.),btScalar(1.))
+m_localScaling(btScalar(1.),btScalar(1.),btScalar(1.)),
+m_bvh(0)
 {
 	m_shapeType = COMPOUND_SHAPE_PROXYTYPE;
 
@@ -43,6 +45,12 @@ btCompoundShape::~btCompoundShape()
 	{
 		m_dynamicAabbTree->~btDbvt();
 		btAlignedFree(m_dynamicAabbTree);
+	}
+	if (m_bvh)
+	{
+		m_bvh->~btQuantizedBvh();
+		btAlignedFree(m_bvh);
+		m_bvh = 0;
 	}
 }
 
@@ -289,6 +297,26 @@ void btCompoundShape::setLocalScaling(const btVector3& scaling)
 	m_localScaling = scaling;
 }
 
+void btCompoundShape::buildBvhTree()
+{
+	const btVector3& bvhAabbMin = m_localAabbMin;
+	const btVector3& bvhAabbMax = m_localAabbMax;
+	m_bvh = new btQuantizedBvh();
+	m_bvh->setQuantizationValues(bvhAabbMin,bvhAabbMax);
+	QuantizedNodeArray&	nodes = m_bvh->getLeafNodeArray();
+	for (int i=0;i<m_children.size();i++)
+	{
+		btQuantizedBvhNode node;
+		btVector3 aabbMin,aabbMax;
+		m_children[i].m_childShape->getAabb(m_children[i].m_transform, aabbMin, aabbMax);
+		m_bvh->quantize(&node.m_quantizedAabbMin[0],aabbMin,0);
+		m_bvh->quantize(&node.m_quantizedAabbMax[0],aabbMax,1);
+		int partId = 0;
+		node.m_escapeIndexOrTriangleIndex = (partId<<(31-MAX_NUM_PARTS_IN_BITS)) | i;
+		nodes.push_back(node);
+	}
+	m_bvh->buildInternal();
+}
 
 void btCompoundShape::createAabbTreeFromChildren()
 {

@@ -21,6 +21,8 @@ subject to the following restrictions:
 #include "btBroadphaseProxy.h"
 #include "btOverlappingPairCallback.h"
 
+#include "BulletCollision/CollisionDispatch/btCollisionObject.h"
+
 #include "LinearMath/btAlignedObjectArray.h"
 class btDispatcher;
 
@@ -113,8 +115,11 @@ public:
 
 		bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
 		collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
-		
-		return collides;
+
+		if (!collides)
+			return false;
+
+		return true;
 	}
 
 	// Add a pair and return the new pair. If the pair already exists,
