@@ -316,7 +316,7 @@ static void* localBufMalloc(int size)
 	if((sLocalBufUsed + size16) > LOCAL_BUF_SIZE)
 	{ // reset
 		spLocalBufCurr = sLocalMemBuf;
-		while((int)spLocalBufCurr & 0x0F) spLocalBufCurr++; // align to 16 bytes
+		while((unsigned long)spLocalBufCurr & 0x0F) spLocalBufCurr++; // align to 16 bytes
 		sLocalBufUsed = 0;
 	}
 	void* ret = spLocalBufCurr;
