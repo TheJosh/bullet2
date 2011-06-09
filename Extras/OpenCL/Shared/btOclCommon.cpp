@@ -18,6 +18,9 @@ subject to the following restrictions:
 #include "btOclCommon.h"
 
 
+
+
+
 static char* spPlatformVendor = 
 #if defined(CL_PLATFORM_MINI_CL)
 "MiniCL, SCEA";

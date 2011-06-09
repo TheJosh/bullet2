@@ -348,6 +348,8 @@ if(bFirstCall)
 	GL_DialogWindow* settings = m_dialogDynamicsWorld->createDialog(50,0,280,280,"Broadphase (MiniCL)");
 #elif defined(CL_PLATFORM_NVIDIA)
 	GL_DialogWindow* settings = m_dialogDynamicsWorld->createDialog(50,0,280,280,"Broadphase (NVIDIA)");
+#elif defined(CL_PLATFORM_AMD)
+	GL_DialogWindow* settings = m_dialogDynamicsWorld->createDialog(50,0,280,280,"Broadphase (AMD)");
 #else
 #error "OpenCL platform not supported"
 #endif

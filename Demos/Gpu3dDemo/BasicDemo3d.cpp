@@ -277,8 +277,10 @@ btCudaBroadphase::btCudaBroadphase(	btOverlappingPairCache* overlappingPairCache
 //	m_broadphase = new btAxisSweep3(gWorldMin,gWorldMax,32000,gPairCache,true);//(btDbvtBroadphase(gPairCache);
 #endif //DBVT
 
+
 #endif	
 	
+
 
 	// create solvers for tests 
 	///the default constraint solver

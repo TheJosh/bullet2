@@ -16,6 +16,7 @@ subject to the following restrictions:
 #include <stdio.h>
 #include <stdlib.h>
 
+
 #ifdef __APPLE__
 //CL_PLATFORM_MINI_CL could be defined in build system
 #else

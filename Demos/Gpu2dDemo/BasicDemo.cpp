@@ -385,12 +385,11 @@ void	BasicDemo::initPhysics()
 		bool isDynamic = (mass != 0.f);
 
 		btVector3 localInertia(0,0,0);
-
 #if OECAKE_LOADER
 	BasicDemoOecakeLoader	loader(this);
-	if (!loader.processFile("Gpu2dDemo.oec"))
+	if (!loader.processFile("test1.oec"))
 	{
-		loader.processFile("../../../../../Demos/Gpu2dDemo/Gpu2dDemo.oec");
+		loader.processFile("../../../../../Demos/Gpu2dDemo/test.oec");
 	}
 #if 0 // perfomance test : work-in-progress
 	{ // add more object, but share their shapes
@@ -509,6 +508,10 @@ void	BasicDemo::initPhysics()
 	clientResetScene();
 #endif
 }
+
+
+
+
 
 void BasicDemo::clientResetScene()
 {
