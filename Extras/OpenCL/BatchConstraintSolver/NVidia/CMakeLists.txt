@@ -2,7 +2,7 @@ INCLUDE_DIRECTORIES(
 	${BULLET_PHYSICS_SOURCE_DIR}/src
 	${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/Shared
 	${BULLET_PHYSICS_SOURCE_DIR}/Extras/OpenCL/BatchConstraintSolver/Shared
-	$ENV{NVSDKCOMPUTE_ROOT}/OpenCL/common/inc	
+	${NVIDIA_OPENCL_BASE_DIR}/include
 )
 
 SET(BatchConstraintSolver_SRCS
